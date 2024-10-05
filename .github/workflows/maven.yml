@@ -3,8 +3,8 @@ name: Java CI with Maven
 env:
   # find out this value by opening https://api.github.com/repos/<owner>/<repo>/releases
   # in your browser and copy the full "upload_url" value including the {?name,label} part
-  UPLOAD_URL: https://uploads.github.com/repos/MarginallyClever/Makelangelo-software/releases/54908875/assets{?name,label}
-  RELEASE_ID: 54908875 # same as above (id can just be taken out the upload_url, it's used to find old releases)
+  UPLOAD_URL: https://uploads.github.com/repos/JdJ1n/Makelangelo-software/releases/178534524/assets{?name,label}
+  RELEASE_ID: 178534524 # same as above (id can just be taken out the upload_url, it's used to find old releases)
 
 
 on:
