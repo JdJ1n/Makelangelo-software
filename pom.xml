@@ -496,6 +496,12 @@ It pairs really well with Marlin-polargraph, the code in the brain of the robot 
 			<version>4.2.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.github.javafaker</groupId>
+			<artifactId>javafaker</artifactId>
+			<version>1.0.2</version>
+		</dependency>
+
 		<!-- qoi image format support -->
 		<dependency>
 			<groupId>me.saharnooby</groupId>
