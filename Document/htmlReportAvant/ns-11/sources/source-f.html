@@ -1,0 +1,326 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Converter_Sandy</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imageconverter</a>
+</div>
+
+<h1>Coverage Summary for Class: Converter_Sandy (com.marginallyclever.makelangelo.makeart.imageconverter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Converter_Sandy</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/26)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/112)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imageconverter;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+&nbsp;import com.marginallyclever.makelangelo.paper.Paper;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectOneOfMany;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectSlider;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * based on polagraph style by Sandy Noble.
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class Converter_Sandy extends ImageConverter {
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(Converter_Sandy.class);</b>
+<b class="nc">&nbsp;	private static int blockScale=150;</b>
+<b class="nc">&nbsp;	private static int direction=0;</b>
+<b class="nc">&nbsp;	private final String [] directionChoices = new String[] {</b>
+<b class="nc">&nbsp;		Translator.get(&quot;top right&quot;),</b>
+<b class="nc">&nbsp;		Translator.get(&quot;top left&quot;), </b>
+<b class="nc">&nbsp;		Translator.get(&quot;bottom left&quot;), </b>
+<b class="nc">&nbsp;		Translator.get(&quot;bottom right&quot;), </b>
+<b class="nc">&nbsp;		Translator.get(&quot;center&quot;)</b>
+&nbsp;	};
+&nbsp;
+&nbsp;	public Converter_Sandy() {
+<b class="nc">&nbsp;		super();</b>
+<b class="nc">&nbsp;		SelectSlider selectRings = new SelectSlider(&quot;rings&quot;,Translator.get(&quot;SandyNoble.rings&quot;),300,10,getScale());</b>
+<b class="nc">&nbsp;		add(selectRings);</b>
+<b class="nc">&nbsp;		selectRings.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setScale((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		SelectOneOfMany selectDirection = new SelectOneOfMany(&quot;direction&quot;,Translator.get(&quot;SandyNoble.center&quot;),getDirections(),getDirectionIndex());</b>
+<b class="nc">&nbsp;		add(selectDirection);</b>
+<b class="nc">&nbsp;		selectDirection.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setDirection((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="nc">&nbsp;		return Translator.get(&quot;SandyNoble.title&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void start(Paper paper, TransformedImage image) {
+<b class="nc">&nbsp;		super.start(paper, image);</b>
+&nbsp;
+<b class="nc">&nbsp;		FilterDesaturate bw = new FilterDesaturate(myImage);</b>
+<b class="nc">&nbsp;		TransformedImage img = bw.filter();</b>
+&nbsp;
+&nbsp;		// if the image were projected on the paper, where would the top left corner of the image be in paper space?
+&nbsp;		// image(0,0) is (-paperWidth/2,-paperHeight/2)*paperMargin
+&nbsp;
+<b class="nc">&nbsp;		double yBottom = myPaper.getPaperBottom();</b>
+<b class="nc">&nbsp;		double yTop    = myPaper.getPaperTop();</b>
+<b class="nc">&nbsp;		double xLeft   = myPaper.getPaperLeft();</b>
+<b class="nc">&nbsp;		double xRight  = myPaper.getPaperRight();</b>
+&nbsp;
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double pLeft   = rect.getMinX() +1.0;</b>
+<b class="nc">&nbsp;		double pBottom = rect.getMinY() +1.0;</b>
+<b class="nc">&nbsp;		double pRight  = rect.getMaxX() -1.0;</b>
+<b class="nc">&nbsp;		double pTop    = rect.getMaxY() -1.0;</b>
+&nbsp;
+&nbsp;		double cx,cy;
+<b class="nc">&nbsp;		double last_x=0,last_y=0;</b>
+&nbsp;
+<b class="nc">&nbsp;		boolean wasDrawing=false;</b>
+&nbsp;
+<b class="nc">&nbsp;		switch (direction) {</b>
+&nbsp;			case 0 -&gt; {
+<b class="nc">&nbsp;				cx = xRight;</b>
+<b class="nc">&nbsp;				cy = yTop;</b>
+<b class="nc">&nbsp;				last_x = pRight;</b>
+<b class="nc">&nbsp;				last_y = pTop;</b>
+&nbsp;			}
+&nbsp;			case 1 -&gt; {
+<b class="nc">&nbsp;				cx = xLeft;</b>
+<b class="nc">&nbsp;				cy = yTop;</b>
+<b class="nc">&nbsp;				last_x = pLeft;</b>
+<b class="nc">&nbsp;				last_y = pTop;</b>
+&nbsp;			}
+&nbsp;			case 2 -&gt; {
+<b class="nc">&nbsp;				cx = xLeft;</b>
+<b class="nc">&nbsp;				cy = yBottom;</b>
+<b class="nc">&nbsp;				last_x = pLeft;</b>
+<b class="nc">&nbsp;				last_y = pBottom;</b>
+&nbsp;			}
+&nbsp;			case 3 -&gt; {
+<b class="nc">&nbsp;				cx = xRight;</b>
+<b class="nc">&nbsp;				cy = yBottom;</b>
+<b class="nc">&nbsp;				last_x = pRight;</b>
+<b class="nc">&nbsp;				last_y = pBottom;</b>
+&nbsp;			}
+&nbsp;			default -&gt; {
+<b class="nc">&nbsp;				cx = 0;</b>
+<b class="nc">&nbsp;				cy = 0;</b>
+<b class="nc">&nbsp;				last_x = 0;</b>
+<b class="nc">&nbsp;				last_y = 0;</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+&nbsp;		double x, y, z, scaleZ;
+&nbsp;
+<b class="nc">&nbsp;		double dx = xRight - xLeft; </b>
+<b class="nc">&nbsp;		double dy = yTop - yBottom;</b>
+<b class="nc">&nbsp;		double rMax = Math.sqrt(dx*dx+dy*dy);</b>
+<b class="nc">&nbsp;		double rMin = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;		double rStep = (rMax-rMin)/(double)blockScale;</b>
+&nbsp;		double r;
+<b class="nc">&nbsp;		double t_dir=1;</b>
+<b class="nc">&nbsp;		double pulseFlip=1;</b>
+&nbsp;		double t,t_step;
+&nbsp;		double flipSum;
+<b class="nc">&nbsp;		double pulseSize = rStep*0.5 - 0.5;//r_step * 0.6 * scale_z;</b>
+&nbsp;
+<b class="nc">&nbsp;		turtle = new Turtle();</b>
+<b class="nc">&nbsp;		logger.debug(&quot;Sandy started.&quot;);</b>
+&nbsp;		//Thread.dumpStack();
+<b class="nc">&nbsp;		double px = myPaper.getCenterX();</b>
+<b class="nc">&nbsp;		double py = myPaper.getCenterY();</b>
+&nbsp;
+<b class="nc">&nbsp;		turtle.lock();</b>
+&nbsp;		try {
+&nbsp;			// make concentric circles that get bigger and bigger.
+<b class="nc">&nbsp;			for(r=rMin;r&lt;rMax;r+=rStep) {</b>
+&nbsp;				// go around in a circle
+<b class="nc">&nbsp;				t=0;</b>
+<b class="nc">&nbsp;				t_step = 1.0/r;</b>
+<b class="nc">&nbsp;				flipSum=0;</b>
+&nbsp;				// go around the circle
+<b class="nc">&nbsp;				for(t=0;t&lt;Math.PI*2;t+=t_step) {</b>
+<b class="nc">&nbsp;					dx = Math.cos(t_dir *t);</b>
+<b class="nc">&nbsp;					dy = Math.sin(t_dir *t);</b>
+<b class="nc">&nbsp;					x = cx + dx * r;</b>
+<b class="nc">&nbsp;					y = cy + dy * r;</b>
+<b class="nc">&nbsp;					if(!rect.contains(x,y)) {</b>
+<b class="nc">&nbsp;						if(wasDrawing) {</b>
+<b class="nc">&nbsp;							turtle.jumpTo(px+last_x,py+last_y);</b>
+<b class="nc">&nbsp;							wasDrawing=false;</b>
+&nbsp;						}
+&nbsp;						continue;
+&nbsp;					}
+&nbsp;	
+<b class="nc">&nbsp;					last_x=x;</b>
+<b class="nc">&nbsp;					last_y=y;</b>
+&nbsp;					// read a block of the image and find the average intensity in this block
+<b class="nc">&nbsp;					z = img.sample( x-pulseSize/2.0, y-pulseSize/2.0,x+pulseSize/2.0,y +pulseSize/2.0 );</b>
+&nbsp;					// scale the intensity value
+<b class="nc">&nbsp;					if(z&lt;0) z=0;</b>
+<b class="nc">&nbsp;					if(z&gt;255) z=255;</b>
+<b class="nc">&nbsp;					scaleZ = (255.0 -  z) / 255.0;</b>
+&nbsp;	
+<b class="nc">&nbsp;					if(!wasDrawing) {</b>
+<b class="nc">&nbsp;						turtle.jumpTo(px+last_x,py+last_y);</b>
+<b class="nc">&nbsp;						wasDrawing=true;</b>
+&nbsp;					}
+&nbsp;	
+<b class="nc">&nbsp;					turtle.moveTo(	px + x + dx * pulseSize*pulseFlip,</b>
+&nbsp;									py + y + dy * pulseSize*pulseFlip);
+&nbsp;					
+<b class="nc">&nbsp;					flipSum+=scaleZ;</b>
+<b class="nc">&nbsp;					if(flipSum &gt;= 1) {</b>
+<b class="nc">&nbsp;						flipSum-=1;</b>
+<b class="nc">&nbsp;						pulseFlip = -pulseFlip;</b>
+<b class="nc">&nbsp;						turtle.moveTo(	px + x + dx * pulseSize*pulseFlip,</b>
+&nbsp;										py + y + dy * pulseSize*pulseFlip);
+&nbsp;					}
+&nbsp;				}
+<b class="nc">&nbsp;				t_dir=-t_dir;</b>
+&nbsp;			}
+<b class="nc">&nbsp;		} catch(Exception e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Sandy failed&quot;, e);</b>
+&nbsp;		} finally {
+<b class="nc">&nbsp;			turtle.unlock();</b>
+<b class="nc">&nbsp;			logger.debug(&quot;Sandy finished.&quot;);</b>
+<b class="nc">&nbsp;		}</b>
+&nbsp;
+<b class="nc">&nbsp;		fireConversionFinished();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public int getScale() {
+<b class="nc">&nbsp;		return blockScale;</b>
+&nbsp;	}
+&nbsp;	public void setScale(int value) {
+<b class="nc">&nbsp;		if(value&lt;1) value=1;</b>
+<b class="nc">&nbsp;		blockScale=value;</b>
+&nbsp;	}
+&nbsp;	public String [] getDirections() {
+<b class="nc">&nbsp;		return directionChoices;</b>
+&nbsp;	}
+&nbsp;	public int getDirectionIndex() {
+<b class="nc">&nbsp;		return direction;</b>
+&nbsp;	}
+&nbsp;	public void setDirection(int value) {
+<b class="nc">&nbsp;		if(value&lt;0) value=0;</b>
+<b class="nc">&nbsp;		if(value&gt;=directionChoices.length) value = directionChoices.length-1;</b>
+<b class="nc">&nbsp;		direction = value;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

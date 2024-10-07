@@ -1,0 +1,406 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Translator</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo</a>
+</div>
+
+<h1>Coverage Summary for Class: Translator (com.marginallyclever.makelangelo)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Translator</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (12/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    52.4%
+  </span>
+  <span class="absValue">
+    (22/42)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66%
+  </span>
+  <span class="absValue">
+    (70/106)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.FileAccess;
+&nbsp;import com.marginallyclever.util.MarginallyCleverTranslationXmlFileHelper;
+&nbsp;import com.marginallyclever.util.PreferencesHelper;
+&nbsp;import org.apache.commons.io.FilenameUtils;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.File;
+&nbsp;import java.io.FileInputStream;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.InputStream;
+&nbsp;import java.net.URI;
+&nbsp;import java.net.URL;
+&nbsp;import java.nio.file.*;
+&nbsp;import java.util.*;
+&nbsp;import java.util.prefs.BackingStoreException;
+&nbsp;import java.util.prefs.Preferences;
+&nbsp;import java.util.stream.Stream;
+&nbsp;
+&nbsp;/**
+&nbsp; * &lt;p&gt;&lt;/p&gt;MultilingualSupport is the translation engine.  You ask for a string it finds the matching string in the currently selected language.
+&nbsp; * See &lt;a href=&quot;http://www.java-samples.com/showtutorial.php?tutorialid=152&quot;&gt;XML and Java - Parsing XML using Java Tutorial&lt;/a&gt;&lt;/p&gt;
+&nbsp; * &lt;p&gt;TODO: This system loads all language files even though it only displays one at a time.  It could load a single language and save memory.&lt;/p&gt;
+&nbsp; * @author Dan Royer
+&nbsp; * @author Peter Colapietro
+&nbsp; */
+<b class="nc">&nbsp;public final class Translator {</b>
+<b class="fc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(Translator.class);</b>
+&nbsp;
+&nbsp;	public static final String MISSING = &quot;Missing:&quot;;
+&nbsp;	// Working directory. This represents the directory where the java executable launched the jar from.
+&nbsp;	public static final String WORKING_DIRECTORY = /*File.separator + */&quot;languages&quot;/*+File.separator*/;
+&nbsp;	// The name of the preferences node containing the user&#39;s choice.
+&nbsp;	private static final String LANGUAGE_KEY = &quot;language&quot;;
+&nbsp;	// TODO get a better way to store user preference.
+<b class="fc">&nbsp;	private static final Preferences languagePreferenceNode = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LANGUAGE);</b>
+&nbsp;	// The default choice when nothing has been selected.
+<b class="fc">&nbsp;	private static String defaultLanguage = &quot;English&quot;;</b>
+&nbsp;	// The current choice
+&nbsp;	private static String currentLanguage;
+&nbsp;	// a list of all languages and their translations strings
+<b class="fc">&nbsp;	private static final Map&lt;String, TranslatorLanguage&gt; languages = new HashMap&lt;&gt;();</b>
+&nbsp;	private static TranslatorLanguage currentLanguageContainer;
+&nbsp;
+&nbsp;	public static void start() {
+<b class="fc">&nbsp;		logger.info(&quot;starting translator...&quot;);</b>
+&nbsp;		
+<b class="fc">&nbsp;		Locale locale = Locale.getDefault();</b>
+<b class="fc">&nbsp;		defaultLanguage = locale.getDisplayLanguage(Locale.ENGLISH);</b>
+<b class="fc">&nbsp;		logger.info(&quot;Default language = {}&quot;, defaultLanguage);</b>
+&nbsp;		
+<b class="fc">&nbsp;		loadLanguages();</b>
+<b class="fc">&nbsp;		loadConfig();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return true if this is the first time loading language files (probably on install)
+&nbsp;	 */
+&nbsp;	public static boolean isThisTheFirstTimeLoadingLanguageFiles() {
+&nbsp;		// Did the language file disappear?  Offer the language dialog.
+&nbsp;		try {
+<b class="nc">&nbsp;			if (doesLanguagePreferenceExist()) {</b>
+&nbsp;				// does the list of languages contain the preferred choice?
+<b class="nc">&nbsp;				String languageNameFromPref = languagePreferenceNode.get(LANGUAGE_KEY, defaultLanguage);</b>
+<b class="nc">&nbsp;				if (!languages.containsKey(languageNameFromPref)) {</b>
+<b class="nc">&nbsp;					logger.error(&quot;Language &#39;{}&#39; not available ...&quot;, languageNameFromPref);</b>
+&nbsp;
+&nbsp;					// To avoid some null issues in Translator.get(String key),
+&nbsp;					// lets say it&#39;s the first run (to ask the user to select a valid language name)
+<b class="nc">&nbsp;					return true;</b>
+&nbsp;				}
+<b class="nc">&nbsp;				return false;</b>
+&nbsp;			}
+<b class="nc">&nbsp;		} catch (BackingStoreException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to load language&quot;, e);</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return true;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return true if a preferences node exists
+&nbsp;	 * @throws BackingStoreException
+&nbsp;	 */
+&nbsp;	static private boolean doesLanguagePreferenceExist() throws BackingStoreException {
+<b class="nc">&nbsp;		return Arrays.asList(languagePreferenceNode.keys()).contains(LANGUAGE_KEY);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * save the user&#39;s current language choice
+&nbsp;	 */
+&nbsp;	public static void saveConfig() {
+<b class="fc">&nbsp;		logger.debug(&quot;saveConfig()&quot;);</b>
+<b class="fc">&nbsp;		languagePreferenceNode.put(LANGUAGE_KEY, currentLanguage);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * load the user&#39;s language choice
+&nbsp;	 */
+&nbsp;	public static void loadConfig() {
+<b class="fc">&nbsp;		logger.debug(&quot;loadConfig: {}={}&quot;, languagePreferenceNode.toString(), defaultLanguage);</b>
+<b class="fc">&nbsp;		setCurrentLanguage(languagePreferenceNode.get(LANGUAGE_KEY, defaultLanguage));</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Scan folder for language files.
+&nbsp;	 * See http://stackoverflow.com/questions/1429172/how-do-i-list-the-files-inside-a-jar-file
+&nbsp;	 * @throws IllegalStateException No language files found
+&nbsp;	 */
+&nbsp;	public static void loadLanguages() {
+<b class="fc">&nbsp;		languages.clear();</b>
+&nbsp;		
+&nbsp;		try {
+<b class="fc">&nbsp;			int found=0;</b>
+<b class="fc">&nbsp;			Stream&lt;Path&gt; walk = getLanguagePaths();</b>
+<b class="fc">&nbsp;			Iterator&lt;Path&gt; it = walk.iterator();</b>
+<b class="fc">&nbsp;			while (it.hasNext()) {</b>
+<b class="fc">&nbsp;				Path p = it.next();</b>
+<b class="fc">&nbsp;				String name = p.toString();</b>
+&nbsp;				//if( f.isDirectory() || f.isHidden() ) continue;
+<b class="fc">&nbsp;				if (FilenameUtils.getExtension(name).equalsIgnoreCase(&quot;xml&quot;) ) {</b>
+<b class="fc">&nbsp;					if (name.endsWith(&quot;pom.xml&quot;)) {</b>
+&nbsp;						continue;
+&nbsp;					}
+&nbsp;					
+&nbsp;					// found an XML file in the /languages folder.  Good sign!
+<b class="pc">&nbsp;					if (attemptToLoadLanguageXML(name)) found++;</b>
+&nbsp;				}
+&nbsp;			}
+<b class="fc">&nbsp;			walk.close();</b>
+&nbsp;			
+&nbsp;			//logger.debug(&quot;total found: &quot;+found);
+&nbsp;	
+<b class="pc">&nbsp;			if(found==0) {</b>
+<b class="nc">&nbsp;				throw new IllegalStateException(&quot;No translations found.&quot;);</b>
+&nbsp;			}
+&nbsp;		}
+<b class="nc">&nbsp;		catch(Exception e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;{}. Defaulting to {}. Language folder expected to be located at {}&quot;, e.getMessage(), defaultLanguage, WORKING_DIRECTORY);</b>
+<b class="nc">&nbsp;			final TranslatorLanguage languageContainer  = new TranslatorLanguage();</b>
+<b class="nc">&nbsp;			String path = MarginallyCleverTranslationXmlFileHelper.getDefaultLanguageFilePath();</b>
+<b class="nc">&nbsp;			logger.debug(&quot;default path requested: {}&quot;, path);</b>
+<b class="nc">&nbsp;			URL pathFound = Translator.class.getClassLoader().getResource(path);</b>
+<b class="nc">&nbsp;			logger.debug(&quot;path found: {}&quot;, pathFound);</b>
+<b class="nc">&nbsp;			try (InputStream s = pathFound.openStream()) {</b>
+<b class="nc">&nbsp;				languageContainer.loadFromInputStream(s);</b>
+<b class="nc">&nbsp;			} catch (IOException ie) {</b>
+<b class="nc">&nbsp;				logger.error(ie.getMessage());</b>
+&nbsp;			}
+<b class="nc">&nbsp;			languages.put(languageContainer.getName(), languageContainer);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private static Stream&lt;Path&gt; getLanguagePaths() throws Exception {
+<b class="fc">&nbsp;		URI uri = Translator.class.getClassLoader().getResource(WORKING_DIRECTORY).toURI();</b>
+<b class="fc">&nbsp;		logger.trace(&quot;Looking for translations in {}&quot;, uri.toString());</b>
+&nbsp;		
+&nbsp;		Path myPath;
+<b class="pc">&nbsp;		if (uri.getScheme().equals(&quot;jar&quot;)) {</b>
+<b class="nc">&nbsp;			FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());</b>
+<b class="nc">&nbsp;			myPath = fileSystem.getPath(WORKING_DIRECTORY);</b>
+&nbsp;		} else {
+<b class="fc">&nbsp;			myPath = Paths.get(uri);</b>
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		Path rootPath = FileSystems.getDefault().getPath(FileAccess.getWorkingDirectory());</b>
+<b class="fc">&nbsp;		logger.trace(&quot;rootDir={}&quot;, rootPath);</b>
+&nbsp;
+&nbsp;		// we&#39;ll look inside the JAR file first, then look in the working directory.
+&nbsp;		// this way new translation files in the working directory will replace the old JAR files.
+<b class="fc">&nbsp;		Stream&lt;Path&gt; walk = Stream.concat(</b>
+<b class="fc">&nbsp;				Files.walk(myPath, 1),	// check inside the JAR file.</b>
+<b class="fc">&nbsp;				Files.walk(rootPath,1)	// then check the working directory</b>
+&nbsp;				);
+&nbsp;
+<b class="fc">&nbsp;		return walk;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	private static boolean attemptToLoadLanguageXML(String name) throws Exception {
+&nbsp;		InputStream stream;
+&nbsp;		String actualFilename;
+&nbsp;
+<b class="fc">&nbsp;		File externalFile = new File(name);</b>
+<b class="pc">&nbsp;		if(externalFile.exists()) {</b>
+<b class="fc">&nbsp;			stream = new FileInputStream(name);</b>
+<b class="fc">&nbsp;			actualFilename = name;</b>
+&nbsp;		} else {
+<b class="nc">&nbsp;			String nameInsideJar = WORKING_DIRECTORY+&quot;/&quot;+FilenameUtils.getName(name);</b>
+<b class="nc">&nbsp;			stream = Translator.class.getClassLoader().getResourceAsStream(nameInsideJar);</b>
+<b class="nc">&nbsp;			actualFilename = &quot;Jar:&quot;+nameInsideJar;</b>
+&nbsp;		}
+<b class="pc">&nbsp;		if( stream == null ) return false;</b>
+&nbsp;
+<b class="fc">&nbsp;		logger.trace(&quot;Found {}&quot;, actualFilename);</b>
+<b class="fc">&nbsp;		TranslatorLanguage lang = new TranslatorLanguage();</b>
+&nbsp;		try {
+<b class="fc">&nbsp;			lang.loadFromInputStream(stream);</b>
+<b class="nc">&nbsp;		} catch(Exception e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to load {}&quot;, actualFilename, e);</b>
+&nbsp;			// if the xml file is invalid then an exception can occur.
+&nbsp;			// make sure lang is empty in case of a partial-load failure.
+<b class="nc">&nbsp;			lang = new TranslatorLanguage();</b>
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		stream.close();</b>
+&nbsp;
+<b class="pc">&nbsp;		if( !lang.getName().isEmpty() &amp;&amp;</b>
+<b class="pc">&nbsp;			!lang.getAuthors().isEmpty()) {</b>
+&nbsp;			// we loaded a language file that seems pretty legit.
+<b class="fc">&nbsp;			languages.put(lang.getName(), lang);</b>
+<b class="fc">&nbsp;			return true;</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		return false;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param key name of key to find in translation list.  &lt;b&gt;Keys must be Strings, not variables&lt;/b&gt;.
+&nbsp;	 *            If you use a variable then the tests for missing and duplicate translations will not
+&nbsp;	 *            work in the distant future.
+&nbsp;	 * @return the translated value for key, or &quot;missing:key&quot;.
+&nbsp;	 */
+&nbsp;	public static String get(String key) {
+<b class="fc">&nbsp;		String translation = currentLanguageContainer.get(key);</b>
+<b class="fc">&nbsp;		if (translation == null) {</b>
+<b class="fc">&nbsp;			logger.warn(&quot;Missing translation &#39;{}&#39; in language &#39;{}&#39;&quot;, key, currentLanguage);</b>
+<b class="fc">&nbsp;			return MISSING +key;</b>
+&nbsp;		}
+<b class="fc">&nbsp;		return translation;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Translates a string and fills in some details.  String contains the special character sequence &quot;%N&quot;, where N is the n-th parameter passed to get()
+&nbsp;	 * A %1 is replaced with the first parameter, %2 with the second, and so on.  There is no escape character.
+&nbsp;	 * @param key name of key to find in translation list
+&nbsp;	 * @param params 
+&nbsp;	 * @return the translated value for key, or &quot;missing:key&quot;.
+&nbsp;	 */
+&nbsp;	public static String get(String key,String [] params) {
+<b class="fc">&nbsp;		String modified = get(key);</b>
+<b class="fc">&nbsp;		int n=1;</b>
+<b class="fc">&nbsp;		for(String p : params) {</b>
+<b class="fc">&nbsp;			modified = modified.replaceAll(&quot;%&quot;+n, p);</b>
+<b class="fc">&nbsp;			++n;</b>
+&nbsp;		}
+<b class="fc">&nbsp;		return modified;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return the list of language names
+&nbsp;	 */
+&nbsp;	public static String[] getLanguageList() {
+<b class="fc">&nbsp;		final String[] choices = new String[languages.keySet().size()];</b>
+<b class="fc">&nbsp;		final Object[] lang_keys = languages.keySet().toArray();</b>
+&nbsp;
+<b class="fc">&nbsp;		for (int i = 0; i &lt; lang_keys.length; ++i) {</b>
+<b class="fc">&nbsp;			choices[i] = (String) lang_keys[i];</b>
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		return choices;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param language the name of the language to make active.
+&nbsp;	 */
+&nbsp;	public static void setCurrentLanguage(String language) {
+<b class="fc">&nbsp;		currentLanguage = language;</b>
+<b class="fc">&nbsp;		currentLanguageContainer = languages.get(language);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return the index of the current language
+&nbsp;	 */
+&nbsp;	public static int getCurrentLanguageIndex() {
+<b class="fc">&nbsp;		String [] set = getLanguageList();</b>
+&nbsp;		// find the current language
+<b class="pc">&nbsp;		for( int i=0;i&lt;set.length; ++i) {</b>
+<b class="fc">&nbsp;			if( set[i].equals(Translator.currentLanguage)) return i;</b>
+&nbsp;		}
+&nbsp;		// now try the default
+<b class="nc">&nbsp;		for( int i=0;i&lt;set.length; ++i) {</b>
+<b class="nc">&nbsp;			if( set[i].equals(Translator.defaultLanguage)) return i;</b>
+&nbsp;		}
+&nbsp;		// failed both, return 0 for the first option.
+<b class="nc">&nbsp;		return 0;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

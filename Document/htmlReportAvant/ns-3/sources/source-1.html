@@ -1,0 +1,231 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > SerialConnection</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.communications.serial</a>
+</div>
+
+<h1>Coverage Summary for Class: SerialConnection (com.marginallyclever.communications.serial)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SerialConnection</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/42)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.communications.serial;
+&nbsp;
+&nbsp;import com.marginallyclever.communications.NetworkSession;
+&nbsp;import jssc.SerialPort;
+&nbsp;import jssc.SerialPortEvent;
+&nbsp;import jssc.SerialPortEventListener;
+&nbsp;import jssc.SerialPortException;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * Encapsulate all serial receive/transmit implementation
+&nbsp; *
+&nbsp; * @author Peter Colapietro
+&nbsp; * @since v7 (4/12/15)
+&nbsp; */
+&nbsp;public final class SerialConnection extends NetworkSession implements SerialPortEventListener {
+&nbsp;	public static final int BAUD_RATE = 250000;
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(SerialConnection.class);</b>
+&nbsp;
+&nbsp;	private SerialPort serialPort;
+<b class="nc">&nbsp;	private boolean portOpened = false;</b>
+<b class="nc">&nbsp;	private String inputBuffer = &quot;&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;	public SerialConnection() {}</b>
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void closeConnection() {
+<b class="nc">&nbsp;		if (portOpened) {</b>
+<b class="nc">&nbsp;			logger.debug(&quot;closed {}&quot;, getName());</b>
+<b class="nc">&nbsp;			if (serialPort != null) {</b>
+&nbsp;				try {
+<b class="nc">&nbsp;					serialPort.removeEventListener();</b>
+<b class="nc">&nbsp;					serialPort.closePort();</b>
+<b class="nc">&nbsp;				} catch (SerialPortException e) {</b>
+<b class="nc">&nbsp;					logger.error(&quot;Close failed&quot;, e);</b>
+&nbsp;				}
+&nbsp;			}
+<b class="nc">&nbsp;			portOpened = false;</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void openConnection(String portName) throws Exception {
+<b class="nc">&nbsp;		openConnection(portName, BAUD_RATE);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	// open a serial connection to a device.  We won&#39;t know it&#39;s the robot until
+&nbsp;	public void openConnection(String portName, int baud) throws Exception {
+<b class="nc">&nbsp;		if (portOpened) return;</b>
+&nbsp;
+<b class="nc">&nbsp;		closeConnection();</b>
+&nbsp;
+<b class="nc">&nbsp;		logger.debug(&quot;open {} @ {}&quot;, portName, baud);</b>
+&nbsp;
+&nbsp;		// open the port
+<b class="nc">&nbsp;		serialPort = new SerialPort(portName);</b>
+<b class="nc">&nbsp;		serialPort.openPort(); // Open serial port</b>
+<b class="nc">&nbsp;		serialPort.setParams(baud, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);</b>
+<b class="nc">&nbsp;		serialPort.setDTR(false);</b>
+<b class="nc">&nbsp;		serialPort.addEventListener(this);</b>
+&nbsp;
+<b class="nc">&nbsp;		setName(portName);</b>
+<b class="nc">&nbsp;		portOpened = true;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	// Deal with something robot has sent.
+&nbsp;	@Override
+&nbsp;	public void serialEvent(SerialPortEvent events) {
+&nbsp;		String rawInput, oneLine;
+&nbsp;		int x;
+&nbsp;
+<b class="nc">&nbsp;		if(!events.isRXCHAR()) return;</b>
+<b class="nc">&nbsp;		if(!portOpened) return;</b>
+<b class="nc">&nbsp;		int len =0 ;</b>
+&nbsp;		byte [] buffer;
+&nbsp;		try {
+<b class="nc">&nbsp;			len = events.getEventValue();</b>
+<b class="nc">&nbsp;			buffer = serialPort.readBytes(len);</b>
+<b class="nc">&nbsp;		} catch (SerialPortException e) {</b>
+&nbsp;			// uh oh
+&nbsp;			return;
+&nbsp;		}
+&nbsp;		
+<b class="nc">&nbsp;		if( len&lt;=0 ) return;</b>
+<b class="nc">&nbsp;		rawInput = new String(buffer,0,len);</b>
+<b class="nc">&nbsp;		inputBuffer+=rawInput;</b>
+&nbsp;		// each line ends with a \n.
+<b class="nc">&nbsp;		for( x=inputBuffer.indexOf(&quot;\n&quot;); x!=-1; x=inputBuffer.indexOf(&quot;\n&quot;) ) {</b>
+<b class="nc">&nbsp;			x=x+1;</b>
+<b class="nc">&nbsp;			oneLine = inputBuffer.substring(0,x);</b>
+<b class="nc">&nbsp;			inputBuffer = inputBuffer.substring(x);</b>
+<b class="nc">&nbsp;			notifyDataReceived(oneLine);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void sendMessage(String msg) throws Exception {
+<b class="nc">&nbsp;		if(!portOpened) return;</b>
+<b class="nc">&nbsp;		if(msg==null || msg.length()==0) return;</b>
+&nbsp;		
+<b class="nc">&nbsp;		serialPort.writeBytes(msg.getBytes());</b>
+<b class="nc">&nbsp;		notifyDataSent(msg);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return the port open for this serial connection.
+&nbsp;	 */
+&nbsp;	@Override
+&nbsp;	public boolean isOpen() {
+<b class="nc">&nbsp;		return portOpened;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

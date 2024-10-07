@@ -1,0 +1,161 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > LSystem</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart</a>
+</div>
+
+<h1>Coverage Summary for Class: LSystem (com.marginallyclever.makelangelo.makeart)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LSystem</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (13/13)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart;
+&nbsp;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;/**
+&nbsp; * Lindenmayer System (L System) processor.  Supply the axiom, the rules, and then `getResult(depth)`
+&nbsp; * See also &lt;a href=&#39;https://en.wikipedia.org/wiki/L-system#Examples_of_L-systems&#39;&gt;Procedural L Systems&lt;/a&gt;.
+&nbsp; * Does not understand context sensitive grammars, stochastic grammars, parametric grammars, or bi-directional grammars.
+&nbsp; * @author Dan Royer
+&nbsp; * @since 2022-08-03
+&nbsp; */
+&nbsp;public class LSystem {
+<b class="fc">&nbsp;    private final Map&lt;String,String&gt; rules = new HashMap&lt;&gt;();</b>
+&nbsp;    private final String axiom;
+&nbsp;
+&nbsp;    public LSystem(String axiom) {
+<b class="fc">&nbsp;        super();</b>
+<b class="fc">&nbsp;        this.axiom = axiom;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param from a String with one character.
+&nbsp;     * @param to any number of characters.
+&nbsp;     */
+&nbsp;    public void setRule(String from,String to) {
+<b class="fc">&nbsp;        rules.put(from,to);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getResult(int depth) {
+<b class="fc">&nbsp;        String result=axiom;</b>
+&nbsp;
+<b class="fc">&nbsp;        for(int i=0;i&lt;depth;++i) {</b>
+<b class="fc">&nbsp;            var sb = new StringBuilder();</b>
+<b class="fc">&nbsp;            for( int j=0;j&lt;result.length();++j) {</b>
+<b class="fc">&nbsp;                String b = result.substring(j,j+1);</b>
+<b class="fc">&nbsp;                String to = rules.get(b);</b>
+<b class="fc">&nbsp;                sb.append(to==null ? b : to);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            result = sb.toString();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,301 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > W3CColorNames</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.convenience</a>
+</div>
+
+<h1>Coverage Summary for Class: W3CColorNames (com.marginallyclever.convenience)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">W3CColorNames</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (2/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.7%
+  </span>
+  <span class="absValue">
+    (153/155)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.convenience;
+&nbsp;
+&nbsp;import java.awt.*;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;/**
+&nbsp; * W3C web colors, basic and extended.
+&nbsp; * obtained from many places like https://www.w3.org/TR/css-color-3/, https://www.w3.org/wiki/CSS/Properties/color/keywords
+&nbsp; * @author Dan Royer
+&nbsp; * @since 2022-04-25
+&nbsp; */
+<b class="nc">&nbsp;public class W3CColorNames {</b>
+<b class="fc">&nbsp;    private static final Map&lt;String, Color&gt; map = new HashMap&lt;&gt;();</b>
+&nbsp;    static {
+<b class="fc">&nbsp;        map.put(&quot;aliceblue&quot;,new Color(0xF0,0xF8,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;antiquewhite&quot;,new Color(0xFA,0xEB,0xD7));</b>
+<b class="fc">&nbsp;        map.put(&quot;aqua&quot;,new Color(0x00,0xFF,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;aquamarine&quot;,new Color(0x7F,0xFF,0xD4));</b>
+<b class="fc">&nbsp;        map.put(&quot;azure&quot;,new Color(0xF0,0xFF,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;beige&quot;,new Color(0xF5,0xF5,0xDC));</b>
+<b class="fc">&nbsp;        map.put(&quot;bisque&quot;,new Color(0xFF,0xE4,0xC4));</b>
+<b class="fc">&nbsp;        map.put(&quot;black&quot;,new Color(0x00,0x00,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;blanchedalmond&quot;,new Color(0xFF,0xEB,0xCD));</b>
+<b class="fc">&nbsp;        map.put(&quot;blue&quot;,new Color(0x00,0x00,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;blueviolet&quot;,new Color(0x8A,0x2B,0xE2));</b>
+<b class="fc">&nbsp;        map.put(&quot;brown&quot;,new Color(0xA5,0x2A,0x2A));</b>
+<b class="fc">&nbsp;        map.put(&quot;burlywood&quot;,new Color(0xDE,0xB8,0x87));</b>
+<b class="fc">&nbsp;        map.put(&quot;cadetblue&quot;,new Color(0x5F,0x9E,0xA0));</b>
+<b class="fc">&nbsp;        map.put(&quot;chartreuse&quot;,new Color(0x7F,0xFF,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;chocolate&quot;,new Color(0xD2,0x69,0x1E));</b>
+<b class="fc">&nbsp;        map.put(&quot;coral&quot;,new Color(0xFF,0x7F,0x50));</b>
+<b class="fc">&nbsp;        map.put(&quot;cornflowerblue&quot;,new Color(0x64,0x95,0xED));</b>
+<b class="fc">&nbsp;        map.put(&quot;cornsilk&quot;,new Color(0xFF,0xF8,0xDC));</b>
+<b class="fc">&nbsp;        map.put(&quot;crimson&quot;,new Color(0xDC,0x14,0x3C));</b>
+<b class="fc">&nbsp;        map.put(&quot;cyan&quot;,new Color(0x00,0xFF,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkblue&quot;,new Color(0x00,0x00,0x8B));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkcyan&quot;,new Color(0x00,0x8B,0x8B));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkgoldenrod&quot;,new Color(0xB8,0x86,0x0B));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkgray&quot;,new Color(0xA9,0xA9,0xA9));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkgrey&quot;,new Color(0xA9,0xA9,0xA9));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkgreen&quot;,new Color(0x00,0x64,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkkhaki&quot;,new Color(0xBD,0xB7,0x6B));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkmagenta&quot;,new Color(0x8B,0x00,0x8B));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkolivegreen&quot;,new Color(0x55,0x6B,0x2F));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkorange&quot;,new Color(0xFF,0x8C,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkorchid&quot;,new Color(0x99,0x32,0xCC));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkred&quot;,new Color(0x8B,0x00,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;darksalmon&quot;,new Color(0xE9,0x96,0x7A));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkseagreen&quot;,new Color(0x8F,0xBC,0x8F));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkslateblue&quot;,new Color(0x48,0x3D,0x8B));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkslategray&quot;,new Color(0x2F,0x4F,0x4F));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkslategrey&quot;,new Color(0x2F,0x4F,0x4F));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkturquoise&quot;,new Color(0x00,0xCE,0xD1));</b>
+<b class="fc">&nbsp;        map.put(&quot;darkviolet&quot;,new Color(0x94,0x00,0xD3));</b>
+<b class="fc">&nbsp;        map.put(&quot;deeppink&quot;,new Color(0xFF,0x14,0x93));</b>
+<b class="fc">&nbsp;        map.put(&quot;deepskyblue&quot;,new Color(0x00,0xBF,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;dimgray&quot;,new Color(0x69,0x69,0x69));</b>
+<b class="fc">&nbsp;        map.put(&quot;dimgrey&quot;,new Color(0x69,0x69,0x69));</b>
+<b class="fc">&nbsp;        map.put(&quot;dodgerblue&quot;,new Color(0x1E,0x90,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;firebrick&quot;,new Color(0xB2,0x22,0x22));</b>
+<b class="fc">&nbsp;        map.put(&quot;floralwhite&quot;,new Color(0xFF,0xFA,0xF0));</b>
+<b class="fc">&nbsp;        map.put(&quot;forestgreen&quot;,new Color(0x22,0x8B,0x22));</b>
+<b class="fc">&nbsp;        map.put(&quot;fuchsia&quot;,new Color(0xFF,0x00,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;gainsboro&quot;,new Color(0xDC,0xDC,0xDC));</b>
+<b class="fc">&nbsp;        map.put(&quot;ghostwhite&quot;,new Color(0xF8,0xF8,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;gold&quot;,new Color(0xFF,0xD7,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;goldenrod&quot;,new Color(0xDA,0xA5,0x20));</b>
+<b class="fc">&nbsp;        map.put(&quot;gray&quot;,new Color(0x80,0x80,0x80));</b>
+<b class="fc">&nbsp;        map.put(&quot;grey&quot;,new Color(0x80,0x80,0x80));</b>
+<b class="fc">&nbsp;        map.put(&quot;green&quot;,new Color(0x00,0x80,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;greenyellow&quot;,new Color(0xAD,0xFF,0x2F));</b>
+<b class="fc">&nbsp;        map.put(&quot;honeydew&quot;,new Color(0xF0,0xFF,0xF0));</b>
+<b class="fc">&nbsp;        map.put(&quot;hotpink&quot;,new Color(0xFF,0x69,0xB4));</b>
+<b class="fc">&nbsp;        map.put(&quot;indianred&quot;,new Color(0xCD,0x5C,0x5C));</b>
+<b class="fc">&nbsp;        map.put(&quot;indigo&quot;,new Color(0x4B,0x00,0x82));</b>
+<b class="fc">&nbsp;        map.put(&quot;ivory&quot;,new Color(0xFF,0xFF,0xF0));</b>
+<b class="fc">&nbsp;        map.put(&quot;khaki&quot;,new Color(0xF0,0xE6,0x8C));</b>
+<b class="fc">&nbsp;        map.put(&quot;lavender&quot;,new Color(0xE6,0xE6,0xFA));</b>
+<b class="fc">&nbsp;        map.put(&quot;lavenderblush&quot;,new Color(0xFF,0xF0,0xF5));</b>
+<b class="fc">&nbsp;        map.put(&quot;lawngreen&quot;,new Color(0x7C,0xFC,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;lemonchiffon&quot;,new Color(0xFF,0xFA,0xCD));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightblue&quot;,new Color(0xAD,0xD8,0xE6));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightcoral&quot;,new Color(0xF0,0x80,0x80));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightcyan&quot;,new Color(0xE0,0xFF,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightgoldenrodyellow&quot;,new Color(0xFA,0xFA,0xD2));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightgray&quot;,new Color(0xD3,0xD3,0xD3));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightgrey&quot;,new Color(0xD3,0xD3,0xD3));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightgreen&quot;,new Color(0x90,0xEE,0x90));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightpink&quot;,new Color(0xFF,0xB6,0xC1));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightsalmon&quot;,new Color(0xFF,0xA0,0x7A));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightseagreen&quot;,new Color(0x20,0xB2,0xAA));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightskyblue&quot;,new Color(0x87,0xCE,0xFA));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightslategray&quot;,new Color(0x77,0x88,0x99));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightslategrey&quot;,new Color(0x77,0x88,0x99));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightsteelblue&quot;,new Color(0xB0,0xC4,0xDE));</b>
+<b class="fc">&nbsp;        map.put(&quot;lightyellow&quot;,new Color(0xFF,0xFF,0xE0));</b>
+<b class="fc">&nbsp;        map.put(&quot;lime&quot;,new Color(0x00,0xFF,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;limegreen&quot;,new Color(0x32,0xCD,0x32));</b>
+<b class="fc">&nbsp;        map.put(&quot;linen&quot;,new Color(0xFA,0xF0,0xE6));</b>
+<b class="fc">&nbsp;        map.put(&quot;magenta&quot;,new Color(0xFF,0x00,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;maroon&quot;,new Color(0x80,0x00,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;mediumaquamarine&quot;,new Color(0x66,0xCD,0xAA));</b>
+<b class="fc">&nbsp;        map.put(&quot;mediumblue&quot;,new Color(0x00,0x00,0xCD));</b>
+<b class="fc">&nbsp;        map.put(&quot;mediumorchid&quot;,new Color(0xBA,0x55,0xD3));</b>
+<b class="fc">&nbsp;        map.put(&quot;mediumpurple&quot;,new Color(0x93,0x70,0xDB));</b>
+<b class="fc">&nbsp;        map.put(&quot;mediumseagreen&quot;,new Color(0x3C,0xB3,0x71));</b>
+<b class="fc">&nbsp;        map.put(&quot;mediumslateblue&quot;,new Color(0x7B,0x68,0xEE));</b>
+<b class="fc">&nbsp;        map.put(&quot;mediumspringgreen&quot;,new Color(0x00,0xFA,0x9A));</b>
+<b class="fc">&nbsp;        map.put(&quot;mediumturquoise&quot;,new Color(0x48,0xD1,0xCC));</b>
+<b class="fc">&nbsp;        map.put(&quot;mediumvioletred&quot;,new Color(0xC7,0x15,0x85));</b>
+<b class="fc">&nbsp;        map.put(&quot;midnightblue&quot;,new Color(0x19,0x19,0x70));</b>
+<b class="fc">&nbsp;        map.put(&quot;mintcream&quot;,new Color(0xF5,0xFF,0xFA));</b>
+<b class="fc">&nbsp;        map.put(&quot;mistyrose&quot;,new Color(0xFF,0xE4,0xE1));</b>
+<b class="fc">&nbsp;        map.put(&quot;moccasin&quot;,new Color(0xFF,0xE4,0xB5));</b>
+<b class="fc">&nbsp;        map.put(&quot;navajowhite&quot;,new Color(0xFF,0xDE,0xAD));</b>
+<b class="fc">&nbsp;        map.put(&quot;navy&quot;,new Color(0x00,0x00,0x80));</b>
+<b class="fc">&nbsp;        map.put(&quot;oldlace&quot;,new Color(0xFD,0xF5,0xE6));</b>
+<b class="fc">&nbsp;        map.put(&quot;olive&quot;,new Color(0x80,0x80,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;olivedrab&quot;,new Color(0x6B,0x8E,0x23));</b>
+<b class="fc">&nbsp;        map.put(&quot;orange&quot;,new Color(0xFF,0xA5,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;orangered&quot;,new Color(0xFF,0x45,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;orchid&quot;,new Color(0xDA,0x70,0xD6));</b>
+<b class="fc">&nbsp;        map.put(&quot;palegoldenrod&quot;,new Color(0xEE,0xE8,0xAA));</b>
+<b class="fc">&nbsp;        map.put(&quot;palegreen&quot;,new Color(0x98,0xFB,0x98));</b>
+<b class="fc">&nbsp;        map.put(&quot;paleturquoise&quot;,new Color(0xAF,0xEE,0xEE));</b>
+<b class="fc">&nbsp;        map.put(&quot;palevioletred&quot;,new Color(0xDB,0x70,0x93));</b>
+<b class="fc">&nbsp;        map.put(&quot;papayawhip&quot;,new Color(0xFF,0xEF,0xD5));</b>
+<b class="fc">&nbsp;        map.put(&quot;peachpuff&quot;,new Color(0xFF,0xDA,0xB9));</b>
+<b class="fc">&nbsp;        map.put(&quot;peru&quot;,new Color(0xCD,0x85,0x3F));</b>
+<b class="fc">&nbsp;        map.put(&quot;pink&quot;,new Color(0xFF,0xC0,0xCB));</b>
+<b class="fc">&nbsp;        map.put(&quot;plum&quot;,new Color(0xDD,0xA0,0xDD));</b>
+<b class="fc">&nbsp;        map.put(&quot;powderblue&quot;,new Color(0xB0,0xE0,0xE6));</b>
+<b class="fc">&nbsp;        map.put(&quot;purple&quot;,new Color(0x80,0x00,0x80));</b>
+<b class="fc">&nbsp;        map.put(&quot;rebeccapurple&quot;,new Color(0x66,0x33,0x99));</b>
+<b class="fc">&nbsp;        map.put(&quot;red&quot;,new Color(0xFF,0x00,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;rosybrown&quot;,new Color(0xBC,0x8F,0x8F));</b>
+<b class="fc">&nbsp;        map.put(&quot;royalblue&quot;,new Color(0x41,0x69,0xE1));</b>
+<b class="fc">&nbsp;        map.put(&quot;saddlebrown&quot;,new Color(0x8B,0x45,0x13));</b>
+<b class="fc">&nbsp;        map.put(&quot;salmon&quot;,new Color(0xFA,0x80,0x72));</b>
+<b class="fc">&nbsp;        map.put(&quot;sandybrown&quot;,new Color(0xF4,0xA4,0x60));</b>
+<b class="fc">&nbsp;        map.put(&quot;seagreen&quot;,new Color(0x2E,0x8B,0x57));</b>
+<b class="fc">&nbsp;        map.put(&quot;seashell&quot;,new Color(0xFF,0xF5,0xEE));</b>
+<b class="fc">&nbsp;        map.put(&quot;sienna&quot;,new Color(0xA0,0x52,0x2D));</b>
+<b class="fc">&nbsp;        map.put(&quot;silver&quot;,new Color(0xC0,0xC0,0xC0));</b>
+<b class="fc">&nbsp;        map.put(&quot;skyblue&quot;,new Color(0x87,0xCE,0xEB));</b>
+<b class="fc">&nbsp;        map.put(&quot;slateblue&quot;,new Color(0x6A,0x5A,0xCD));</b>
+<b class="fc">&nbsp;        map.put(&quot;slategray&quot;,new Color(0x70,0x80,0x90));</b>
+<b class="fc">&nbsp;        map.put(&quot;slategrey&quot;,new Color(0x70,0x80,0x90));</b>
+<b class="fc">&nbsp;        map.put(&quot;snow&quot;,new Color(0xFF,0xFA,0xFA));</b>
+<b class="fc">&nbsp;        map.put(&quot;springgreen&quot;,new Color(0x00,0xFF,0x7F));</b>
+<b class="fc">&nbsp;        map.put(&quot;steelblue&quot;,new Color(0x46,0x82,0xB4));</b>
+<b class="fc">&nbsp;        map.put(&quot;tan&quot;,new Color(0xD2,0xB4,0x8C));</b>
+<b class="fc">&nbsp;        map.put(&quot;teal&quot;,new Color(0x00,0x80,0x80));</b>
+<b class="fc">&nbsp;        map.put(&quot;thistle&quot;,new Color(0xD8,0xBF,0xD8));</b>
+<b class="fc">&nbsp;        map.put(&quot;tomato&quot;,new Color(0xFF,0x63,0x47));</b>
+<b class="fc">&nbsp;        map.put(&quot;turquoise&quot;,new Color(0x40,0xE0,0xD0));</b>
+<b class="fc">&nbsp;        map.put(&quot;violet&quot;,new Color(0xEE,0x82,0xEE));</b>
+<b class="fc">&nbsp;        map.put(&quot;wheat&quot;,new Color(0xF5,0xDE,0xB3));</b>
+<b class="fc">&nbsp;        map.put(&quot;white&quot;,new Color(0xFF,0xFF,0xFF));</b>
+<b class="fc">&nbsp;        map.put(&quot;whitesmoke&quot;,new Color(0xF5,0xF5,0xF5));</b>
+<b class="fc">&nbsp;        map.put(&quot;yellow&quot;,new Color(0xFF,0xFF,0x00));</b>
+<b class="fc">&nbsp;        map.put(&quot;yellowgreen&quot;,new Color(0x9A,0xCD,0x32));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param name
+&nbsp;     * @return Color matching name, or null if no match.
+&nbsp;     */
+&nbsp;    public static Color get(String name) {
+<b class="nc">&nbsp;        return map.get(name);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param match the color to matcch
+&nbsp;     * @return the name matching the given color, or null if no match.
+&nbsp;     */
+&nbsp;    public static String get(Color match) {
+<b class="fc">&nbsp;        for(String key: map.keySet()) {</b>
+<b class="fc">&nbsp;            Color c = map.get(key);</b>
+<b class="fc">&nbsp;            if(c.equals(match)) return key;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

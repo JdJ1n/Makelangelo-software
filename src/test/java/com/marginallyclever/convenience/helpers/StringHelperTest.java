@@ -12,7 +12,7 @@ public class StringHelperTest {
             "1.23456, 1.235",
             "0.12345, 0.123",
             "-1.23456, -1.235"
-    })
+    }) // Arrange
     public void testFormatFloat(float input, String expected) {
         // Act
         String result = StringHelper.formatFloat(input);
@@ -27,7 +27,7 @@ public class StringHelperTest {
             "'hello', 10, 'hello     '",
             "'world', 8, 'world   '",
             "'java', 6, 'java  '"
-    })
+    }) // Arrange
     public void testPadRight(String input, int length, String expected) {
         // Act
         String result = StringHelper.padRight(input, length);
@@ -43,7 +43,7 @@ public class StringHelperTest {
             "7322, '02:02:02'",
             "86400, '00:00:24'",
             "86424, '00:00:24'"
-    })
+    }) // Arrange
     public void testGetElapsedTime(int seconds, String expected) {
         // Act
         String result = StringHelper.getElapsedTime(seconds);

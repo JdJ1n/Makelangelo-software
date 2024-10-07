@@ -1,0 +1,190 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > RobotUID</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.plotter</a>
+</div>
+
+<h1>Coverage Summary for Class: RobotUID (com.marginallyclever.makelangelo.plotter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RobotUID</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/27)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.plotter;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.CommandLineOptions;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.BufferedReader;
+&nbsp;import java.io.InputStreamReader;
+&nbsp;import java.net.URL;
+&nbsp;import java.net.URLConnection;
+&nbsp;
+&nbsp;/**
+&nbsp; * Was used in Makelangelo-firmware to get the GUID from the arduino board.
+&nbsp; * If the number was zero, it would request a new number from the Marginally Clever url.
+&nbsp; * This way Marginally Clever could track how many new machines were being made over time.
+&nbsp; * Kept for historical reasons.
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;@Deprecated
+<b class="nc">&nbsp;public class RobotUID {</b>
+&nbsp;
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(RobotUID.class);</b>
+&nbsp;
+&nbsp;	public static long findOrCreateUID(String line) {
+<b class="nc">&nbsp;		long newUID = -1;</b>
+&nbsp;		
+&nbsp;		// try to get the UID in the line
+<b class="nc">&nbsp;		String[] lines = line.split(&quot;\\r?\\n&quot;);</b>
+<b class="nc">&nbsp;		if (lines.length &gt; 0) {</b>
+&nbsp;			try {
+<b class="nc">&nbsp;				newUID = Long.parseLong(lines[0]);</b>
+<b class="nc">&nbsp;				logger.debug(&quot;UID found: {}&quot;, newUID);</b>
+<b class="nc">&nbsp;			} catch (NumberFormatException e) {</b>
+<b class="nc">&nbsp;				logger.error(&quot;UID parsing failed. line={}, error={}&quot;, lines[0], e.getMessage());</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+&nbsp;		// new robots have UID&lt;=0
+<b class="nc">&nbsp;		if(newUID &lt;= 0) newUID = getNewRobotUID();</b>
+&nbsp;		
+<b class="nc">&nbsp;		return newUID;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	// based on http://www.exampledepot.com/egs/java.net/Post.html
+&nbsp;	private static long getNewRobotUID() {
+<b class="nc">&nbsp;		long newUID = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;		boolean pleaseGetAGUID = !CommandLineOptions.hasOption(&quot;-noguid&quot;);</b>
+<b class="nc">&nbsp;		if (!pleaseGetAGUID)</b>
+<b class="nc">&nbsp;			return 0;</b>
+&nbsp;
+<b class="nc">&nbsp;		logger.debug(&quot;obtaining UID from server.&quot;);</b>
+&nbsp;		try {
+&nbsp;			// Send request
+<b class="nc">&nbsp;			URL url = new URL(&quot;https://www.marginallyclever.com/drawbot_getuid.php&quot;);</b>
+<b class="nc">&nbsp;			URLConnection conn = url.openConnection();</b>
+&nbsp;			// get results
+<b class="nc">&nbsp;			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));</b>
+<b class="nc">&nbsp;			String line = rd.readLine();</b>
+<b class="nc">&nbsp;			logger.debug(&quot;Server says: &#39;{}&#39;&quot;, line);</b>
+<b class="nc">&nbsp;			newUID = Long.parseLong(line);</b>
+<b class="nc">&nbsp;			if (newUID != 0) {</b>
+&nbsp;				//plottersettings.createNewUID(newUID);
+&nbsp;			}
+&nbsp;			
+<b class="nc">&nbsp;		} catch (Exception e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Error from server&quot;, e);</b>
+<b class="nc">&nbsp;			return 0;</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		return newUID;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

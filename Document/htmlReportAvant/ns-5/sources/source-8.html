@@ -1,0 +1,314 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > ConvexHull</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.convenience</a>
+</div>
+
+<h1>Coverage Summary for Class: ConvexHull (com.marginallyclever.convenience)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ConvexHull</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    65%
+  </span>
+  <span class="absValue">
+    (13/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    65.4%
+  </span>
+  <span class="absValue">
+    (34/52)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    70.9%
+  </span>
+  <span class="absValue">
+    (61/86)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.convenience;
+&nbsp;
+&nbsp;import com.jogamp.opengl.GL2;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.vecmath.Vector2d;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * Convex hull algorithm.
+&nbsp; * @author Dan Royer
+&nbsp; * @since 2022-04-06
+&nbsp; */
+&nbsp;public class ConvexHull {
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(ConvexHull.class);</b>
+<b class="fc">&nbsp;    private final ArrayList&lt;Vector2d&gt; points = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="fc">&nbsp;    public ConvexHull() {}</b>
+&nbsp;
+<b class="nc">&nbsp;    public ConvexHull(ArrayList&lt;Vector2d&gt; points) {</b>
+<b class="nc">&nbsp;        set(points);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void add(Vector2d p) {
+<b class="fc">&nbsp;        int s = points.size();</b>
+<b class="fc">&nbsp;        if(s&lt;2) points.add(p);</b>
+<b class="fc">&nbsp;        else if(s&lt;3) addThirdPointClockwise(p);</b>
+<b class="fc">&nbsp;        else if(!contains(p)) {</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                addPointCarefully(p);</b>
+<b class="nc">&nbsp;            } catch(Exception e) {</b>
+<b class="nc">&nbsp;                logger.error(&quot;addPointCarefully() failure.&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public void clear() {
+<b class="nc">&nbsp;        points.clear();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Rectangle2D getBounds() {
+<b class="nc">&nbsp;        Rectangle2D bounds = new Rectangle2D.Double();</b>
+<b class="nc">&nbsp;        if(!points.isEmpty()) {</b>
+<b class="nc">&nbsp;            Vector2d p = points.get(0);</b>
+<b class="nc">&nbsp;            bounds.setRect(p.x,p.y,0,0);</b>
+<b class="nc">&nbsp;            for(Vector2d p2 : points) {</b>
+<b class="nc">&nbsp;                bounds.add(p2.x,p2.y);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return bounds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void set(List&lt;Vector2d&gt; points) {
+<b class="fc">&nbsp;        this.points.clear();</b>
+<b class="fc">&nbsp;        this.points.addAll(points);</b>
+<b class="fc">&nbsp;        rebuildHull();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The hull can be described as a fan of triangles all sharing p0.
+&nbsp;     * if p is inside any of the triangles then it is inside the fan.
+&nbsp;     * @param p the point
+&nbsp;     * @return true if inside the fan.
+&nbsp;     */
+&nbsp;    public boolean contains(Vector2d p) {
+<b class="pc">&nbsp;        if(points.size()&lt;3) return false;</b>
+&nbsp;
+<b class="fc">&nbsp;        Vector2d a= points.get(0);</b>
+<b class="fc">&nbsp;        int s = points.size();</b>
+<b class="fc">&nbsp;        for(int i=0;i&lt;s;++i) {</b>
+<b class="fc">&nbsp;            int j=(i+1)%s;</b>
+<b class="fc">&nbsp;            Vector2d b= points.get(j);</b>
+<b class="fc">&nbsp;            if(pointIsOnTheLeft(p, a, b)) return false;</b>
+<b class="fc">&nbsp;            a=b;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void addThirdPointClockwise(Vector2d c) {
+<b class="fc">&nbsp;        Vector2d a= points.get(0);</b>
+<b class="fc">&nbsp;        Vector2d b= points.get(1);</b>
+<b class="pc">&nbsp;        if(pointIsOnTheLeft(c,a,b)) points.add(1, c);	// new order is acb</b>
+<b class="fc">&nbsp;        else points.add( c);	// new order is abc</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean pointIsOnTheLeft(Vector2d c,Vector2d a,Vector2d b) {
+<b class="fc">&nbsp;        Vector2d d=new Vector2d();</b>
+<b class="fc">&nbsp;        Vector2d e=new Vector2d();</b>
+&nbsp;
+<b class="fc">&nbsp;        d.sub(b,a);</b>
+<b class="fc">&nbsp;        d=orthogonalXY(d);</b>
+<b class="fc">&nbsp;        e.sub(c,a);</b>
+&nbsp;
+<b class="fc">&nbsp;        return d.dot(e)&gt;0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * See &lt;a href=&quot;https://en.wikipedia.org/wiki/Gift_wrapping_algorithm&quot;&gt;Gift wrapping algorithm&lt;/a&gt;
+&nbsp;     * @param p the point to add
+&nbsp;     */
+&nbsp;    private void addPointCarefully(Vector2d p) {
+<b class="fc">&nbsp;        points.add(p);</b>
+<b class="fc">&nbsp;        rebuildHull();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void rebuildHull() {
+<b class="fc">&nbsp;        ArrayList&lt;Vector2d&gt; toKeep = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        int hullSize = points.size();</b>
+<b class="pc">&nbsp;        if(hullSize&lt;=3) return;</b>
+&nbsp;
+<b class="fc">&nbsp;        Vector2d pointOnHull = getPointGuaranteedOnEdgeOfHull();</b>
+<b class="fc">&nbsp;        Vector2d firstPoint = pointOnHull;</b>
+&nbsp;        Vector2d endPoint;
+&nbsp;        do {
+<b class="fc">&nbsp;            toKeep.add(pointOnHull);</b>
+<b class="fc">&nbsp;            endPoint = points.get(0);</b>
+<b class="fc">&nbsp;            for( Vector2d b : points) {</b>
+<b class="fc">&nbsp;                if(endPoint == pointOnHull || pointIsOnTheLeft(b, pointOnHull, endPoint)) {</b>
+<b class="fc">&nbsp;                    endPoint = b;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="fc">&nbsp;            pointOnHull = endPoint;</b>
+<b class="fc">&nbsp;            hullSize--;</b>
+<b class="pc">&nbsp;        } while(endPoint!=firstPoint &amp;&amp; hullSize&gt;=0);</b>
+&nbsp;
+<b class="pc">&nbsp;        if(toKeep.size()&lt;3) {</b>
+<b class="nc">&nbsp;            throw new IndexOutOfBoundsException(&quot;Algorithm failed.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        points.clear();</b>
+<b class="fc">&nbsp;        points.addAll(toKeep);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Vector2d getPointGuaranteedOnEdgeOfHull() {
+&nbsp;        // first is left-most point in the set.
+<b class="fc">&nbsp;        Vector2d pointOnHull = points.get(0);</b>
+<b class="fc">&nbsp;        for( Vector2d n : points) {</b>
+<b class="fc">&nbsp;            if(pointOnHull.x&gt;n.x) pointOnHull=n;</b>
+<b class="fc">&nbsp;            else if(pointOnHull.x==n.x) {</b>
+&nbsp;                // two matching x, find the smallest y
+<b class="pc">&nbsp;                if(pointOnHull.y&gt;n.y) pointOnHull=n;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return pointOnHull;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @SuppressWarnings(&quot;unused&quot;)
+&nbsp;    public Vector2d getCenterOfHull() {
+<b class="fc">&nbsp;        Vector2d center = new Vector2d();</b>
+&nbsp;
+<b class="fc">&nbsp;        int s = points.size();</b>
+<b class="fc">&nbsp;        for (Vector2d point : points) center.add(point);</b>
+<b class="fc">&nbsp;        center.scale(1.0/(double)s);</b>
+&nbsp;
+<b class="fc">&nbsp;        return center;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Is point p inside triangle abc?  Works with clockwise and counter-clockwise triangles.
+&nbsp;    @SuppressWarnings(&quot;unused&quot;)
+&nbsp;    private boolean pointIsInTriangleXY(Vector2d p, Vector2d a, Vector2d b, Vector2d c) {
+<b class="nc">&nbsp;        boolean r0 = pointIsOnTheLeft(p, a, b);</b>
+<b class="nc">&nbsp;        boolean r1 = pointIsOnTheLeft(p, b, c);</b>
+<b class="nc">&nbsp;        if(r0!=r1) return false;</b>
+<b class="nc">&nbsp;        boolean r2 = pointIsOnTheLeft(p, c, a);</b>
+<b class="nc">&nbsp;        return (r0==r2);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Vector2d orthogonalXY(Vector2d d) {
+<b class="fc">&nbsp;        return new Vector2d(d.y,-d.x);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void renderAsFan(GL2 gl2) {
+<b class="nc">&nbsp;        gl2.glBegin(GL2.GL_TRIANGLE_FAN);</b>
+<b class="nc">&nbsp;        for( Vector2d p : points) gl2.glVertex2d(p.x,p.y);</b>
+<b class="nc">&nbsp;        gl2.glEnd();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void renderAsLineLoop(GL2 gl2) {
+<b class="nc">&nbsp;        gl2.glBegin(GL2.GL_LINE_LOOP);</b>
+<b class="nc">&nbsp;        for( Vector2d p : points) gl2.glVertex2d(p.x,p.y);</b>
+<b class="nc">&nbsp;        gl2.glEnd();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        return &quot;ConvexHull{&quot; +</b>
+&nbsp;                &quot;hull=&quot; + points +
+&nbsp;                &#39;}&#39;;
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Vector2d&gt; getPoints() {
+<b class="nc">&nbsp;        return points;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

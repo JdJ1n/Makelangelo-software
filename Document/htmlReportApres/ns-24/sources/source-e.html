@@ -1,0 +1,194 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > SelectReadOnlyText</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.select</a>
+</div>
+
+<h1>Coverage Summary for Class: SelectReadOnlyText (com.marginallyclever.makelangelo.select)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SelectReadOnlyText</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    40.6%
+  </span>
+  <span class="absValue">
+    (13/32)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.select;
+&nbsp;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.swing.*;
+&nbsp;import javax.swing.event.HyperlinkEvent;
+&nbsp;import java.awt.*;
+&nbsp;import java.io.IOException;
+&nbsp;import java.net.URI;
+&nbsp;import java.net.URISyntaxException;
+&nbsp;
+&nbsp;/**
+&nbsp; * Read only JEditorPane with an HyperlinkListener for text/html, contening or not, multiple html link.
+&nbsp; * With clickable link (Desktop.BROWSE) and ToolTips when hovered over.
+&nbsp; * 
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.24.0
+&nbsp; */
+&nbsp;public class SelectReadOnlyText extends Select {
+<b class="fc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(SelectReadOnlyText.class);</b>
+&nbsp;
+&nbsp;	public SelectReadOnlyText(String internalName,String labelKey) {
+<b class="fc">&nbsp;		super(internalName);</b>
+&nbsp;
+<b class="fc">&nbsp;		JEditorPane jEdPane = createJEditorPaneWithHyperlinkListenerAndToolTipsForDesktopBrowse(&quot;&lt;html&gt;&quot; + labelKey + &quot;&lt;/html&gt;&quot;);</b>
+<b class="fc">&nbsp;		this.add(jEdPane,BorderLayout.CENTER);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Create a JEditorPane not editable for text/html contente, with an HyperLinkListener to Desktop Browse (when clicked) and show a ToolTips with the URL hovered.
+&nbsp;	 * @param sToSetAsTextToTheHtmlEditorPane
+&nbsp;	 * @return 
+&nbsp;	 */
+&nbsp;	public static JEditorPane createJEditorPaneWithHyperlinkListenerAndToolTipsForDesktopBrowse(String sToSetAsTextToTheHtmlEditorPane) {
+<b class="fc">&nbsp;		JEditorPane createdJEditorPane =  new JEditorPane();</b>
+<b class="fc">&nbsp;		createdJEditorPane.setEditable(false);</b>
+<b class="fc">&nbsp;		createdJEditorPane.setOpaque(false);</b>
+<b class="fc">&nbsp;		createdJEditorPane.setContentType(&quot;text/html&quot;);</b>
+<b class="fc">&nbsp;		createdJEditorPane.setText(sToSetAsTextToTheHtmlEditorPane);</b>
+<b class="fc">&nbsp;		createdJEditorPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);</b>
+<b class="fc">&nbsp;		createdJEditorPane.setFont(UIManager.getFont(&quot;Label.font&quot;));</b>
+<b class="fc">&nbsp;		createdJEditorPane.addHyperlinkListener((HyperlinkEvent hyperlinkEvent) -&gt; reactToHyperlink(hyperlinkEvent,createdJEditorPane));</b>
+<b class="fc">&nbsp;		return createdJEditorPane;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private static void reactToHyperlink(HyperlinkEvent hyperlinkEvent,JEditorPane createdJEditorPane) {
+<b class="nc">&nbsp;		HyperlinkEvent.EventType eventType = hyperlinkEvent.getEventType();</b>
+<b class="nc">&nbsp;		if(eventType == HyperlinkEvent.EventType.ACTIVATED) {</b>
+<b class="nc">&nbsp;			if (Desktop.isDesktopSupported()) {</b>
+&nbsp;				try {
+<b class="nc">&nbsp;					URI u = hyperlinkEvent.getURL().toURI();</b>
+<b class="nc">&nbsp;					Desktop desktop = Desktop.getDesktop();</b>
+<b class="nc">&nbsp;					if (desktop.isSupported(Desktop.Action.BROWSE)) {</b>
+<b class="nc">&nbsp;						logger.debug(&quot;Desktop.Action.BROWSE {}&quot;, u);</b>
+<b class="nc">&nbsp;						desktop.browse(u);</b>
+&nbsp;					} else {
+<b class="nc">&nbsp;						logger.error(&quot;Desktop.Action.BROWSE not supported. Cant browse {}&quot;, u);</b>
+&nbsp;					}
+<b class="nc">&nbsp;				} catch (IOException | URISyntaxException e) {</b>
+<b class="nc">&nbsp;					logger.error(&quot;Failed to open the browser to the url&quot;, e);</b>
+&nbsp;				}
+&nbsp;			} else {
+<b class="nc">&nbsp;				logger.error(&quot;Desktop not supported. Cant browse {}&quot;, hyperlinkEvent.getURL());</b>
+&nbsp;			}
+<b class="nc">&nbsp;		} else if(eventType == HyperlinkEvent.EventType.ENTERED) {</b>
+<b class="nc">&nbsp;			if (!(hyperlinkEvent.getURL() == null || hyperlinkEvent.getURL().toString().isEmpty())) {</b>
+<b class="nc">&nbsp;				createdJEditorPane.setToolTipText(hyperlinkEvent.getURL().toExternalForm());</b>
+&nbsp;
+&nbsp;				// TODO should be set at the starting of the application
+<b class="nc">&nbsp;				ToolTipManager.sharedInstance().setInitialDelay(0);</b>
+<b class="nc">&nbsp;				ToolTipManager.sharedInstance().setDismissDelay(5000);</b>
+&nbsp;			}
+<b class="nc">&nbsp;		} else if(eventType == HyperlinkEvent.EventType.EXITED) {</b>
+<b class="nc">&nbsp;			createdJEditorPane.setToolTipText(null);// null to turn off the tooltips.</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

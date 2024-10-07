@@ -1,0 +1,231 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > DrawingHelper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.convenience.helpers</a>
+</div>
+
+<h1>Coverage Summary for Class: DrawingHelper (com.marginallyclever.convenience.helpers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DrawingHelper</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/47)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.convenience.helpers;
+&nbsp;
+&nbsp;import com.jogamp.opengl.GL2;
+&nbsp;import com.jogamp.opengl.util.texture.Texture;
+&nbsp;import com.jogamp.opengl.util.texture.TextureIO;
+&nbsp;import com.marginallyclever.convenience.FileAccess;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.BufferedInputStream;
+&nbsp;import java.io.IOException;
+&nbsp;
+<b class="nc">&nbsp;public class DrawingHelper {</b>
+<b class="nc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(DrawingHelper.class);</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Draw a circle
+&nbsp;     * @param gl2 the render context
+&nbsp;     * @param x x center coordinate
+&nbsp;     * @param y y center coordinate
+&nbsp;     * @param radius radius
+&nbsp;     */
+&nbsp;    public static void drawCircle(GL2 gl2, float x, float y, float radius) {
+<b class="nc">&nbsp;        gl2.glTranslatef(x, y, 0);</b>
+<b class="nc">&nbsp;        gl2.glBegin(GL2.GL_LINE_LOOP);</b>
+<b class="nc">&nbsp;        for (float f = 0; f &lt; 2.0 * Math.PI; f += 0.3f) {</b>
+<b class="nc">&nbsp;            gl2.glVertex2d(</b>
+<b class="nc">&nbsp;                    Math.cos(f) * radius,</b>
+<b class="nc">&nbsp;                    Math.sin(f) * radius);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        gl2.glEnd();</b>
+<b class="nc">&nbsp;        gl2.glTranslatef(-x, -y, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Draw an arc
+&nbsp;     * @param gl2 the render context
+&nbsp;     * @param x x center coordinate
+&nbsp;     * @param y y center coordinate
+&nbsp;     * @param radius radius
+&nbsp;     * @param a1 start angle
+&nbsp;     * @param a2 end angle
+&nbsp;     */
+&nbsp;    public static void drawArc(GL2 gl2, float x, float y, float radius, float a1, float a2) {
+<b class="nc">&nbsp;        gl2.glTranslatef(x, y, 0);</b>
+<b class="nc">&nbsp;        gl2.glBegin(GL2.GL_LINES);</b>
+<b class="nc">&nbsp;        int steps = 10;</b>
+<b class="nc">&nbsp;        float delta = (a2 - a1) / (float) steps;</b>
+<b class="nc">&nbsp;        float f = a1;</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; steps; i++) {</b>
+<b class="nc">&nbsp;            gl2.glVertex2d(Math.cos(f) * radius, Math.sin(f) * radius);</b>
+<b class="nc">&nbsp;            gl2.glVertex2d(Math.cos(f + delta) * radius, Math.sin(f + delta) * radius);</b>
+<b class="nc">&nbsp;            f += delta;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        gl2.glEnd();</b>
+<b class="nc">&nbsp;        gl2.glTranslatef(-x, -y, 0);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Draw a rectangle
+&nbsp;     * @param gl2 the render context
+&nbsp;     * @param top top coordinate
+&nbsp;     * @param right right coordinate
+&nbsp;     * @param bottom bottom coordinate
+&nbsp;     * @param left left coordinate
+&nbsp;     */
+&nbsp;    public static void drawRectangle(GL2 gl2, double top, double right, double bottom, double left) {
+<b class="nc">&nbsp;        gl2.glBegin(GL2.GL_QUADS);</b>
+<b class="nc">&nbsp;        gl2.glVertex2d(left, top);</b>
+<b class="nc">&nbsp;        gl2.glVertex2d(right, top);</b>
+<b class="nc">&nbsp;        gl2.glVertex2d(right, bottom);</b>
+<b class="nc">&nbsp;        gl2.glVertex2d(left, bottom);</b>
+<b class="nc">&nbsp;        gl2.glEnd();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Load the given file from the classpath. Make sure the size of the picture is a power of 2
+&nbsp;     * @param name filename
+&nbsp;     * @return a texture
+&nbsp;     */
+&nbsp;    public static Texture loadTexture(String name) {
+<b class="nc">&nbsp;        Texture tex = null;</b>
+<b class="nc">&nbsp;        try (BufferedInputStream bis = FileAccess.open(name)) {</b>
+<b class="nc">&nbsp;            tex = TextureIO.newTexture(bis, false, name.substring(name.lastIndexOf(&#39;.&#39;) + 1));</b>
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            logger.warn(&quot;Can&#39;t load {}&quot;, name, e);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return tex;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Paint a quad with the given texture
+&nbsp;     * @param gl2 the render context
+&nbsp;     * @param x x center coordinate
+&nbsp;     * @param y y center coordinate
+&nbsp;     * @param width with of the texture
+&nbsp;     * @param height height of the texture
+&nbsp;     */
+&nbsp;    public static void paintTexture(GL2 gl2, Texture texture, double x, double y, double width, double height) {
+<b class="nc">&nbsp;        texture.bind(gl2);</b>
+<b class="nc">&nbsp;        gl2.glColor4d(1, 1, 1, 1);</b>
+<b class="nc">&nbsp;        gl2.glEnable(GL2.GL_TEXTURE_2D);</b>
+<b class="nc">&nbsp;        gl2.glBegin(GL2.GL_QUADS);</b>
+<b class="nc">&nbsp;        gl2.glTexCoord2d(0, 0);</b>
+<b class="nc">&nbsp;        gl2.glVertex2d(x, y);</b>
+<b class="nc">&nbsp;        gl2.glTexCoord2d(1, 0);</b>
+<b class="nc">&nbsp;        gl2.glVertex2d(x + width, y);</b>
+<b class="nc">&nbsp;        gl2.glTexCoord2d(1, 1);</b>
+<b class="nc">&nbsp;        gl2.glVertex2d(x + width, y + height);</b>
+<b class="nc">&nbsp;        gl2.glTexCoord2d(0, 1);</b>
+<b class="nc">&nbsp;        gl2.glVertex2d(x, y + height);</b>
+<b class="nc">&nbsp;        gl2.glEnd();</b>
+<b class="nc">&nbsp;        gl2.glDisable(GL2.GL_TEXTURE_2D);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

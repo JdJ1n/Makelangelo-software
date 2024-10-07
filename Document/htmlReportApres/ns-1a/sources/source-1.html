@@ -1,0 +1,248 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Generator_Maze</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.turtlegenerator.maze</a>
+</div>
+
+<h1>Coverage Summary for Class: Generator_Maze (com.marginallyclever.makelangelo.makeart.turtlegenerator.maze)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Generator_Maze</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    28.6%
+  </span>
+  <span class="absValue">
+    (2/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    17.9%
+  </span>
+  <span class="absValue">
+    (10/56)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.turtlegenerator.maze;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectRandomSeed;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Random;
+&nbsp;import java.util.Stack;
+&nbsp;
+&nbsp;public abstract class Generator_Maze extends TurtleGenerator {
+<b class="fc">&nbsp;    protected final List&lt;MazeCell&gt; cells = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    protected final List&lt;MazeWall&gt; walls = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private static int seed = 0;</b>
+<b class="fc">&nbsp;    private static final Random random = new Random();</b>
+&nbsp;
+&nbsp;    public Generator_Maze() {
+<b class="fc">&nbsp;        super();</b>
+<b class="fc">&nbsp;        add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href=&#39;https://en.wikipedia.org/wiki/Maze_generation_algorithm&#39;&gt;&quot; +</b>
+<b class="fc">&nbsp;                Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;) + &quot;&lt;/a&gt;&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;, Translator.get(&quot;Generator.randomSeed&quot;), seed);</b>
+<b class="fc">&nbsp;        add(selectRandomSeed);</b>
+<b class="fc">&nbsp;        selectRandomSeed.addSelectListener((evt) -&gt; {</b>
+<b class="nc">&nbsp;            seed = (int) evt.getNewValue();</b>
+<b class="nc">&nbsp;            random.setSeed((long) evt.getNewValue());</b>
+<b class="nc">&nbsp;            generate();</b>
+&nbsp;        });
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * build a list of walls in the maze, cells in the maze, and how they connect to each other.
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public void generate() {
+<b class="nc">&nbsp;        buildCells();</b>
+<b class="nc">&nbsp;        buildWalls();</b>
+<b class="nc">&nbsp;        buildMaze();</b>
+&nbsp;
+&nbsp;        // draw the maze
+<b class="nc">&nbsp;        Turtle turtle = drawMaze();</b>
+&nbsp;
+<b class="nc">&nbsp;        turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</b>
+&nbsp;
+<b class="nc">&nbsp;        notifyListeners(turtle);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Build the list of rooms.
+&nbsp;     */
+&nbsp;    public abstract void buildCells();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Build the list of walls between rooms.
+&nbsp;     */
+&nbsp;    public abstract void buildWalls();
+&nbsp;
+&nbsp;    public abstract Turtle drawMaze();
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Depth first search of the maze, removing walls as we go.
+&nbsp;     */
+&nbsp;    protected void buildMaze() {
+<b class="nc">&nbsp;        int unvisitedCells = cells.size();</b>
+<b class="nc">&nbsp;        Stack&lt;MazeCell&gt; stack = new Stack&lt;&gt;();</b>
+&nbsp;
+&nbsp;        // Make the initial cell the current cell and mark it as visited
+<b class="nc">&nbsp;        int currentCell = (int)(random.nextDouble()*unvisitedCells);</b>
+<b class="nc">&nbsp;        cells.get(currentCell).visited = true;</b>
+<b class="nc">&nbsp;        stack.add(cells.get(currentCell));</b>
+<b class="nc">&nbsp;        --unvisitedCells;</b>
+&nbsp;
+&nbsp;        // While there are unvisited cells
+<b class="nc">&nbsp;        while (unvisitedCells &gt; 0) {</b>
+&nbsp;            // If the current cell has any neighbours which have not been visited
+&nbsp;            // Choose randomly one of the unvisited neighbours
+<b class="nc">&nbsp;            int nextCell = chooseUnvisitedNeighbor(currentCell);</b>
+<b class="nc">&nbsp;            if (nextCell != -1) {</b>
+&nbsp;                // Remove the wall between the current cell and the next cell
+<b class="nc">&nbsp;                int wallIndex = findWallBetween(currentCell, nextCell);</b>
+<b class="nc">&nbsp;                walls.get(wallIndex).removed = true;</b>
+&nbsp;                // Make the next cell into the current cell and mark it as visited
+<b class="nc">&nbsp;                currentCell = nextCell;</b>
+&nbsp;
+<b class="nc">&nbsp;                cells.get(currentCell).visited = true;</b>
+<b class="nc">&nbsp;                stack.add(cells.get(currentCell));</b>
+<b class="nc">&nbsp;                --unvisitedCells;</b>
+<b class="nc">&nbsp;            } else if(!stack.isEmpty()) {</b>
+&nbsp;                // else if stack is not empty pop a cell from the stack
+<b class="nc">&nbsp;                MazeCell c = stack.pop();</b>
+<b class="nc">&nbsp;                currentCell = cells.indexOf(c);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    protected int chooseUnvisitedNeighbor(int currentCell) {
+<b class="nc">&nbsp;        List&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        MazeCell c = cells.get(currentCell);</b>
+<b class="nc">&nbsp;        for(int i=0;i&lt;c.walls.size();++i) {</b>
+<b class="nc">&nbsp;            MazeWall w = c.walls.get(i);</b>
+<b class="nc">&nbsp;            if(w.removed) continue;</b>
+<b class="nc">&nbsp;            if(w.cellA==currentCell) {</b>
+<b class="nc">&nbsp;                if(cells.get(w.cellB).visited) continue;</b>
+<b class="nc">&nbsp;                candidates.add(w.cellB);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                if(cells.get(w.cellA).visited) continue;</b>
+<b class="nc">&nbsp;                candidates.add(w.cellA);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if(candidates.isEmpty())</b>
+<b class="nc">&nbsp;            return -1;</b>
+&nbsp;
+&nbsp;        // choose a random candidate
+<b class="nc">&nbsp;        int choice = (int) (random.nextDouble() * candidates.size());</b>
+<b class="nc">&nbsp;        return candidates.get(choice);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected int findWallBetween(int currentCell, int nextCell) {
+<b class="nc">&nbsp;        MazeCell c = cells.get(currentCell);</b>
+<b class="nc">&nbsp;        for(MazeWall w : c.walls) {</b>
+<b class="nc">&nbsp;            if(w.cellA==nextCell || w.cellB==nextCell) {</b>
+<b class="nc">&nbsp;                return walls.indexOf(w);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return -1;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

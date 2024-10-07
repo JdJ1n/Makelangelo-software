@@ -1,0 +1,238 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > OpenFileChooser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.io</a>
+</div>
+
+<h1>Coverage Summary for Class: OpenFileChooser (com.marginallyclever.makelangelo.makeart.io)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OpenFileChooser</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/40)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">OpenFileChooser$OpenListener</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/40)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.io;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.FileAccess;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imageconverter.SelectImageConverterPanel;
+&nbsp;import com.marginallyclever.util.PreferencesHelper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.swing.*;
+&nbsp;import javax.swing.filechooser.FileNameExtensionFilter;
+&nbsp;import java.awt.*;
+&nbsp;import java.io.File;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.prefs.Preferences;
+&nbsp;import java.util.stream.Stream;
+&nbsp;
+&nbsp;/**
+&nbsp; * Takes care about configuring the file chooser with all the extensions the app supports
+&nbsp; */
+&nbsp;public class OpenFileChooser {
+<b class="nc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(OpenFileChooser.class);</b>
+&nbsp;    public static final String KEY_PREFERENCE_LOAD_PATH = &quot;loadPath&quot;;
+<b class="nc">&nbsp;    private final JFileChooser jFileChooser = new JFileChooser();</b>
+<b class="nc">&nbsp;    private final JLabel previewLabel = new JLabel();</b>
+&nbsp;    private final Component parent;
+&nbsp;    private OpenListener openListener;
+&nbsp;
+&nbsp;    public OpenFileChooser(Component parent) {
+<b class="nc">&nbsp;        super();</b>
+&nbsp;
+<b class="nc">&nbsp;        this.parent = parent;</b>
+&nbsp;
+&nbsp;        // add all supported type
+<b class="nc">&nbsp;        String[] extensions = Stream.concat(</b>
+<b class="nc">&nbsp;                TurtleFactory.getLoadExtensions().stream()</b>
+<b class="nc">&nbsp;                        .map(FileNameExtensionFilter::getExtensions)</b>
+<b class="nc">&nbsp;                        .flatMap(Stream::of)</b>
+&nbsp;                ,
+<b class="nc">&nbsp;                Arrays.stream(SelectImageConverterPanel.IMAGE_FILE_EXTENSIONS.clone())</b>
+<b class="nc">&nbsp;        ).toArray(String[]::new);</b>
+&nbsp;
+<b class="nc">&nbsp;        jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(Translator.get(&quot;OpenFileChooser.AllSupportedFiles&quot;), extensions));</b>
+&nbsp;
+&nbsp;        // add vector formats
+<b class="nc">&nbsp;        for (FileNameExtensionFilter ff : TurtleFactory.getLoadExtensions()) {</b>
+<b class="nc">&nbsp;            jFileChooser.addChoosableFileFilter(ff);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // merge SelectImageConverterPanel.IMAGE_FILE_EXTENSIONS into a string separated by /
+<b class="nc">&nbsp;        String names = Arrays.stream(SelectImageConverterPanel.IMAGE_FILE_EXTENSIONS)</b>
+<b class="nc">&nbsp;                .reduce((a, b) -&gt; a + &quot;/&quot; + b)</b>
+<b class="nc">&nbsp;                .orElse(&quot;&quot;);</b>
+&nbsp;        // add image formats
+<b class="nc">&nbsp;        FileNameExtensionFilter images = new FileNameExtensionFilter(Translator.get(&quot;OpenFileChooser.FileTypeImage&quot;,new String[]{names}), SelectImageConverterPanel.IMAGE_FILE_EXTENSIONS);</b>
+<b class="nc">&nbsp;        jFileChooser.addChoosableFileFilter(images);</b>
+&nbsp;
+&nbsp;        // no wild card filter, please.
+<b class="nc">&nbsp;        jFileChooser.setAcceptAllFileFilterUsed(false);</b>
+&nbsp;
+&nbsp;        // display a preview
+<b class="nc">&nbsp;        jFileChooser.addPropertyChangeListener(JFileChooser.SELECTED_FILE_CHANGED_PROPERTY, (evt) -&gt;{</b>
+&nbsp;            // no file selected.
+<b class="nc">&nbsp;            previewLabel.setIcon(null);</b>
+&nbsp;
+<b class="nc">&nbsp;            File file = (File) evt.getNewValue();</b>
+<b class="nc">&nbsp;            if (file != null &amp;&amp; file.isFile()) {</b>
+&nbsp;                // ImageIcon may silently fail to load the image.  That&#39;s ok.
+<b class="nc">&nbsp;                ImageIcon icon = new ImageIcon(file.getAbsolutePath());</b>
+&nbsp;                // Scale the image to fit the label
+<b class="nc">&nbsp;                Image scaledImage = icon.getImage().getScaledInstance(previewLabel.getWidth(), previewLabel.getHeight(), Image.SCALE_DEFAULT);</b>
+<b class="nc">&nbsp;                previewLabel.setIcon(new ImageIcon(scaledImage));</b>
+&nbsp;            }
+&nbsp;        });
+&nbsp;
+&nbsp;        // Set a preferred size for the preview image
+<b class="nc">&nbsp;        previewLabel.setPreferredSize(new Dimension(200, 200));</b>
+&nbsp;        // glue the preview image to the right side of the dialog
+<b class="nc">&nbsp;        JPanel previewPanel = new JPanel();</b>
+<b class="nc">&nbsp;        previewPanel.add(previewLabel);</b>
+<b class="nc">&nbsp;        jFileChooser.setAccessory(previewPanel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setOpenListener(OpenListener openListener) {
+<b class="nc">&nbsp;        this.openListener = openListener;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void chooseFile() {
+<b class="nc">&nbsp;        Preferences preferences = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.FILE);</b>
+<b class="nc">&nbsp;        String lastPath = preferences.get(KEY_PREFERENCE_LOAD_PATH, FileAccess.getWorkingDirectory());</b>
+<b class="nc">&nbsp;        jFileChooser.setCurrentDirectory(new File(lastPath));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (jFileChooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {</b>
+<b class="nc">&nbsp;            String filename = jFileChooser.getSelectedFile().getAbsolutePath();</b>
+<b class="nc">&nbsp;            preferences.put(KEY_PREFERENCE_LOAD_PATH, jFileChooser.getCurrentDirectory().toString());</b>
+<b class="nc">&nbsp;            logger.debug(&quot;File selected by user: {}&quot;, filename);</b>
+<b class="nc">&nbsp;            openListener.openFile(filename);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public interface OpenListener {
+&nbsp;        void openFile(String filename);
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

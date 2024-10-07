@@ -1,0 +1,464 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Generator_Polyeder</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.turtlegenerator</a>
+</div>
+
+<h1>Coverage Summary for Class: Generator_Polyeder (com.marginallyclever.makelangelo.makeart.turtlegenerator)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Generator_Polyeder</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (8/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    9.1%
+  </span>
+  <span class="absValue">
+    (2/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    37.9%
+  </span>
+  <span class="absValue">
+    (36/95)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Generator_Polyeder$Model</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Generator_Polyeder$Transform</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/31)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    39.1%
+  </span>
+  <span class="absValue">
+    (9/23)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    9.1%
+  </span>
+  <span class="absValue">
+    (2/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    29.1%
+  </span>
+  <span class="absValue">
+    (37/127)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.Point2D;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectInteger;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectOneOfMany;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;
+&nbsp;/**
+&nbsp; * Draws a papercraft &lt;a href=&quot;https://en.wikipedia.org/wiki/Archimedean_solid&quot;&gt;Achimedean Solid&lt;/a&gt;.  Cut, crease, fold, and glue to assemble.
+&nbsp; * Model descriptions are recursive path instructions.  for example, {3,3,1,0,3,1,0,3,1,0}.  The first &#39;3&#39; means draw a triangle.  
+&nbsp; * then for each side of that triangle, {3,1,0}, or draw another triangle and add a flap on the first side and nothing on the second.
+&nbsp; * this recursively creates the shapes needed.
+&nbsp; * 
+&nbsp; * @author Guenther Sohler
+&nbsp; * @since 7.24.0
+&nbsp; *
+&nbsp; */
+&nbsp;public class Generator_Polyeder extends TurtleGenerator {
+&nbsp;
+<b class="fc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(Generator_Polyeder.class);</b>
+&nbsp;	/**
+&nbsp;	 * Helper class that describe a solid
+&nbsp;	 * @author Guenther Sohler
+&nbsp;	 * @since 7.24.0
+&nbsp;	 */
+<b class="fc">&nbsp;	public static class Model {</b>
+&nbsp;		public String name;
+&nbsp;		public int []instructions;
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Helper class for making relative movements along a path to draw each solid
+&nbsp;	 * @author Guenther Sohler
+&nbsp;	 * @since 7.24.0
+&nbsp;	 */
+&nbsp;	public static class Transform {
+&nbsp;		public Point2D org;
+&nbsp;		public double x_x,x_y,y_x,y_y;
+&nbsp;		
+&nbsp;		public Transform()
+<b class="nc">&nbsp;		{</b>
+<b class="nc">&nbsp;			org = new Point2D();</b>
+<b class="nc">&nbsp;			org.x=0;</b>
+<b class="nc">&nbsp;			org.y=0;</b>
+<b class="nc">&nbsp;			x_x=y_y=1;</b>
+<b class="nc">&nbsp;			x_y=y_x=0;</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		public Point2D trans(Point2D pt)
+&nbsp;		{
+<b class="nc">&nbsp;			Point2D a=new Point2D();</b>
+<b class="nc">&nbsp;			a.x=org.x+pt.x*x_x+pt.y*y_x;</b>
+<b class="nc">&nbsp;			a.y=org.y+pt.x*x_y+pt.y*y_y;</b>
+<b class="nc">&nbsp;			return a;</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		public Transform dup()
+&nbsp;		{
+<b class="nc">&nbsp;			Transform t1= new Transform();</b>
+<b class="nc">&nbsp;			t1.org.x=org.x;</b>
+<b class="nc">&nbsp;			t1.org.y=org.y;</b>
+<b class="nc">&nbsp;			t1.x_x=x_x;</b>
+<b class="nc">&nbsp;			t1.x_y=x_y;</b>
+<b class="nc">&nbsp;			t1.y_x=y_x;</b>
+<b class="nc">&nbsp;			t1.y_y=y_y;</b>
+<b class="nc">&nbsp;			return t1;</b>
+&nbsp;		}
+&nbsp;		
+&nbsp;		public void walk(Point2D d)
+&nbsp;		{
+<b class="nc">&nbsp;			org.x += d.x*x_x + d.y*y_x;</b>
+<b class="nc">&nbsp;			org.y += d.x*x_y + d.y*y_y;</b>
+&nbsp;		}
+&nbsp;		
+&nbsp;		public void rotate(double ang)
+&nbsp;		{
+&nbsp;			double x_xn,x_yn,y_xn,y_yn;
+&nbsp;
+<b class="nc">&nbsp;			double s = Math.sin(ang);</b>
+<b class="nc">&nbsp;			double c = Math.cos(ang);</b>
+&nbsp;			
+<b class="nc">&nbsp;			x_xn=x_x*c-x_y*s;</b>
+<b class="nc">&nbsp;		    x_yn=x_x*s+x_y*c;</b>
+<b class="nc">&nbsp;		    x_x=x_xn;</b>
+<b class="nc">&nbsp;		    x_y=x_yn;</b>
+&nbsp;
+<b class="nc">&nbsp;		    y_xn=y_x*c-y_y*s;</b>
+<b class="nc">&nbsp;		    y_yn=y_x*s+y_y*c;</b>
+<b class="nc">&nbsp;		    y_x=y_xn;</b>
+<b class="nc">&nbsp;		    y_y=y_yn;</b>
+&nbsp;
+&nbsp;		}
+&nbsp;		
+&nbsp;		public void dump()
+&nbsp;		{
+<b class="nc">&nbsp;			logger.debug(&quot;{}/{} x:{}/{} y:{}/{}&quot;, org.x, org.y, x_x, x_y, y_x, y_y);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	// length of a long side
+<b class="fc">&nbsp;	protected int size=100;</b>
+&nbsp;	// size of fold + glue flap 
+<b class="fc">&nbsp;	protected int flap=10;</b>
+&nbsp;	// selected model
+<b class="fc">&nbsp;	protected int modelid=0;</b>
+&nbsp;	// list of all available model shapes
+<b class="fc">&nbsp;	protected final ArrayList&lt;Model&gt; models = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;	public int instructionPtr;
+&nbsp;
+&nbsp;	public Generator_Polyeder() {
+<b class="fc">&nbsp;		super();</b>
+&nbsp;
+<b class="fc">&nbsp;		addModel(&quot;Cube&quot;,new int[] {4,4,1,1,1,4,0,1,0,4,1,1,1,4,0,4,0,0,0,0});</b>
+<b class="fc">&nbsp;		addModel(&quot;Tetrahedron&quot;, new int [] {3,3,1,0,3,1,0,3,1,0});</b>
+<b class="fc">&nbsp;		addModel(&quot;Octahedron&quot;,new int[] {3,3,0,3,0,1,3,0,1,3,3,1,3,1,1,3,0,1});</b>
+<b class="fc">&nbsp;		addModel(&quot;Dodecahedron&quot;,new int[] {5,5,5,0,1,1,1,5,0,1,1,1,5,0,1,1,1,5,0,1,1,1,0,1,5,1,5,5,0,0,0,1,5,0,0,0,1,5,0,0,0,1,5,0,0,0,1,0,0,1});</b>
+<b class="fc">&nbsp;		addModel(&quot;Icosaedron&quot;,new int[] {3,3,3,0,1,3,3,3,0,1,3,3,3,0,1,3,3,3,0,1,3,3,3,0,1,1,3,0,1,3,0,1,3,0,1,3,0,1,3,0,1,0});</b>
+<b class="fc">&nbsp;		addModel(&quot;Cuboctahedron&quot;,new int[] {4,3,4,0,3,0,1,1,1,3,4,0,3,0,1,1,1,3,4,0,3,0,4,0,0,0,1,1,3,4,0,3,0,1,1,1});</b>
+<b class="fc">&nbsp;		addModel(&quot;Rhombicosidodecahedron&quot;,new int[] {5,4,3,0,4,0,3,0,1,1,5,0,4,0,5,0,4,0,1,3,0,1,4,0,1,1,1,1,4,3,0,4,0,3,0,1,1,5,0,4,0,5,0,1,1,1,1,4,3,0,1,1,1,0,3,1,0,4,1,1,0,3,1,0</b>
+&nbsp;				,4,1,5,1,4,0,1,3,1,0,4,1,5,1,4,1,1,3,1,0,4,1,1,1,1,3,1,1,4,0,1,1,3,0,1
+&nbsp;				,4,1,5,1,4,0,1,3,1,0,4,1,5,1,4,1,1,3,1,0,4,1,1,1,1,3,1,1,4,0,1,1,3,0,1
+&nbsp;				,4,0,5,0,4,0,1,3,1,0,4,0,5,0,4,0,1,1,1,1,1,4,3,0,1,1,1,3,0,1
+&nbsp;				,4,0,5,0,4,0,1,3,0,1,4,0,1,1,1,1
+&nbsp;				});
+<b class="fc">&nbsp;		addModel(&quot;Football&quot;,new int[] {6,6,5,0,0,0,0,6,1,1,1,1,1,1,6,1,6,5,0,0,0,0,6,1,1,1,1,1,1</b>
+&nbsp;				,6,1,1,5,0,0,0,0,6,1,1,1,1,1,1,1,5,0,0,0,0,6,1,1,1,1,1,1,1,5,0,0,0,0,6,1,1,5,0,0,0,0,1,1,1
+&nbsp;				,6,1,6,5,0,0,0,0,6,1,1,1,1,1,1,6,1,6,5,0,0,0,0,6,1,1,1,1,1,1
+&nbsp;				,6,1,1,5,0,0,0,0,6,1,1,1,1,1,1,1,5,0,0,0,0,6,1,1,1,1,1,1,1,5,0,0,0,0,6,1,1,5,0,0,0,0,1,1,1,1});
+<b class="fc">&nbsp;		addModel(&quot;Icosidodecahedron&quot;,new int[] {5,3,5,1,3,0,5,1,3,0,0,1,1,3,0,0,3,5,1,3,0,5,1,1,1,1,3,0,0,1,0,5,1,3,0,5,1,3,0,0,1,1,3,0,0,1,3,0,5,1,3,0,5,1,3,0,0,1,1,3,0,0,1,3,0,5,1,3,0,5,1,1,1,1,3,0,0,1,3,0,5,1,3,0,0,1,1,3,0,0});</b>
+<b class="fc">&nbsp;		addModel(&quot;Truncated Octahedron&quot;,new int[] {4,6,1,1,6,4,0,0,0,0,1,1,4,0,0,0,1,1,6,0,1,6,1,0,1,1,1,1,0,6,1,1,6,4,0,0,0,0,4,0,0,0,1,4,0,0,0,1,1,6,0,1,6,1,0,1,1,1,1,0});</b>
+<b class="fc">&nbsp;		addModel(&quot;Rhombicuboctahedron&quot;,new int[] {4,4,3,0,0,4,4,1,1,1,4,3,0,0,1,3,0,0,4,1,1,1,3,0,0,4,1,4,0,0,0,1,4,3,0,0,4,4,1,1,1,4,3,0,0,4,4,1,1,1,1,4,1,1,1,3,0,0,4,1,1,1,3,0,0,4,1,4,0,0,0,1});</b>
+&nbsp;
+&nbsp;		SelectInteger selectSize;
+&nbsp;		SelectInteger selectFlap;
+&nbsp;		SelectOneOfMany selectModel;
+<b class="fc">&nbsp;		String [] models=getModelNames();</b>
+&nbsp;
+<b class="fc">&nbsp;		add(selectSize = new SelectInteger(&quot;size&quot;,Translator.get(&quot;Size&quot;),getLastSize()));</b>
+<b class="fc">&nbsp;		selectSize.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setSize(((Number)selectSize.getValue()).intValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(selectFlap = new SelectInteger(&quot;flap&quot;,Translator.get(&quot;Flap&quot;),getLastFlap()));</b>
+<b class="fc">&nbsp;		selectFlap.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setFlap(((Number)selectFlap.getValue()).intValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(selectModel = new SelectOneOfMany(&quot;model&quot;,Translator.get(&quot;Model&quot;),models,getLastModel()));</b>
+<b class="fc">&nbsp;		selectModel.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setModel(selectModel.getSelectedIndex());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="fc">&nbsp;		return Translator.get(&quot;Polyeder&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	void addModel(String name,int [] instructions) {
+<b class="fc">&nbsp;		Model m = new Model();</b>
+<b class="fc">&nbsp;		m.name=name;</b>
+<b class="fc">&nbsp;		m.instructions=instructions;</b>
+<b class="fc">&nbsp;		models.add(m);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public String [] getModelNames() {
+<b class="fc">&nbsp;		String [] result = new String[models.size()];</b>
+<b class="fc">&nbsp;		for(int i=0;i&lt;models.size();i++)</b>
+&nbsp;		{
+<b class="fc">&nbsp;			result[i]=models.get(i).name;</b>
+&nbsp;		}
+<b class="fc">&nbsp;		return result;</b>
+&nbsp;
+&nbsp;	}
+&nbsp;
+&nbsp;	private void geneneratePolygonStep(Turtle turtle,Transform t) {
+&nbsp;		int i;
+<b class="nc">&nbsp;		if(modelid &lt; 0 || modelid &gt;= models.size()) return;</b>
+<b class="nc">&nbsp;		if(instructionPtr &gt;= models.get(modelid).instructions.length) return;</b>
+<b class="nc">&nbsp;		int code=models.get(modelid).instructions[instructionPtr++];</b>
+&nbsp;
+<b class="nc">&nbsp;		if(code == 1)</b>
+&nbsp;		{
+&nbsp;			// draw a flap
+<b class="nc">&nbsp;			Point2D pos=new Point2D();</b>
+&nbsp;			Point2D abspos;
+&nbsp;
+<b class="nc">&nbsp;			pos.x=0;</b>
+<b class="nc">&nbsp;			pos.y=size/2f;</b>
+<b class="nc">&nbsp;			abspos=t.trans(pos);</b>
+<b class="nc">&nbsp;			turtle.moveTo(abspos.x,abspos.y);</b>
+&nbsp;
+<b class="nc">&nbsp;			turtle.penDown();</b>
+&nbsp;
+<b class="nc">&nbsp;			pos.x=-flap;</b>
+<b class="nc">&nbsp;			pos.y=size/2f-flap;</b>
+<b class="nc">&nbsp;			abspos=t.trans(pos);</b>
+<b class="nc">&nbsp;			turtle.moveTo(abspos.x,abspos.y);</b>
+&nbsp;
+<b class="nc">&nbsp;			pos.y=-pos.y;</b>
+<b class="nc">&nbsp;			abspos=t.trans(pos);</b>
+<b class="nc">&nbsp;			turtle.moveTo(abspos.x,abspos.y);</b>
+&nbsp;
+<b class="nc">&nbsp;			pos.x=0;</b>
+<b class="nc">&nbsp;			pos.y=-size/2f;</b>
+<b class="nc">&nbsp;			abspos=t.trans(pos);</b>
+<b class="nc">&nbsp;			turtle.moveTo(abspos.x,abspos.y);</b>
+&nbsp;
+<b class="nc">&nbsp;			turtle.penUp();</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		if(code &gt;= 3 &amp;&amp; code &lt;= 8)</b>
+&nbsp;		{
+&nbsp;			// polygon with `code` number of points.
+&nbsp;			
+<b class="nc">&nbsp;			t.walk(new Point2D(-size/(2*Math.tan(Math.PI/code)),0));</b>
+<b class="nc">&nbsp;			double r=size/(2*Math.sin(Math.PI/code));</b>
+<b class="nc">&nbsp;			for(i=0;i&lt;=code;i++)</b>
+&nbsp;			{
+<b class="nc">&nbsp;				double ang=2*Math.PI*(i-0.5)/(double)code;</b>
+<b class="nc">&nbsp;				Point2D pos=new Point2D();</b>
+<b class="nc">&nbsp;				pos.x=r*Math.cos(ang);</b>
+<b class="nc">&nbsp;				pos.y=r*Math.sin(ang);</b>
+&nbsp;
+<b class="nc">&nbsp;				Point2D abspos=t.trans(pos);</b>
+<b class="nc">&nbsp;				turtle.moveTo(abspos.x,abspos.y);</b>
+<b class="nc">&nbsp;				if(i == 0) turtle.penDown();</b>
+&nbsp;			}
+<b class="nc">&nbsp;			turtle.penUp();</b>
+&nbsp;			// consider a 3 sided shape (code=3).  the very first shape will repeat this 3 times.  all others will repeat this twice.
+&nbsp;			// this way following with &#39;1,0&#39; would mean &quot;add a flap on the first side and nothing on the second&quot;.
+<b class="nc">&nbsp;			for(i=(instructionPtr&gt;1)?1:0;i&lt;code;i++)</b>
+&nbsp;			{
+<b class="nc">&nbsp;				logger.debug(&quot;turn {}&quot;, i);</b>
+<b class="nc">&nbsp;				Transform t1=t.dup();</b>
+<b class="nc">&nbsp;				t1.rotate(2*Math.PI*i/(double)code);</b>
+<b class="nc">&nbsp;				t1.walk(new Point2D(size/(2*Math.tan(Math.PI/code)),0));</b>
+<b class="nc">&nbsp;				t1.rotate(Math.PI);</b>
+&nbsp;				// recursion.
+<b class="nc">&nbsp;				geneneratePolygonStep(turtle,t1);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void generate() {
+<b class="nc">&nbsp;		instructionPtr=0;</b>
+&nbsp;
+<b class="nc">&nbsp;		Turtle turtle = new Turtle();</b>
+<b class="nc">&nbsp;		turtle.penUp();</b>
+&nbsp;
+<b class="nc">&nbsp;		Transform t = new Transform();</b>
+<b class="nc">&nbsp;		logger.debug(&quot;start&quot;);</b>
+<b class="nc">&nbsp;		geneneratePolygonStep(turtle,t);</b>
+<b class="nc">&nbsp;		logger.debug(&quot;end&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</b>
+&nbsp;
+<b class="nc">&nbsp;		notifyListeners(turtle);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	public int getLastSize() {
+<b class="fc">&nbsp;		return size;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public int getLastFlap() {
+<b class="fc">&nbsp;		return flap;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public int getLastModel() {
+<b class="fc">&nbsp;		return modelid;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setSize(int intValue) {
+<b class="nc">&nbsp;		this.size=intValue;</b>
+&nbsp;
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setFlap(int intValue) {
+<b class="nc">&nbsp;		this.flap=intValue;</b>
+&nbsp;
+&nbsp;	}
+&nbsp;	public void setModel(int intValue) {
+<b class="nc">&nbsp;		this.modelid=intValue;</b>
+&nbsp;
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

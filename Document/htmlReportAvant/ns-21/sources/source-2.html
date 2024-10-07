@@ -1,0 +1,270 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > PlotterSettingsManager</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.plotter.plottersettings</a>
+</div>
+
+<h1>Coverage Summary for Class: PlotterSettingsManager (com.marginallyclever.makelangelo.plotter.plottersettings)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PlotterSettingsManager</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    81.8%
+  </span>
+  <span class="absValue">
+    (9/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (1/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    82.9%
+  </span>
+  <span class="absValue">
+    (58/70)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.plotter.plottersettings;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.plotter.plotterrenderer.PlotterRendererFactory;
+&nbsp;import com.marginallyclever.util.PreferencesHelper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.awt.*;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.prefs.Preferences;
+&nbsp;
+&nbsp;/**
+&nbsp; * Manages the list of all existing {@link PlotterSettings}.
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.33.2
+&nbsp; */
+&nbsp;public class PlotterSettingsManager {
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(PlotterSettingsManager.class);</b>
+&nbsp;    public static final String KEY_MACHINE_LAST_SELECTED = &quot;lastLoadedMachine&quot;;
+<b class="fc">&nbsp;    private final List&lt;String&gt; profileNames = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private final Preferences topLevelMachinesPreferenceNode = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.MACHINES);</b>
+&nbsp;
+&nbsp;    public PlotterSettingsManager() {
+<b class="fc">&nbsp;        super();</b>
+<b class="fc">&nbsp;        writeMakelangelo5();</b>
+<b class="fc">&nbsp;        writeMakelangeloHugeProfile();</b>
+<b class="fc">&nbsp;        loadAllProfiles();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void writeMakelangelo5() {
+<b class="fc">&nbsp;        PlotterSettings profile = buildMakelangelo5();</b>
+<b class="fc">&nbsp;        profile.save();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void writeMakelangeloHugeProfile() {
+<b class="fc">&nbsp;        PlotterSettings profile = buildMakelangelo5();</b>
+<b class="fc">&nbsp;        profile.setRobotUID(&quot;Makelangelo Huge&quot;);</b>
+<b class="fc">&nbsp;        profile.setMachineSize(1336,2000);</b>
+<b class="fc">&nbsp;        profile.setString(PlotterSettings.STYLE,&quot;MAKELANGELO_5_HUGE&quot;);</b>
+<b class="fc">&nbsp;        profile.save();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static PlotterSettings buildMakelangelo5() {
+<b class="fc">&nbsp;        PlotterSettings profile = new PlotterSettings();</b>
+<b class="fc">&nbsp;        profile.setRobotUID(&quot;Makelangelo 5&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        profile.setBoolean(PlotterSettings.IS_REGISTERED, false);</b>
+<b class="fc">&nbsp;        profile.setBoolean(PlotterSettings.HANDLE_SMALL_SEGMENTS, false);</b>
+&nbsp;
+<b class="fc">&nbsp;        profile.setMachineSize(650,1000);</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.MIN_SEGMENT_LENGTH, 0.5);	// mm</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.MAX_ACCELERATION, 100);	// mm/s/s</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.MIN_ACCELERATION, 0.0);	// mm/s/s</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.MINIMUM_PLANNER_SPEED, 0.05);	// mm/s</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.DIAMETER, 0.8);	// mm, &gt;0</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.PEN_ANGLE_UP, 90);	// servo angle (degrees,0...180)</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.PEN_ANGLE_DOWN, 25);	// servo angle (degrees,0...180)</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.PEN_ANGLE_UP_TIME, 150);</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.PEN_ANGLE_DOWN_TIME, 250);</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.FEED_RATE_TRAVEL, 3000);	// mm/min.  3000 = 50 mm/s</b>
+<b class="fc">&nbsp;        profile.setDouble(PlotterSettings.FEED_RATE_DRAW, 3000);	// mm/min.  3000 = 50 mm/s</b>
+&nbsp;
+<b class="fc">&nbsp;        profile.setInteger(PlotterSettings.BLOCK_BUFFER_SIZE, 16);</b>
+<b class="fc">&nbsp;        profile.setInteger(PlotterSettings.SEGMENTS_PER_SECOND, 5);</b>
+<b class="fc">&nbsp;        profile.setInteger(PlotterSettings.MIN_SEG_TIME, 20000);		// us</b>
+<b class="fc">&nbsp;        profile.setInteger(PlotterSettings.STARTING_POS_INDEX, 4);</b>
+<b class="fc">&nbsp;        profile.setInteger(PlotterSettings.Z_MOTOR_TYPE, PlotterSettings.Z_MOTOR_TYPE_SERVO);</b>
+&nbsp;
+<b class="fc">&nbsp;        profile.setString(PlotterSettings.USER_GENERAL_START_GCODE, &quot;&quot;);</b>
+<b class="fc">&nbsp;        profile.setString(PlotterSettings.USER_GENERAL_END_GCODE, &quot;&quot;);</b>
+<b class="fc">&nbsp;        profile.setString(PlotterSettings.STYLE, PlotterRendererFactory.MAKELANGELO_5.getName());</b>
+&nbsp;
+<b class="fc">&nbsp;        profile.setColor(PlotterSettings.PAPER_COLOR, Color.WHITE);</b>
+<b class="fc">&nbsp;        profile.setColor(PlotterSettings.PEN_DOWN_COLOR_DEFAULT,Color.BLACK);</b>
+<b class="fc">&nbsp;        profile.setColor(PlotterSettings.PEN_DOWN_COLOR,Color.BLACK);</b>
+<b class="fc">&nbsp;        profile.setColor(PlotterSettings.PEN_UP_COLOR,Color.GREEN);</b>
+&nbsp;
+<b class="fc">&nbsp;        profile.setDoubleArray(PlotterSettings.MAX_JERK,new double []{ 10, 10, 0.3 });</b>
+<b class="fc">&nbsp;        return profile;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Load all profiles from the preferences tree.  Subsequent calls will reload the list.
+&nbsp;     */
+&nbsp;    public void loadAllProfiles() {
+<b class="fc">&nbsp;        profileNames.clear();</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            profileNames.addAll( List.of( topLevelMachinesPreferenceNode.childrenNames() ) );</b>
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            logger.error(&quot;Failed to load preferences&quot;, e);</b>
+<b class="nc">&nbsp;            profileNames.add(&quot;Default&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;String&gt; getProfileNames() {
+<b class="fc">&nbsp;        return profileNames;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     *
+&nbsp;     * @return a new instance of the last selected {@link PlotterSettings}.
+&nbsp;     */
+&nbsp;    public PlotterSettings getLastSelectedProfile() {
+<b class="nc">&nbsp;        String uid = topLevelMachinesPreferenceNode.get(KEY_MACHINE_LAST_SELECTED, &quot;0&quot;);</b>
+<b class="nc">&nbsp;        return new PlotterSettings(uid);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLastSelectedProfile(String robotUID) {
+<b class="nc">&nbsp;        topLevelMachinesPreferenceNode.put(KEY_MACHINE_LAST_SELECTED, robotUID);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     *
+&nbsp;     * @param robotUID
+&nbsp;     * @return true if there was a problem deleting the profile.
+&nbsp;     */
+&nbsp;    public boolean deleteProfile(String robotUID) {
+<b class="pc">&nbsp;        if(robotUID == null) return true;</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            Preferences thisMachineNode = topLevelMachinesPreferenceNode.node(robotUID);</b>
+<b class="fc">&nbsp;            thisMachineNode.removeNode();</b>
+<b class="fc">&nbsp;            profileNames.remove(robotUID);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch (Exception e) {</b>
+<b class="nc">&nbsp;            logger.error(&quot;Failed to delete profile {}. {}&quot;, robotUID, e);</b>
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a copy of the current profile, changes the RobotUID, and saves it as a new instance.  Does not change the
+&nbsp;     * old profile.
+&nbsp;     *
+&nbsp;     * @param oldUID the name of the profile to copy
+&nbsp;     * @param newUID the name of the new profile
+&nbsp;     * @return true if there was a problem.
+&nbsp;     */
+&nbsp;    public boolean saveAs(String oldUID, String newUID) {
+<b class="fc">&nbsp;        PlotterSettings settings = new PlotterSettings(oldUID);</b>
+<b class="fc">&nbsp;        settings.setString(PlotterSettings.ANCESTOR,settings.getProgenitor());</b>
+<b class="fc">&nbsp;        settings.setRobotUID(newUID);</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            settings.save();</b>
+<b class="nc">&nbsp;        } catch(Exception e) {</b>
+<b class="nc">&nbsp;            logger.error(&quot;failed to rename {} to {}.&quot;,oldUID,newUID,e);</b>
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        profileNames.add( newUID );</b>
+<b class="fc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

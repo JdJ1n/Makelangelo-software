@@ -1,0 +1,187 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > PropertiesFileHelper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.util</a>
+</div>
+
+<h1>Coverage Summary for Class: PropertiesFileHelper (com.marginallyclever.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PropertiesFileHelper</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (4/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (7/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    82.6%
+  </span>
+  <span class="absValue">
+    (19/23)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.util;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Makelangelo;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.InputStream;
+&nbsp;import java.util.Properties;
+&nbsp;
+&nbsp;/**
+&nbsp; * Created on 5/10/15.
+&nbsp; *
+&nbsp; * @author Peter Colapietro
+&nbsp; * @since v7.1.2
+&nbsp; */
+<b class="nc">&nbsp;public final class PropertiesFileHelper {</b>
+&nbsp;
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(PropertiesFileHelper.class);</b>
+&nbsp;
+&nbsp;    private static final String MAKELANGELO_PROPERTIES_FILENAME = &quot;makelangelo.properties&quot;;
+&nbsp;    private static final String GIT_PROPERTIES_FILENAME = &quot;git.properties&quot;;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return version number in the form of vX.Y.Z where X is MAJOR, Y is MINOR version, and Z is PATCH
+&nbsp;     * See &lt;a href=&quot;http://semver.org/&quot;&gt;Semantic Versioning 2.0.0&lt;/a&gt;
+&nbsp;     */
+&nbsp;    public static String getMakelangeloVersion() {
+<b class="fc">&nbsp;        final Properties prop = loadProperties(MAKELANGELO_PROPERTIES_FILENAME, false);</b>
+<b class="fc">&nbsp;        String version = prop.getProperty(&quot;makelangelo.version&quot;);</b>
+<b class="fc">&nbsp;        logger.debug(&quot;version: {}&quot;, version);</b>
+<b class="fc">&nbsp;        return version;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * returns version git read from the file git.properties produced by the maven plugin git-commit-id-maven-plugin
+&nbsp;     *
+&nbsp;     * @return version git
+&nbsp;     */
+&nbsp;    public static String getMakelangeloGitVersion() {
+<b class="fc">&nbsp;        final Properties prop = loadProperties(GIT_PROPERTIES_FILENAME, true);</b>
+<b class="fc">&nbsp;        String fullGitRevision = &quot;dirty&quot;;</b>
+<b class="pc">&nbsp;        if (prop.getProperty(&quot;git.branch&quot;) != null) {</b>
+<b class="fc">&nbsp;            fullGitRevision = prop.getProperty(&quot;git.branch&quot;) + &quot;-&quot; + prop.getProperty(&quot;git.commit.id.abbrev&quot;);</b>
+<b class="pc">&nbsp;            if (&quot;true&quot;.equals(prop.getProperty(&quot;git.dirty&quot;))) {</b>
+<b class="nc">&nbsp;                fullGitRevision += &quot;-dirty&quot;;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        logger.debug(&quot;fullGitRevision: {}&quot;, fullGitRevision);</b>
+<b class="fc">&nbsp;        return fullGitRevision;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    private static Properties loadProperties(String filename, boolean optionnal) throws IllegalStateException {
+<b class="fc">&nbsp;        final Properties prop = new Properties();</b>
+<b class="pc">&nbsp;        try (final InputStream input = Makelangelo.class.getClassLoader().getResourceAsStream(filename)) {</b>
+<b class="pc">&nbsp;            if (!optionnal &amp;&amp; input == null) {</b>
+<b class="nc">&nbsp;                throw new IllegalStateException(&quot;unable to find &quot; + filename);</b>
+&nbsp;            }
+<b class="pc">&nbsp;            if (input != null) {</b>
+&nbsp;                //load a properties file from class path
+<b class="fc">&nbsp;                prop.load(input);</b>
+&nbsp;            }
+&nbsp;
+<b class="pc">&nbsp;        } catch (IllegalStateException | IOException ex) {</b>
+<b class="nc">&nbsp;            logger.error(&quot;Failed to load {}&quot;, GIT_PROPERTIES_FILENAME, ex);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return prop;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

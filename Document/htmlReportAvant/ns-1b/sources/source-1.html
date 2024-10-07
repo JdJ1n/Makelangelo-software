@@ -1,0 +1,368 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Paper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.paper</a>
+</div>
+
+<h1>Coverage Summary for Class: Paper (com.marginallyclever.makelangelo.paper)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Paper</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    64%
+  </span>
+  <span class="absValue">
+    (16/25)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (2/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    60.6%
+  </span>
+  <span class="absValue">
+    (57/94)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.paper;
+&nbsp;
+&nbsp;import com.jogamp.opengl.GL2;
+&nbsp;import com.marginallyclever.makelangelo.preview.PreviewListener;
+&nbsp;import com.marginallyclever.util.PreferencesHelper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.util.prefs.Preferences;
+&nbsp;
+&nbsp;public class Paper implements PreviewListener {
+<b class="fc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(Paper.class);</b>
+&nbsp;
+&nbsp;	public static final int DEFAULT_WIDTH = 420; // mm
+&nbsp;	public static final int DEFAULT_HEIGHT = 594; // mm
+&nbsp;
+&nbsp;	private static final String PREF_KEY_ROTATION = &quot;rotation&quot;;
+&nbsp;	private static final String PREF_KEY_PAPER_MARGIN = &quot;paper_margin&quot;;
+&nbsp;	private static final String PREF_KEY_PAPER_BOTTOM = &quot;paper_bottom&quot;;
+&nbsp;	private static final String PREF_KEY_PAPER_TOP = &quot;paper_top&quot;;
+&nbsp;	private static final String PREF_KEY_PAPER_RIGHT = &quot;paper_right&quot;;
+&nbsp;	private static final String PREF_KEY_PAPER_LEFT = &quot;paper_left&quot;;
+&nbsp;	private static final String PREF_KEY_PAPER_COLOR = &quot;paper_color&quot;;
+&nbsp;	private static final String PREF_KEY_PAPER_CENTER_X = &quot;paper_center_X&quot;;
+&nbsp;	private static final String PREF_KEY_PAPER_CENTER_Y = &quot;paper_center_Y&quot;;
+&nbsp;
+<b class="fc">&nbsp;	private static final Preferences paperPreferenceNode</b>
+<b class="fc">&nbsp;		= PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.PAPER);</b>
+&nbsp;	
+&nbsp;	// paper border position ( from the center of the paper)
+&nbsp;	private double paperLeft;
+&nbsp;	private double paperRight;
+&nbsp;	private double paperBottom;
+&nbsp;	private double paperTop;
+&nbsp;	// % from edge of paper.
+<b class="fc">&nbsp;	private double paperMargin = 0.95;</b>
+&nbsp;	
+&nbsp;	private double rotation;
+&nbsp;	private double rotationRef;
+&nbsp;
+&nbsp;	// shift apply to the center of the paper
+<b class="fc">&nbsp;	private double centerX=0.0d;</b>
+<b class="fc">&nbsp;	private double centerY=0.0d;</b>
+<b class="fc">&nbsp;	private Color paperColor = Color.WHITE;</b>
+&nbsp;	
+&nbsp;	public Paper() {
+<b class="fc">&nbsp;		super();</b>
+<b class="fc">&nbsp;		setPaperSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, 0, 0);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public void render(GL2 gl2) {
+<b class="nc">&nbsp;		renderPaper(gl2);</b>
+<b class="nc">&nbsp;		renderMargin(gl2);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Render the paper margin rectangle.
+&nbsp;	 * @param gl2 the render context
+&nbsp;	 */
+&nbsp;	private void renderMargin(GL2 gl2) {
+<b class="nc">&nbsp;		gl2.glLineWidth(1);</b>
+<b class="nc">&nbsp;		gl2.glColor3f(0.9f, 0.9f, 0.9f); // Paper margin line #color</b>
+&nbsp;
+<b class="nc">&nbsp;		Rectangle2D.Double rect = getMarginRectangle();</b>
+<b class="nc">&nbsp;		double yMin = rect.getMinY();</b>
+<b class="nc">&nbsp;		double yMax = rect.getMaxY();</b>
+<b class="nc">&nbsp;		double xMin = rect.getMinX();</b>
+<b class="nc">&nbsp;		double xMax = rect.getMaxX();</b>
+&nbsp;
+<b class="nc">&nbsp;		gl2.glPushMatrix();</b>
+<b class="nc">&nbsp;		gl2.glTranslated(centerX, centerY, 0);</b>
+<b class="nc">&nbsp;		gl2.glBegin(GL2.GL_LINE_LOOP);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(xMin, yMax);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(xMax, yMax);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(xMax, yMin);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(xMin, yMin);</b>
+<b class="nc">&nbsp;		gl2.glEnd();</b>
+<b class="nc">&nbsp;		gl2.glPopMatrix();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Draw paper as a rectangle.
+&nbsp;	 * @param gl2 
+&nbsp;	 */
+&nbsp;	private void renderPaper(GL2 gl2) {
+<b class="nc">&nbsp;		gl2.glColor3d(</b>
+<b class="nc">&nbsp;				(double)paperColor.getRed() / 255.0, </b>
+<b class="nc">&nbsp;				(double)paperColor.getGreen() / 255.0, </b>
+<b class="nc">&nbsp;				(double)paperColor.getBlue() / 255.0);</b>
+<b class="nc">&nbsp;		gl2.glPushMatrix();</b>
+<b class="nc">&nbsp;		gl2.glTranslated(centerX, centerY, 0);</b>
+<b class="nc">&nbsp;		gl2.glBegin(GL2.GL_TRIANGLE_FAN);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(getPaperLeft(), getPaperTop());</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(getPaperRight(), getPaperTop());</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(getPaperRight(), getPaperBottom());</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(getPaperLeft(), getPaperBottom());</b>
+<b class="nc">&nbsp;		gl2.glEnd();</b>
+<b class="nc">&nbsp;		gl2.glPopMatrix();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return description of the paper.
+&nbsp;	 */
+&nbsp;	@Override
+&nbsp;	public String toString() {
+<b class="fc">&nbsp;		return String.format(</b>
+&nbsp;				&quot;Paper Width=%5.2f Height=%5.2f center(%5.2f,%5.2f) color %s&quot;,
+<b class="fc">&nbsp;				getPaperWidth(), getPaperHeight(), centerX, centerY, paperColor);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/** 
+&nbsp;	 * TODO control values consistency ?
+&nbsp;	 * TODO color hase RGB hex string value ?
+&nbsp;	 */
+&nbsp;	public void loadConfig() {
+<b class="fc">&nbsp;		logger.debug(&quot;loading...&quot;);</b>
+<b class="fc">&nbsp;		paperLeft = Double.parseDouble(paperPreferenceNode.get(PREF_KEY_PAPER_LEFT, Double.toString(paperLeft)));</b>
+<b class="fc">&nbsp;		paperRight = Double.parseDouble(paperPreferenceNode.get(PREF_KEY_PAPER_RIGHT, Double.toString(paperRight)));</b>
+<b class="fc">&nbsp;		paperTop = Double.parseDouble(paperPreferenceNode.get(PREF_KEY_PAPER_TOP, Double.toString(paperTop)));</b>
+<b class="fc">&nbsp;		paperBottom = Double.parseDouble(paperPreferenceNode.get(PREF_KEY_PAPER_BOTTOM, Double.toString(paperBottom)));</b>
+<b class="fc">&nbsp;		paperMargin = Double.parseDouble(paperPreferenceNode.get(PREF_KEY_PAPER_MARGIN, Double.toString(paperMargin)));</b>
+<b class="fc">&nbsp;		rotation = Double.parseDouble(paperPreferenceNode.get(PREF_KEY_ROTATION, Double.toString(rotation)));</b>
+<b class="fc">&nbsp;		int colorFromPref = Integer.parseInt(paperPreferenceNode.get(PREF_KEY_PAPER_COLOR, Integer.toString(paperColor.hashCode())));</b>
+<b class="fc">&nbsp;		paperColor = new Color(colorFromPref);</b>
+<b class="fc">&nbsp;		rotationRef = 0;</b>
+<b class="fc">&nbsp;		centerX=Double.parseDouble(paperPreferenceNode.get(PREF_KEY_PAPER_CENTER_X, Double.toString(rotation)));</b>
+<b class="fc">&nbsp;		centerY=Double.parseDouble(paperPreferenceNode.get(PREF_KEY_PAPER_CENTER_Y, Double.toString(rotation)));</b>
+<b class="fc">&nbsp;		logger.debug(this.toString());</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void saveConfig() {
+<b class="fc">&nbsp;		logger.debug(&quot;saving &quot;+this+&quot;...&quot;);</b>
+<b class="fc">&nbsp;		paperPreferenceNode.putDouble(PREF_KEY_PAPER_LEFT, paperLeft);</b>
+<b class="fc">&nbsp;		paperPreferenceNode.putDouble(PREF_KEY_PAPER_RIGHT, paperRight);</b>
+<b class="fc">&nbsp;		paperPreferenceNode.putDouble(PREF_KEY_PAPER_TOP, paperTop);</b>
+<b class="fc">&nbsp;		paperPreferenceNode.putDouble(PREF_KEY_PAPER_BOTTOM, paperBottom);</b>
+<b class="fc">&nbsp;		paperPreferenceNode.put(PREF_KEY_PAPER_MARGIN, Double.toString(paperMargin));</b>
+<b class="fc">&nbsp;		paperPreferenceNode.putDouble(PREF_KEY_ROTATION, rotation);</b>
+<b class="fc">&nbsp;		paperPreferenceNode.putInt(PREF_KEY_PAPER_COLOR, paperColor.hashCode());</b>
+<b class="fc">&nbsp;		paperPreferenceNode.putDouble(PREF_KEY_PAPER_CENTER_X, centerX);</b>
+<b class="fc">&nbsp;		paperPreferenceNode.putDouble(PREF_KEY_PAPER_CENTER_Y, centerY);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setPaperSize(double width, double height, double shiftx, double shifty) {
+<b class="fc">&nbsp;		this.centerX = shiftx;</b>
+<b class="fc">&nbsp;		this.centerY = shifty;</b>
+<b class="fc">&nbsp;		this.paperLeft = -width / 2;</b>
+<b class="fc">&nbsp;		this.paperRight = width / 2;</b>
+<b class="fc">&nbsp;		this.paperTop = height / 2;</b>
+<b class="fc">&nbsp;		this.paperBottom = -height / 2;		</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Color getPaperColor() {
+<b class="fc">&nbsp;		return paperColor;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setPaperColor(Color arg0) {
+<b class="fc">&nbsp;		paperColor = arg0;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public double getCenterX() {
+<b class="fc">&nbsp;		return centerX;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public double getCenterY() {
+<b class="fc">&nbsp;		return centerY;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return paper height in mm.
+&nbsp;	 */
+&nbsp;	public double getPaperHeight() {
+<b class="fc">&nbsp;		return paperTop - paperBottom;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return paper width in mm.
+&nbsp;	 */
+&nbsp;	public double getPaperWidth() {
+<b class="fc">&nbsp;		return paperRight - paperLeft;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return absolute paper left edge in mm.
+&nbsp;	 */
+&nbsp;	public double getPaperLeft() {
+<b class="nc">&nbsp;		return paperLeft;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return absolute paper right edge in mm.
+&nbsp;	 */
+&nbsp;	public double getPaperRight() {
+<b class="nc">&nbsp;		return paperRight;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return absolute paper top edge in mm.
+&nbsp;	 */
+&nbsp;	public double getPaperTop() {
+<b class="nc">&nbsp;		return paperTop;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return absolute paper bottom edge in mm.
+&nbsp;	 */
+&nbsp;	public double getPaperBottom() {
+<b class="nc">&nbsp;		return paperBottom;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param paperMargin 0...1
+&nbsp;	 */
+&nbsp;	public void setPaperMargin(double paperMargin) {
+<b class="pc">&nbsp;		if( paperMargin&lt;0 ) paperMargin = 0;</b>
+<b class="pc">&nbsp;		if( paperMargin&gt;1 ) paperMargin = 1;</b>
+<b class="fc">&nbsp;		this.paperMargin = paperMargin;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return paper margin as a value 0...1.
+&nbsp;	 */
+&nbsp;	public double getPaperMargin() {
+<b class="fc">&nbsp;		return paperMargin;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Rectangle2D.Double getMarginRectangle() {
+<b class="fc">&nbsp;		Rectangle2D.Double rectangle = new Rectangle2D.Double();</b>
+<b class="fc">&nbsp;		rectangle.x = paperLeft * paperMargin;</b>
+<b class="fc">&nbsp;		rectangle.y = paperBottom * paperMargin;</b>
+<b class="fc">&nbsp;		rectangle.width = (paperRight-paperLeft) * paperMargin;</b>
+<b class="fc">&nbsp;		rectangle.height = (paperTop-paperBottom) * paperMargin;</b>
+<b class="fc">&nbsp;		return rectangle;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public double getRotation() {
+<b class="fc">&nbsp;		return this.rotation;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setRotation(double rot) {
+<b class="nc">&nbsp;		this.rotation = rot;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setRotationRef(double ang) {
+<b class="nc">&nbsp;		this.rotationRef = ang;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

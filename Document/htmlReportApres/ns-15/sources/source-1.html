@@ -1,0 +1,275 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > TruchetCurved</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.truchet</a>
+</div>
+
+<h1>Coverage Summary for Class: TruchetCurved (com.marginallyclever.makelangelo.makeart.truchet)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TruchetCurved</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.9%
+  </span>
+  <span class="absValue">
+    (8/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    60.9%
+  </span>
+  <span class="absValue">
+    (14/23)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90.5%
+  </span>
+  <span class="absValue">
+    (57/63)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.truchet;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.helpers.MathHelper;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import javax.vecmath.Vector2d;
+&nbsp;
+&nbsp;public class TruchetCurved implements TruchetTile {
+&nbsp;    public static final int TYPE_RANDOM = 0;
+&nbsp;    public static final int TYPE_CURTAIN_LEFT = 1;
+&nbsp;    public static final int TYPE_CURTAIN_RIGHT = 2;
+&nbsp;    public static final int TYPE_FAN_LEFT = 3;
+&nbsp;    public static final int TYPE_FAN_RIGHT = 4;
+&nbsp;    public static final int MAX_TYPES = 5;
+&nbsp;
+<b class="fc">&nbsp;    private int type = 0;</b>
+&nbsp;    private final Turtle turtle;
+&nbsp;    private final double spaceBetweenLines;
+&nbsp;    private final double tileSize;
+&nbsp;
+&nbsp;    public TruchetCurved(Turtle turtle,double spaceBetweenLines,double linesPerTileCount) {
+<b class="fc">&nbsp;        super();</b>
+<b class="fc">&nbsp;        this.turtle=turtle;</b>
+<b class="fc">&nbsp;        this.spaceBetweenLines = spaceBetweenLines;</b>
+<b class="fc">&nbsp;        tileSize = spaceBetweenLines * linesPerTileCount;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void drawTile(double x,double y) {
+<b class="pc">&nbsp;        switch(type) {</b>
+&nbsp;            case TYPE_RANDOM -&gt; {
+<b class="nc">&nbsp;                double r = Math.random();</b>
+&nbsp;
+<b class="nc">&nbsp;                if(r&lt;0.25) tileA1(x,y);</b>
+<b class="nc">&nbsp;                else if(r&lt;0.50) tileB1(x,y);</b>
+<b class="nc">&nbsp;                else if(r&lt;0.75) tileA2(x,y);</b>
+<b class="nc">&nbsp;                else            tileB2(x,y);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            case TYPE_CURTAIN_LEFT -&gt; tileA1(x,y);</b>
+<b class="fc">&nbsp;            case TYPE_CURTAIN_RIGHT -&gt; tileB1(x,y);</b>
+<b class="fc">&nbsp;            case TYPE_FAN_LEFT -&gt; tileA2(x,y);</b>
+<b class="fc">&nbsp;            case TYPE_FAN_RIGHT -&gt; tileB2(x,y);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Style=/
+&nbsp;     * @param x0 top-left corner
+&nbsp;     * @param y0 top-left corner
+&nbsp;     */
+&nbsp;    public void tileA1(double x0,double y0) {
+<b class="fc">&nbsp;        double x1=x0+tileSize;</b>
+<b class="fc">&nbsp;        double y1=y0+tileSize;</b>
+<b class="fc">&nbsp;        double d=Math.sqrt(tileSize*tileSize+tileSize*tileSize);</b>
+&nbsp;
+<b class="fc">&nbsp;        for(double r1=spaceBetweenLines;r1&lt;=tileSize;r1 += spaceBetweenLines) {</b>
+<b class="fc">&nbsp;            interTile(x1,y1,r1,Math.PI*1.5,Math.PI*1.0);</b>
+&nbsp;
+&nbsp;            double v;
+&nbsp;            try {
+<b class="fc">&nbsp;                Vector2d p = MathHelper.intersectionOfCircles(r1,tileSize,d);</b>
+<b class="fc">&nbsp;                v = Math.abs(Math.atan(p.y/p.x)) - Math.PI * 0.25;</b>
+<b class="fc">&nbsp;                interTile(x0, y0, r1, Math.PI * 0.0, -v);</b>
+<b class="fc">&nbsp;                interTile(x0, y0, r1, Math.PI * 0.5, Math.PI * 0.5+v);</b>
+<b class="fc">&nbsp;            } catch(IllegalArgumentException e) {</b>
+<b class="fc">&nbsp;                interTile(x0,y0,r1,Math.PI*0.0,Math.PI*0.5);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Style=/
+&nbsp;     * @param x0 top-left corner
+&nbsp;     * @param y0 top-left corner
+&nbsp;     */
+&nbsp;    public void tileA2(double x0,double y0) {
+<b class="fc">&nbsp;        double x1=x0+tileSize;</b>
+<b class="fc">&nbsp;        double y1=y0+tileSize;</b>
+<b class="fc">&nbsp;        double d=Math.sqrt(tileSize*tileSize+tileSize*tileSize);</b>
+&nbsp;
+<b class="fc">&nbsp;        for(double r1=spaceBetweenLines;r1&lt;=tileSize;r1 += spaceBetweenLines) {</b>
+<b class="fc">&nbsp;            interTile(x0,y0,r1,Math.PI*0.0,Math.PI*0.5);</b>
+&nbsp;
+&nbsp;            double v;
+&nbsp;            try {
+<b class="fc">&nbsp;                Vector2d p = MathHelper.intersectionOfCircles(r1,tileSize,d);</b>
+<b class="fc">&nbsp;                v = Math.abs(Math.atan(p.y/p.x)) - Math.PI * 0.25;</b>
+<b class="fc">&nbsp;                interTile(x1,y1, r1, Math.PI * 1.0, Math.PI * 1.0-v);</b>
+<b class="fc">&nbsp;                interTile(x1,y1, r1, Math.PI * 1.5, Math.PI * 1.5+v);</b>
+<b class="fc">&nbsp;            } catch(IllegalArgumentException e) {</b>
+<b class="fc">&nbsp;                interTile(x1,y1,r1,Math.PI*1.5,Math.PI*1.0);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Style=\
+&nbsp;     * @param x0 top-left corner
+&nbsp;     * @param y0 top-left corner
+&nbsp;     */
+&nbsp;    public void tileB1(double x0,double y0) {
+<b class="fc">&nbsp;        double x1=x0+tileSize;</b>
+<b class="fc">&nbsp;        double y1=y0+tileSize;</b>
+<b class="fc">&nbsp;        double d=Math.sqrt(tileSize*tileSize+tileSize*tileSize);</b>
+&nbsp;
+<b class="fc">&nbsp;        for(double r1=spaceBetweenLines;r1&lt;=tileSize;r1 += spaceBetweenLines) {</b>
+<b class="fc">&nbsp;            interTile(x0,y1,r1,Math.PI*2.0,Math.PI*1.5);</b>
+&nbsp;
+&nbsp;            double v;
+&nbsp;            try {
+<b class="fc">&nbsp;                Vector2d p = MathHelper.intersectionOfCircles(r1,tileSize,d);</b>
+<b class="fc">&nbsp;                v = Math.abs(Math.atan(p.y/p.x)) - Math.PI * 0.25;</b>
+<b class="fc">&nbsp;                interTile(x1, y0, r1, Math.PI * 0.5, Math.PI * 0.5-v);</b>
+<b class="fc">&nbsp;                interTile(x1, y0, r1, Math.PI * 1.0, Math.PI * 1.0+v);</b>
+<b class="fc">&nbsp;            } catch(IllegalArgumentException e) {</b>
+<b class="fc">&nbsp;                interTile(x1,y0,r1,Math.PI*1.0,Math.PI*0.5);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Style=\
+&nbsp;     * @param x0 top-left corner
+&nbsp;     * @param y0 top-left corner
+&nbsp;     */
+&nbsp;    public void tileB2(double x0,double y0) {
+<b class="fc">&nbsp;        double x1=x0+tileSize;</b>
+<b class="fc">&nbsp;        double y1=y0+tileSize;</b>
+<b class="fc">&nbsp;        double d=Math.sqrt(tileSize*tileSize+tileSize*tileSize);</b>
+&nbsp;
+<b class="fc">&nbsp;        for(double r1=spaceBetweenLines;r1&lt;=tileSize;r1 += spaceBetweenLines) {</b>
+<b class="fc">&nbsp;            interTile(x1,y0,r1,Math.PI*1.0,Math.PI*0.5);</b>
+&nbsp;
+&nbsp;            double v;
+&nbsp;            try {
+<b class="fc">&nbsp;                Vector2d p = MathHelper.intersectionOfCircles(r1,tileSize,d);</b>
+<b class="fc">&nbsp;                v = Math.abs(Math.atan(p.y/p.x)) - Math.PI * 0.25;</b>
+<b class="fc">&nbsp;                interTile(x0, y1, r1, Math.PI * 1.5, Math.PI * 1.5-v);</b>
+<b class="fc">&nbsp;                interTile(x0, y1, r1, Math.PI * 2.0, Math.PI * 2.0+v);</b>
+<b class="fc">&nbsp;            } catch(IllegalArgumentException e) {</b>
+<b class="fc">&nbsp;                interTile(x0,y1,r1,Math.PI*2.0,Math.PI*1.5);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // Interpolate from (x0,y0) to (x1,y1) in steps of length iterSize.
+&nbsp;    private void interTile(double cx,double cy,double radius,double a0, double a1) {
+<b class="fc">&nbsp;        turtle.drawArc(cx,cy,radius,a0,a1,10);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getType() {
+<b class="nc">&nbsp;        return type;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setType(int type) {
+<b class="pc">&nbsp;        if(type&lt;0 || type &gt;=MAX_TYPES) throw new IllegalArgumentException(&quot;Invalid type&quot;);</b>
+<b class="fc">&nbsp;        this.type = type;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

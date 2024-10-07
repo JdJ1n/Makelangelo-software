@@ -1,0 +1,182 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > FilterThresholdFancy</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imagefilter</a>
+</div>
+
+<h1>Coverage Summary for Class: FilterThresholdFancy (com.marginallyclever.makelangelo.makeart.imagefilter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FilterThresholdFancy</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (2/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    33.3%
+  </span>
+  <span class="absValue">
+    (2/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    45.8%
+  </span>
+  <span class="absValue">
+    (11/24)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imagefilter;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.ColorRGB;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;
+&nbsp;import java.awt.image.BufferedImage;
+&nbsp;
+&nbsp;/**
+&nbsp; * For any pixel u 0...1,&lt;br&gt;
+&nbsp; * &lt;ul&gt;
+&nbsp; *     &lt;li&gt;if u &gt;= e, then v = 1&lt;/li&gt;
+&nbsp; *     &lt;li&gt;if u &lt;  e, then v = 1 + tanh(phi*(u-e))&lt;/li&gt;
+&nbsp; * &lt;/ul&gt;
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.46.0
+&nbsp; */
+&nbsp;public class FilterThresholdFancy extends ImageFilter {
+&nbsp;    private final TransformedImage a;
+&nbsp;    private final int threshold;
+&nbsp;    private final double phi;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param a source image
+&nbsp;     * @param threshold 0...255
+&nbsp;     * @param phi &gt;=0
+&nbsp;     */
+<b class="fc">&nbsp;    public FilterThresholdFancy(TransformedImage a, int threshold, double phi) {</b>
+<b class="fc">&nbsp;        this.a = a;</b>
+<b class="fc">&nbsp;        this.threshold = threshold;</b>
+<b class="fc">&nbsp;        this.phi = phi;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public TransformedImage filter() {
+<b class="nc">&nbsp;        TransformedImage result = new TransformedImage(a);</b>
+<b class="nc">&nbsp;        int w = a.getSourceImage().getWidth();</b>
+<b class="nc">&nbsp;        int h = a.getSourceImage().getHeight();</b>
+&nbsp;
+<b class="nc">&nbsp;        BufferedImage aa = a.getSourceImage();</b>
+<b class="nc">&nbsp;        BufferedImage rr = result.getSourceImage();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (int y = 0; y &lt; h; ++y) {</b>
+<b class="nc">&nbsp;            for (int x = 0; x &lt; w; ++x) {</b>
+<b class="nc">&nbsp;                ColorRGB diff = new ColorRGB(aa.getRGB(x, y));</b>
+<b class="nc">&nbsp;                diff.red   = modify(diff.red  );</b>
+<b class="nc">&nbsp;                diff.green = modify(diff.green);</b>
+<b class="nc">&nbsp;                diff.blue  = modify(diff.blue );</b>
+<b class="nc">&nbsp;                rr.setRGB(x, y, diff.toInt());</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    int modify(double input) {
+<b class="fc">&nbsp;        if(input &gt;= threshold) return 255;</b>
+&nbsp;        // diff will always be &lt;0
+<b class="fc">&nbsp;        double diff = input - threshold;</b>
+<b class="fc">&nbsp;        double diffUnit = diff / 255.0;</b>
+<b class="fc">&nbsp;        double temp = phi * diffUnit;</b>
+&nbsp;        // if tau&gt;=0 then tanh will always be -1...0
+<b class="fc">&nbsp;        double vUnit = 1.0 + Math.tanh(temp);</b>
+<b class="fc">&nbsp;        double v = vUnit * 255.0;</b>
+<b class="fc">&nbsp;        return (int)Math.max( 0, Math.min(255,v) );</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

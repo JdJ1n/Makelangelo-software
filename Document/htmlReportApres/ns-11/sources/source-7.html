@@ -1,0 +1,528 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Converter_FlowField</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imageconverter</a>
+</div>
+
+<h1>Coverage Summary for Class: Converter_FlowField (com.marginallyclever.makelangelo.makeart.imageconverter)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Converter_FlowField</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/40)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/38)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/204)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Converter_FlowField$SampleAt</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/41)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/38)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/208)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imageconverter;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.Point2D;
+&nbsp;import com.marginallyclever.convenience.noise.Noise;
+&nbsp;import com.marginallyclever.convenience.noise.NoiseFactory;
+&nbsp;import com.marginallyclever.convenience.noise.PerlinNoise;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+&nbsp;import com.marginallyclever.makelangelo.paper.Paper;
+&nbsp;import com.marginallyclever.makelangelo.select.*;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import javax.vecmath.Vector2d;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.util.*;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * Uses perlin noise to generate a flow field, then makes the flow lines thicker where the image is darker.
+&nbsp; * @author Dan Royer
+&nbsp; * @since 2022-04-05
+&nbsp; */
+&nbsp;public class Converter_FlowField extends ImageConverter {
+<b class="nc">&nbsp;	private static double  scaleX = 0.01; // controls complexity of curve</b>
+<b class="nc">&nbsp;	private static double  scaleY = 0.01; // controls complexity of curve</b>
+<b class="nc">&nbsp;	private static double  offsetX = 0; // controls complexity of curve</b>
+<b class="nc">&nbsp;	private static double  offsetY = 0; // controls complexity of curve</b>
+<b class="nc">&nbsp;	private static int stepSize = 10; // the distance between lines at the edge of the paper, in mm.</b>
+<b class="nc">&nbsp;	private static int stepLength = 10;</b>
+<b class="nc">&nbsp;	private static int stepVariation = 5;</b>
+<b class="nc">&nbsp;	private static boolean rightAngle = false;</b>
+<b class="nc">&nbsp;	private static double samplingRate = 5;  // the sampling rate along each line, in mm.</b>
+<b class="nc">&nbsp;	private static boolean fromEdge = false;  // continuous lines</b>
+<b class="nc">&nbsp;	private static int cutoff = 128;  // the sampling rate along each line, in mm.</b>
+<b class="nc">&nbsp;	private static int seed=0;</b>
+<b class="nc">&nbsp;	private static final Random random = new Random();</b>
+&nbsp;
+<b class="nc">&nbsp;	private Noise noiseMaker = new PerlinNoise();</b>
+&nbsp;
+&nbsp;	public Converter_FlowField() {
+<b class="nc">&nbsp;		super();</b>
+<b class="nc">&nbsp;		SelectRandomSeed fieldRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;,Translator.get(&quot;Generator.randomSeed&quot;),seed);</b>
+<b class="nc">&nbsp;		SelectOneOfMany fieldNoise = new SelectOneOfMany(&quot;noiseType&quot;,Translator.get(&quot;Generator_FlowField.noiseType&quot;), NoiseFactory.getNames(),0);</b>
+<b class="nc">&nbsp;		SelectDouble selectScaleX = new SelectDouble(&quot;scaleX&quot;, Translator.get(&quot;Generator_FlowField.scaleX&quot;), getScaleX());</b>
+<b class="nc">&nbsp;		SelectDouble selectScaleY = new SelectDouble(&quot;scaleY&quot;, Translator.get(&quot;Generator_FlowField.scaleY&quot;), getScaleY());</b>
+<b class="nc">&nbsp;		SelectDouble selectOffsetX = new SelectDouble(&quot;offsetX&quot;, Translator.get(&quot;Generator_FlowField.offsetX&quot;), getOffsetX());</b>
+<b class="nc">&nbsp;		SelectDouble selectOffsetY = new SelectDouble(&quot;offsetY&quot;, Translator.get(&quot;Generator_FlowField.offsetY&quot;), getOffsetY());</b>
+<b class="nc">&nbsp;		SelectSlider selectStepSize = new SelectSlider(&quot;stepSize&quot;, Translator.get(&quot;Generator_FlowField.stepSize&quot;), 20, 2, getStepSize());</b>
+<b class="nc">&nbsp;		SelectSlider fieldStepVariation = new SelectSlider(&quot;stepVariation&quot;,Translator.get(&quot;Generator_FlowField.stepVariation&quot;),20,0,stepVariation);</b>
+<b class="nc">&nbsp;		SelectSlider fieldStepLength = new SelectSlider(&quot;stepLength&quot;,Translator.get(&quot;Generator_FlowField.stepLength&quot;),20,1,stepLength);</b>
+<b class="nc">&nbsp;		SelectBoolean fieldFromEdge = new SelectBoolean(&quot;fromEdge&quot;,Translator.get(&quot;Generator_FlowField.fromEdge&quot;),fromEdge);</b>
+<b class="nc">&nbsp;		SelectBoolean selectRightAngle = new SelectBoolean(&quot;rightAngle&quot;, Translator.get(&quot;Generator_FlowField.rightAngle&quot;), getRightAngle());</b>
+<b class="nc">&nbsp;		SelectSlider selectCutoff = new SelectSlider(&quot;cutoff&quot;, Translator.get(&quot;Converter_VoronoiStippling.Cutoff&quot;), 255,0, cutoff);</b>
+&nbsp;
+<b class="nc">&nbsp;		add(fieldRandomSeed);</b>
+<b class="nc">&nbsp;		fieldRandomSeed.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			seed = (int)evt.getNewValue();</b>
+<b class="nc">&nbsp;			random.setSeed(seed);</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+&nbsp;
+<b class="nc">&nbsp;		add(fieldNoise);</b>
+<b class="nc">&nbsp;		fieldNoise.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			noiseMaker = NoiseFactory.getNoise(fieldNoise.getSelectedIndex());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+&nbsp;
+<b class="nc">&nbsp;		add(selectScaleX);</b>
+<b class="nc">&nbsp;		add(selectScaleY);</b>
+<b class="nc">&nbsp;		add(selectOffsetX);</b>
+<b class="nc">&nbsp;		add(selectOffsetY);</b>
+<b class="nc">&nbsp;		add(selectStepSize);</b>
+<b class="nc">&nbsp;		add(fieldStepVariation);</b>
+<b class="nc">&nbsp;		add(fieldStepLength);</b>
+<b class="nc">&nbsp;		add(fieldFromEdge);</b>
+<b class="nc">&nbsp;		add(selectRightAngle);</b>
+<b class="nc">&nbsp;		add(selectCutoff);</b>
+&nbsp;
+<b class="nc">&nbsp;		selectScaleX.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setScaleX((double)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		selectScaleY.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setScaleY((double)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		selectOffsetX.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setOffsetX((double)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		selectOffsetY.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setOffsetY((double)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		selectStepSize.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setStepSize((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		fieldStepLength.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setStepLength((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		fieldStepVariation.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setStepVariation((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		fieldFromEdge.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setFromEdge((boolean)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		selectRightAngle.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setRightAngle((boolean)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		selectCutoff.addSelectListener((evt)-&gt;{</b>
+<b class="nc">&nbsp;			setCutoff((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+&nbsp;
+<b class="nc">&nbsp;		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href=&#39;https://en.wikipedia.org/wiki/Perlin_noise&#39;&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="nc">&nbsp;		return Translator.get(&quot;Generator_FlowField.name&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public static void setScaleX(double scaleX) {
+<b class="nc">&nbsp;		Converter_FlowField.scaleX = scaleX;</b>
+&nbsp;	}
+&nbsp;	public static void setScaleY(double scaleY) {
+<b class="nc">&nbsp;		Converter_FlowField.scaleY = scaleY;</b>
+&nbsp;	}
+&nbsp;	public static void setOffsetX(double offsetX) {
+<b class="nc">&nbsp;		Converter_FlowField.offsetX = offsetX;</b>
+&nbsp;	}
+&nbsp;	public static void setOffsetY(double offsetY) {
+<b class="nc">&nbsp;		Converter_FlowField.offsetY = offsetY;</b>
+&nbsp;	}
+&nbsp;	public static void setStepSize(int stepSize) {
+<b class="nc">&nbsp;		Converter_FlowField.stepSize = stepSize;</b>
+&nbsp;	}
+&nbsp;	public static void setStepLength(int stepLength) {
+<b class="nc">&nbsp;		Converter_FlowField.stepLength = stepLength;</b>
+&nbsp;	}
+&nbsp;	public static void setStepVariation(int stepVariation) {
+<b class="nc">&nbsp;		Converter_FlowField.stepVariation = stepVariation;</b>
+&nbsp;	}
+&nbsp;	public static void setFromEdge(boolean fromEdge) {
+<b class="nc">&nbsp;		Converter_FlowField.fromEdge = fromEdge;</b>
+&nbsp;	}
+&nbsp;	public static void setRightAngle(boolean rightAngle) {
+<b class="nc">&nbsp;		Converter_FlowField.rightAngle = rightAngle;</b>
+&nbsp;	}
+&nbsp;	public static void setCutoff(int cutoff) {
+<b class="nc">&nbsp;		Converter_FlowField.cutoff = cutoff;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public static double getScaleX() {
+<b class="nc">&nbsp;		return scaleX;</b>
+&nbsp;	}
+&nbsp;	public static double getScaleY() {
+<b class="nc">&nbsp;		return scaleY;</b>
+&nbsp;	}
+&nbsp;	public static double getOffsetX() {
+<b class="nc">&nbsp;		return offsetX;</b>
+&nbsp;	}
+&nbsp;	public static double getOffsetY() {
+<b class="nc">&nbsp;		return offsetY;</b>
+&nbsp;	}
+&nbsp;	public static int getStepSize() {
+<b class="nc">&nbsp;		return stepSize;</b>
+&nbsp;	}
+&nbsp;	public static boolean getRightAngle() {
+<b class="nc">&nbsp;		return rightAngle;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private static class SampleAt {
+&nbsp;		public Point2D p;
+&nbsp;		public Point2D n;
+&nbsp;		public double value;
+&nbsp;
+<b class="nc">&nbsp;		public SampleAt(Point2D p, Point2D n,double value) {</b>
+<b class="nc">&nbsp;			this.p = p;</b>
+<b class="nc">&nbsp;			this.n = n;</b>
+<b class="nc">&nbsp;			this.value = value;</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	// move several times along the same line, changing the offset each time based on the intensity of the image.
+&nbsp;	protected void convertLine(TransformedImage img, Turtle line) {
+<b class="nc">&nbsp;		SampleAt [] samples = calculateSamplesOnce(img,line);</b>
+&nbsp;
+&nbsp;		// TODO number of passes should be based on the size of the pen tip.
+<b class="nc">&nbsp;		double px = myPaper.getCenterX();</b>
+<b class="nc">&nbsp;		double py = myPaper.getCenterY();</b>
+&nbsp;
+<b class="nc">&nbsp;		double passes=4;</b>
+<b class="nc">&nbsp;		double halfPasses=(passes-1)/2;</b>
+<b class="nc">&nbsp;		boolean first = true;</b>
+&nbsp;
+<b class="nc">&nbsp;		for(int j=0;j&lt;passes;++j) {</b>
+<b class="nc">&nbsp;			double offset = (double)j-halfPasses;</b>
+<b class="nc">&nbsp;			for(SampleAt sample : samples) {</b>
+&nbsp;				// move to the adjusted point
+<b class="nc">&nbsp;				Point2D p3 = new Point2D(sample.n);</b>
+<b class="nc">&nbsp;				p3.scale(offset*sample.value);</b>
+<b class="nc">&nbsp;				p3.add(sample.p);</b>
+<b class="nc">&nbsp;				if(first) {</b>
+<b class="nc">&nbsp;					turtle.jumpTo(px + p3.x, py + p3.y);</b>
+<b class="nc">&nbsp;					first=false;</b>
+&nbsp;				} else {
+<b class="nc">&nbsp;					turtle.moveTo(px + p3.x, py + p3.y);</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;			// reverse the samples, which reverses the line direction.
+<b class="nc">&nbsp;			Collections.reverse(Arrays.asList(samples));</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private SampleAt[] calculateSamplesOnce(TransformedImage img, Turtle line) {
+<b class="nc">&nbsp;		double len = line.getDrawDistance();</b>
+<b class="nc">&nbsp;		int numSamples = (int)(len/samplingRate);</b>
+<b class="nc">&nbsp;		SampleAt [] samples = new SampleAt[numSamples];</b>
+&nbsp;
+<b class="nc">&nbsp;		Point2D p = line.interpolate(0.0);</b>
+<b class="nc">&nbsp;		for(int i=0;i&lt;numSamples;i++) {</b>
+<b class="nc">&nbsp;			Point2D p2 = line.interpolate((double)(i+1)* samplingRate);</b>
+&nbsp;
+<b class="nc">&nbsp;			double value = 255.0 - (img.sample(p2.x, p2.y, 5.0));</b>
+<b class="nc">&nbsp;			value = Math.max(0,Math.min(255,value));</b>
+&nbsp;
+<b class="nc">&nbsp;			Point2D n = new Point2D(p2.y-p.y,-(p2.x-p.x));</b>
+<b class="nc">&nbsp;			n.normalize();</b>
+&nbsp;
+<b class="nc">&nbsp;			samples[i] = new SampleAt(p, n, value);</b>
+<b class="nc">&nbsp;			p=p2;</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return samples;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Converts images into zigzags in paper space instead of image space
+&nbsp;	 */
+&nbsp;	@Override
+&nbsp;	public void start(Paper paper, TransformedImage image) {
+<b class="nc">&nbsp;		super.start(paper, image);</b>
+&nbsp;
+<b class="nc">&nbsp;		random.setSeed(seed);</b>
+<b class="nc">&nbsp;		FilterDesaturate bw = new FilterDesaturate(myImage);</b>
+<b class="nc">&nbsp;		TransformedImage img = bw.filter();</b>
+&nbsp;
+<b class="nc">&nbsp;		turtle.history.clear();</b>
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;		if(fromEdge) {</b>
+&nbsp;			// get all the flow lines.
+<b class="nc">&nbsp;			List&lt;Turtle&gt; list = fromEdge();</b>
+<b class="nc">&nbsp;			if (rightAngle) {</b>
+<b class="nc">&nbsp;				rightAngle = false;</b>
+<b class="nc">&nbsp;				list.addAll(fromEdge());</b>
+<b class="nc">&nbsp;				rightAngle = true;</b>
+&nbsp;			}
+&nbsp;
+&nbsp;			// make the line thicc.
+<b class="nc">&nbsp;			turtle = new Turtle();</b>
+<b class="nc">&nbsp;			for (Turtle t : list) {</b>
+<b class="nc">&nbsp;				convertLine(img, t);</b>
+&nbsp;			}
+&nbsp;		} else {
+<b class="nc">&nbsp;			asGrid(image);</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		fireConversionFinished();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private List&lt;Turtle&gt; fromEdge() {
+<b class="nc">&nbsp;		List&lt;Turtle&gt; list = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;		double px = myPaper.getCenterX();</b>
+<b class="nc">&nbsp;		double py = myPaper.getCenterY();</b>
+&nbsp;
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double xMin = rect.getMinX()+stepSize;</b>
+<b class="nc">&nbsp;		double xMax = rect.getMaxX()-stepSize;</b>
+<b class="nc">&nbsp;		double yMin = rect.getMinY()+stepSize;</b>
+<b class="nc">&nbsp;		double yMax = rect.getMaxY()-stepSize;</b>
+<b class="nc">&nbsp;		Rectangle r = new Rectangle((int)xMin,(int)yMin,(int)(xMax-xMin),(int)(yMax-yMin));</b>
+<b class="nc">&nbsp;		r.grow(1,1);</b>
+&nbsp;
+<b class="nc">&nbsp;		for(double y = yMin; y&lt;yMax; y+=stepSize) {</b>
+<b class="nc">&nbsp;			list.add(makeLine(r, xMin, y));</b>
+&nbsp;			//list.add(makeLine(r, xMax, y));
+&nbsp;		}
+<b class="nc">&nbsp;		for(double x = xMin; x&lt;xMax; x+=stepSize) {</b>
+<b class="nc">&nbsp;			list.add(makeLine(r, x, yMin));</b>
+&nbsp;			//list.add(makeLine(r, x, yMax));
+&nbsp;		}
+<b class="nc">&nbsp;		return list;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private Turtle makeLine(Rectangle r, double x, double y) {
+<b class="nc">&nbsp;		Turtle line = new Turtle();</b>
+<b class="nc">&nbsp;		line.jumpTo(x,y);</b>
+&nbsp;		// if the first step at this position would be outside the rectangle, reverse the direction.
+<b class="nc">&nbsp;		double v = noiseMaker.noise(line.getX() * scaleX + offsetX, line.getY() * scaleY + offsetY, 0);</b>
+<b class="nc">&nbsp;		line.setAngle(v * 180 + (rightAngle?90:0));</b>
+<b class="nc">&nbsp;		Vector2d nextStep = line.getHeading();</b>
+<b class="nc">&nbsp;		nextStep.scale(samplingRate);</b>
+<b class="nc">&nbsp;		nextStep.add(line.getPosition());</b>
+<b class="nc">&nbsp;		continueLine(line, r,!r.contains(nextStep.x,nextStep.y));</b>
+<b class="nc">&nbsp;		return line;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void continueLine(Turtle line, Rectangle r, boolean reverse) {
+<b class="nc">&nbsp;		for(int i=0;i&lt;200;++i) {</b>
+<b class="nc">&nbsp;			double v = noiseMaker.noise(line.getX() * scaleX + offsetX, line.getY() * scaleY + offsetY, 0);</b>
+<b class="nc">&nbsp;			line.setAngle(v * 180 + (rightAngle?90:0));</b>
+<b class="nc">&nbsp;			Vector2d nextStep = line.getHeading();</b>
+<b class="nc">&nbsp;			nextStep.scale(reverse?-samplingRate : samplingRate);</b>
+<b class="nc">&nbsp;			nextStep.add(line.getPosition());</b>
+&nbsp;			// stop if we leave the rectangle
+<b class="nc">&nbsp;			if(!r.contains(nextStep.x,nextStep.y)) break;</b>
+<b class="nc">&nbsp;			line.moveTo(nextStep.x,nextStep.y);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void asGrid(TransformedImage img) {
+&nbsp;
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double xMin = rect.getMinX();</b>
+<b class="nc">&nbsp;		double xMax = rect.getMaxX();</b>
+<b class="nc">&nbsp;		double yMin = rect.getMinY();</b>
+<b class="nc">&nbsp;		double yMax = rect.getMaxY();</b>
+<b class="nc">&nbsp;		double px = myPaper.getCenterX();</b>
+<b class="nc">&nbsp;		double py = myPaper.getCenterY();</b>
+<b class="nc">&nbsp;		Rectangle r = new Rectangle((int)xMin,(int)yMin,(int)(xMax-xMin),(int)(yMax-yMin));</b>
+<b class="nc">&nbsp;		r.grow(1,1);</b>
+<b class="nc">&nbsp;		for(double y = yMin; y&lt;yMax; y+=stepSize) {</b>
+<b class="nc">&nbsp;			for (double x = xMin; x &lt; xMax; x += stepSize) {</b>
+<b class="nc">&nbsp;				followLine(img,x,y,r);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void followLine(TransformedImage img,double x,double y,Rectangle r) {
+<b class="nc">&nbsp;		double xx = x + stepVariation * (random.nextDouble() * 2.0 - 1.0);</b>
+<b class="nc">&nbsp;		double yy = y + stepVariation * (random.nextDouble() * 2.0 - 1.0);</b>
+&nbsp;
+<b class="nc">&nbsp;		turtle.jumpTo(xx, yy);</b>
+<b class="nc">&nbsp;		followLine(img, r, 2);</b>
+<b class="nc">&nbsp;		turtle.jumpTo(xx, yy);</b>
+<b class="nc">&nbsp;		followLine(img, r, -2);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void followLine(TransformedImage img,Rectangle r, int step) {
+<b class="nc">&nbsp;		double px = myPaper.getCenterX();</b>
+<b class="nc">&nbsp;		double py = myPaper.getCenterY();</b>
+&nbsp;
+<b class="nc">&nbsp;		for(int i=0;i&lt;stepLength/2;++i) {</b>
+<b class="nc">&nbsp;			double value = 255.0 - (img.sample(turtle.getX()-px, turtle.getY()-py, 5.0));</b>
+<b class="nc">&nbsp;			value /= 255.0;</b>
+&nbsp;
+<b class="nc">&nbsp;			if(value + (random.nextDouble() - 0.5) &gt; (cutoff/255.0)) turtle.penDown();</b>
+<b class="nc">&nbsp;			else turtle.penUp();</b>
+&nbsp;
+<b class="nc">&nbsp;			double v = noiseMaker.noise(turtle.getX() * scaleX + offsetX, turtle.getY() * scaleY + offsetY, 0);</b>
+<b class="nc">&nbsp;			turtle.setAngle(v * 180);</b>
+<b class="nc">&nbsp;			Vector2d nextStep = turtle.getHeading();</b>
+<b class="nc">&nbsp;			nextStep.scale(step);</b>
+<b class="nc">&nbsp;			nextStep.add(turtle.getPosition());</b>
+<b class="nc">&nbsp;			if(!r.contains(nextStep.x,nextStep.y)) break;</b>
+<b class="nc">&nbsp;			turtle.forward(step);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

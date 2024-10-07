@@ -1,0 +1,250 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > QuadGraph</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.convenience</a>
+</div>
+
+<h1>Coverage Summary for Class: QuadGraph (com.marginallyclever.convenience)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">QuadGraph</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/40)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/64)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.convenience;
+&nbsp;
+&nbsp;import com.jogamp.opengl.GL2;
+&nbsp;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * A quadtree is a data structure that can be used to quickly find all the objects that are within a given 2D area.
+&nbsp; */
+&nbsp;public class QuadGraph {
+&nbsp;    private static final int MAX_POINTS = 5;
+<b class="nc">&nbsp;    public final Rectangle2D bounds = new Rectangle2D.Double();</b>
+<b class="nc">&nbsp;    public final List&lt;Point2D&gt; sites = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;    public QuadGraph[] children = null;</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Setup a new quadtree node.
+&nbsp;     * @param x lower left corner
+&nbsp;     * @param y lower left corner
+&nbsp;     * @param x2 upper right corner
+&nbsp;     * @param y2 upper right corner
+&nbsp;     */
+<b class="nc">&nbsp;    public QuadGraph(double x, double y, double x2, double y2) {</b>
+<b class="nc">&nbsp;        bounds.setRect(x, y, x2-x, y2-y);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void split() {
+<b class="nc">&nbsp;        if(children != null) return;</b>
+<b class="nc">&nbsp;        double x1 = bounds.getMinX();</b>
+<b class="nc">&nbsp;        double y1 = bounds.getMinY();</b>
+<b class="nc">&nbsp;        double x2 = bounds.getMaxX();</b>
+<b class="nc">&nbsp;        double y2 = bounds.getMaxY();</b>
+<b class="nc">&nbsp;        double cx = (x1+x2)/2;</b>
+<b class="nc">&nbsp;        double cy = (y1+y2)/2;</b>
+<b class="nc">&nbsp;        children = new QuadGraph[4];</b>
+<b class="nc">&nbsp;        children[0] = new QuadGraph(x1,y1,cx,cy);</b>
+<b class="nc">&nbsp;        children[1] = new QuadGraph(x1,cy,cx,y2);</b>
+<b class="nc">&nbsp;        children[2] = new QuadGraph(cx,cy,x2,y2);</b>
+<b class="nc">&nbsp;        children[3] = new QuadGraph(cx,y1,x2,cy);</b>
+<b class="nc">&nbsp;        moveSitesIntoChildren();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void moveSitesIntoChildren() {
+&nbsp;        // put all sites into the new children
+<b class="nc">&nbsp;        for(Point2D c : sites) {</b>
+<b class="nc">&nbsp;            addCellToOneQuadrant(c);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        sites.clear();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean insert(Point2D e) {
+<b class="nc">&nbsp;        if(bounds.contains(e.x,e.y)) {</b>
+<b class="nc">&nbsp;            if(sites.size()&lt;MAX_POINTS &amp;&amp; children == null) {</b>
+<b class="nc">&nbsp;                sites.add(e);</b>
+<b class="nc">&nbsp;                return true;</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                split();</b>
+<b class="nc">&nbsp;                return addCellToOneQuadrant(e);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean addCellToOneQuadrant(Point2D e) {
+<b class="nc">&nbsp;        for(int i=0;i&lt;4;++i) {</b>
+<b class="nc">&nbsp;            if(children[i].insert(e)) return true;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // locate the cell under point x,y
+&nbsp;    public Point2D search(Point2D p) {
+<b class="nc">&nbsp;        if(!bounds.contains(p.x,p.y)) return null;</b>
+&nbsp;
+<b class="nc">&nbsp;        Point2D bestFound = null;</b>
+<b class="nc">&nbsp;        double bestD = Double.MAX_VALUE;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!sites.isEmpty()) {</b>
+&nbsp;            // search me
+<b class="nc">&nbsp;            for(Point2D c : sites) {</b>
+<b class="nc">&nbsp;                double d = p.distanceSquared(c);</b>
+<b class="nc">&nbsp;                if(bestD &gt; d) {</b>
+<b class="nc">&nbsp;                    bestD = d;</b>
+<b class="nc">&nbsp;                    bestFound = c;</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if(children != null) {</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; 4; ++i) {</b>
+&nbsp;                // look into the children
+<b class="nc">&nbsp;                Point2D bestChildFound = children[i].search(p);</b>
+<b class="nc">&nbsp;                if (bestChildFound != null &amp;&amp; bestFound == null) {</b>
+<b class="nc">&nbsp;                    double d = p.distanceSquared(bestChildFound);</b>
+<b class="nc">&nbsp;                    if(bestD &gt; d) {</b>
+<b class="nc">&nbsp;                        bestFound = bestChildFound;</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return bestFound;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void render(GL2 gl2) {
+<b class="nc">&nbsp;        if (children != null) {</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; 4; ++i) {</b>
+<b class="nc">&nbsp;                children[i].render(gl2);</b>
+&nbsp;            }
+&nbsp;            return;
+&nbsp;        } else {
+<b class="nc">&nbsp;            gl2.glColor3f(1, 0, 1);</b>
+<b class="nc">&nbsp;            gl2.glLineWidth(1);</b>
+<b class="nc">&nbsp;            gl2.glBegin(GL2.GL_LINE_LOOP);</b>
+<b class="nc">&nbsp;            gl2.glVertex2d(bounds.getMinX(), bounds.getMinY());</b>
+<b class="nc">&nbsp;            gl2.glVertex2d(bounds.getMinX(), bounds.getMaxY());</b>
+<b class="nc">&nbsp;            gl2.glVertex2d(bounds.getMaxX(), bounds.getMaxY());</b>
+<b class="nc">&nbsp;            gl2.glVertex2d(bounds.getMaxX(), bounds.getMinY());</b>
+<b class="nc">&nbsp;            gl2.glEnd();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public int countPoints() {
+<b class="nc">&nbsp;        int sum = sites.size();</b>
+<b class="nc">&nbsp;        if(children != null) {</b>
+<b class="nc">&nbsp;            for (int i = 0; i &lt; 4; ++i) {</b>
+<b class="nc">&nbsp;                sum += children[i].countPoints();</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return sum;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

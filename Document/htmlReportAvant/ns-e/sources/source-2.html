@@ -1,0 +1,159 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Line</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes</a>
+</div>
+
+<h1>Coverage Summary for Class: Line (com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Line</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (2/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    52.2%
+  </span>
+  <span class="absValue">
+    (12/23)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import com.marginallyclever.nodegraphcore.*;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;public class Line extends Node {
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(Line.class);</b>
+&nbsp;
+<b class="fc">&nbsp;    private final DockReceiving&lt;Number&gt; x0 = new DockReceiving&lt;&gt;(&quot;x0&quot;, Number.class, 0);</b>
+<b class="fc">&nbsp;    private final DockReceiving&lt;Number&gt; y0 = new DockReceiving&lt;&gt;(&quot;y0&quot;, Number.class, 0);</b>
+<b class="fc">&nbsp;    private final DockReceiving&lt;Number&gt; x1 = new DockReceiving&lt;&gt;(&quot;x1&quot;, Number.class, 1);</b>
+<b class="fc">&nbsp;    private final DockReceiving&lt;Number&gt; y1 = new DockReceiving&lt;&gt;(&quot;y1&quot;, Number.class, 0);</b>
+<b class="fc">&nbsp;    private final DockShipping&lt;Turtle&gt; contents = new DockShipping&lt;&gt;(&quot;contents&quot;, Turtle.class, new Turtle());</b>
+&nbsp;
+&nbsp;    public Line() {
+<b class="fc">&nbsp;        super(&quot;Line&quot;);</b>
+<b class="fc">&nbsp;        addVariable(x0);</b>
+<b class="fc">&nbsp;        addVariable(y0);</b>
+<b class="fc">&nbsp;        addVariable(x1);</b>
+<b class="fc">&nbsp;        addVariable(y1);</b>
+<b class="fc">&nbsp;        addVariable(contents);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void update() {
+<b class="nc">&nbsp;        if(x0.hasPacketWaiting()) x0.receive();</b>
+<b class="nc">&nbsp;        if(y0.hasPacketWaiting()) y0.receive();</b>
+<b class="nc">&nbsp;        if(x1.hasPacketWaiting()) x1.receive();</b>
+<b class="nc">&nbsp;        if(y1.hasPacketWaiting()) y1.receive();</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            Turtle t = new Turtle();</b>
+<b class="nc">&nbsp;            t.jumpTo(x0.getValue().doubleValue(),y0.getValue().doubleValue());</b>
+<b class="nc">&nbsp;            t.moveTo(x1.getValue().doubleValue(),y1.getValue().doubleValue());</b>
+<b class="nc">&nbsp;            t.penUp();</b>
+<b class="nc">&nbsp;            contents.send(new Packet&lt;&gt;(t));</b>
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            logger.warn(&quot;Failed to update, ignoring&quot;, e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

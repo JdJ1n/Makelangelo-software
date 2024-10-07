@@ -1,0 +1,429 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > PreferencesHelper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.util</a>
+</div>
+
+<h1>Coverage Summary for Class: PreferencesHelper (com.marginallyclever.util)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PreferencesHelper</td>
+<td class="coverageStat">
+  <span class="percent">
+    30.8%
+  </span>
+  <span class="absValue">
+    (4/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    5.6%
+  </span>
+  <span class="absValue">
+    (1/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    22.8%
+  </span>
+  <span class="absValue">
+    (18/79)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">PreferencesHelper$MakelangeloPreferenceKey</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (12/12)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    47.1%
+  </span>
+  <span class="absValue">
+    (8/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    5.6%
+  </span>
+  <span class="absValue">
+    (1/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    33%
+  </span>
+  <span class="absValue">
+    (30/91)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.util;
+&nbsp;
+&nbsp;import org.json.JSONObject;
+&nbsp;import org.json.Property;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.File;
+&nbsp;import java.io.FileInputStream;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Properties;
+&nbsp;import java.util.prefs.AbstractPreferences;
+&nbsp;import java.util.prefs.BackingStoreException;
+&nbsp;import java.util.prefs.Preferences;
+&nbsp;
+&nbsp;import static com.marginallyclever.util.PreferencesHelper.MakelangeloPreferenceKey.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * Helper class to be used when accessing preferences.
+&nbsp; * @author Peter Colapietro
+&nbsp; * @since v7.1.4
+&nbsp; */
+&nbsp;public final class PreferencesHelper {
+&nbsp;
+<b class="fc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(PreferencesHelper.class);</b>
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Internal mapping of all Makelangelo preference nodes.
+&nbsp;	 */
+&nbsp;	private static Map&lt;MakelangeloPreferenceKey, Preferences&gt; CLASS_TO_PREFERENCE_NODE_MAP;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Future Makelagelo root preference node path name.
+&nbsp;	 */
+&nbsp;	@SuppressWarnings(&quot;unused&quot;)
+<b class="fc">&nbsp;	private static final String MAKELANGELO_ROOT_PATH_NAME = PreferencesHelper.class.getPackage().getName();</b>
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Load saved values
+&nbsp;	 */
+&nbsp;	@SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;	static public void start() {
+<b class="fc">&nbsp;		Map&lt;MakelangeloPreferenceKey, ? super Preferences&gt; initialMap = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;		Preferences userRootPreferencesNode = MarginallyCleverPreferences.userRoot();</b>
+<b class="fc">&nbsp;		final Preferences legacyMakelangeloPreferenceNode = userRootPreferencesNode.node(LEGACY_MAKELANGELO_ROOT.getNodeName());</b>
+&nbsp;		try {
+<b class="fc">&nbsp;			legacyMakelangeloPreferenceNode.sync();</b>
+<b class="nc">&nbsp;		} catch (BackingStoreException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to sync pref&quot;, e);</b>
+&nbsp;		}
+<b class="fc">&nbsp;		initialMap.put(LEGACY_MAKELANGELO_ROOT, legacyMakelangeloPreferenceNode);</b>
+<b class="fc">&nbsp;		initialMap.put(GRAPHICS, legacyMakelangeloPreferenceNode.node(GRAPHICS.getNodeName()));</b>
+<b class="fc">&nbsp;		initialMap.put(MACHINES, legacyMakelangeloPreferenceNode.node(MACHINES.getNodeName()));</b>
+<b class="fc">&nbsp;		initialMap.put(LANGUAGE, legacyMakelangeloPreferenceNode.node(LANGUAGE.getNodeName()));</b>
+<b class="fc">&nbsp;		initialMap.put(SOUND, legacyMakelangeloPreferenceNode.node(SOUND.getNodeName()));</b>
+<b class="fc">&nbsp;		initialMap.put(METRICS, legacyMakelangeloPreferenceNode.node(METRICS.getNodeName()));</b>
+<b class="fc">&nbsp;		initialMap.put(PAPER, legacyMakelangeloPreferenceNode.node(PAPER.getNodeName()));</b>
+<b class="fc">&nbsp;		initialMap.put(FILE, legacyMakelangeloPreferenceNode.node(FILE.getNodeName()));</b>
+&nbsp;
+<b class="fc">&nbsp;		Map&lt;? extends MakelangeloPreferenceKey, ? extends Preferences&gt; castedMap = (Map&lt;? extends MakelangeloPreferenceKey, ? extends Preferences&gt;) initialMap;</b>
+<b class="fc">&nbsp;		CLASS_TO_PREFERENCE_NODE_MAP = Collections.unmodifiableMap(castedMap);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Enumeration used when getting a specific preference node.
+&nbsp;	 * See #getPreferenceNode(MakelangeloPreferenceKey)
+&nbsp;	 */
+<b class="fc">&nbsp;	public enum MakelangeloPreferenceKey {</b>
+&nbsp;
+&nbsp;		/**
+&nbsp;		 * Graphics preference node path, used to store things such as {@code &quot;Draw all while running&quot;} used when OpenGL
+&nbsp;		 * renders the application.
+&nbsp;		 */
+<b class="fc">&nbsp;		GRAPHICS(&quot;Graphics&quot;),</b>
+&nbsp;
+&nbsp;		/**
+&nbsp;		 * Machine preference node path, used to store things such as paper height and width, invert left and right motors,
+&nbsp;		 * etc.
+&nbsp;		 * See com.marginallyclever.makelangeloRobot.plottersettings.MakelangeloRobotSettings
+&nbsp;		 */
+<b class="fc">&nbsp;		MACHINES(&quot;Machines&quot;),</b>
+<b class="fc">&nbsp;		LANGUAGE(&quot;Language&quot;),</b>
+<b class="fc">&nbsp;		SOUND(&quot;Sound&quot;),</b>
+<b class="fc">&nbsp;		FILE(&quot;File&quot;),</b>
+<b class="fc">&nbsp;		METRICS(&quot;Metrics&quot;),</b>
+<b class="fc">&nbsp;		PAPER(&quot;Paper&quot;),</b>
+&nbsp;
+&nbsp;		/**
+&nbsp;		 * Legacy preference node path.
+&nbsp;		 */
+<b class="fc">&nbsp;		@Deprecated</b>
+&nbsp;		LEGACY_MAKELANGELO_ROOT(&quot;DrawBot&quot;);
+&nbsp;
+<b class="fc">&nbsp;		MakelangeloPreferenceKey(String nodeName) {</b>
+<b class="fc">&nbsp;			this.nodeName = nodeName;</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		private String nodeName;
+&nbsp;
+&nbsp;		public String getNodeName() {
+<b class="fc">&nbsp;			return nodeName;</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * NOOP Constructor.
+&nbsp;	 *
+&nbsp;	 * @throws IllegalStateException
+&nbsp;	 */
+<b class="nc">&nbsp;	private PreferencesHelper() throws IllegalStateException {</b>
+<b class="nc">&nbsp;		throw new IllegalStateException();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param key enumeration key used to look up a Makelangelo preference value.
+&nbsp;	 * @return preference node associated with the given key.
+&nbsp;	 */
+&nbsp;	@SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;	public static &lt;P extends Preferences&gt; P getPreferenceNode(MakelangeloPreferenceKey key) {
+<b class="fc">&nbsp;		return (P) CLASS_TO_PREFERENCE_NODE_MAP.get(key);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param preferenceNode Preference node whose name, and key values,
+&nbsp;	 *                       as well as those of its children&#39;s are to be logged.
+&nbsp;	 */
+&nbsp;	public static &lt;P extends Preferences&gt; void logPreferenceNode(P preferenceNode) {
+&nbsp;		try {
+<b class="pc">&nbsp;			if (logger.isDebugEnabled()) {</b>
+<b class="nc">&nbsp;				logger.debug(&quot;node name:{}&quot;, preferenceNode);</b>
+<b class="nc">&nbsp;				logKeyValuesForPreferenceNode(preferenceNode);</b>
+<b class="nc">&nbsp;				final String[] childrenPreferenceNodeNames = preferenceNode.childrenNames();</b>
+<b class="nc">&nbsp;				for (String childNodeName : childrenPreferenceNodeNames) {</b>
+<b class="nc">&nbsp;					final Preferences childNode = preferenceNode.node(childNodeName);</b>
+<b class="nc">&nbsp;					logPreferenceNode(childNode);</b>
+&nbsp;				}
+&nbsp;			}
+<b class="nc">&nbsp;		} catch (BackingStoreException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to log node {}&quot;, preferenceNode, e);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param preferenceNode Preference node to log key value pairs for.
+&nbsp;	 */
+&nbsp;	public static &lt;P extends Preferences&gt; void logKeyValuesForPreferenceNode(P preferenceNode) throws BackingStoreException {
+<b class="nc">&nbsp;		final String[] keys = preferenceNode.keys();</b>
+<b class="nc">&nbsp;		for (String key : keys) {</b>
+<b class="nc">&nbsp;			logger.debug(&quot;key:{} value:{}&quot;, key, preferenceNode.get(key, null));</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param sourcePreferenceNode      Preference node to be copied from.
+&nbsp;	 * @param destinationPreferenceNode Preference node to be copied to.
+&nbsp;	 */
+&nbsp;	public static &lt;P extends Preferences&gt; void copyPreferenceNode(P sourcePreferenceNode, P destinationPreferenceNode) {
+&nbsp;		try {
+<b class="nc">&nbsp;			final String[] keys = sourcePreferenceNode.keys();</b>
+<b class="nc">&nbsp;			for (String key : keys) {</b>
+<b class="nc">&nbsp;				final String value = sourcePreferenceNode.get(key, null);</b>
+<b class="nc">&nbsp;				destinationPreferenceNode.put(key, value);</b>
+&nbsp;			}
+<b class="nc">&nbsp;			final String[] childNames = sourcePreferenceNode.childrenNames();</b>
+<b class="nc">&nbsp;			for (String childName : childNames) {</b>
+<b class="nc">&nbsp;				final Preferences destinationChildNode = destinationPreferenceNode.node(childName);</b>
+<b class="nc">&nbsp;				copyPreferenceNode(sourcePreferenceNode.node(childName), destinationChildNode);</b>
+&nbsp;			}
+<b class="nc">&nbsp;		} catch (BackingStoreException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to copy preference&quot;, e);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Recursively clears all the preferences (key-value associations) for a given node and its children.
+&nbsp;	 *
+&nbsp;	 * @param preferenceNode Preference node that you want recursively cleared of all key value pairs.
+&nbsp;	 * See &lt;a href=&quot;http://stackoverflow.com/a/6411855&quot;&gt;&lt;/a&gt;
+&nbsp;	 */
+&nbsp;	private static &lt;P extends Preferences&gt; void clearAll(P preferenceNode) throws BackingStoreException {
+<b class="nc">&nbsp;		final String[] childrenNames = preferenceNode.childrenNames();</b>
+<b class="nc">&nbsp;		for (String childNodeName : childrenNames) {</b>
+<b class="nc">&nbsp;			final Preferences childNode = preferenceNode.node(childNodeName);</b>
+<b class="nc">&nbsp;			final String[] childNodesChildren = childNode.childrenNames();</b>
+<b class="nc">&nbsp;			if (childNodesChildren != null) {</b>
+<b class="nc">&nbsp;				final boolean hasChildren = childNodesChildren.length != 0;</b>
+<b class="nc">&nbsp;				if (hasChildren) {</b>
+<b class="nc">&nbsp;					clearAll(childNode);</b>
+&nbsp;				}
+<b class="nc">&nbsp;				childNode.clear();</b>
+&nbsp;			}
+&nbsp;		}
+<b class="nc">&nbsp;		preferenceNode.clear();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Removes all of the preferences (key-value associations) in this
+&nbsp;	 * preference node with no effect on any descendants
+&nbsp;	 * of this node.
+&nbsp;	 */
+&nbsp;	@SuppressWarnings(&quot;unused&quot;)
+&nbsp;	private static &lt;P extends Preferences&gt; void shallowClearPreferences(P preferenceNode) {
+&nbsp;		try {
+<b class="nc">&nbsp;			preferenceNode.clear();</b>
+<b class="nc">&nbsp;		} catch (BackingStoreException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to clear preference&quot;, e);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Removes all of the preferences (key-value associations) in this
+&nbsp;	 * preference node and any descendants of this node.
+&nbsp;	 */
+&nbsp;	@SuppressWarnings(&quot;unused&quot;)
+&nbsp;	private static &lt;P extends Preferences&gt; void deepClearPreferences(P preferenceNode) {
+&nbsp;		try {
+<b class="nc">&nbsp;			preferenceNode.clear();</b>
+<b class="nc">&nbsp;			final String[] childrenPreferenceNodeNames = preferenceNode.childrenNames();</b>
+<b class="nc">&nbsp;			for (String childNodeName : childrenPreferenceNodeNames) {</b>
+<b class="nc">&nbsp;				final Preferences childNode = preferenceNode.node(childNodeName);</b>
+<b class="nc">&nbsp;				childNode.clear();</b>
+&nbsp;			}
+<b class="nc">&nbsp;		} catch (BackingStoreException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to deep clear preference&quot;, e);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param sourcePreferenceNode      Preference node to be copied from.
+&nbsp;	 * @param destinationPreferenceNode Preference node to be copied to and logged.
+&nbsp;	 * &lt;br&gt;
+&nbsp;	 *   {@link #copyPreferenceNode(Preferences, Preferences)}
+&nbsp;	 * &lt;br&gt;
+&nbsp;	 *   {@link #logPropertiesNode(Properties)}
+&nbsp;	 * &lt;br&gt;
+&nbsp;	 *   {@link #logAncestryable(Ancestryable)}
+&nbsp;	 */
+&nbsp;	@SuppressWarnings(&quot;unused&quot;)
+&nbsp;	private void copyAndLogPreferenceNode(AbstractPreferences sourcePreferenceNode, MarginallyCleverPreferences destinationPreferenceNode) {
+&nbsp;		try {
+<b class="nc">&nbsp;			PreferencesHelper.clearAll(destinationPreferenceNode);</b>
+<b class="nc">&nbsp;		} catch (BackingStoreException e) {</b>
+<b class="nc">&nbsp;			logger.error(e.getMessage());</b>
+&nbsp;		}
+<b class="nc">&nbsp;		PreferencesHelper.copyPreferenceNode(sourcePreferenceNode, destinationPreferenceNode);</b>
+<b class="nc">&nbsp;		final File preferencesFile = MarginallyCleverPreferencesFileFactory.getPropertiesPreferencesFile();</b>
+<b class="nc">&nbsp;		final Properties p = new Properties();</b>
+<b class="nc">&nbsp;		try (final FileInputStream inStream = new FileInputStream(preferencesFile)) {</b>
+<b class="nc">&nbsp;			p.load(inStream);</b>
+<b class="nc">&nbsp;		} catch (IOException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to copy preference file {}&quot;, preferencesFile, e);</b>
+&nbsp;		}
+<b class="nc">&nbsp;		logPropertiesNode(p);</b>
+<b class="nc">&nbsp;		logAncestryable(destinationPreferenceNode);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param preferenceNode preference node to be logged.
+&nbsp;	 */
+&nbsp;	public static void logAncestryable(Ancestryable preferenceNode) {
+<b class="nc">&nbsp;		final JSONObject object = new JSONObject(preferenceNode.getChildren());</b>
+<b class="nc">&nbsp;		logger.debug( object.toString());</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param properties Properties to be logged.
+&nbsp;	 */
+&nbsp;	public static &lt;P extends Properties&gt; void logPropertiesNode(P properties) {
+<b class="nc">&nbsp;		final JSONObject jsonObject = Property.toJSONObject(properties);</b>
+<b class="nc">&nbsp;		logger.debug( jsonObject.toString());</b>
+&nbsp;	}
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

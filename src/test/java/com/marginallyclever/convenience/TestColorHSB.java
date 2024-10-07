@@ -30,7 +30,7 @@ public class TestColorHSB {
         assertColorsEqual(new ColorHSB(0, 2, 0), 0, 1, 0);
         assertColorsEqual(new ColorHSB(0, 0, 2), 0, 0, 1);
     }
-    /*
+
     private static final float delta = 1e-6f; // Allowable margin of error
     private ColorHSB color1;
     private ColorHSB color2;
@@ -42,13 +42,13 @@ public class TestColorHSB {
     }
 
     @ParameterizedTest
-    @MethodSource("provideColorHSBValues")
+    @MethodSource("provideColorHSBValuesForSet")
     public void testSet(float hue, float saturation, float brightness) {
         // Act
         color1.set(hue, saturation, brightness);
 
         // Assert
-        assertColorsEqual(color1, hue, saturation, brightness);
+        assertColorsEqual(color1, clamp(hue), clamp(saturation), clamp(brightness));
     }
 
     @ParameterizedTest
@@ -150,6 +150,14 @@ public class TestColorHSB {
         );
     }
 
+    private static Stream<Arguments> provideColorHSBValuesForSet() {
+        return Stream.of(
+                Arguments.of(0.2f, 0.3f, 0.4f),
+                Arguments.of(0.5f, 0.6f, 0.7f),
+                Arguments.of(0.8f, 0.9f, 1.0f)
+        );
+    }
+
     private static Stream<Arguments> provideColorHSBValuesForEquals() {
         return Stream.of(
                 Arguments.of(0.2f, 0.3f, 0.4f, 0.2f, 0.3f, 0.4f, true),
@@ -162,6 +170,6 @@ public class TestColorHSB {
     private float clamp(float value) {
         return Math.max(0.0f, Math.min(1.0f, value));
     }
-*/
+
 
 }

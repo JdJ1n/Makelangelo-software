@@ -1,0 +1,221 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Generator_GraphPaper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.turtlegenerator.grid</a>
+</div>
+
+<h1>Coverage Summary for Class: Generator_GraphPaper (com.marginallyclever.makelangelo.makeart.turtlegenerator.grid)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Generator_GraphPaper</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (4/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    12.2%
+  </span>
+  <span class="absValue">
+    (6/49)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.turtlegenerator.grid;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.Clipper2D;
+&nbsp;import com.marginallyclever.convenience.Point2D;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectDouble;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;
+&nbsp;/**
+&nbsp; * 1cm and 10cm grid lines
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class Generator_GraphPaper extends TurtleGenerator {
+<b class="fc">&nbsp;	private static double angle = 0;</b>
+&nbsp;
+&nbsp;	public Generator_GraphPaper() {
+<b class="fc">&nbsp;		super();</b>
+&nbsp;
+&nbsp;		SelectDouble angle;
+&nbsp;
+<b class="fc">&nbsp;		add(angle = new SelectDouble(&quot;order&quot;,Translator.get(&quot;HilbertCurveOrder&quot;),Generator_GraphPaper.getAngle()));</b>
+&nbsp;
+<b class="fc">&nbsp;		angle.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setAngle(angle.getValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="fc">&nbsp;		return Translator.get(&quot;GraphPaperName&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	static public double getAngle() {
+<b class="fc">&nbsp;		return angle;</b>
+&nbsp;	}
+&nbsp;	static public void setAngle(double value) {
+<b class="nc">&nbsp;		angle = value;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void generate() {
+<b class="nc">&nbsp;		Turtle turtle = new Turtle();</b>
+<b class="nc">&nbsp;		turtle.setColor(Color.RED);</b>
+<b class="nc">&nbsp;		lines(turtle,10,0);</b>
+<b class="nc">&nbsp;		lines(turtle,10,90);</b>
+<b class="nc">&nbsp;		turtle.setColor(Color.BLACK);</b>
+<b class="nc">&nbsp;		lines(turtle,100,0);</b>
+<b class="nc">&nbsp;		lines(turtle,100,90);</b>
+&nbsp;
+<b class="nc">&nbsp;		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</b>
+&nbsp;
+<b class="nc">&nbsp;		notifyListeners(turtle);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	protected void lines(Turtle turtle,float stepSize_mm,int angle_deg) {
+<b class="nc">&nbsp;		double majorX = Math.cos(Math.toRadians(angle_deg));</b>
+<b class="nc">&nbsp;		double majorY = Math.sin(Math.toRadians(angle_deg));</b>
+&nbsp;
+&nbsp;		// from top to bottom of the margin area...
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double yMin = rect.getMinY();</b>
+<b class="nc">&nbsp;		double yMax = rect.getMaxY();</b>
+<b class="nc">&nbsp;		double xMin = rect.getMinX();</b>
+<b class="nc">&nbsp;		double xMax = rect.getMaxX();</b>
+&nbsp;
+<b class="nc">&nbsp;		double dy = (yMax - yMin)/2;</b>
+<b class="nc">&nbsp;		double dx = (xMax - xMin)/2;</b>
+<b class="nc">&nbsp;		double radius = Math.sqrt(dx*dx+dy*dy);</b>
+&nbsp;
+<b class="nc">&nbsp;		Point2D P0=new Point2D();</b>
+<b class="nc">&nbsp;		Point2D P1=new Point2D();</b>
+&nbsp;
+<b class="nc">&nbsp;		Point2D rMax = new Point2D(xMax,yMax);</b>
+<b class="nc">&nbsp;		Point2D rMin = new Point2D(xMin,yMin);</b>
+&nbsp;		
+<b class="nc">&nbsp;		int i=0;</b>
+<b class="nc">&nbsp;		for(double a = -radius;a&lt;radius;a+=stepSize_mm) {</b>
+<b class="nc">&nbsp;			double majorPX = majorX * a;</b>
+<b class="nc">&nbsp;			double majorPY = majorY * a;</b>
+<b class="nc">&nbsp;			P0.set( majorPX - majorY * radius,</b>
+&nbsp;					majorPY + majorX * radius);
+<b class="nc">&nbsp;			P1.set( majorPX + majorY * radius,</b>
+&nbsp;					majorPY - majorX * radius);
+<b class="nc">&nbsp;			if(Clipper2D.clipLineToRectangle(P0, P1, rMax, rMin)) {</b>
+<b class="nc">&nbsp;				if ((i % 2) == 0) 	{</b>
+<b class="nc">&nbsp;					turtle.moveTo(P0.x,P0.y);</b>
+<b class="nc">&nbsp;					turtle.penDown();</b>
+<b class="nc">&nbsp;					turtle.moveTo(P1.x,P1.y);</b>
+<b class="nc">&nbsp;					turtle.penUp();</b>
+&nbsp;				} else {
+<b class="nc">&nbsp;					turtle.moveTo(P1.x,P1.y);</b>
+<b class="nc">&nbsp;					turtle.penDown();</b>
+<b class="nc">&nbsp;					turtle.moveTo(P0.x,P0.y);</b>
+<b class="nc">&nbsp;					turtle.penUp();</b>
+&nbsp;				}
+&nbsp;			}
+<b class="nc">&nbsp;			++i;</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

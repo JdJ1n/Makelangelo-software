@@ -1,0 +1,282 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Converter_Crosshatch</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imageconverter</a>
+</div>
+
+<h1>Coverage Summary for Class: Converter_Crosshatch (com.marginallyclever.makelangelo.makeart.imageconverter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Converter_Crosshatch</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/84)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imageconverter;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+&nbsp;import com.marginallyclever.makelangelo.paper.Paper;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectSlider;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;
+&nbsp;public class Converter_Crosshatch extends ImageConverter {
+<b class="nc">&nbsp;	private static double intensity=2.0f;</b>
+<b class="nc">&nbsp;	private static double pass90=16.0f;</b>
+<b class="nc">&nbsp;	private static double pass75=32.0f;</b>
+<b class="nc">&nbsp;	private static double pass15=64.0f;</b>
+<b class="nc">&nbsp;	private static double pass45=192.0f;</b>
+&nbsp;
+&nbsp;	public Converter_Crosshatch() {
+<b class="nc">&nbsp;		super();</b>
+<b class="nc">&nbsp;		SelectSlider selectIntesity = new SelectSlider(&quot;intensity&quot;, Translator.get(&quot;ConverterIntensity&quot;), 100, 1, (int) (getIntensity() * 10.0));</b>
+<b class="nc">&nbsp;		selectIntesity.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setIntensity((float)((int)evt.getNewValue())/10.0f);</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		add(selectIntesity);</b>
+&nbsp;
+<b class="nc">&nbsp;		SelectSlider selectPass90 = new SelectSlider(&quot;pass90&quot;, Translator.get(&quot;pass90&quot;), 256, 0, (int) getPass90());</b>
+<b class="nc">&nbsp;		selectPass90.addSelectListener((evt)-&gt; {</b>
+<b class="nc">&nbsp;			setPass90((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		add(selectPass90);</b>
+&nbsp;
+<b class="nc">&nbsp;		SelectSlider selectPass75 = new SelectSlider(&quot;pass75&quot;,Translator.get(&quot;pass75&quot;),256,0,(int)getPass75());</b>
+<b class="nc">&nbsp;		selectPass75.addSelectListener((evt)-&gt; {</b>
+<b class="nc">&nbsp;			setPass75((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		add(selectPass75);</b>
+&nbsp;
+<b class="nc">&nbsp;		SelectSlider selectPass45 = new SelectSlider(&quot;pass45&quot;,Translator.get(&quot;pass45&quot;),256,0,(int)getPass45());</b>
+<b class="nc">&nbsp;		selectPass45.addSelectListener((evt)-&gt; {</b>
+<b class="nc">&nbsp;			setPass45((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		add(selectPass45);</b>
+&nbsp;
+<b class="nc">&nbsp;		SelectSlider selectPass15 = new SelectSlider(&quot;pass15&quot;,Translator.get(&quot;pass15&quot;),256,0,(int)getPass15());</b>
+<b class="nc">&nbsp;		selectPass15.addSelectListener((evt)-&gt; {</b>
+<b class="nc">&nbsp;			setPass15((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		add(selectPass15);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="nc">&nbsp;		return Translator.get(&quot;Crosshatch&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setIntensity(double arg0) {
+<b class="nc">&nbsp;		intensity=arg0;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public double getIntensity() {
+<b class="nc">&nbsp;		return intensity;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public double getPass90() {
+<b class="nc">&nbsp;		return pass90;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public double getPass75() {
+<b class="nc">&nbsp;		return pass75;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public double getPass15() {
+<b class="nc">&nbsp;		return pass15;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public double getPass45() {
+<b class="nc">&nbsp;		return pass45;</b>
+&nbsp;	} 
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public void start(Paper paper, TransformedImage image) {
+<b class="nc">&nbsp;		super.start(paper, image);</b>
+&nbsp;
+<b class="nc">&nbsp;		FilterDesaturate bw = new FilterDesaturate(myImage);</b>
+<b class="nc">&nbsp;		TransformedImage img = bw.filter();</b>
+&nbsp;		
+<b class="nc">&nbsp;		turtle = new Turtle();</b>
+<b class="nc">&nbsp;		finishPass(new int[]{(int)pass90},90,img);</b>
+<b class="nc">&nbsp;		finishPass(new int[]{(int)pass75},75,img);</b>
+<b class="nc">&nbsp;		finishPass(new int[]{(int)pass15},15,img);</b>
+<b class="nc">&nbsp;		finishPass(new int[]{(int)pass45},45,img);</b>
+&nbsp;
+<b class="nc">&nbsp;		fireConversionFinished();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void finishPass(int [] passes,double angleDeg,TransformedImage img) {
+<b class="nc">&nbsp;		double dx = Math.cos(Math.toRadians(angleDeg));</b>
+<b class="nc">&nbsp;		double dy = Math.sin(Math.toRadians(angleDeg));</b>
+&nbsp;
+&nbsp;		// figure out how many lines we&#39;re going to have on this image.
+<b class="nc">&nbsp;		double stepSize = intensity/2.0;</b>
+<b class="nc">&nbsp;		if (stepSize &lt; 1) stepSize = 1;</b>
+&nbsp;
+&nbsp;		// Color values are from 0...255 inclusive.  255 is white, 0 is black.
+&nbsp;		// Lift the pen any time the color value is &gt; level (128 or more).
+&nbsp;
+&nbsp;		// from top to bottom of the margin area...
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double xLeft   = rect.getMinX();</b>
+<b class="nc">&nbsp;		double yBottom = rect.getMinY();</b>
+<b class="nc">&nbsp;		double xRight  = rect.getMaxX();</b>
+<b class="nc">&nbsp;		double yTop    = rect.getMaxY();</b>
+<b class="nc">&nbsp;		double height = yTop - yBottom;</b>
+<b class="nc">&nbsp;		double width = xRight - xLeft;</b>
+<b class="nc">&nbsp;		double maxLen = Math.sqrt(width*width+height*height);</b>
+<b class="nc">&nbsp;		double [] error0 = new double[(int)Math.ceil(maxLen)];</b>
+<b class="nc">&nbsp;		double [] error1 = new double[(int)Math.ceil(maxLen)];</b>
+<b class="nc">&nbsp;		boolean useError=false;</b>
+&nbsp;		
+<b class="nc">&nbsp;		int i=0;</b>
+<b class="nc">&nbsp;		for(double a = -maxLen;a&lt;maxLen;a+=stepSize) {</b>
+<b class="nc">&nbsp;			double px = dx * a;</b>
+<b class="nc">&nbsp;			double py = dy * a;</b>
+<b class="nc">&nbsp;			double x0 = px - dy * maxLen;</b>
+<b class="nc">&nbsp;			double y0 = py + dx * maxLen;</b>
+<b class="nc">&nbsp;			double x1 = px + dy * maxLen;</b>
+<b class="nc">&nbsp;			double y1 = py - dx * maxLen;</b>
+&nbsp;		
+<b class="nc">&nbsp;			double l2 = passes[(i % passes.length)];</b>
+<b class="nc">&nbsp;			if ((i % 2) == 0) {</b>
+<b class="nc">&nbsp;				if(!useError) convertAlongLine(x0, y0, x1, y1, stepSize, l2, img);</b>
+<b class="nc">&nbsp;				else convertAlongLineErrorTerms(x0,y0,x1,y1,stepSize,l2,error0,error1,img);</b>
+&nbsp;			} else {
+<b class="nc">&nbsp;				if(!useError) convertAlongLine(x1, y1, x0, y0, stepSize, l2, img);</b>
+<b class="nc">&nbsp;				else convertAlongLineErrorTerms(x1,y1,x0,y0,stepSize,l2,error0,error1,img);</b>
+&nbsp;			}
+<b class="nc">&nbsp;			for(int j=0;j&lt;error0.length;++j) {</b>
+<b class="nc">&nbsp;				error0[j]=error1[error0.length-1-j];</b>
+<b class="nc">&nbsp;				error1[error0.length-1-j]=0;</b>
+&nbsp;			}
+<b class="nc">&nbsp;			++i;</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setPass90(int newValue) {
+<b class="nc">&nbsp;		Converter_Crosshatch.pass90 = newValue;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setPass75(int newValue) {
+<b class="nc">&nbsp;		Converter_Crosshatch.pass75 = newValue;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setPass15(int newValue) {
+<b class="nc">&nbsp;		Converter_Crosshatch.pass15 = newValue;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setPass45(int newValue) {
+<b class="nc">&nbsp;		Converter_Crosshatch.pass45 = newValue;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

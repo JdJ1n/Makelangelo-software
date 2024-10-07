@@ -1,0 +1,169 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > FilterInvert</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imagefilter</a>
+</div>
+
+<h1>Coverage Summary for Class: FilterInvert (com.marginallyclever.makelangelo.makeart.imagefilter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FilterInvert</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (2/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.3%
+  </span>
+  <span class="absValue">
+    (15/18)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imagefilter;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.ColorRGB;
+&nbsp;import com.marginallyclever.convenience.ResizableImagePanel;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;
+&nbsp;import javax.imageio.ImageIO;
+&nbsp;import java.awt.image.BufferedImage;
+&nbsp;import java.io.FileInputStream;
+&nbsp;import java.io.IOException;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * Inverts the colors in an image.
+&nbsp; *
+&nbsp; * @author Dan
+&nbsp; */
+&nbsp;public class FilterInvert extends ImageFilter {
+&nbsp;    private final TransformedImage img;
+&nbsp;
+&nbsp;    public FilterInvert(TransformedImage img) {
+<b class="fc">&nbsp;        super();</b>
+<b class="fc">&nbsp;        this.img = img;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TransformedImage filter() {
+<b class="fc">&nbsp;        BufferedImage src = img.getSourceImage();</b>
+<b class="fc">&nbsp;        int h = src.getHeight();</b>
+<b class="fc">&nbsp;        int w = src.getWidth();</b>
+&nbsp;        int x, y;
+&nbsp;
+<b class="fc">&nbsp;        TransformedImage after = new TransformedImage(img);</b>
+<b class="fc">&nbsp;        BufferedImage afterBI = after.getSourceImage();</b>
+&nbsp;
+<b class="fc">&nbsp;        for (y = 0; y &lt; h; ++y) {</b>
+<b class="fc">&nbsp;            for (x = 0; x &lt; w; ++x) {</b>
+<b class="fc">&nbsp;                ColorRGB color = new ColorRGB(src.getRGB(x, y));</b>
+<b class="fc">&nbsp;                color.red = 255 - color.red;</b>
+<b class="fc">&nbsp;                color.green = 255 - color.green;</b>
+<b class="fc">&nbsp;                color.blue = 255 - color.blue;</b>
+<b class="fc">&nbsp;                afterBI.setRGB(x, y, color.toInt());</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return after;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void main(String[] args) throws IOException {
+<b class="nc">&nbsp;        TransformedImage src = new TransformedImage( ImageIO.read(new FileInputStream(&quot;src/test/resources/mandrill.png&quot;)) );</b>
+<b class="nc">&nbsp;        FilterInvert f = new FilterInvert(src);</b>
+<b class="nc">&nbsp;        ResizableImagePanel.showImage(f.filter().getSourceImage(), &quot;Filter_Invert&quot; );</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

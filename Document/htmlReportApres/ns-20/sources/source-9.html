@@ -1,0 +1,335 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Zarplotter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.plotter.plotterrenderer</a>
+</div>
+
+<h1>Coverage Summary for Class: Zarplotter (com.marginallyclever.makelangelo.plotter.plotterrenderer)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Zarplotter</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    16.7%
+  </span>
+  <span class="absValue">
+    (1/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    6.4%
+  </span>
+  <span class="absValue">
+    (6/94)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.plotter.plotterrenderer;
+&nbsp;
+&nbsp;import com.jogamp.opengl.GL2;
+&nbsp;import com.marginallyclever.convenience.Point2D;
+&nbsp;import com.marginallyclever.makelangelo.plotter.Plotter;
+&nbsp;import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Dan Royer
+&nbsp; */
+<b class="fc">&nbsp;public class Zarplotter implements PlotterRenderer {</b>
+<b class="fc">&nbsp;	final public double ZAR_MOTOR_MOUNT_SIZE=45; //cm</b>
+<b class="fc">&nbsp;	final public double ZAR_PLOTTER_SIZE=60; //cm</b>
+<b class="fc">&nbsp;	final public double ZAR_PLOTTER_OUTER_SIZE=70; //cm</b>
+<b class="fc">&nbsp;	final public double ZAR_PLOTTER_HOLE_SIZE=20; //cm</b>
+<b class="fc">&nbsp;	final public double ZAR_MOTOR_BODY_SIZE=42; //cm</b>
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public void render(GL2 gl2,Plotter robot) {
+<b class="nc">&nbsp;		paintMotors(gl2,robot);</b>
+<b class="nc">&nbsp;		paintControlBox(gl2,robot);</b>
+<b class="nc">&nbsp;		if(robot.getDidFindHome()) </b>
+<b class="nc">&nbsp;			paintPenHolderToCounterweights(gl2,robot);		</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void paintPenHolderToCounterweights(GL2 gl2, Plotter robot) {
+<b class="nc">&nbsp;		PlotterSettings settings = robot.getSettings();</b>
+&nbsp;		//double dx, dy;
+<b class="nc">&nbsp;		Point2D pos = robot.getPos();</b>
+<b class="nc">&nbsp;		double gx = pos.x;</b>
+<b class="nc">&nbsp;		double gy = pos.y;</b>
+&nbsp;
+<b class="nc">&nbsp;		double top = settings.getDouble(PlotterSettings.LIMIT_TOP);</b>
+<b class="nc">&nbsp;		double bottom = settings.getDouble(PlotterSettings.LIMIT_BOTTOM);</b>
+<b class="nc">&nbsp;		double left = settings.getDouble(PlotterSettings.LIMIT_LEFT);</b>
+<b class="nc">&nbsp;		double right = settings.getDouble(PlotterSettings.LIMIT_RIGHT);</b>
+&nbsp;
+<b class="nc">&nbsp;		gl2.glEnable(GL2.GL_BLEND);</b>
+<b class="nc">&nbsp;		gl2.glBlendFunc(GL2.GL_SRC_ALPHA,GL2.GL_ONE_MINUS_SRC_ALPHA);</b>
+&nbsp;		
+<b class="nc">&nbsp;		gl2.glColor4d(0, 0, 0,0.5);</b>
+&nbsp;		// plotter
+<b class="nc">&nbsp;		gl2.glPushMatrix();</b>
+<b class="nc">&nbsp;		gl2.glTranslated(gx, gy, 0);</b>
+<b class="nc">&nbsp;		gl2.glBegin(GL2.GL_QUADS);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-ZAR_PLOTTER_OUTER_SIZE/2, -ZAR_PLOTTER_OUTER_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-ZAR_PLOTTER_OUTER_SIZE/2, -ZAR_PLOTTER_HOLE_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+ZAR_PLOTTER_OUTER_SIZE/2, -ZAR_PLOTTER_HOLE_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+ZAR_PLOTTER_OUTER_SIZE/2, -ZAR_PLOTTER_OUTER_SIZE/2);</b>
+&nbsp;
+<b class="nc">&nbsp;		gl2.glVertex2d( ZAR_PLOTTER_HOLE_SIZE/2, -ZAR_PLOTTER_HOLE_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d( ZAR_PLOTTER_HOLE_SIZE/2, ZAR_PLOTTER_HOLE_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+ZAR_PLOTTER_OUTER_SIZE/2, ZAR_PLOTTER_HOLE_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+ZAR_PLOTTER_OUTER_SIZE/2, -ZAR_PLOTTER_HOLE_SIZE/2);</b>
+&nbsp;
+<b class="nc">&nbsp;		gl2.glVertex2d(-ZAR_PLOTTER_OUTER_SIZE/2, -ZAR_PLOTTER_HOLE_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-ZAR_PLOTTER_OUTER_SIZE/2, ZAR_PLOTTER_HOLE_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-ZAR_PLOTTER_HOLE_SIZE/2,  ZAR_PLOTTER_HOLE_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-ZAR_PLOTTER_HOLE_SIZE/2, -ZAR_PLOTTER_HOLE_SIZE/2);</b>
+&nbsp;
+<b class="nc">&nbsp;		gl2.glVertex2d(-ZAR_PLOTTER_OUTER_SIZE/2, +ZAR_PLOTTER_HOLE_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-ZAR_PLOTTER_OUTER_SIZE/2, +ZAR_PLOTTER_OUTER_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+ZAR_PLOTTER_OUTER_SIZE/2, +ZAR_PLOTTER_OUTER_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+ZAR_PLOTTER_OUTER_SIZE/2, +ZAR_PLOTTER_HOLE_SIZE/2);</b>
+&nbsp;
+<b class="nc">&nbsp;		gl2.glEnd();</b>
+<b class="nc">&nbsp;		gl2.glPopMatrix();</b>
+&nbsp;
+&nbsp;		// belt from motors to plotter
+<b class="nc">&nbsp;		gl2.glBegin(GL2.GL_LINES);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(left +ZAR_MOTOR_MOUNT_SIZE, top   -ZAR_MOTOR_MOUNT_SIZE);	gl2.glVertex2d(gx-ZAR_PLOTTER_SIZE/2, gy+ZAR_PLOTTER_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(right-ZAR_MOTOR_MOUNT_SIZE, top   -ZAR_MOTOR_MOUNT_SIZE);	gl2.glVertex2d(gx+ZAR_PLOTTER_SIZE/2, gy+ZAR_PLOTTER_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(left +ZAR_MOTOR_MOUNT_SIZE, bottom+ZAR_MOTOR_MOUNT_SIZE);	gl2.glVertex2d(gx-ZAR_PLOTTER_SIZE/2, gy-ZAR_PLOTTER_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(right-ZAR_MOTOR_MOUNT_SIZE, bottom+ZAR_MOTOR_MOUNT_SIZE);	gl2.glVertex2d(gx+ZAR_PLOTTER_SIZE/2, gy-ZAR_PLOTTER_SIZE/2);</b>
+<b class="nc">&nbsp;		gl2.glEnd();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void paintMotors(GL2 gl2,Plotter plotter) {
+<b class="nc">&nbsp;		double top = plotter.getSettings().getDouble(PlotterSettings.LIMIT_TOP);</b>
+<b class="nc">&nbsp;		double bottom = plotter.getSettings().getDouble(PlotterSettings.LIMIT_BOTTOM);</b>
+<b class="nc">&nbsp;		double right = plotter.getSettings().getDouble(PlotterSettings.LIMIT_RIGHT);</b>
+<b class="nc">&nbsp;		double left = plotter.getSettings().getDouble(PlotterSettings.LIMIT_LEFT);</b>
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;		gl2.glPushMatrix();		gl2.glTranslated(left , top   , 0);		gl2.glRotated(270, 0, 0, 1);		paintOneMotor(gl2);		gl2.glPopMatrix();</b>
+<b class="nc">&nbsp;		gl2.glPushMatrix();		gl2.glTranslated(right, top   , 0);		gl2.glRotated(180, 0, 0, 1);		paintOneMotor(gl2);		gl2.glPopMatrix();</b>
+<b class="nc">&nbsp;		gl2.glPushMatrix();		gl2.glTranslated(right, bottom, 0);		gl2.glRotated( 90, 0, 0, 1);		paintOneMotor(gl2);		gl2.glPopMatrix();</b>
+<b class="nc">&nbsp;		gl2.glPushMatrix();		gl2.glTranslated(left , bottom, 0);		gl2.glRotated(  0, 0, 0, 1);		paintOneMotor(gl2);		gl2.glPopMatrix();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void paintOneMotor(GL2 gl2) {
+&nbsp;		// frame
+<b class="nc">&nbsp;		gl2.glColor3f(1, 0.8f, 0.5f);</b>
+<b class="nc">&nbsp;		gl2.glBegin(GL2.GL_TRIANGLE_FAN);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(0                   , 0                   );</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(0                   , ZAR_MOTOR_MOUNT_SIZE);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(ZAR_MOTOR_MOUNT_SIZE, ZAR_MOTOR_MOUNT_SIZE);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(ZAR_MOTOR_MOUNT_SIZE, 0                   );</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(0                   , 0                   );</b>
+<b class="nc">&nbsp;		gl2.glEnd();</b>
+&nbsp;		
+&nbsp;		// motor
+<b class="nc">&nbsp;		gl2.glColor3f(0, 0, 0);</b>
+<b class="nc">&nbsp;		gl2.glBegin(GL2.GL_QUADS);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(0                  , 0                  );</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(0                  , ZAR_MOTOR_BODY_SIZE);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(ZAR_MOTOR_BODY_SIZE, ZAR_MOTOR_BODY_SIZE);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(ZAR_MOTOR_BODY_SIZE, 0                  );</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(0                  , 0                  );</b>
+<b class="nc">&nbsp;		gl2.glEnd();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void paintControlBox(GL2 gl2,Plotter plotter) {
+<b class="nc">&nbsp;		double cy = plotter.getSettings().getDouble(PlotterSettings.LIMIT_TOP);</b>
+<b class="nc">&nbsp;		double cx = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;		gl2.glPushMatrix();</b>
+<b class="nc">&nbsp;		gl2.glTranslated(cx, cy, 0);</b>
+&nbsp;
+<b class="nc">&nbsp;		gl2.glScaled(10, 10, 1);</b>
+&nbsp;		
+&nbsp;		// mounting plate for PCB
+<b class="nc">&nbsp;		gl2.glColor3f(1,0.8f,0.5f);</b>
+<b class="nc">&nbsp;		gl2.glBegin(GL2.GL_QUADS);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-8, 5);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+8, 5);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+8, -5);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-8, -5);</b>
+<b class="nc">&nbsp;		gl2.glEnd();</b>
+&nbsp;		
+&nbsp;		// RUMBA in v3 (135mm*75mm)
+<b class="nc">&nbsp;		float h = 7.5f/2;</b>
+<b class="nc">&nbsp;		float w = 13.5f/2;</b>
+<b class="nc">&nbsp;		gl2.glColor3d(0.9,0.9,0.9);</b>
+<b class="nc">&nbsp;		gl2.glBegin(GL2.GL_QUADS);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-w, h);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+w, h);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(+w, -h);</b>
+<b class="nc">&nbsp;		gl2.glVertex2d(-w, -h);</b>
+<b class="nc">&nbsp;		gl2.glEnd();</b>
+&nbsp;
+<b class="nc">&nbsp;		gl2.glPopMatrix();</b>
+&nbsp;	}
+&nbsp;/*
+&nbsp;	@Override
+&nbsp;	public Point2D getHome() {
+&nbsp;		return new Point2D(0,0);
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getVersion() {
+&nbsp;		return &quot;6&quot;;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean canAutoHome() {
+&nbsp;		return false;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean canChangeMachineSize() {
+&nbsp;		return true;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean canAccelerate() {
+&nbsp;		return true;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean canChangeHome() {
+&nbsp;		// TODO Auto-generated method stub
+&nbsp;		return false;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public float getWidth() {
+&nbsp;		return 3 * 12 * 25.4f;  // 3&#39;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public float getHeight() {
+&nbsp;		return 3 * 12 * 25.4f;  // 3&#39;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public float getFeedrateMax() {
+&nbsp;		// TODO Auto-generated method stub
+&nbsp;		return 0;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public float getFeedrateDefault() {
+&nbsp;		// TODO Auto-generated method stub
+&nbsp;		return 0;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public float getAccelerationMax() {
+&nbsp;		// TODO Auto-generated method stub
+&nbsp;		return 0;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public float getDouble(PlotterSettings.PEN_ANGLE_UP_TIME) {
+&nbsp;		// TODO Auto-generated method stub
+&nbsp;		return 0;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public float getZAngleOn() {
+&nbsp;		return 0;
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public float getZAngleOff() {
+&nbsp;		return 90;
+&nbsp;	}*/
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

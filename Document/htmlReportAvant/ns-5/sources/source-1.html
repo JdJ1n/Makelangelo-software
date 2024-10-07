@@ -1,0 +1,348 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Bezier</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.convenience</a>
+</div>
+
+<h1>Coverage Summary for Class: Bezier (com.marginallyclever.convenience)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Bezier</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    42.9%
+  </span>
+  <span class="absValue">
+    (3/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    39.3%
+  </span>
+  <span class="absValue">
+    (22/56)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    52.4%
+  </span>
+  <span class="absValue">
+    (54/103)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.convenience;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * 4 point bezier splines
+&nbsp; * Based on &lt;a href=&quot;https://github.com/pelson/antigrain/blob/master/agg-2.4/src/agg_curves.cpp&quot;&gt;1&lt;/a&gt;
+&nbsp; * and &lt;a href=&quot;https://github.com/mattdesl/adaptive-bezier-curve&quot;&gt;2&lt;/a&gt;
+&nbsp; * @author Dan Royer
+&nbsp; *
+&nbsp; */
+&nbsp;public class Bezier {
+<b class="fc">&nbsp;	private int recursionLimit = 8;</b>
+<b class="fc">&nbsp;	private double curveAngleToleranceEpsilon =0.01;</b>
+<b class="fc">&nbsp;	private double angleTolerance = 0;</b>
+<b class="fc">&nbsp;	private double cuspLimit = 0;</b>
+&nbsp;	private static final double FLOAT_EPSILON=1.19209290e-7;
+&nbsp;    
+&nbsp;	private double x0,x1,x2,x3;
+&nbsp;	private double y0,y1,y2,y3;
+&nbsp;    
+<b class="fc">&nbsp;	public Bezier(double x0,double y0,double x1,double y1,double x2,double y2,double x3,double y3) {</b>
+<b class="fc">&nbsp;		this.x0=x0;</b>
+<b class="fc">&nbsp;		this.y0=y0;</b>
+<b class="fc">&nbsp;		this.x1=x1;</b>
+<b class="fc">&nbsp;		this.y1=y1;</b>
+<b class="fc">&nbsp;		this.x2=x2;</b>
+<b class="fc">&nbsp;		this.y2=y2;</b>
+<b class="fc">&nbsp;		this.x3=x3;</b>
+<b class="fc">&nbsp;		this.y3=y3;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	// Based on https://github.com/pelson/antigrain/blob/master/agg-2.4/src/agg_curves.cpp
+&nbsp;	// and https://github.com/mattdesl/adaptive-bezier-curve
+&nbsp;	public List&lt;Point2D&gt; generateCurvePoints(double distanceTolerance) {
+<b class="fc">&nbsp;		ArrayList&lt;Point2D&gt; points = new ArrayList&lt;Point2D&gt;();</b>
+<b class="fc">&nbsp;		points.add(new Point2D(x0,y0));</b>
+<b class="fc">&nbsp;		recursive(x0,y0,x1,y1,x2,y2,x3,y3,points,distanceTolerance*distanceTolerance,0);</b>
+<b class="fc">&nbsp;		points.add(new Point2D(x3,y3));</b>
+<b class="fc">&nbsp;		return points;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void recursive(double x1,double y1,double x2,double y2,double x3,double y3,double x4,double y4,ArrayList&lt;Point2D&gt; points, double distanceTolerance,int level) {
+<b class="pc">&nbsp;        if(level &gt; recursionLimit) </b>
+&nbsp;            return;
+&nbsp;
+&nbsp;        // Calculate all the mid-points of the line segments
+<b class="fc">&nbsp;        double x12   = (x1 + x2) / 2.0;</b>
+<b class="fc">&nbsp;        double y12   = (y1 + y2) / 2.0;</b>
+<b class="fc">&nbsp;        double x23   = (x2 + x3) / 2.0;</b>
+<b class="fc">&nbsp;        double y23   = (y2 + y3) / 2.0;</b>
+<b class="fc">&nbsp;        double x34   = (x3 + x4) / 2.0;</b>
+<b class="fc">&nbsp;        double y34   = (y3 + y4) / 2.0;</b>
+<b class="fc">&nbsp;        double x123  = (x12 + x23) / 2.0;</b>
+<b class="fc">&nbsp;        double y123  = (y12 + y23) / 2.0;</b>
+<b class="fc">&nbsp;        double x234  = (x23 + x34) / 2.0;</b>
+<b class="fc">&nbsp;        double y234  = (y23 + y34) / 2.0;</b>
+<b class="fc">&nbsp;        double x1234 = (x123 + x234) / 2.0;</b>
+<b class="fc">&nbsp;        double y1234 = (y123 + y234) / 2.0;</b>
+&nbsp;
+<b class="fc">&nbsp;        if(level &gt; 0) { // Enforce subdivision first time</b>
+&nbsp;            // Try to approximate the full cubic curve by a single straight line
+<b class="fc">&nbsp;            double dx = x4-x1;</b>
+<b class="fc">&nbsp;            double dy = y4-y1;</b>
+&nbsp;
+<b class="fc">&nbsp;            double d2 = Math.abs((x2 - x4) * dy - (y2 - y4) * dx);</b>
+<b class="fc">&nbsp;            double d3 = Math.abs((x3 - x4) * dy - (y3 - y4) * dx);</b>
+&nbsp;
+&nbsp;            double da1, da2;
+&nbsp;
+<b class="fc">&nbsp;            if(d2 &gt; FLOAT_EPSILON &amp;&amp; d3 &gt; FLOAT_EPSILON) {</b>
+&nbsp;                // Regular care
+<b class="fc">&nbsp;                if((d2 + d3)*(d2 + d3) &lt;= distanceTolerance * (dx*dx + dy*dy)) {</b>
+&nbsp;                    // If the curvature doesn&#39;t exceed the distanceTolerance value we tend to finish subdivisions.
+<b class="pc">&nbsp;                    if(angleTolerance &lt; curveAngleToleranceEpsilon) {</b>
+<b class="fc">&nbsp;                        points.add(new Point2D(x1234, y1234));</b>
+&nbsp;                        return;
+&nbsp;                    }
+&nbsp;
+&nbsp;                    // Angle &amp; Cusp Condition
+<b class="nc">&nbsp;					double a23 = Math.atan2(y3 - y2, x3 - x2);</b>
+<b class="nc">&nbsp;                    da1 = Math.abs(a23 - Math.atan2(y2 - y1, x2 - x1));</b>
+<b class="nc">&nbsp;                    da2 = Math.abs(Math.atan2(y4 - y3, x4 - x3) - a23);</b>
+<b class="nc">&nbsp;                    if(da1 &gt;= Math.PI) da1 = 2.0*Math.PI - da1;</b>
+<b class="nc">&nbsp;                    if(da2 &gt;= Math.PI) da2 = 2.0*Math.PI - da2;</b>
+&nbsp;
+<b class="nc">&nbsp;                    if(da1 + da2 &lt; angleTolerance) {</b>
+&nbsp;                        // Finally we can stop the recursion
+<b class="nc">&nbsp;                        points.add(new Point2D(x1234, y1234));</b>
+&nbsp;                        return;
+&nbsp;                    }
+&nbsp;
+<b class="nc">&nbsp;                    if(cuspLimit != 0.0) {</b>
+<b class="nc">&nbsp;                        if(da1 &gt; cuspLimit) {</b>
+<b class="nc">&nbsp;                            points.add(new Point2D(x2, y2));</b>
+&nbsp;                            return;
+&nbsp;                        }
+<b class="nc">&nbsp;                        if(da2 &gt; cuspLimit) {</b>
+<b class="nc">&nbsp;                            points.add(new Point2D(x3, y3));</b>
+&nbsp;                            return;
+&nbsp;                        }
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            } else {
+<b class="fc">&nbsp;                if(d2 &gt; FLOAT_EPSILON) {</b>
+&nbsp;                    // p1,p3,p4 are co-linear, p2 is considerable
+<b class="fc">&nbsp;                    if(d2 * d2 &lt;= distanceTolerance * (dx*dx + dy*dy)) {</b>
+<b class="pc">&nbsp;                        if(angleTolerance &lt; curveAngleToleranceEpsilon) {</b>
+<b class="fc">&nbsp;                            points.add(new Point2D(x1234, y1234));</b>
+&nbsp;                            return;
+&nbsp;                        }
+&nbsp;
+&nbsp;                        // Angle Condition
+<b class="nc">&nbsp;                        da1 = Math.abs(Math.atan2(y3 - y2, x3 - x2) - Math.atan2(y2 - y1, x2 - x1));</b>
+<b class="nc">&nbsp;                        if(da1 &gt;= Math.PI) da1 = 2.0*Math.PI - da1;</b>
+&nbsp;
+<b class="nc">&nbsp;                        if(da1 &lt; angleTolerance) {</b>
+<b class="nc">&nbsp;                            points.add(new Point2D(x2, y2));</b>
+<b class="nc">&nbsp;                            points.add(new Point2D(x3, y3));</b>
+&nbsp;                            return;
+&nbsp;                        }
+&nbsp;
+<b class="nc">&nbsp;                        if(cuspLimit != 0.0) {</b>
+<b class="nc">&nbsp;                            if(da1 &gt; cuspLimit) {</b>
+<b class="nc">&nbsp;                                points.add(new Point2D(x2, y2));</b>
+&nbsp;                                return;
+&nbsp;                            }
+&nbsp;                        }
+&nbsp;                    }
+<b class="fc">&nbsp;                } else if(d3 &gt; FLOAT_EPSILON) {</b>
+&nbsp;                    // p1,p2,p4 are co-linear, p3 is considerable
+<b class="fc">&nbsp;                    if(d3 * d3 &lt;= distanceTolerance * (dx*dx + dy*dy)) {</b>
+<b class="pc">&nbsp;                        if(angleTolerance &lt; curveAngleToleranceEpsilon) {</b>
+<b class="fc">&nbsp;                            points.add(new Point2D(x1234, y1234));</b>
+&nbsp;                            return;
+&nbsp;                        }
+&nbsp;
+&nbsp;                        // Angle Condition
+<b class="nc">&nbsp;                        da1 = Math.abs(Math.atan2(y4 - y3, x4 - x3) - Math.atan2(y3 - y2, x3 - x2));</b>
+<b class="nc">&nbsp;                        if(da1 &gt;= Math.PI) da1 = 2.0*Math.PI - da1;</b>
+&nbsp;
+<b class="nc">&nbsp;                        if(da1 &lt; angleTolerance) {</b>
+<b class="nc">&nbsp;                            points.add(new Point2D(x2, y2));</b>
+<b class="nc">&nbsp;                            points.add(new Point2D(x3, y3));</b>
+&nbsp;                            return;
+&nbsp;                        }
+&nbsp;
+<b class="nc">&nbsp;                        if(cuspLimit != 0.0) {</b>
+<b class="nc">&nbsp;                            if(da1 &gt; cuspLimit) {</b>
+<b class="nc">&nbsp;                                points.add(new Point2D(x3, y3));</b>
+&nbsp;                                return;
+&nbsp;                            }
+&nbsp;                        }
+&nbsp;                    }
+&nbsp;                } else {
+&nbsp;                    // Co-linear case
+<b class="fc">&nbsp;                    dx = x1234 - (x1 + x4) / 2.0;</b>
+<b class="fc">&nbsp;                    dy = y1234 - (y1 + y4) / 2.0;</b>
+<b class="fc">&nbsp;                    if(dx*dx + dy*dy &lt;= distanceTolerance) {</b>
+<b class="fc">&nbsp;                        points.add(new Point2D(x1234, y1234));</b>
+&nbsp;                        return;
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Continue subdivision
+<b class="fc">&nbsp;        recursive(x1, y1, x12, y12, x123, y123, x1234, y1234, points, distanceTolerance, level + 1);</b>
+<b class="fc">&nbsp;        recursive(x1234, y1234, x234, y234, x34, y34, x4, y4, points, distanceTolerance, level + 1);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	protected ArrayList&lt;Point2D&gt; generateCurvePointsOld() {
+<b class="nc">&nbsp;		ArrayList&lt;Point2D&gt; list = new ArrayList&lt;Point2D&gt;();</b>
+<b class="nc">&nbsp;		list.add(new Point2D(x0,y0));</b>
+&nbsp;		
+<b class="nc">&nbsp;		double steps=25;</b>
+<b class="nc">&nbsp;		for(double k=1;k&lt;steps;k++) {</b>
+<b class="nc">&nbsp;			double j = k/steps;</b>
+&nbsp;			/*
+&nbsp;			// first method
+&nbsp;			double xa = lerp(x0,x1,j);
+&nbsp;			double ya = lerp(y0,y1,j);
+&nbsp;			double xb = lerp(x1,x2,j);
+&nbsp;			double yb = lerp(y1,y2,j);
+&nbsp;			double xc = lerp(x2,x3,j);
+&nbsp;			double yc = lerp(y2,y3,j);
+&nbsp;			
+&nbsp;			double xab = lerp(xa,xb,j);
+&nbsp;			double yab = lerp(ya,yb,j);
+&nbsp;			double xbc = lerp(xb,xc,j);
+&nbsp;			double ybc = lerp(yb,yc,j);
+&nbsp;			
+&nbsp;			double xabc = lerp(xab,xbc,j);
+&nbsp;			double yabc = lerp(yab,ybc,j);
+&nbsp;			/*/
+&nbsp;			// second method
+<b class="nc">&nbsp;			double xabc = getXAt(j);</b>
+<b class="nc">&nbsp;			double yabc = getYAt(j);</b>
+&nbsp;	        //*/
+&nbsp;			
+<b class="nc">&nbsp;	        list.add(new Point2D(xabc,yabc));</b>
+&nbsp;		}
+<b class="nc">&nbsp;		list.add(new Point2D(x3,y3));</b>
+&nbsp;		
+<b class="nc">&nbsp;		return list;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	// for some value t=[0...1]
+&nbsp;	double getXAt(double t) {
+<b class="nc">&nbsp;        double a = Math.pow((1.0 - t), 3.0);</b>
+<b class="nc">&nbsp;        double b = 3.0 * t * Math.pow((1.0 - t), 2.0);</b>
+<b class="nc">&nbsp;        double c = 3.0 * Math.pow(t, 2.0) * (1.0 - t);</b>
+<b class="nc">&nbsp;        double d = Math.pow(t, 3.0);</b>
+&nbsp; 
+<b class="nc">&nbsp;        return a * x0 + b * x1 + c * x2 + d * x3;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	// for some value t=[0...1]
+&nbsp;	double getYAt(double t) {
+<b class="nc">&nbsp;        double a = Math.pow((1.0 - t), 3.0);</b>
+<b class="nc">&nbsp;        double b = 3.0 * t * Math.pow((1.0 - t), 2.0);</b>
+<b class="nc">&nbsp;        double c = 3.0 * Math.pow(t, 2.0) * (1.0 - t);</b>
+<b class="nc">&nbsp;        double d = Math.pow(t, 3.0);</b>
+&nbsp;        
+<b class="nc">&nbsp;        return a * y0 + b * y1 + c * y2 + d * y3;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	protected double lerp(double a,double b,double fraction) {
+<b class="nc">&nbsp;		return ( b - a ) * fraction + a;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

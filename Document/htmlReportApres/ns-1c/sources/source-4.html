@@ -1,0 +1,150 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > PlotterEvent</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.plotter</a>
+</div>
+
+<h1>Coverage Summary for Class: PlotterEvent (com.marginallyclever.makelangelo.plotter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PlotterEvent</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (1/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (4/6)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.plotter;
+&nbsp;
+&nbsp;public class PlotterEvent {
+&nbsp;	// robot has disconnected
+&nbsp;	public static final int DISCONNECT = 0;
+&nbsp;	// robot is connected and identity confirmed.
+&nbsp;	public static final int CONNECTION_READY = 1;
+&nbsp;	// bad firmware detected. extra is a String with the version found.
+&nbsp;	public static final int BAD_FIRMWARE = 2;
+&nbsp;	// bad hardware detected. extra is a String with the version found.
+&nbsp;	public static final int BAD_HARDWARE = 3;
+&nbsp;	// starting to send gcode to robot
+&nbsp;	public static final int START = 4;
+&nbsp;	// stopping
+&nbsp;	public static final int STOP = 5;
+&nbsp;	// extra is the line number last sent to the robot.
+&nbsp;	public static final int PROGRESS_SOFAR = 6;
+&nbsp;	// requests tool change. extra is a 24 bit RGB value.
+&nbsp;	public static final int TOOL_CHANGE = 7;
+&nbsp;	// new GCode commands have been given to the robot.
+&nbsp;	public static final int NEW_GCODE = 8;
+&nbsp;	// motor engaged status has changed.  extra is a boolean with the new state.
+&nbsp;	public static final int MOTORS_ENGAGED = 9;
+&nbsp;	// robot has homed and is safe to drive.
+&nbsp;	public static final int HOME_FOUND = 10;
+&nbsp;	// robot has moved.
+&nbsp;	public static final int POSITION = 11;
+&nbsp;	// robot has raised or lowered pen.  extra is true if pen is up, false if pen is down.
+&nbsp;	public static final int PEN_UPDOWN = 12;
+&nbsp;	
+&nbsp;	public Plotter subject;
+&nbsp;	public int type;
+&nbsp;	public Object extra;
+&nbsp;
+&nbsp;	public PlotterEvent(int eventType, Plotter robot) {
+<b class="fc">&nbsp;		super();</b>
+<b class="fc">&nbsp;		type = eventType;</b>
+<b class="fc">&nbsp;		subject = robot;</b>
+<b class="fc">&nbsp;		extra = null;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public PlotterEvent(int eventType, Plotter robot, Object extraData) {
+<b class="nc">&nbsp;		this(eventType, robot);</b>
+<b class="nc">&nbsp;		extra = extraData;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

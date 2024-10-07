@@ -1,0 +1,221 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > ApplicationSettings</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.applicationsettings</a>
+</div>
+
+<h1>Coverage Summary for Class: ApplicationSettings (com.marginallyclever.makelangelo.applicationsettings)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ApplicationSettings</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/56)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.applicationsettings;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.util.PreferencesHelper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.swing.*;
+&nbsp;import java.awt.*;
+&nbsp;import java.io.*;
+&nbsp;import java.util.prefs.BackingStoreException;
+&nbsp;import java.util.prefs.InvalidPreferencesFormatException;
+&nbsp;import java.util.prefs.Preferences;
+&nbsp;
+&nbsp;/**
+&nbsp; * Application settings
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class ApplicationSettings {
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(ApplicationSettings.class);</b>
+&nbsp;	
+&nbsp;	public ApplicationSettings() {
+<b class="nc">&nbsp;		super();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void run(Component parentComponent) {
+<b class="nc">&nbsp;		JPanel panel = new JPanel(new BorderLayout());</b>
+<b class="nc">&nbsp;		panel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));</b>
+&nbsp;
+<b class="nc">&nbsp;		JPanel top = new JPanel(new FlowLayout());</b>
+<b class="nc">&nbsp;		top.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);</b>
+<b class="nc">&nbsp;		JButton buttonImport = new JButton(Translator.get(&quot;Import&quot;));</b>
+<b class="nc">&nbsp;		top.add(buttonImport);</b>
+<b class="nc">&nbsp;		buttonImport.addActionListener(e -&gt; importPreferences(parentComponent));</b>
+&nbsp;
+<b class="nc">&nbsp;		JButton buttonExport = new JButton(Translator.get(&quot;Export&quot;));</b>
+<b class="nc">&nbsp;		top.add(buttonExport);</b>
+<b class="nc">&nbsp;		buttonExport.addActionListener(e -&gt; exportPreferences(parentComponent));</b>
+&nbsp;
+<b class="nc">&nbsp;		JButton buttonReset = new JButton(Translator.get(&quot;Reset&quot;));</b>
+<b class="nc">&nbsp;		top.add(buttonReset);</b>
+<b class="nc">&nbsp;		buttonReset.addActionListener(e -&gt; resetPreferences(parentComponent));</b>
+&nbsp;
+<b class="nc">&nbsp;		panel.add(top,BorderLayout.NORTH);</b>
+&nbsp;
+<b class="nc">&nbsp;		JTabbedPane pane = new JTabbedPane();</b>
+<b class="nc">&nbsp;		pane.add(Translator.get(&quot;SoundPreferences.Title&quot;), SoundPreferences.buildPanel());</b>
+<b class="nc">&nbsp;		pane.add(Translator.get(&quot;GFXPreferences.Title&quot;), GFXPreferences.buildPanel());</b>
+<b class="nc">&nbsp;		pane.add(Translator.get(&quot;LanguagePreferences.Title&quot;), LanguagePreferences.buildPanel());</b>
+<b class="nc">&nbsp;		pane.add(Translator.get(&quot;MetricsPreferences.Title&quot;), MetricsPreferences.buildPanel());</b>
+<b class="nc">&nbsp;		panel.add(pane,BorderLayout.CENTER);</b>
+&nbsp;
+<b class="nc">&nbsp;		int result = JOptionPane.showConfirmDialog(parentComponent, panel, Translator.get(&quot;ApplicationSettings.title&quot;), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);</b>
+<b class="nc">&nbsp;		if (result == JOptionPane.OK_OPTION) {</b>
+<b class="nc">&nbsp;			SoundPreferences.save();</b>
+<b class="nc">&nbsp;			GFXPreferences.save();</b>
+<b class="nc">&nbsp;			LanguagePreferences.save();</b>
+<b class="nc">&nbsp;			MetricsPreferences.save();</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void exportPreferences(Component parentComponent) {
+<b class="nc">&nbsp;		final JFileChooser fc = new JFileChooser();</b>
+<b class="nc">&nbsp;		int returnVal = fc.showSaveDialog(parentComponent);</b>
+<b class="nc">&nbsp;		if(returnVal == JFileChooser.APPROVE_OPTION) {</b>
+<b class="nc">&nbsp;			final File file = fc.getSelectedFile();</b>
+<b class="nc">&nbsp;			try (final OutputStream fileOutputStream = new FileOutputStream(file)) {</b>
+<b class="nc">&nbsp;				Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LEGACY_MAKELANGELO_ROOT);</b>
+<b class="nc">&nbsp;				prefs.exportSubtree(fileOutputStream);</b>
+<b class="nc">&nbsp;			} catch (IOException | BackingStoreException e) {</b>
+<b class="nc">&nbsp;				logger.error(&quot;Failed to export preferences to {}&quot;, file, e);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void importPreferences(Component parentComponent) {
+<b class="nc">&nbsp;		final JFileChooser fc = new JFileChooser();</b>
+<b class="nc">&nbsp;		int returnVal = fc.showOpenDialog(parentComponent);</b>
+<b class="nc">&nbsp;		if(returnVal == JFileChooser.APPROVE_OPTION) {</b>
+<b class="nc">&nbsp;			final File file = fc.getSelectedFile();</b>
+<b class="nc">&nbsp;			try (final InputStream fileInputStream = new FileInputStream(file)) {</b>
+<b class="nc">&nbsp;				Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LEGACY_MAKELANGELO_ROOT);</b>
+<b class="nc">&nbsp;				prefs.flush();</b>
+<b class="nc">&nbsp;				Preferences.importPreferences(fileInputStream);</b>
+<b class="nc">&nbsp;				prefs.flush();</b>
+<b class="nc">&nbsp;			} catch (IOException | InvalidPreferencesFormatException | BackingStoreException e) {</b>
+<b class="nc">&nbsp;				logger.error(&quot;Failed to import preferences from {}&quot;, file, e);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void resetPreferences(Component parentComponent) {
+<b class="nc">&nbsp;		int dialogResult = JOptionPane.showConfirmDialog(parentComponent, Translator.get(&quot;MenuResetMachinePreferencesWarning&quot;), Translator.get(&quot;QuestionTitle&quot;), JOptionPane.YES_NO_OPTION);</b>
+<b class="nc">&nbsp;		if(dialogResult == JOptionPane.YES_OPTION){</b>
+&nbsp;			try {
+<b class="nc">&nbsp;				Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LEGACY_MAKELANGELO_ROOT);</b>
+<b class="nc">&nbsp;				prefs.removeNode();</b>
+<b class="nc">&nbsp;				Preferences.userRoot().flush();</b>
+<b class="nc">&nbsp;				PreferencesHelper.start();</b>
+<b class="nc">&nbsp;			} catch (BackingStoreException e) {</b>
+<b class="nc">&nbsp;				logger.error(&quot;Failed to reset preferences&quot;, e);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,134 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > SelectEvent</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.select</a>
+</div>
+
+<h1>Coverage Summary for Class: SelectEvent (com.marginallyclever.makelangelo.select)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SelectEvent</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    25%
+  </span>
+  <span class="absValue">
+    (1/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    57.1%
+  </span>
+  <span class="absValue">
+    (4/7)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.select;
+&nbsp;
+&nbsp;/**
+&nbsp; * A SelectEvent is fired when a Select changes value.
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.50.2
+&nbsp; */
+&nbsp;public class SelectEvent {
+&nbsp;    private final Select source;
+&nbsp;    private Object oldValue;
+&nbsp;    private Object newValue;
+&nbsp;
+<b class="fc">&nbsp;    public SelectEvent(Select source,Object oldValue,Object newValue) {</b>
+<b class="fc">&nbsp;        this.source = source;</b>
+<b class="fc">&nbsp;        this.oldValue = oldValue;</b>
+<b class="fc">&nbsp;        this.newValue = newValue;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Select getSource() {
+<b class="nc">&nbsp;        return source;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Object getOldValue() {
+<b class="nc">&nbsp;        return oldValue;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Object getNewValue() {
+<b class="nc">&nbsp;        return newValue;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

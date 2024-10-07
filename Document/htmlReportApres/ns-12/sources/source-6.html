@@ -1,0 +1,235 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > FilterDitherFloydSteinbergColor</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imagefilter</a>
+</div>
+
+<h1>Coverage Summary for Class: FilterDitherFloydSteinbergColor (com.marginallyclever.makelangelo.makeart.imagefilter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FilterDitherFloydSteinbergColor</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/49)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imagefilter;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.ResizableImagePanel;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;
+&nbsp;import javax.imageio.ImageIO;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.image.BufferedImage;
+&nbsp;import java.io.FileInputStream;
+&nbsp;import java.io.IOException;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * Floyd/Steinberg dithering
+&nbsp; * See &lt;a href=&quot;http://stackoverflow.com/questions/5940188/how-to-convert-a-24-bit-png-to-3-bit-png-using-floyd-steinberg-dithering&quot;&gt;http://stackoverflow.com/questions/5940188/how-to-convert-a-24-bit-png-to-3-bit-png-using-floyd-steinberg-dithering&lt;/a&gt;
+&nbsp; *
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class FilterDitherFloydSteinbergColor extends ImageFilter {
+&nbsp;    public final Color[] palette;
+&nbsp;    private final TransformedImage img;
+&nbsp;
+&nbsp;    public FilterDitherFloydSteinbergColor(TransformedImage img) {
+<b class="nc">&nbsp;        super();</b>
+<b class="nc">&nbsp;        this.img = img;</b>
+<b class="nc">&nbsp;        palette = new Color[] {</b>
+&nbsp;                Color.BLACK,
+&nbsp;                Color.BLUE,
+&nbsp;                Color.GREEN,
+&nbsp;                Color.CYAN,
+&nbsp;                Color.RED,
+&nbsp;                Color.MAGENTA,
+&nbsp;                Color.YELLOW,
+&nbsp;                Color.WHITE,
+&nbsp;        };
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public TransformedImage filter() {
+<b class="nc">&nbsp;        BufferedImage src = img.getSourceImage();</b>
+<b class="nc">&nbsp;        int h = src.getHeight();</b>
+<b class="nc">&nbsp;        int w = src.getWidth();</b>
+&nbsp;
+<b class="nc">&nbsp;        TransformedImage after = new TransformedImage(img);</b>
+<b class="nc">&nbsp;        BufferedImage afterBI = after.getSourceImage();</b>
+<b class="nc">&nbsp;        Color [][] d = new Color[h][w];</b>
+&nbsp;
+<b class="nc">&nbsp;        for (int y = 0; y &lt; h; y++) {</b>
+<b class="nc">&nbsp;            for (int x = 0; x &lt; w; x++) {</b>
+<b class="nc">&nbsp;                d[y][x] = new Color(src.getRGB(x, y));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        for (int y = 0; y &lt; h; y++) {</b>
+<b class="nc">&nbsp;            for (int x = 0; x &lt; w; x++) {</b>
+<b class="nc">&nbsp;                Color oldColor = d[y][x];</b>
+<b class="nc">&nbsp;                Color newColor = findClosestPaletteColor(oldColor);</b>
+<b class="nc">&nbsp;                afterBI.setRGB(x, y, newColor.hashCode());</b>
+&nbsp;
+<b class="nc">&nbsp;                Color err = new Color(</b>
+<b class="nc">&nbsp;                        oldColor.getRed() - newColor.getRed(),</b>
+<b class="nc">&nbsp;                        oldColor.getGreen() - newColor.getGreen(),</b>
+<b class="nc">&nbsp;                        oldColor.getBlue() - newColor.getBlue()</b>
+&nbsp;                );
+&nbsp;
+<b class="nc">&nbsp;                if (x + 1 &lt; w              ) d[y    ][x + 1] = addColors(d[y    ][x + 1], scaleColor(err, 7.0 / 16.0));</b>
+<b class="nc">&nbsp;                if (x - 1 &gt;= 0 &amp;&amp; y + 1 &lt; h) d[y + 1][x - 1] = addColors(d[y + 1][x - 1], scaleColor(err, 3.0 / 16.0));</b>
+<b class="nc">&nbsp;                if (y + 1 &lt; h              ) d[y + 1][x    ] = addColors(d[y + 1][x    ], scaleColor(err, 5.0 / 16.0));</b>
+<b class="nc">&nbsp;                if (x + 1 &lt; w &amp;&amp; y + 1 &lt; h ) d[y + 1][x + 1] = addColors(d[y + 1][x + 1], scaleColor(err, 1.0 / 16.0));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return after;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Color addColors(Color a, Color b) {
+<b class="nc">&nbsp;        return new Color(</b>
+<b class="nc">&nbsp;                Math.max(0,Math.min(255, a.getRed() + b.getRed())),</b>
+<b class="nc">&nbsp;                Math.max(0,Math.min(255, a.getGreen() + b.getGreen())),</b>
+<b class="nc">&nbsp;                Math.max(0,Math.min(255, a.getBlue() + b.getBlue()))</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    private Color scaleColor(Color c, double scale) {
+<b class="nc">&nbsp;        return new Color(</b>
+<b class="nc">&nbsp;                (int) (c.getRed() * scale),</b>
+<b class="nc">&nbsp;                (int) (c.getGreen() * scale),</b>
+<b class="nc">&nbsp;                (int) (c.getBlue() * scale)</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    private Color findClosestPaletteColor(Color c) {
+<b class="nc">&nbsp;        Color closest = palette[0];</b>
+<b class="nc">&nbsp;        double best = diffSquared(closest,c);</b>
+&nbsp;
+<b class="nc">&nbsp;        for (Color n : palette) {</b>
+<b class="nc">&nbsp;            double next = diffSquared(n,c);</b>
+<b class="nc">&nbsp;            if (next &lt; best) {</b>
+<b class="nc">&nbsp;                closest = n;</b>
+<b class="nc">&nbsp;                best = next;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return closest;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int diffSquared(Color a, Color b) {
+<b class="nc">&nbsp;        return Math.abs(a.getRed() - b.getRed())</b>
+<b class="nc">&nbsp;                + Math.abs(a.getGreen() - b.getGreen())</b>
+<b class="nc">&nbsp;                + Math.abs(a.getBlue() - b.getBlue());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void main(String[] args) throws IOException {
+<b class="nc">&nbsp;        TransformedImage src = new TransformedImage(ImageIO.read(new FileInputStream(&quot;src/test/resources/mandrill.png&quot;)));</b>
+<b class="nc">&nbsp;        FilterDitherFloydSteinbergColor f = new FilterDitherFloydSteinbergColor(src);</b>
+<b class="nc">&nbsp;        TransformedImage dest = f.filter();</b>
+<b class="nc">&nbsp;        ResizableImagePanel.showImage(dest.getSourceImage(), &quot;Filter_DitherFloydSteinbergColor&quot;);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

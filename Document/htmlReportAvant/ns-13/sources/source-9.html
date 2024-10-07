@@ -1,0 +1,285 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > SaveDXF</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.io</a>
+</div>
+
+<h1>Coverage Summary for Class: SaveDXF (com.marginallyclever.makelangelo.makeart.io)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SaveDXF</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (83/83)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">SaveDXF$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (84/84)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.io;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.helpers.MathHelper;
+&nbsp;import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import com.marginallyclever.makelangelo.turtle.TurtleMove;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.swing.filechooser.FileNameExtensionFilter;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.io.OutputStream;
+&nbsp;import java.io.OutputStreamWriter;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Dan Royer
+&nbsp; * see http://paulbourke.net/dataformats/dxf/min3d.html for details
+&nbsp; */
+<b class="fc">&nbsp;public class SaveDXF implements TurtleSaver {</b>
+<b class="fc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(SaveDXF.class);</b>
+<b class="fc">&nbsp;	private static final FileNameExtensionFilter filter = new FileNameExtensionFilter(&quot;DXF R12&quot;, &quot;dxf&quot;);</b>
+&nbsp;		
+&nbsp;	@Override
+&nbsp;	public FileNameExtensionFilter getFileNameFilter() {
+<b class="fc">&nbsp;		return filter;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean save(OutputStream outputStream,Turtle turtle, PlotterSettings settings) throws Exception {
+<b class="fc">&nbsp;		logger.debug(&quot;saving...&quot;);</b>
+&nbsp;		
+<b class="fc">&nbsp;		Rectangle2D.Double box = turtle.getBounds();</b>
+<b class="fc">&nbsp;		OutputStreamWriter out = new OutputStreamWriter(outputStream);</b>
+&nbsp;		// header
+<b class="fc">&nbsp;		out.write(&quot;999\nDXF created by Makelangelo software (http://makelangelo.com)\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nSECTION\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;2\nHEADER\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;9\n$ACADVER\n1\nAC1006\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;9\n$INSBASE\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;10\n&quot;+box.x+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;20\n&quot;+box.y+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;30\n0.0\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;9\n$EXTMIN\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;10\n&quot;+box.x+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;20\n&quot;+box.y+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;30\n0.0\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;9\n$EXTMAX\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;10\n&quot;+(box.x+box.width)+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;20\n&quot;+(box.y+box.height)+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;30\n0.0\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nENDSEC\n&quot;);</b>
+&nbsp;
+&nbsp;		// tables section
+<b class="fc">&nbsp;		out.write(&quot;0\nSECTION\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;2\nTABLES\n&quot;);</b>
+&nbsp;		// line type
+<b class="fc">&nbsp;		out.write(&quot;0\nTABLE\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;2\nLTYPE\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;70\n1\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nLTYPE\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;2\nCONTINUOUS\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;70\n64\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;3\nSolid line\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;72\n65\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;73\n0\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;40\n0.000\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nENDTAB\n&quot;);</b>
+&nbsp;		// layers
+<b class="fc">&nbsp;		out.write(&quot;0\nTABLE\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;2\nLAYER\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;70\n6\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nLAYER\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;2\n1\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;70\n64\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;62\n7\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;6\nCONTINUOUS\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nLAYER\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;2\n2\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;70\n64\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;62\n7\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;6\nCONTINUOUS\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nENDTAB\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nTABLE\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;2\nSTYLE\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;70\n0\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nENDTAB\n&quot;);</b>
+&nbsp;		// end tables
+<b class="fc">&nbsp;		out.write(&quot;0\nENDSEC\n&quot;);</b>
+&nbsp;
+&nbsp;		// empty blocks section (good form?)
+<b class="fc">&nbsp;		out.write(&quot;0\nSECTION\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nBLOCKS\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nENDSEC\n&quot;);</b>
+&nbsp;		// now the lines
+<b class="fc">&nbsp;		out.write(&quot;0\nSECTION\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;2\nENTITIES\n&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;		boolean isUp=true;</b>
+<b class="fc">&nbsp;		double x0 = turtle.history.get(0).x;</b>
+<b class="fc">&nbsp;		double y0 = turtle.history.get(0).y;</b>
+&nbsp;				
+<b class="fc">&nbsp;		for( TurtleMove m : turtle.history ) {</b>
+<b class="pc">&nbsp;			switch(m.type) {</b>
+&nbsp;			case TRAVEL:
+<b class="fc">&nbsp;				isUp=true;</b>
+<b class="fc">&nbsp;				x0=m.x;</b>
+<b class="fc">&nbsp;				y0=m.y;</b>
+&nbsp;				break;
+&nbsp;			case DRAW_LINE:
+<b class="fc">&nbsp;				if(isUp) isUp=false;</b>
+<b class="fc">&nbsp;				out.write(&quot;0\nLINE\n&quot;);</b>
+<b class="fc">&nbsp;				out.write(&quot;8\n1\n&quot;);  // layer 1</b>
+<b class="fc">&nbsp;				out.write(&quot;10\n&quot;+MathHelper.roundOff3(x0)+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;				out.write(&quot;20\n&quot;+MathHelper.roundOff3(y0)+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;				out.write(&quot;11\n&quot;+MathHelper.roundOff3(m.x)+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;				out.write(&quot;21\n&quot;+MathHelper.roundOff3(m.y)+&quot;\n&quot;);</b>
+<b class="fc">&nbsp;				x0=m.x;</b>
+<b class="fc">&nbsp;				y0=m.y;</b>
+&nbsp;				
+&nbsp;				break;
+&nbsp;			case TOOL_CHANGE:
+&nbsp;				// TODO write out DXF layer using  m.getColor()
+&nbsp;				break;
+&nbsp;			}
+&nbsp;		}
+&nbsp;		// wrap it up
+<b class="fc">&nbsp;		out.write(&quot;0\nENDSEC\n&quot;);</b>
+<b class="fc">&nbsp;		out.write(&quot;0\nEOF\n&quot;);</b>
+<b class="fc">&nbsp;		out.flush();</b>
+&nbsp;		
+<b class="fc">&nbsp;		logger.debug(&quot;done.&quot;);</b>
+<b class="fc">&nbsp;		return true;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

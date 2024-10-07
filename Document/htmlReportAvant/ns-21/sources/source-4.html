@@ -1,0 +1,385 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > PlotterSettingsPanel</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.plotter.plottersettings</a>
+</div>
+
+<h1>Coverage Summary for Class: PlotterSettingsPanel (com.marginallyclever.makelangelo.plotter.plottersettings)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PlotterSettingsPanel</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/138)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.plotter.plottersettings;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.CommandLineOptions;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.plotter.plotterrenderer.PlotterRendererFactory;
+&nbsp;import com.marginallyclever.makelangelo.select.*;
+&nbsp;import com.marginallyclever.util.PreferencesHelper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.swing.*;
+&nbsp;import java.awt.*;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * {@link PlotterSettingsPanel} is the user interface to adjust {@link PlotterSettings}.
+&nbsp; *
+&nbsp; * @author Dan Rmaybe oyer
+&nbsp; * @since 7.1.4
+&nbsp; */
+&nbsp;public class PlotterSettingsPanel extends JPanel {
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(PlotterSettingsPanel.class);</b>
+&nbsp;	private final PlotterSettings settings;
+&nbsp;	private PlotterSettingsUserGcodePanel userGcodePanel;
+&nbsp;	private SelectOneOfMany visualStyle;
+&nbsp;	private SelectDouble machineWidth, machineHeight;
+&nbsp;	private SelectDouble totalBeltNeeded;
+&nbsp;	private SelectDouble totalServoNeeded;
+&nbsp;	private SelectDouble totalStepperNeeded;
+&nbsp;	private SelectDouble acceleration;
+&nbsp;	private SelectDouble penDiameter;
+&nbsp;	private SelectDouble travelFeedRate;
+&nbsp;	private SelectDouble drawFeedRate;
+&nbsp;	private SelectDouble penUpAngle;
+&nbsp;	private SelectDouble penDownAngle;
+&nbsp;	private SelectDouble penRaiseRate;
+&nbsp;	private SelectDouble penLowerRate;
+&nbsp;	
+&nbsp;	private SelectColor selectPenDownColor;
+&nbsp;	private SelectColor selectPenUpColor;
+&nbsp;
+&nbsp;	private SelectInteger blockBufferSize;
+&nbsp;	private SelectInteger segmentsPerSecond;
+&nbsp;	private SelectDouble minSegmentLength;
+&nbsp;	private SelectInteger minSegTime;
+&nbsp;	private SelectBoolean handleSmallSegments;
+&nbsp;	private SelectDouble minAcceleration;
+&nbsp;	private SelectDouble minPlannerSpeed;
+&nbsp;	private SelectOneOfMany zMotorType;
+&nbsp;
+&nbsp;	private PlotterSettingsListener listener;
+&nbsp;
+&nbsp;	public PlotterSettingsPanel(PlotterSettings settings) {
+<b class="nc">&nbsp;		super(new BorderLayout());</b>
+<b class="nc">&nbsp;		this.settings = settings;</b>
+<b class="nc">&nbsp;		rebuildPanel();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void rebuildPanel() {
+<b class="nc">&nbsp;		this.removeAll();</b>
+<b class="nc">&nbsp;		userGcodePanel = new PlotterSettingsUserGcodePanel(settings);</b>
+&nbsp;
+<b class="nc">&nbsp;		JButton buttonSave = new JButton(Translator.get(&quot;Save&quot;));</b>
+<b class="nc">&nbsp;		buttonSave.addActionListener((e)-&gt;save());</b>
+&nbsp;
+<b class="nc">&nbsp;		JButton buttonReset = new JButton(Translator.get(&quot;Reset&quot;));</b>
+<b class="nc">&nbsp;		buttonReset.addActionListener((e)-&gt;reset());</b>
+&nbsp;
+<b class="nc">&nbsp;		JPanel bottom = new JPanel(new FlowLayout());</b>
+&nbsp;
+<b class="nc">&nbsp;		SelectPanel interior0 = new SelectPanel();</b>
+<b class="nc">&nbsp;		SelectPanel interior1 = new SelectPanel();</b>
+<b class="nc">&nbsp;		SelectPanel interior2 = new SelectPanel();</b>
+&nbsp;
+<b class="nc">&nbsp;		List&lt;String&gt; machineStyles = getMachineStyleNames();</b>
+<b class="nc">&nbsp;		String myStyle = settings.getString(PlotterSettings.STYLE);</b>
+<b class="nc">&nbsp;		int index = Math.max(0,machineStyles.indexOf(myStyle));</b>
+&nbsp;
+<b class="nc">&nbsp;		addToPanel(interior0,visualStyle         = new SelectOneOfMany(&quot;style&quot;,		 Translator.get(&quot;RobotMenu.RobotStyle&quot;						), machineStyles.toArray(new String[0]), index));</b>
+<b class="nc">&nbsp;		addToPanel(interior0,machineWidth 		 = new SelectDouble(&quot;width&quot;,		 Translator.get(&quot;PlotterSettingsPanel.MachineWidth&quot;			),settings.getDouble(PlotterSettings.LIMIT_RIGHT) - settings.getDouble(PlotterSettings.LIMIT_LEFT)));</b>
+<b class="nc">&nbsp;		addToPanel(interior0,machineHeight 	     = new SelectDouble(&quot;height&quot;,		 Translator.get(&quot;PlotterSettingsPanel.MachineHeight&quot;		),settings.getDouble(PlotterSettings.LIMIT_TOP) - settings.getDouble(PlotterSettings.LIMIT_BOTTOM)));</b>
+<b class="nc">&nbsp;		addToPanel(interior0,totalStepperNeeded  = new SelectDouble(&quot;stepperLength&quot;, Translator.get(&quot;PlotterSettingsPanel.StepperLengthNeeded&quot;	),0));</b>
+<b class="nc">&nbsp;		addToPanel(interior0,totalBeltNeeded 	 = new SelectDouble(&quot;beltLength&quot;,	 Translator.get(&quot;PlotterSettingsPanel.BeltLengthNeeded&quot;		),0));</b>
+<b class="nc">&nbsp;		addToPanel(interior0,totalServoNeeded 	 = new SelectDouble(&quot;servoLength&quot;,	 Translator.get(&quot;PlotterSettingsPanel.ServoLengthNeeded&quot;	),0));</b>
+&nbsp;
+<b class="nc">&nbsp;		addToPanel(interior1,penDiameter 		 = new SelectDouble(&quot;diameter&quot;,		 Translator.get(&quot;PlotterSettingsPanel.penToolDiameter&quot;		),settings.getDouble(PlotterSettings.DIAMETER)));</b>
+<b class="nc">&nbsp;	    addToPanel(interior1,travelFeedRate 	 = new SelectDouble(&quot;feedrate&quot;,		 Translator.get(&quot;PlotterSettingsPanel.penToolMaxFeedRate&quot;	),settings.getDouble(PlotterSettings.FEED_RATE_TRAVEL)));</b>
+<b class="nc">&nbsp;	    addToPanel(interior1,drawFeedRate 		 = new SelectDouble(&quot;speed&quot;,		 Translator.get(&quot;PlotterSettingsPanel.Speed&quot;				),settings.getDouble(PlotterSettings.FEED_RATE_DRAW)));</b>
+<b class="nc">&nbsp;	    addToPanel(interior1,acceleration 		 = new SelectDouble(&quot;acceleration&quot;,	 Translator.get(&quot;PlotterSettingsPanel.AdjustAcceleration&quot;	),settings.getDouble(PlotterSettings.MAX_ACCELERATION)));</b>
+<b class="nc">&nbsp;		addToPanel(interior1,penRaiseRate        = new SelectDouble(&quot;liftSpeed&quot;,	 Translator.get(&quot;PlotterSettingsPanel.penToolLiftSpeed&quot;		),settings.getDouble(PlotterSettings.PEN_ANGLE_UP_TIME)));</b>
+<b class="nc">&nbsp;		addToPanel(interior1,penLowerRate        = new SelectDouble(&quot;lowerSpeed&quot;,	 Translator.get(&quot;PlotterSettingsPanel.penToolLowerSpeed&quot;	),settings.getDouble(PlotterSettings.PEN_ANGLE_DOWN_TIME)));</b>
+<b class="nc">&nbsp;	    addToPanel(interior1,penUpAngle 		 = new SelectDouble(&quot;up&quot;,			 Translator.get(&quot;PlotterSettingsPanel.penToolUp&quot;			),settings.getDouble(PlotterSettings.PEN_ANGLE_UP)));</b>
+<b class="nc">&nbsp;	    addToPanel(interior1,penDownAngle 		 = new SelectDouble(&quot;down&quot;,			 Translator.get(&quot;PlotterSettingsPanel.penToolDown&quot;			),settings.getDouble(PlotterSettings.PEN_ANGLE_DOWN)));</b>
+<b class="nc">&nbsp;		addToPanel(interior1,selectPenUpColor 	 = new SelectColor(&quot;colorUp&quot;,		 Translator.get(&quot;PlotterSettingsPanel.pen up color&quot;			),settings.getColor(PlotterSettings.PEN_UP_COLOR),this));</b>
+<b class="nc">&nbsp;		addToPanel(interior1,selectPenDownColor  = new SelectColor(&quot;colorDown&quot;,		 Translator.get(&quot;PlotterSettingsPanel.pen down color&quot;		),settings.getColor(PlotterSettings.PEN_DOWN_COLOR_DEFAULT),this));</b>
+&nbsp;
+<b class="nc">&nbsp;		addToPanel(interior1,zMotorType          = new SelectOneOfMany(&quot;zMotorType&quot;,Translator.get(&quot;PlotterSettings.zMotorType&quot;),new String[]{</b>
+<b class="nc">&nbsp;				Translator.get(&quot;PlotterSettings.zMotorType.servo&quot;),  // PlotterSettings.Z_MOTOR_TYPE_SERVO = 1</b>
+<b class="nc">&nbsp;				Translator.get(&quot;PlotterSettings.zMotorType.stepper&quot;),  // PlotterSettings.Z_MOTOR_TYPE_STEPPER = 2</b>
+<b class="nc">&nbsp;		},settings.getInteger(PlotterSettings.Z_MOTOR_TYPE)-1));</b>
+&nbsp;
+<b class="nc">&nbsp;		addToPanel(interior2,blockBufferSize     = new SelectInteger(&quot;blockBufferSize&quot;,     Translator.get(&quot;PlotterSettings.blockBufferSize&quot;     ),settings.getInteger(PlotterSettings.BLOCK_BUFFER_SIZE)));</b>
+<b class="nc">&nbsp;		addToPanel(interior2,segmentsPerSecond   = new SelectInteger(&quot;segmentsPerSecond&quot;,   Translator.get(&quot;PlotterSettings.segmentsPerSecond&quot;   ),settings.getInteger(PlotterSettings.SEGMENTS_PER_SECOND)));</b>
+<b class="nc">&nbsp;		addToPanel(interior2,minSegmentLength    = new SelectDouble (&quot;minSegmentLength&quot;,    Translator.get(&quot;PlotterSettings.minSegmentLength&quot;    ),settings.getDouble(PlotterSettings.MIN_SEGMENT_LENGTH)));</b>
+<b class="nc">&nbsp;		addToPanel(interior2,minSegTime          = new SelectInteger(&quot;minSegTime&quot;,          Translator.get(&quot;PlotterSettings.minSegTime&quot;          ),settings.getInteger(PlotterSettings.MIN_SEG_TIME)));</b>
+<b class="nc">&nbsp;		addToPanel(interior2,handleSmallSegments = new SelectBoolean(&quot;handleSmallSegments&quot;, Translator.get(&quot;PlotterSettings.handleSmallSegments&quot; ),settings.getBoolean(PlotterSettings.HANDLE_SMALL_SEGMENTS)));</b>
+<b class="nc">&nbsp;		addToPanel(interior2,minAcceleration     = new SelectDouble (&quot;minAcceleration&quot;,     Translator.get(&quot;PlotterSettings.minAcceleration&quot;     ),settings.getDouble(PlotterSettings.MIN_ACCELERATION)));</b>
+<b class="nc">&nbsp;		addToPanel(interior2,minPlannerSpeed     = new SelectDouble (&quot;minPlannerSpeed&quot;,     Translator.get(&quot;PlotterSettings.minimumPlannerSpeed&quot; ),settings.getDouble(PlotterSettings.MINIMUM_PLANNER_SPEED)));</b>
+&nbsp;
+<b class="nc">&nbsp;		if(!settings.isMostAncestral()) {</b>
+<b class="nc">&nbsp;			bottom.add(buttonSave);</b>
+<b class="nc">&nbsp;			bottom.add(buttonReset);</b>
+&nbsp;		} else {
+<b class="nc">&nbsp;			machineWidth.setReadOnly();</b>
+<b class="nc">&nbsp;			machineHeight.setReadOnly();</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		machineWidth.addSelectListener((e)-&gt;updateLengthNeeded());</b>
+<b class="nc">&nbsp;		machineHeight.addSelectListener((e)-&gt;updateLengthNeeded());</b>
+&nbsp;
+<b class="nc">&nbsp;		totalStepperNeeded.setReadOnly();</b>
+<b class="nc">&nbsp;		totalBeltNeeded.setReadOnly();</b>
+<b class="nc">&nbsp;		totalServoNeeded.setReadOnly();</b>
+<b class="nc">&nbsp;		updateLengthNeeded();</b>
+&nbsp;
+<b class="nc">&nbsp;		JTabbedPane tabbedPane = new JTabbedPane();</b>
+<b class="nc">&nbsp;		tabbedPane.addTab(Translator.get(&quot;PlotterSettingsPanel.TabEssential&quot;),interior0);</b>
+<b class="nc">&nbsp;		tabbedPane.addTab(Translator.get(&quot;PlotterSettingsPanel.TabPen&quot;),interior1);</b>
+<b class="nc">&nbsp;		tabbedPane.addTab(Translator.get(&quot;PlotterSettingsPanel.TabSimulation&quot;),interior2);</b>
+<b class="nc">&nbsp;		tabbedPane.addTab(Translator.get(&quot;PlotterSettingsUserGcodePanel.Title&quot;),userGcodePanel);</b>
+&nbsp;
+&nbsp;		// now assemble the dialog
+<b class="nc">&nbsp;		this.add(tabbedPane,BorderLayout.CENTER);</b>
+<b class="nc">&nbsp;		this.add(bottom,BorderLayout.SOUTH);</b>
+<b class="nc">&nbsp;		this.repaint();</b>
+&nbsp;
+<b class="nc">&nbsp;		visualStyle.addSelectListener(e-&gt;updateSizeEditable());</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void updateSizeEditable() {
+<b class="nc">&nbsp;		var matches = !visualStyle.getSelectedItem().equals(PlotterRendererFactory.MAKELANGELO_CUSTOM.name());</b>
+<b class="nc">&nbsp;		matches |= !settings.isMostAncestral();</b>
+<b class="nc">&nbsp;		machineWidth.setReadOnly(matches);</b>
+<b class="nc">&nbsp;		machineHeight.setReadOnly(matches);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void addToPanel(SelectPanel interior2, Select minPlannerSpeed) {
+<b class="nc">&nbsp;		interior2.add(minPlannerSpeed);</b>
+<b class="nc">&nbsp;		minPlannerSpeed.addSelectListener((e)-&gt;{</b>
+<b class="nc">&nbsp;			save();</b>
+<b class="nc">&nbsp;			fireSettingsChangedEvent();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;
+&nbsp;	private void save() {
+<b class="nc">&nbsp;		double mwf = machineWidth.getValue();</b>
+<b class="nc">&nbsp;		double mhf = machineHeight.getValue();</b>
+<b class="nc">&nbsp;		double accel = acceleration.getValue();</b>
+&nbsp;
+<b class="nc">&nbsp;		boolean isDataSane = (mwf &gt; 0 &amp;&amp; mhf &gt; 0);</b>
+<b class="nc">&nbsp;		if(!isDataSane) {</b>
+&nbsp;			// TODO display a notice to the user?
+&nbsp;			return;
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		userGcodePanel.save();</b>
+&nbsp;		
+<b class="nc">&nbsp;		settings.setMachineSize(mwf, mhf);</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.MAX_ACCELERATION,accel);</b>
+&nbsp;	
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.DIAMETER,penDiameter.getValue());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.FEED_RATE_TRAVEL,travelFeedRate.getValue());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.FEED_RATE_DRAW,drawFeedRate.getValue());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.MAX_ACCELERATION,acceleration.getValue());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.PEN_ANGLE_UP_TIME,penRaiseRate.getValue());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.PEN_ANGLE_DOWN_TIME,penLowerRate.getValue());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.PEN_ANGLE_UP,penUpAngle.getValue());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.PEN_ANGLE_DOWN,penDownAngle.getValue());</b>
+&nbsp;
+<b class="nc">&nbsp;		settings.setColor(PlotterSettings.PAPER_COLOR,Color.WHITE);</b>
+<b class="nc">&nbsp;		settings.setColor(PlotterSettings.PEN_DOWN_COLOR,selectPenDownColor.getColor());</b>
+<b class="nc">&nbsp;		settings.setColor(PlotterSettings.PEN_DOWN_COLOR_DEFAULT,selectPenDownColor.getColor());</b>
+<b class="nc">&nbsp;		settings.setColor(PlotterSettings.PEN_UP_COLOR,selectPenUpColor.getColor());</b>
+&nbsp;		
+<b class="nc">&nbsp;		settings.setInteger(PlotterSettings.BLOCK_BUFFER_SIZE,blockBufferSize.getValue());</b>
+<b class="nc">&nbsp;		settings.setInteger(PlotterSettings.SEGMENTS_PER_SECOND,segmentsPerSecond.getValue());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.MIN_SEGMENT_LENGTH,minSegmentLength.getValue());</b>
+<b class="nc">&nbsp;		settings.setInteger(PlotterSettings.MIN_SEG_TIME,minSegTime.getValue());</b>
+<b class="nc">&nbsp;		settings.setBoolean(PlotterSettings.HANDLE_SMALL_SEGMENTS,handleSmallSegments.isSelected());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.MIN_ACCELERATION,minAcceleration.getValue());</b>
+<b class="nc">&nbsp;		settings.setDouble(PlotterSettings.MINIMUM_PLANNER_SPEED,minPlannerSpeed.getValue());</b>
+<b class="nc">&nbsp;		settings.setInteger(PlotterSettings.Z_MOTOR_TYPE,zMotorType.getSelectedIndex()+1);</b>
+&nbsp;
+<b class="nc">&nbsp;		List&lt;String&gt; machineStyles = getMachineStyleNames();</b>
+<b class="nc">&nbsp;		settings.setString(PlotterSettings.STYLE,machineStyles.get(visualStyle.getSelectedIndex()));</b>
+&nbsp;
+<b class="nc">&nbsp;		settings.save();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private List&lt;String&gt; getMachineStyleNames() {
+<b class="nc">&nbsp;		List&lt;String&gt; machineStyleNames = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;		for(PlotterRendererFactory m : PlotterRendererFactory.values()) {</b>
+<b class="nc">&nbsp;			machineStyleNames.add(m.name());</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return machineStyleNames;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void reset() {
+<b class="nc">&nbsp;		settings.reset();</b>
+<b class="nc">&nbsp;		userGcodePanel.reset();</b>
+<b class="nc">&nbsp;		rebuildPanel();</b>
+<b class="nc">&nbsp;		fireSettingsChangedEvent();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Calculate length of belt and cables needed based on machine dimensions.
+&nbsp;	 */
+&nbsp;	private void updateLengthNeeded() {
+<b class="nc">&nbsp;		double w = machineWidth.getValue();</b>
+<b class="nc">&nbsp;		double h = machineHeight.getValue();</b>
+<b class="nc">&nbsp;		double SAFETY_MARGIN=100;</b>
+&nbsp;
+<b class="nc">&nbsp;		double mmBeltNeeded=(Math.sqrt(w*w+h*h)+SAFETY_MARGIN); // 10cm safety margin</b>
+<b class="nc">&nbsp;		double beltNeeded = Math.ceil(mmBeltNeeded*0.001);</b>
+<b class="nc">&nbsp;		totalBeltNeeded.setValue((float)beltNeeded);</b>
+&nbsp;
+<b class="nc">&nbsp;		double mmServoNeeded = (Math.sqrt(w*w+h*h)+SAFETY_MARGIN) + w/2.0; // 10cm safety margin</b>
+<b class="nc">&nbsp;		double servoNeeded = Math.ceil(mmServoNeeded*0.001);</b>
+<b class="nc">&nbsp;		totalServoNeeded.setValue((float)servoNeeded);</b>
+&nbsp;
+<b class="nc">&nbsp;		double mmStepperNeeded = w/2.0+SAFETY_MARGIN; // 10cm safety margin</b>
+<b class="nc">&nbsp;		double stepperNeeded = Math.ceil(mmStepperNeeded*0.001);</b>
+<b class="nc">&nbsp;		totalStepperNeeded.setValue((float)stepperNeeded);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void addListener(PlotterSettingsListener listener) {
+<b class="nc">&nbsp;		this.listener = listener;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void fireSettingsChangedEvent() {
+<b class="nc">&nbsp;		if(listener!=null) {</b>
+<b class="nc">&nbsp;			listener.settingsChangedEvent(settings);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Start the PlotterSettingsPanel.
+&nbsp; 	 * @param args not used
+&nbsp;	 */
+&nbsp;	public static void main(String[] args) {
+<b class="nc">&nbsp;		PreferencesHelper.start();</b>
+<b class="nc">&nbsp;		CommandLineOptions.setFromMain(args);</b>
+<b class="nc">&nbsp;		Translator.start();</b>
+&nbsp;
+&nbsp;		try {
+<b class="nc">&nbsp;			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());</b>
+<b class="nc">&nbsp;		} catch (Exception ex) {</b>
+<b class="nc">&nbsp;			logger.warn(&quot;failed to set native look and feel.&quot;, ex);</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		PlotterSettings plotterSettings = new PlotterSettings();</b>
+<b class="nc">&nbsp;		JFrame frame = new JFrame(PlotterSettingsPanel.class.getSimpleName());</b>
+<b class="nc">&nbsp;		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</b>
+<b class="nc">&nbsp;		frame.add(new PlotterSettingsPanel(plotterSettings));</b>
+<b class="nc">&nbsp;		frame.pack();</b>
+<b class="nc">&nbsp;		frame.setVisible(true);	</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

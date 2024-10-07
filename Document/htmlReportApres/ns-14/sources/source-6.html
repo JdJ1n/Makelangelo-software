@@ -1,0 +1,155 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > RemoveExtraColorChangesFromTurtle</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.tools</a>
+</div>
+
+<h1>Coverage Summary for Class: RemoveExtraColorChangesFromTurtle (com.marginallyclever.makelangelo.makeart.tools)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">RemoveExtraColorChangesFromTurtle</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.tools;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.turtle.MovementType;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import com.marginallyclever.makelangelo.turtle.TurtleMove;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * {@link RemoveExtraColorChangesFromTurtle} removes any color changes that are not needed.
+&nbsp; */
+<b class="nc">&nbsp;public class RemoveExtraColorChangesFromTurtle {</b>
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(RemoveExtraColorChangesFromTurtle.class);</b>
+&nbsp;	
+&nbsp;	public static void run(Turtle turtle) {
+<b class="nc">&nbsp;		logger.debug(&quot;start @ {}&quot;, turtle.history.size());</b>
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;		List&lt;TurtleMove&gt; newHistory = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;		TurtleMove last=null;</b>
+<b class="nc">&nbsp;		for(TurtleMove move : turtle.history) {</b>
+<b class="nc">&nbsp;			if(move.type != MovementType.TOOL_CHANGE) {</b>
+<b class="nc">&nbsp;				newHistory.add(move);</b>
+<b class="nc">&nbsp;			} else if(last==null || !last.getColor().equals(move.getColor())) {</b>
+<b class="nc">&nbsp;				last = move;</b>
+<b class="nc">&nbsp;				newHistory.add(move);</b>
+&nbsp;			}
+&nbsp;		}
+<b class="nc">&nbsp;		turtle.history.clear();</b>
+<b class="nc">&nbsp;		turtle.history.addAll(newHistory);</b>
+&nbsp;		
+&nbsp;		// There may be some dumb travel moves left. (several travels in a row.)
+&nbsp;	
+<b class="nc">&nbsp;		logger.debug(&quot;end @ {}&quot;, turtle.history.size());</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

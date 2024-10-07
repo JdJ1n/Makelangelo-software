@@ -1,0 +1,267 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Generator_MazeRectangle</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.turtlegenerator.maze</a>
+</div>
+
+<h1>Coverage Summary for Class: Generator_MazeRectangle (com.marginallyclever.makelangelo.makeart.turtlegenerator.maze)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Generator_MazeRectangle</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    41.7%
+  </span>
+  <span class="absValue">
+    (5/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    12.9%
+  </span>
+  <span class="absValue">
+    (9/70)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.turtlegenerator.maze;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectSlider;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;
+&nbsp;/**
+&nbsp; * Makes a &quot;well formed&quot; maze.
+&nbsp; * See also &lt;a href=&quot;https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_backtracker&quot;&gt;wikipedia&lt;/a&gt;
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class Generator_MazeRectangle extends Generator_Maze {
+<b class="fc">&nbsp;	private static int rows = 5, columns = 5;</b>
+&nbsp;
+&nbsp;	public Generator_MazeRectangle() {
+<b class="fc">&nbsp;		super();</b>
+&nbsp;
+&nbsp;		SelectSlider field_rows;
+&nbsp;		SelectSlider field_columns;
+&nbsp;
+<b class="fc">&nbsp;		add(field_rows = new SelectSlider(&quot;rows&quot;,Translator.get(&quot;Generator_MazeRectangle.rows&quot;),100,1,getRows()));</b>
+<b class="fc">&nbsp;		field_rows.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setRows(field_rows.getValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(field_columns = new SelectSlider(&quot;columns&quot;,Translator.get(&quot;Generator_MazeRectangle.columns&quot;),100,1,getCols()));</b>
+<b class="fc">&nbsp;		field_columns.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setCols(field_columns.getValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="fc">&nbsp;		return Translator.get(&quot;Generator_MazeRectangle.name&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public int getRows() {
+<b class="fc">&nbsp;		return rows;</b>
+&nbsp;	}
+&nbsp;	public void setRows(int arg0) {
+<b class="nc">&nbsp;		if(arg0&lt;1) arg0=1;</b>
+<b class="nc">&nbsp;		rows=arg0;</b>
+&nbsp;	}
+&nbsp;	public int getCols() {
+<b class="fc">&nbsp;		return columns;</b>
+&nbsp;	}
+&nbsp;	public void setCols(int arg0) {
+<b class="nc">&nbsp;		if(arg0&lt;1) arg0=1;</b>
+<b class="nc">&nbsp;		columns=arg0;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * build a list of walls in the maze, cells in the maze, and how they connect to each other.
+&nbsp;	 */
+&nbsp;	@Override
+&nbsp;	public void buildCells() {
+<b class="nc">&nbsp;		cells.clear();</b>
+&nbsp;
+&nbsp;		int x, y;
+<b class="nc">&nbsp;		for (y = 0; y &lt; rows; ++y) {</b>
+<b class="nc">&nbsp;			for (x = 0; x &lt; columns; ++x) {</b>
+<b class="nc">&nbsp;				cells.add(new MazeCell(x,y));</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void buildWalls() {
+<b class="nc">&nbsp;		walls.clear();</b>
+&nbsp;		MazeWall w;
+&nbsp;		int x, y;
+<b class="nc">&nbsp;		for (y = 0; y &lt; rows; ++y) {</b>
+<b class="nc">&nbsp;			for (x = 0; x &lt; columns; ++x) {</b>
+<b class="nc">&nbsp;				if (x &lt; columns - 1) {</b>
+&nbsp;					// vertical wall between horizontal cells
+<b class="nc">&nbsp;					w = new MazeWall(</b>
+&nbsp;							y * columns + x,
+&nbsp;							y * columns + x + 1);
+<b class="nc">&nbsp;					walls.add(w);</b>
+<b class="nc">&nbsp;					cells.get(w.cellA).walls.add(w);</b>
+<b class="nc">&nbsp;					cells.get(w.cellB).walls.add(w);</b>
+&nbsp;				}
+<b class="nc">&nbsp;				if (y &lt; rows - 1) {</b>
+&nbsp;					// horizontal wall between vertical cells
+<b class="nc">&nbsp;					w = new MazeWall(</b>
+&nbsp;						(y  ) * columns + x,
+&nbsp;						(y+1) * columns + x);
+<b class="nc">&nbsp;					walls.add(w);</b>
+<b class="nc">&nbsp;					cells.get(w.cellA).walls.add(w);</b>
+<b class="nc">&nbsp;					cells.get(w.cellB).walls.add(w);</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Turtle drawMaze() {
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double yMin = rect.getMinY();</b>
+<b class="nc">&nbsp;		double yMax = rect.getMaxY();</b>
+<b class="nc">&nbsp;		double xMin = rect.getMinX();</b>
+<b class="nc">&nbsp;		double xMax = rect.getMaxX();</b>
+&nbsp;
+<b class="nc">&nbsp;		double w = (xMax - xMin) / columns;</b>
+<b class="nc">&nbsp;		double h = (yMax - yMin) / rows;</b>
+&nbsp;
+<b class="nc">&nbsp;		Turtle turtle = new Turtle();</b>
+&nbsp;		
+&nbsp;		// Draw outside edge
+<b class="nc">&nbsp;		turtle.jumpTo(xMin, yMax);</b>
+<b class="nc">&nbsp;		turtle.moveTo(xMax, yMax);</b>
+<b class="nc">&nbsp;		turtle.moveTo(xMax, yMin + h);</b>
+&nbsp;		// bottom right gap for exit is here
+<b class="nc">&nbsp;		turtle.jumpTo(xMax, yMin);</b>
+<b class="nc">&nbsp;		turtle.moveTo(xMin, yMin);</b>
+&nbsp;		// top-left gap for entrance is left here
+<b class="nc">&nbsp;		turtle.moveTo(xMin, yMax - h);</b>
+&nbsp;
+&nbsp;		int i;
+<b class="nc">&nbsp;		for (i = 0; i &lt; walls.size(); ++i) {</b>
+<b class="nc">&nbsp;			MazeWall wall = walls.get(i);</b>
+<b class="nc">&nbsp;			if (wall.removed)</b>
+&nbsp;				continue;
+<b class="nc">&nbsp;			int a = wall.cellA;</b>
+<b class="nc">&nbsp;			int b = wall.cellB;</b>
+<b class="nc">&nbsp;			int ax = cells.get(a).x;</b>
+<b class="nc">&nbsp;			int ay = cells.get(a).y;</b>
+<b class="nc">&nbsp;			int bx = cells.get(b).x;</b>
+<b class="nc">&nbsp;			int by = cells.get(b).y;</b>
+<b class="nc">&nbsp;			if (ay == by) {</b>
+&nbsp;				// vertical wall
+<b class="nc">&nbsp;				double x = xMin + (ax + 1) * w;</b>
+<b class="nc">&nbsp;				double y0 = yMin + (ay + 0) * h;</b>
+<b class="nc">&nbsp;				double y1 = yMin + (ay + 1) * h;</b>
+<b class="nc">&nbsp;				turtle.jumpTo(x, y0);</b>
+<b class="nc">&nbsp;				turtle.moveTo(x, y1);</b>
+<b class="nc">&nbsp;			} else if (ax == bx) {</b>
+&nbsp;				// horizontal wall
+<b class="nc">&nbsp;				double x0 = xMin + (ax + 0) * w;</b>
+<b class="nc">&nbsp;				double x1 = xMin + (ax + 1) * w;</b>
+<b class="nc">&nbsp;				double y = yMin + (ay + 1) * h;</b>
+<b class="nc">&nbsp;				turtle.jumpTo(x0, y);</b>
+<b class="nc">&nbsp;				turtle.moveTo(x1, y);</b>
+&nbsp;			}
+&nbsp;		}
+<b class="nc">&nbsp;		return turtle;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

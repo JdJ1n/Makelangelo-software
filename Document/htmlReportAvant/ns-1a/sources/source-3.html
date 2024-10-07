@@ -1,0 +1,393 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Generator_MazeHoneycomb</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.turtlegenerator.maze</a>
+</div>
+
+<h1>Coverage Summary for Class: Generator_MazeHoneycomb (com.marginallyclever.makelangelo.makeart.turtlegenerator.maze)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Generator_MazeHoneycomb</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    27.8%
+  </span>
+  <span class="absValue">
+    (5/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/58)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    7.8%
+  </span>
+  <span class="absValue">
+    (10/128)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.turtlegenerator.maze;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.tools.ResizeTurtleToPaperAction;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectSlider;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import javax.vecmath.Vector2d;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * Makes a &quot;well formed&quot; honeycomb maze.  This maze uses &quot;point top&quot; hexagons where odd-numbered rows are shifted to
+&nbsp; * the right.  See also
+&nbsp; * &lt;a href=&quot;https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_backtracker&quot;&gt;wikipedia&lt;/a&gt;,
+&nbsp; * &lt;a href=&quot;https://www.redblobgames.com/grids/hexagons/&quot;&gt;redblobgames&lt;/a&gt;.
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.43.0
+&nbsp; */
+&nbsp;public class Generator_MazeHoneycomb extends Generator_Maze {
+<b class="fc">&nbsp;	private static int rows = 5, columns = 5;</b>
+&nbsp;
+&nbsp;	public Generator_MazeHoneycomb() {
+<b class="fc">&nbsp;		super();</b>
+&nbsp;
+&nbsp;		SelectSlider field_rows;
+&nbsp;		SelectSlider field_columns;
+&nbsp;
+<b class="fc">&nbsp;		add(field_rows = new SelectSlider(&quot;rows&quot;,Translator.get(&quot;Generator_MazeRectangle.rows&quot;),100,1,getRows()));</b>
+<b class="fc">&nbsp;		field_rows.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setRows(field_rows.getValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(field_columns = new SelectSlider(&quot;columns&quot;,Translator.get(&quot;Generator_MazeRectangle.columns&quot;),100,1,getCols()));</b>
+<b class="fc">&nbsp;		field_columns.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setCols(field_columns.getValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="fc">&nbsp;		return Translator.get(&quot;Generator_MazeHoneycomb.name&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public int getRows() {
+<b class="fc">&nbsp;		return rows;</b>
+&nbsp;	}
+&nbsp;	public void setRows(int arg0) {
+<b class="nc">&nbsp;		if(arg0&lt;1) arg0=1;</b>
+<b class="nc">&nbsp;		rows=arg0;</b>
+&nbsp;	}
+&nbsp;	public int getCols() {
+<b class="fc">&nbsp;		return columns;</b>
+&nbsp;	}
+&nbsp;	public void setCols(int arg0) {
+<b class="nc">&nbsp;		if(arg0&lt;1) arg0=1;</b>
+<b class="nc">&nbsp;		columns=arg0;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * build a list of walls in the maze, cells in the maze, and how they connect to each other.
+&nbsp;	 */
+&nbsp;	@Override
+&nbsp;	public void buildCells() {
+<b class="nc">&nbsp;		cells.clear();</b>
+&nbsp;
+&nbsp;		int x, y;
+<b class="nc">&nbsp;		for (y = 0; y &lt; rows; ++y) {</b>
+<b class="nc">&nbsp;			for (x = 0; x &lt; columns; ++x) {</b>
+<b class="nc">&nbsp;				cells.add(new MazeCell(x,y));</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;
+<b class="fc">&nbsp;	private final int[] neighbors = new int[6];</b>
+&nbsp;	private int neighborCount;
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void buildWalls() {
+<b class="nc">&nbsp;		walls.clear();</b>
+&nbsp;
+<b class="nc">&nbsp;		List&lt;Long&gt; duplicates = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;		MazeWall w;
+<b class="nc">&nbsp;		int x, y, currentCell=0;</b>
+<b class="nc">&nbsp;		for (y = 0; y &lt; rows; ++y) {</b>
+<b class="nc">&nbsp;			boolean isOddRow = ((y%2)==1);</b>
+<b class="nc">&nbsp;			for (x = 0; x &lt; columns; ++x) {</b>
+&nbsp;				// get the six possible neighbors of this cell - two above, two below, two to the side
+<b class="nc">&nbsp;				neighborCount = 0;</b>
+&nbsp;				// above
+<b class="nc">&nbsp;				maybeAdd(y - 1, x + 0);</b>
+<b class="nc">&nbsp;				maybeAdd(y - 1, x + (isOddRow? 1:-1));</b>
+&nbsp;				// below
+<b class="nc">&nbsp;				maybeAdd(y + 1, x + 0);</b>
+<b class="nc">&nbsp;				maybeAdd(y + 1, x + (isOddRow? 1:-1));</b>
+&nbsp;				// left and right
+<b class="nc">&nbsp;				maybeAdd(y + 0, x - 1);</b>
+<b class="nc">&nbsp;				maybeAdd(y + 0, x + 1);</b>
+&nbsp;
+<b class="nc">&nbsp;				for (int i = 0; i &lt; neighborCount; ++i) {</b>
+&nbsp;					// vertical wall between horizontal cells
+&nbsp;					// do not add duplicates.
+<b class="nc">&nbsp;					long a = currentCell;</b>
+<b class="nc">&nbsp;					long b = neighbors[i];</b>
+<b class="nc">&nbsp;					if(a&gt;b) {</b>
+<b class="nc">&nbsp;						long tmp = a;</b>
+<b class="nc">&nbsp;						a = b;</b>
+<b class="nc">&nbsp;						b = tmp;</b>
+&nbsp;					}
+<b class="nc">&nbsp;					long address = a&lt;&lt;16 | b;</b>
+<b class="nc">&nbsp;					if(duplicates.contains(address)) continue;</b>
+<b class="nc">&nbsp;					duplicates.add(address);</b>
+&nbsp;
+<b class="nc">&nbsp;					w = new MazeWall( currentCell, neighbors[i]);</b>
+<b class="nc">&nbsp;					walls.add(w);</b>
+<b class="nc">&nbsp;					cells.get(w.cellA).walls.add(w);</b>
+<b class="nc">&nbsp;					cells.get(w.cellB).walls.add(w);</b>
+&nbsp;				}
+<b class="nc">&nbsp;				currentCell++; // current cell</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void maybeAdd(int y, int x) {
+<b class="nc">&nbsp;		if(y&lt;0 || y&gt;=rows) return;</b>
+<b class="nc">&nbsp;		if(x&lt;0 || x&gt;=columns) return;</b>
+<b class="nc">&nbsp;		neighbors[neighborCount] = (y * columns) + x;</b>
+<b class="nc">&nbsp;		neighborCount++;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Turtle drawMaze() {
+<b class="nc">&nbsp;		Turtle turtle = new Turtle();</b>
+&nbsp;
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double yMin = rect.getMinY();</b>
+<b class="nc">&nbsp;		double yMax = rect.getMaxY();</b>
+<b class="nc">&nbsp;		double xMin = rect.getMinX();</b>
+<b class="nc">&nbsp;		double xMax = rect.getMaxX();</b>
+&nbsp;
+<b class="nc">&nbsp;		double w = (xMax - xMin) / columns;</b>
+<b class="nc">&nbsp;		double h = (yMax - yMin) / rows;</b>
+<b class="nc">&nbsp;		double len = Math.min(w,h)/2.0;</b>
+&nbsp;		// In the point-top orientation, the horizontal distance between adjacent hexagon centers is
+<b class="nc">&nbsp;		double horiz = Math.sqrt(3) * len;</b>
+&nbsp;		// The vertical distance is
+<b class="nc">&nbsp;		double vert = 3.0/2.0 * len;</b>
+&nbsp;
+<b class="nc">&nbsp;		drawInteriorWalls(turtle,len,horiz,vert);</b>
+<b class="nc">&nbsp;		drawOutsideEdge(turtle,len,horiz,vert);</b>
+&nbsp;
+<b class="nc">&nbsp;		ResizeTurtleToPaperAction act = new ResizeTurtleToPaperAction(myPaper,false,&quot;&quot;);</b>
+<b class="nc">&nbsp;		turtle = act.run(turtle);</b>
+&nbsp;
+<b class="nc">&nbsp;		return turtle;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void drawInteriorWalls(Turtle turtle, double len, double horiz, double vert) {
+&nbsp;		int i;
+<b class="nc">&nbsp;		for (i = 0; i &lt; walls.size(); ++i) {</b>
+<b class="nc">&nbsp;			MazeWall wall = walls.get(i);</b>
+<b class="nc">&nbsp;			if (wall.removed) {</b>
+&nbsp;				continue;
+&nbsp;			}
+&nbsp;
+<b class="nc">&nbsp;			int a = wall.cellA;</b>
+<b class="nc">&nbsp;			int b = wall.cellB;</b>
+&nbsp;
+<b class="nc">&nbsp;			Vector2d aPos = getCellCenter(a,horiz,vert);</b>
+<b class="nc">&nbsp;			Vector2d bPos = getCellCenter(b,horiz,vert);</b>
+&nbsp;			// get the midpoint
+<b class="nc">&nbsp;			Vector2d mid = new Vector2d();</b>
+<b class="nc">&nbsp;			mid.add(aPos,bPos);</b>
+<b class="nc">&nbsp;			mid.scale(0.5);</b>
+&nbsp;			// get a vector a to b, then rotate it 90 degrees and make it sin(PI/12) long.
+<b class="nc">&nbsp;			Vector2d n = new Vector2d();</b>
+<b class="nc">&nbsp;			n.sub(aPos,bPos);</b>
+<b class="nc">&nbsp;			double tmp = n.x;</b>
+<b class="nc">&nbsp;			n.x = n.y;</b>
+<b class="nc">&nbsp;			n.y = -tmp;</b>
+<b class="nc">&nbsp;			n.normalize();</b>
+<b class="nc">&nbsp;			n.scale(len/2.0);</b>
+&nbsp;
+<b class="nc">&nbsp;			Vector2d start = new Vector2d(mid);</b>
+<b class="nc">&nbsp;			start.sub(n);</b>
+&nbsp;
+<b class="nc">&nbsp;			Vector2d end = new Vector2d(mid);</b>
+<b class="nc">&nbsp;			end.add(n);</b>
+&nbsp;
+<b class="nc">&nbsp;			turtle.jumpTo(start.x, start.y);</b>
+<b class="nc">&nbsp;			turtle.moveTo(end.x, end.y);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void drawOutsideEdge(Turtle turtle,double len, double horiz, double vert) {
+&nbsp;		// top edge
+<b class="nc">&nbsp;		for(int x=0;x&lt;columns;++x) {</b>
+<b class="nc">&nbsp;			Vector2d center = getCellCenter(cells.size()-1-x,horiz,vert);</b>
+<b class="nc">&nbsp;			if(x&gt;0) drawEdge(turtle, center, len, 1);</b>
+<b class="nc">&nbsp;			drawEdge(turtle,center,len,2);</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		// bottom edge
+<b class="nc">&nbsp;		for(int x=0;x&lt;columns;++x) {</b>
+<b class="nc">&nbsp;			Vector2d center = getCellCenter(x,horiz,vert);</b>
+<b class="nc">&nbsp;			if(x&gt;0) drawEdge(turtle,center,len,4);</b>
+<b class="nc">&nbsp;			drawEdge(turtle,center,len,5);</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		// left edge
+<b class="nc">&nbsp;		for(int y=0;y&lt;rows;++y) {</b>
+<b class="nc">&nbsp;			Vector2d center = getCellCenter(y*columns,horiz,vert);</b>
+<b class="nc">&nbsp;			if((y%2)==0) {  // even row</b>
+<b class="nc">&nbsp;				drawEdge(turtle,center,len,2);</b>
+<b class="nc">&nbsp;				drawEdge(turtle,center,len,3);</b>
+<b class="nc">&nbsp;				if(y!=0) drawEdge(turtle,center,len,4);</b>
+&nbsp;			} else {
+<b class="nc">&nbsp;				drawEdge(turtle,center,len,3);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+&nbsp;		// right edge
+<b class="nc">&nbsp;		for(int y=0;y&lt;rows;++y) {</b>
+<b class="nc">&nbsp;			Vector2d center = getCellCenter((y+1)*columns-1,horiz,vert);</b>
+<b class="nc">&nbsp;			if((y%2)==0) {  // even row</b>
+<b class="nc">&nbsp;				drawEdge(turtle,center,len,0);</b>
+&nbsp;			} else {
+<b class="nc">&nbsp;				drawEdge(turtle,center,len,0);</b>
+<b class="nc">&nbsp;				if(y!=rows-1) drawEdge(turtle,center,len,1);</b>
+<b class="nc">&nbsp;				drawEdge(turtle,center,len,5);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * draw edges of a hexagon
+&nbsp;	 * @param turtle the drawing tool
+&nbsp;	 * @param center position of the center of the hexagon
+&nbsp;	 * @param len distance between center and corner
+&nbsp;	 * @param index counter-clockwise order, starting with vertical side on the right.
+&nbsp;	 */
+&nbsp;	private void drawEdge(Turtle turtle, Vector2d center, double len, int index) {
+<b class="nc">&nbsp;		Vector2d c0 = getCorner(center,len,index);</b>
+<b class="nc">&nbsp;		Vector2d c1 = getCorner(center,len,index+1);</b>
+<b class="nc">&nbsp;		turtle.jumpTo(c0.x,c0.y);</b>
+<b class="nc">&nbsp;		turtle.moveTo(c1.x,c1.y);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * get the position of a corner of a hexagon
+&nbsp;	 * @param center position of the center of the hexagon
+&nbsp;	 * @param len distance between center and corner
+&nbsp;	 * @param index counter-clockwise order, starting with the south-east corner.
+&nbsp;	 * @return position of the corner
+&nbsp;	 */
+&nbsp;	private Vector2d getCorner(Vector2d center,double len,int index) {
+<b class="nc">&nbsp;		double angleRad = Math.toRadians(60.0*index-30.0);</b>
+<b class="nc">&nbsp;		return new Vector2d(</b>
+<b class="nc">&nbsp;				center.x + len * Math.cos(angleRad),</b>
+<b class="nc">&nbsp;				center.y + len * Math.sin(angleRad));</b>
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	private Vector2d getCellCenter(int index,double horiz,double vert) {
+<b class="nc">&nbsp;		MazeCell c = cells.get(index);</b>
+<b class="nc">&nbsp;		Vector2d pos = new Vector2d(c.x*horiz, c.y*vert);</b>
+<b class="nc">&nbsp;		if((c.y%2)==1) {</b>
+&nbsp;			// shift this row over by half a cell
+<b class="nc">&nbsp;			pos.x+=horiz/2;</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return pos;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

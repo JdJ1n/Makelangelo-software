@@ -1,0 +1,287 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > ColorPalette</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.convenience</a>
+</div>
+
+<h1>Coverage Summary for Class: ColorPalette (com.marginallyclever.convenience)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ColorPalette</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    16.7%
+  </span>
+  <span class="absValue">
+    (2/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    5%
+  </span>
+  <span class="absValue">
+    (2/40)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.convenience;
+&nbsp;
+&nbsp;import java.awt.*;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * Color palette for quantization
+&nbsp; *
+&nbsp; * @author danroyer
+&nbsp; * @since 7.1.4-SNAPSHOT
+&nbsp; */
+<b class="fc">&nbsp;@Deprecated</b>
+&nbsp;public class ColorPalette {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * List of colors in the form of red, green, and blue data values.
+&nbsp;     * &lt;p&gt;
+&nbsp;     * See ColorRGB
+&nbsp;     */
+<b class="nc">&nbsp;    protected List&lt;Color&gt; colors = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;    public ColorPalette() {</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * add a color to the palette.  Does not check for duplicates.
+&nbsp;     *
+&nbsp;     * @param c color
+&nbsp;     */
+&nbsp;    public void addColor(Color c) {
+<b class="nc">&nbsp;        colors.add(c);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Removes a given color if it exists in the list of colors.
+&nbsp;     *
+&nbsp;     * @param c color to remove.
+&nbsp;     *          See &lt;a href=&quot;http://stackoverflow.com/a/223929&quot;&gt;Iterating through a list, avoiding ConcurrentModificationException when removing in loop&lt;/a&gt;
+&nbsp;     */
+&nbsp;    public void removeColor(Color c) {
+<b class="nc">&nbsp;        for (final Iterator&lt;Color&gt; colorsIterator = colors.iterator(); colorsIterator.hasNext(); ) {</b>
+<b class="nc">&nbsp;            final Color nextColor = colorsIterator.next();</b>
+<b class="nc">&nbsp;            if (nextColor.equals(c)) {</b>
+<b class="nc">&nbsp;                colorsIterator.remove();</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return the number of colors in this palette
+&nbsp;     */
+&nbsp;    public int numColors() {
+<b class="nc">&nbsp;        return colors.size();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * get the color at a given index.
+&nbsp;     *
+&nbsp;     * @param index
+&nbsp;     * @return color for a given index
+&nbsp;     */
+&nbsp;    public Color getColor(int index) throws IndexOutOfBoundsException {
+<b class="nc">&nbsp;        return colors.get(index);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * find the color in the palette that most closely matches a given color.
+&nbsp;     *
+&nbsp;     * @param c the color to match
+&nbsp;     * @return the closest match
+&nbsp;     */
+&nbsp;    public Color quantize(Color c) {
+<b class="nc">&nbsp;        int i = quantizeIndex(c);</b>
+&nbsp;
+<b class="nc">&nbsp;        return this.getColor(i);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Find the index of the color in the palette that most closely matches a given color.
+&nbsp;     *
+&nbsp;     * @param c the color to match
+&nbsp;     * @return the index into the color palette of the closest match
+&nbsp;     */
+&nbsp;    public int quantizeIndex(Color c) {
+<b class="nc">&nbsp;        Iterator&lt;Color&gt; i = colors.iterator();</b>
+<b class="nc">&nbsp;        assert (i.hasNext());</b>
+&nbsp;
+<b class="nc">&nbsp;        Color color, nearestColor = i.next();</b>
+<b class="nc">&nbsp;        int index = 0;</b>
+<b class="nc">&nbsp;        int nearestIndex = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;        while (i.hasNext()) {</b>
+<b class="nc">&nbsp;            color = i.next();</b>
+<b class="nc">&nbsp;            ++index;</b>
+<b class="nc">&nbsp;            if (diffSquared(color, c) &lt; diffSquared(nearestColor, c)) {</b>
+<b class="nc">&nbsp;                nearestColor = color;</b>
+<b class="nc">&nbsp;                nearestIndex = index;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return nearestIndex;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int diffSquared(Color a, Color b) {
+<b class="nc">&nbsp;        return Math.abs(a.getRed() - b.getRed())</b>
+<b class="nc">&nbsp;                + Math.abs(a.getGreen() - b.getGreen())</b>
+<b class="nc">&nbsp;                + Math.abs(a.getBlue() - b.getBlue());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The black key (K) color is calculated from the red (R&#39;), green (G&#39;) and blue (B&#39;) colors:
+&nbsp;     * K = 1-max(R&#39;, G&#39;, B&#39;)
+&nbsp;     * The cyan color (C) is calculated from the red (R&#39;) and black (K) colors:
+&nbsp;     * C = (1-R&#39;-K) / (1-K)
+&nbsp;     * The magenta color (M) is calculated from the green (G&#39;) and black (K) colors:
+&nbsp;     * M = (1-G&#39;-K) / (1-K)
+&nbsp;     * The yellow color (Y) is calculated from the blue (B&#39;) and black (K) colors:
+&nbsp;     * Y = (1-B&#39;-K) / (1-K)
+&nbsp;     * see http://www.rapidtables.com/convert/color/rgb-to-cmyk.htm
+&nbsp;     *
+&nbsp;     * @param r in the range 0...255
+&nbsp;     * @param g in the range 0...255
+&nbsp;     * @param b in the range 0...255
+&nbsp;     */
+&nbsp;    public double[] convertRGBtoCMYK(double r, double g, double b) {
+<b class="nc">&nbsp;        r /= 255;</b>
+<b class="nc">&nbsp;        g /= 255;</b>
+<b class="nc">&nbsp;        b /= 255;</b>
+&nbsp;
+<b class="nc">&nbsp;        double k = 1 - Math.max(r, Math.max(g, b));</b>
+<b class="nc">&nbsp;        double c = (1 - r - k) / (1 - k);</b>
+<b class="nc">&nbsp;        double m = (1 - g - k) / (1 - k);</b>
+<b class="nc">&nbsp;        double y = (1 - b - k) / (1 - k);</b>
+&nbsp;
+<b class="nc">&nbsp;        return new double[]{c, m, y, k};</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * The R,G,B values are given in the range of 0..255.
+&nbsp;     * The red (R) color is calculated from the cyan (C) and black (K) colors:
+&nbsp;     * R = 255 × (1-C) × (1-K)
+&nbsp;     * The green color (G) is calculated from the magenta (M) and black (K) colors:
+&nbsp;     * G = 255 × (1-M) × (1-K)
+&nbsp;     * The blue color (B) is calculated from the yellow (Y) and black (K) colors:
+&nbsp;     * B = 255 × (1-Y) × (1-K)
+&nbsp;     * see http://www.rapidtables.com/convert/color/cmyk-to-rgb.htm
+&nbsp;     *
+&nbsp;     * @param c
+&nbsp;     * @param m
+&nbsp;     * @param y
+&nbsp;     * @param k
+&nbsp;     */
+&nbsp;    public double[] convertCMYKtoRGB(double c, double m, double y, double k) {
+<b class="nc">&nbsp;        double r = 255 * (1 - c) * (1 - k);</b>
+<b class="nc">&nbsp;        double g = 255 * (1 - m) * (1 - k);</b>
+<b class="nc">&nbsp;        double b = 255 * (1 - y) * (1 - k);</b>
+&nbsp;
+<b class="nc">&nbsp;        return new double[]{r, g, b};</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String getHexCode(Color c) {
+<b class="fc">&nbsp;        return String.format(&quot;#%02X%02X%02X&quot;, c.getRed(), c.getGreen(), c.getBlue());</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

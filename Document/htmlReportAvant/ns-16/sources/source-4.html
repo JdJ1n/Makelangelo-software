@@ -1,0 +1,242 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Generator_Lissajous</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.turtlegenerator</a>
+</div>
+
+<h1>Coverage Summary for Class: Generator_Lissajous (com.marginallyclever.makelangelo.makeart.turtlegenerator)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Generator_Lissajous</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    41.2%
+  </span>
+  <span class="absValue">
+    (7/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    42.2%
+  </span>
+  <span class="absValue">
+    (19/45)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectSlider;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;
+&nbsp;/**
+&nbsp; * x(t)=(R-r)*cos(t) + p*cos((R-r)*t/r)
+&nbsp; * y(t)=(R-r)*sin(t) - p*sin((R-r)*t/r)
+&nbsp; * See &lt;a href=&quot;https://linuxgazette.net/133/luana.html&quot;&gt;...&lt;/a&gt;
+&nbsp; * @author Dan Royer
+&nbsp; *
+&nbsp; */
+&nbsp;public class Generator_Lissajous extends TurtleGenerator {
+&nbsp;	private double width, height;
+<b class="fc">&nbsp;	private static double delta = Math.PI/6;</b>
+<b class="fc">&nbsp;	private static int a = 11;</b>
+<b class="fc">&nbsp;	private static int b = 8; // controls complexity of curve</b>
+<b class="fc">&nbsp;	private static int numSamples = 2000;</b>
+&nbsp;
+&nbsp;	public Generator_Lissajous() {
+<b class="fc">&nbsp;		super();</b>
+&nbsp;		SelectSlider field_a;
+&nbsp;		SelectSlider field_b;
+&nbsp;		SelectSlider field_numSamples;
+&nbsp;		SelectSlider field_delta;
+&nbsp;
+<b class="fc">&nbsp;		add(field_a = new SelectSlider(&quot;a&quot;,Translator.get(&quot;LissajousA&quot;),100,1,Generator_Lissajous.getA()));</b>
+<b class="fc">&nbsp;		field_a.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setA(field_a.getValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(field_b = new SelectSlider(&quot;b&quot;,Translator.get(&quot;LissajousB&quot;),100,1,Generator_Lissajous.getB()));</b>
+<b class="fc">&nbsp;		field_b.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setB(field_b.getValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(field_delta = new SelectSlider(&quot;delta&quot;,Translator.get(&quot;LissajousDelta&quot;),1000,0,(int)(Generator_Lissajous.getDelta()*1000.0)));</b>
+<b class="fc">&nbsp;		field_delta.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setDelta(field_delta.getValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(field_numSamples = new SelectSlider(&quot;samples&quot;,Translator.get(&quot;SpirographNumSamples&quot;),2000,50,Generator_Lissajous.getNumSamples()));</b>
+<b class="fc">&nbsp;		field_numSamples.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setNumSamples(field_numSamples.getValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href=&#39;https://en.wikipedia.org/wiki/Lissajous_curve&#39;&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="fc">&nbsp;		return Translator.get(&quot;LissajousName&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	static public int getA() {
+<b class="fc">&nbsp;		return a;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	static public void setA(int arg0)	{
+<b class="nc">&nbsp;		a = arg0;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	static public int getB() {
+<b class="fc">&nbsp;		return b;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	static public void setB(int arg0)	{
+<b class="nc">&nbsp;		b = arg0;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	static public float getDelta() {
+<b class="fc">&nbsp;		return (float)delta;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	static public void setDelta(float arg0)	{
+<b class="nc">&nbsp;		delta = arg0;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	static public int getNumSamples() {
+<b class="fc">&nbsp;		return numSamples;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	static public void setNumSamples(int arg0) {
+<b class="nc">&nbsp;		numSamples = Math.max(1,arg0);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void generate() {		
+&nbsp;		// scale the step size so the curve fits on the paper
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		width = rect.getWidth()/2.0;</b>
+<b class="nc">&nbsp;		height = rect.getHeight()/2.0;</b>
+&nbsp;
+<b class="nc">&nbsp;		Turtle turtle = drawLissajous();</b>
+&nbsp;
+<b class="nc">&nbsp;		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</b>
+&nbsp;
+<b class="nc">&nbsp;		notifyListeners(turtle);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * see &lt;a href=&quot;https://www.openprocessing.org/sketch/26608/&quot;&gt;...&lt;/a&gt;
+&nbsp;	 * based on &lt;a href=&quot;http://www.fjromero.com/processing/lissajous/&quot;&gt;code by Javier Romero&lt;/a&gt;
+&nbsp;	 */
+&nbsp;	protected Turtle drawLissajous() {
+&nbsp;		double x,y,t;
+&nbsp;
+&nbsp;		//x = AX*sin(a*t + delta) + screen_width/2;
+&nbsp;		//y = BX*sin(b*t) + screen_height/2;
+<b class="nc">&nbsp;		Turtle turtle = new Turtle();</b>
+&nbsp;		
+<b class="nc">&nbsp;		for(int t1=0; t1&lt;=numSamples; ++t1) {</b>
+<b class="nc">&nbsp;			t = ( Math.PI*2.0 * t1 / (double)numSamples );</b>
+&nbsp;			
+<b class="nc">&nbsp;			x = width * Math.sin(a*t + delta*Math.PI);</b>
+<b class="nc">&nbsp;			y = height * Math.sin(b*t);</b>
+<b class="nc">&nbsp;			turtle.moveTo(x, y);</b>
+<b class="nc">&nbsp;			turtle.penDown();</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return turtle;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,242 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > PrintTurtle</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.donatelloimpl.nodes</a>
+</div>
+
+<h1>Coverage Summary for Class: PrintTurtle (com.marginallyclever.makelangelo.donatelloimpl.nodes)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PrintTurtle</td>
+<td class="coverageStat">
+  <span class="percent">
+    33.3%
+  </span>
+  <span class="absValue">
+    (1/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/33)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    19.6%
+  </span>
+  <span class="absValue">
+    (9/46)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">PrintTurtle$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    25%
+  </span>
+  <span class="absValue">
+    (1/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/33)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    19.1%
+  </span>
+  <span class="absValue">
+    (9/47)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.donatelloimpl.nodes;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import com.marginallyclever.makelangelo.turtle.TurtleMove;
+&nbsp;import com.marginallyclever.nodegraphcore.DockReceiving;
+&nbsp;import com.marginallyclever.nodegraphcore.DockShipping;
+&nbsp;import com.marginallyclever.nodegraphcore.Node;
+&nbsp;import com.marginallyclever.nodegraphcore.PrintWithGraphics;
+&nbsp;
+&nbsp;import java.awt.*;
+&nbsp;
+&nbsp;public class PrintTurtle extends Node implements PrintWithGraphics {
+<b class="fc">&nbsp;    private final DockReceiving&lt;Turtle&gt; turtle = new DockReceiving&lt;&gt;(&quot;turtle&quot;, Turtle.class,new Turtle());</b>
+<b class="fc">&nbsp;    private final DockReceiving&lt;Number&gt; px = new DockReceiving&lt;&gt;(&quot;X&quot;,Number.class,0);</b>
+<b class="fc">&nbsp;    private final DockReceiving&lt;Number&gt; py = new DockReceiving&lt;&gt;(&quot;Y&quot;,Number.class,0);</b>
+<b class="fc">&nbsp;    private final DockReceiving&lt;Color&gt; travelColor = new DockReceiving&lt;&gt;(&quot;travel color&quot;,Color.class,Color.GREEN);</b>
+<b class="fc">&nbsp;    private final DockShipping&lt;Boolean&gt; showTravel = new DockShipping&lt;&gt;(&quot;show travel&quot;,Boolean.class,false);</b>
+&nbsp;
+&nbsp;    public PrintTurtle() {
+<b class="fc">&nbsp;        super(&quot;PrintTurtle&quot;);</b>
+<b class="fc">&nbsp;        addVariable(turtle);</b>
+<b class="fc">&nbsp;        addVariable(px);</b>
+<b class="fc">&nbsp;        addVariable(py);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+<b class="nc">&nbsp;    public void update() {}</b>
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void print(Graphics g) {
+<b class="nc">&nbsp;        if(turtle.hasPacketWaiting()) turtle.receive();</b>
+<b class="nc">&nbsp;        if(px.hasPacketWaiting()) px.receive();</b>
+<b class="nc">&nbsp;        if(py.hasPacketWaiting()) py.receive();</b>
+<b class="nc">&nbsp;        if(travelColor.hasPacketWaiting()) travelColor.receive();</b>
+&nbsp;
+<b class="nc">&nbsp;        Turtle myTurtle = turtle.getValue();</b>
+<b class="nc">&nbsp;        if(myTurtle==null || myTurtle.history.isEmpty()) return;</b>
+&nbsp;
+<b class="nc">&nbsp;        int dx=px.getValue().intValue();</b>
+<b class="nc">&nbsp;        int dy=py.getValue().intValue();</b>
+<b class="nc">&nbsp;        g.translate(dx,dy);</b>
+&nbsp;
+&nbsp;        // where we&#39;re at in the drawing (to check if we&#39;re between first &amp; last)
+<b class="nc">&nbsp;        boolean showPenUp = showTravel.getValue();</b>
+<b class="nc">&nbsp;        int count = 0;</b>
+<b class="nc">&nbsp;        int first=0;</b>
+<b class="nc">&nbsp;        int last=myTurtle.history.size();</b>
+<b class="nc">&nbsp;        TurtleMove previousMove = null;</b>
+&nbsp;
+<b class="nc">&nbsp;        Color upColor = travelColor.getValue();</b>
+<b class="nc">&nbsp;        Color downColor = new Color(0,0,0);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            count++;</b>
+&nbsp;
+<b class="nc">&nbsp;            for (TurtleMove m : myTurtle.history) {</b>
+<b class="nc">&nbsp;                if(m==null) throw new NullPointerException();</b>
+&nbsp;
+<b class="nc">&nbsp;                boolean inShow = (count &gt;= first &amp;&amp; count &lt; last);</b>
+<b class="nc">&nbsp;                switch (m.type) {</b>
+&nbsp;                    case TRAVEL -&gt; {
+<b class="nc">&nbsp;                        if (inShow &amp;&amp; previousMove != null) {</b>
+<b class="nc">&nbsp;                            if (showPenUp) {</b>
+<b class="nc">&nbsp;                                g.setColor(upColor);</b>
+<b class="nc">&nbsp;                                g.drawLine((int) previousMove.x, (int)previousMove.y, (int) m.x, (int) m.y);</b>
+&nbsp;                            }
+&nbsp;                        }
+<b class="nc">&nbsp;                        count++;</b>
+<b class="nc">&nbsp;                        previousMove = m;</b>
+&nbsp;                    }
+&nbsp;                    case DRAW_LINE -&gt; {
+<b class="nc">&nbsp;                        if (inShow &amp;&amp; previousMove != null) {</b>
+<b class="nc">&nbsp;                            g.setColor(downColor);</b>
+<b class="nc">&nbsp;                            g.drawLine((int) previousMove.x, (int)previousMove.y, (int) m.x, (int) m.y);</b>
+&nbsp;                        }
+<b class="nc">&nbsp;                        count++;</b>
+<b class="nc">&nbsp;                        previousMove = m;</b>
+&nbsp;                    }
+&nbsp;                    case TOOL_CHANGE -&gt; {
+<b class="nc">&nbsp;                        downColor = m.getColor();</b>
+<b class="nc">&nbsp;                        ((Graphics2D) g).setStroke(new BasicStroke((int) m.getDiameter()));</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        catch(Exception e) {</b>
+&nbsp;            //Log.error(e.getMessage());
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        g.translate(-dx,-dy);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

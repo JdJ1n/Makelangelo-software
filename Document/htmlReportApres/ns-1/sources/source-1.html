@@ -1,0 +1,144 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Configuration</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.communications</a>
+</div>
+
+<h1>Coverage Summary for Class: Configuration (com.marginallyclever.communications)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Configuration</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.communications;
+&nbsp;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;/**
+&nbsp; * Configuration of a connection: transport layer, target, optionnal params
+&nbsp; */
+&nbsp;public class Configuration {
+&nbsp;
+&nbsp;    private TransportLayer transportLayer;
+&nbsp;    private String connectionName;
+<b class="nc">&nbsp;    private Map&lt;String, Object&gt; configurations = new HashMap&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;    public Configuration(TransportLayer transportLayer, String connectionName) {</b>
+<b class="nc">&nbsp;        this.transportLayer = transportLayer;</b>
+<b class="nc">&nbsp;        this.connectionName = connectionName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Map&lt;String, Object&gt; getConfigurations() {
+<b class="nc">&nbsp;        return configurations;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addConfiguration(String settings, Object value) {
+<b class="nc">&nbsp;        configurations.put(settings, value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getConnectionName() {
+<b class="nc">&nbsp;        return connectionName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TransportLayer getTransportLayer() {
+<b class="nc">&nbsp;        return transportLayer;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String toString() {
+<b class="nc">&nbsp;        return connectionName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

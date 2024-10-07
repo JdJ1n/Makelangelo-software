@@ -1,0 +1,269 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > PathImageMask</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.donatelloimpl.nodes</a>
+</div>
+
+<h1>Coverage Summary for Class: PathImageMask (com.marginallyclever.makelangelo.donatelloimpl.nodes)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PathImageMask</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    20%
+  </span>
+  <span class="absValue">
+    (1/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    22.1%
+  </span>
+  <span class="absValue">
+    (15/68)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.donatelloimpl.nodes;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.*;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import com.marginallyclever.nodegraphcore.DockReceiving;
+&nbsp;import com.marginallyclever.nodegraphcore.DockShipping;
+&nbsp;import com.marginallyclever.nodegraphcore.Node;
+&nbsp;import com.marginallyclever.nodegraphcore.Packet;
+&nbsp;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.image.BufferedImage;
+&nbsp;
+&nbsp;/**
+&nbsp; * Use an image to mask a path.  Lay the path over the image and remove all parts of the path where the image is brighter
+&nbsp; * than a cutoff value.  The fine grain resolution (and the amount of testing) is controlled by the stepSize.
+&nbsp; * @author Dan Royer
+&nbsp; * @since 2022-03-08
+&nbsp; */
+&nbsp;public class PathImageMask extends Node {
+<b class="fc">&nbsp;    private final DockReceiving&lt;BufferedImage&gt; image = new DockReceiving&lt;&gt;(&quot;image&quot;, BufferedImage.class,new BufferedImage(1,1,BufferedImage.TYPE_INT_RGB));</b>
+<b class="fc">&nbsp;    private final DockReceiving&lt;Turtle&gt; turtle = new DockReceiving&lt;&gt;(&quot;turtle&quot;, Turtle.class,new Turtle());</b>
+<b class="fc">&nbsp;    private final DockReceiving&lt;Number&gt; stepSize = new DockReceiving&lt;&gt;(&quot;stepSize&quot;, Number.class, 5);</b>
+<b class="fc">&nbsp;    private final DockReceiving&lt;Number&gt; threshold = new DockReceiving&lt;&gt;(&quot;threshold&quot;, Number.class, 128);</b>
+<b class="fc">&nbsp;    private final DockShipping&lt;Turtle&gt; outputAbove = new DockShipping&lt;&gt;(&quot;above&quot;, Turtle.class,new Turtle());</b>
+<b class="fc">&nbsp;    private final DockShipping&lt;Turtle&gt; outputBelow = new DockShipping&lt;&gt;(&quot;below&quot;, Turtle.class,new Turtle());</b>
+&nbsp;
+<b class="fc">&nbsp;    private final LineCollection listAbove = new LineCollection();</b>
+<b class="fc">&nbsp;    private final LineCollection listBelow = new LineCollection();</b>
+&nbsp;
+&nbsp;    public PathImageMask() {
+<b class="fc">&nbsp;        super(&quot;PathImageMask&quot;);</b>
+<b class="fc">&nbsp;        addVariable(image);</b>
+<b class="fc">&nbsp;        addVariable(turtle);</b>
+<b class="fc">&nbsp;        addVariable(stepSize);</b>
+<b class="fc">&nbsp;        addVariable(threshold);</b>
+<b class="fc">&nbsp;        addVariable(outputAbove);</b>
+<b class="fc">&nbsp;        addVariable(outputBelow);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void update() {
+<b class="nc">&nbsp;        if(image.hasPacketWaiting()) image.receive();</b>
+<b class="nc">&nbsp;        if(turtle.hasPacketWaiting()) turtle.receive();</b>
+<b class="nc">&nbsp;        if(stepSize.hasPacketWaiting()) stepSize.receive();</b>
+<b class="nc">&nbsp;        if(threshold.hasPacketWaiting()) threshold.receive();</b>
+&nbsp;
+<b class="nc">&nbsp;        Turtle myTurtle = turtle.getValue();</b>
+<b class="nc">&nbsp;        if(myTurtle==null || myTurtle.history.isEmpty()) return;</b>
+&nbsp;
+<b class="nc">&nbsp;        LineCollection lines  = myTurtle.getAsLineSegments();</b>
+<b class="nc">&nbsp;        BufferedImage src = image.getValue();</b>
+&nbsp;        
+<b class="nc">&nbsp;        listAbove.clear();</b>
+<b class="nc">&nbsp;        listBelow.clear();</b>
+&nbsp;        
+<b class="nc">&nbsp;        double s = Math.max(1, stepSize.getValue().doubleValue());</b>
+<b class="nc">&nbsp;        double c = Math.max(0,Math.min(255, threshold.getValue().doubleValue()));</b>
+&nbsp;
+<b class="nc">&nbsp;        for(LineSegment2D line : lines) {</b>
+<b class="nc">&nbsp;            scanLine(src,line,s,c);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Turtle resultAbove = new Turtle();</b>
+<b class="nc">&nbsp;        resultAbove.addLineSegments(listAbove);</b>
+<b class="nc">&nbsp;        outputAbove.send(new Packet&lt;&gt;(resultAbove));</b>
+&nbsp;
+<b class="nc">&nbsp;        Turtle resultBelow = new Turtle();</b>
+<b class="nc">&nbsp;        resultBelow.addLineSegments(listBelow);</b>
+<b class="nc">&nbsp;        outputBelow.send(new Packet&lt;&gt;(resultBelow));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Drag the pen across the paper from &lt;code&gt;seg.start&lt;/code&gt; to &lt;code&gt;seg.end&lt;/code&gt;, taking stepSize steps.  If the
+&nbsp;     * intensity of img at a step is less than or equal to the channelCutoff, keep the step. Results will be in the
+&nbsp;     * {@link #listAbove} and {@link #listBelow}.
+&nbsp;     *
+&nbsp;     * @param img the image to sample while converting along the line.
+&nbsp;     * @param segment the line to walk.
+&nbsp;     * @param stepSize millimeters level of detail for this line.
+&nbsp;     * @param channelCutoff only put pen down when color below this amount.
+&nbsp;     */
+&nbsp;    private void scanLine(BufferedImage img, LineSegment2D segment, double stepSize, double channelCutoff) {
+<b class="nc">&nbsp;        Point2D P0 = segment.start;</b>
+<b class="nc">&nbsp;        Point2D P1 = segment.end;</b>
+&nbsp;
+<b class="nc">&nbsp;        LineCollection toKeep = new LineCollection();</b>
+&nbsp;
+&nbsp;        // clip line to image bounds because sampling outside limits causes exception.
+<b class="nc">&nbsp;        Point2D rMin = new Point2D(0,0);</b>
+<b class="nc">&nbsp;        Point2D rMax = new Point2D(img.getWidth(),img.getHeight());</b>
+<b class="nc">&nbsp;        if(!Clipper2D.clipLineToRectangle(P0, P1, rMax, rMin)) {</b>
+&nbsp;            // entire line clipped
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // walk the line
+<b class="nc">&nbsp;        double dx = P1.x - P0.x;</b>
+<b class="nc">&nbsp;        double dy = P1.y - P0.y;</b>
+<b class="nc">&nbsp;        double distance = Math.sqrt(dx*dx+dy*dy);</b>
+<b class="nc">&nbsp;        double total = Math.min(1,Math.ceil(distance / stepSize));</b>
+<b class="nc">&nbsp;        Point2D a = P0;</b>
+&nbsp;
+<b class="nc">&nbsp;        for( double i = 1; i &lt;= total; ++i ) {</b>
+<b class="nc">&nbsp;            double fraction = i / total;</b>
+<b class="nc">&nbsp;            Point2D b = new Point2D(dx * fraction + P0.x,dy * fraction + P0.y);</b>
+<b class="nc">&nbsp;            double sampleResult = sampleImageUnderStep(img,a,b);</b>
+<b class="nc">&nbsp;            if(sampleResult &lt; channelCutoff) {</b>
+<b class="nc">&nbsp;                listBelow.add(new LineSegment2D(a,b, Color.BLACK));</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                listAbove.add(new LineSegment2D(a,b, Color.BLACK));</b>
+&nbsp;            }
+<b class="nc">&nbsp;            a = b;</b>
+&nbsp;        }
+&nbsp;        
+&nbsp;        // TODO run a mini-merge to reduce the number of new segments?
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the average intensity of the image within the rectangle bounded by points &lt;code&gt;a&lt;/code&gt; and &lt;code&gt;b&lt;/code&gt;.
+&nbsp;     * @param img the source image
+&nbsp;     * @param a one corner of the rectangle.
+&nbsp;     * @param b one corner of the rectangle.
+&nbsp;     * @return the average intensity of the image within the rectangle bounded by points &lt;code&gt;a&lt;/code&gt; and &lt;code&gt;b&lt;/code&gt;.
+&nbsp;     */
+&nbsp;    private double sampleImageUnderStep(BufferedImage img, Point2D a, Point2D b) {
+&nbsp;        // find the top-left and bottom-right corners
+<b class="nc">&nbsp;        int left = (int)Math.floor(Math.min(a.x,b.x));</b>
+<b class="nc">&nbsp;        int right = (int)Math.ceil(Math.max(a.x,b.x));</b>
+<b class="nc">&nbsp;        int bottom = (int)Math.floor(Math.min(a.y,b.y));</b>
+<b class="nc">&nbsp;        int top = (int)Math.ceil(Math.max(a.y,b.y));</b>
+<b class="nc">&nbsp;        double total = Math.max(1,(right-left) * (top-bottom));</b>
+&nbsp;        // get the average of the intensities
+<b class="nc">&nbsp;        double sum = 0;</b>
+<b class="nc">&nbsp;        for(int y=bottom; y&lt;top; ++y) {</b>
+<b class="nc">&nbsp;            for(int x=left; x&lt;right; ++x) {</b>
+<b class="nc">&nbsp;                sum += intensity(img.getRGB(x,y));</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return Math.max(0,Math.min(255, sum / total ));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the average of the red, green, and blue color channels.
+&nbsp;     * @param rgb the color in &lt;code&gt;0xRRGGBB&lt;/code&gt; format.
+&nbsp;     * @return the average of the red, green, and blue color channels.
+&nbsp;     */
+&nbsp;    private double intensity(int rgb) {
+<b class="nc">&nbsp;        double r = (rgb &gt;&gt; 16) &amp; 0xff;</b>
+<b class="nc">&nbsp;        double g = (rgb &gt;&gt;  8) &amp; 0xff;</b>
+<b class="nc">&nbsp;        double b = (rgb      ) &amp; 0xff;</b>
+<b class="nc">&nbsp;        return ( r + g + b ) / 3.0;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

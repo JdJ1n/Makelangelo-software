@@ -1,0 +1,387 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Converter_Wander</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imageconverter</a>
+</div>
+
+<h1>Coverage Summary for Class: Converter_Wander (com.marginallyclever.makelangelo.makeart.imageconverter)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Converter_Wander</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/42)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/108)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Converter_Wander$Bucket</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/42)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/113)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imageconverter;
+&nbsp;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imagefilter.FilterCMYK;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+&nbsp;import com.marginallyclever.makelangelo.paper.Paper;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectBoolean;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectInteger;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectRandomSeed;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.geom.Point2D;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.util.LinkedList;
+&nbsp;import java.util.Random;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * create random lines across the image.  Raise and lower the pen to darken the appropriate areas
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class Converter_Wander extends ImageConverter {
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(Converter_Wander.class);</b>
+&nbsp;	
+<b class="nc">&nbsp;	static private int numLines = 9000;</b>
+<b class="nc">&nbsp;	static private boolean isCMYK = false;</b>
+<b class="nc">&nbsp;	static private double stepSize = 5.0;</b>
+<b class="nc">&nbsp;	private static int seed=0;</b>
+<b class="nc">&nbsp;	private static final Random random = new Random();</b>
+&nbsp;	
+&nbsp;	private static class Bucket {
+&nbsp;		public Point2D a,b;
+&nbsp;		public LinkedList&lt;Point2D&gt; unsortedPoints;
+&nbsp;		public LinkedList&lt;Point2D&gt; sortedPoints;
+&nbsp;		
+<b class="nc">&nbsp;		public Bucket() {</b>
+<b class="nc">&nbsp;			a = new Point2D.Double();</b>
+<b class="nc">&nbsp;			b = new Point2D.Double();</b>
+<b class="nc">&nbsp;			unsortedPoints = new LinkedList&lt;&gt;();</b>
+<b class="nc">&nbsp;			sortedPoints = new LinkedList&lt;&gt;();</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	public Converter_Wander() {
+<b class="nc">&nbsp;		super();</b>
+<b class="nc">&nbsp;		SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;,Translator.get(&quot;Generator.randomSeed&quot;),seed);</b>
+<b class="nc">&nbsp;		add(selectRandomSeed);</b>
+<b class="nc">&nbsp;		selectRandomSeed.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			seed = (int)evt.getNewValue();</b>
+<b class="nc">&nbsp;			random.setSeed(seed);</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+&nbsp;
+<b class="nc">&nbsp;		SelectInteger selectCount = new SelectInteger(&quot;count&quot;,Translator.get(&quot;ConverterWanderLineCount&quot;),getLineCount());</b>
+<b class="nc">&nbsp;		add(selectCount);</b>
+<b class="nc">&nbsp;		selectCount.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setLineCount((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		SelectBoolean selectCmyk = new SelectBoolean(&quot;cmyk&quot;,Translator.get(&quot;ConverterWanderCMYK&quot;),isCMYK());</b>
+<b class="nc">&nbsp;		add(selectCmyk);</b>
+<b class="nc">&nbsp;		selectCmyk.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setCMYK((boolean)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="nc">&nbsp;		return Translator.get(&quot;ConverterWanderName&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void start(Paper paper, TransformedImage image) {
+<b class="nc">&nbsp;		super.start(paper, image);</b>
+<b class="nc">&nbsp;		if(isCMYK) {</b>
+<b class="nc">&nbsp;			finishCMYK();</b>
+&nbsp;		} else {
+<b class="nc">&nbsp;			finishBlackAndWhite();</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		fireConversionFinished();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	protected void outputChannel(TransformedImage img, Color newColor, int pointsPerChannel, double cutoff) {
+<b class="nc">&nbsp;		stepSize = Math.max(1,stepSize);</b>
+<b class="nc">&nbsp;		double halfStep = stepSize/2;</b>
+&nbsp;
+&nbsp;		// Color values are from 0...255 inclusive.  255 is white, 0 is black.
+&nbsp;		// Lift the pen any time the color value is &gt; cutoff.
+&nbsp;
+&nbsp;		// from top to bottom of the margin area...
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double xLeft   = rect.getMinX();</b>
+<b class="nc">&nbsp;		double xRight  = rect.getMaxX();</b>
+<b class="nc">&nbsp;		double yBottom = rect.getMinY();</b>
+<b class="nc">&nbsp;		double yTop    = rect.getMaxY();</b>
+<b class="nc">&nbsp;		double px = myPaper.getCenterX();</b>
+<b class="nc">&nbsp;		double py = myPaper.getCenterY();</b>
+&nbsp;
+&nbsp;		// find numLines number of random points darker than the cutoff value
+<b class="nc">&nbsp;		double height = yTop - yBottom-1;</b>
+<b class="nc">&nbsp;		double width = xRight - xLeft-1;</b>
+&nbsp;		
+&nbsp;		//logger.debug(&quot;Creating buckets in a Z pattern...&quot;);
+<b class="nc">&nbsp;		LinkedList&lt;Bucket&gt; buckets = new LinkedList&lt;&gt;();</b>
+<b class="nc">&nbsp;		int actualPoints=0;</b>
+<b class="nc">&nbsp;		double wMod = width/5.0;</b>
+<b class="nc">&nbsp;		double hMod = height/10.0;</b>
+&nbsp;		double by,bx;
+<b class="nc">&nbsp;		for(by=0;by&lt;height;by+=hMod) {</b>
+<b class="nc">&nbsp;			for(bx=0;bx&lt;width;bx+=wMod) {</b>
+<b class="nc">&nbsp;				Bucket b = new Bucket();</b>
+<b class="nc">&nbsp;				b.a.setLocation(xLeft+bx     , yBottom+by     );</b>
+<b class="nc">&nbsp;				b.b.setLocation(xLeft+bx+wMod, yBottom+by+hMod);</b>
+<b class="nc">&nbsp;				buckets.push(b);</b>
+&nbsp;			}
+<b class="nc">&nbsp;			by+=hMod;</b>
+<b class="nc">&nbsp;			for(bx=width-wMod;bx&gt;=-1;bx-=wMod) {</b>
+<b class="nc">&nbsp;				Bucket b = new Bucket();</b>
+<b class="nc">&nbsp;				b.a.setLocation(xLeft+bx     , yBottom+by     );</b>
+<b class="nc">&nbsp;				b.b.setLocation(xLeft+bx+wMod, yBottom+by+hMod);</b>
+<b class="nc">&nbsp;				buckets.push(b);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+&nbsp;		//logger.debug(&quot;Finding points...&quot;);
+<b class="nc">&nbsp;		for(int i=0;i&lt;pointsPerChannel;++i) {</b>
+<b class="nc">&nbsp;			int v, tries=0;</b>
+&nbsp;			double endPX,endPY; 
+&nbsp;			do {
+<b class="nc">&nbsp;				endPX = xLeft   + (random.nextDouble() * width)+0.5; </b>
+<b class="nc">&nbsp;				endPY = yBottom + (random.nextDouble() * height)+0.5; </b>
+<b class="nc">&nbsp;				v = img.sample(</b>
+&nbsp;						endPX - halfStep, endPY - halfStep, 
+&nbsp;						endPX + halfStep, endPY + halfStep);
+<b class="nc">&nbsp;				++tries;</b>
+<b class="nc">&nbsp;			} while(v&gt;cutoff &amp;&amp; tries&lt;1000);</b>
+<b class="nc">&nbsp;			if(tries==1000) break;  // ran out of points to try?</b>
+&nbsp;
+&nbsp;			int j;
+<b class="nc">&nbsp;			for(j=0; j&lt; buckets.size(); ++j) {</b>
+<b class="nc">&nbsp;				Bucket b = buckets.get(j);</b>
+<b class="nc">&nbsp;				if( b.a.getX()&lt;=endPX &amp;&amp; b.b.getX()&gt;endPX &amp;&amp; </b>
+<b class="nc">&nbsp;				    b.a.getY()&lt;=endPY &amp;&amp; b.b.getY()&gt;endPY ) {</b>
+<b class="nc">&nbsp;					b.unsortedPoints.addLast(new Point2D.Double(endPX,endPY));</b>
+<b class="nc">&nbsp;					++actualPoints;</b>
+&nbsp;					break;
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+&nbsp;		// sort the points by nearest neighbor first.
+<b class="nc">&nbsp;		logger.debug(&quot;Sorting {} points...&quot;, actualPoints);</b>
+<b class="nc">&nbsp;		for (Bucket bucket : buckets) {</b>
+&nbsp;			//logger.debug(j+&quot; of &quot;+buckets.size()+ &quot; has &quot;+buckets.get(j).unsortedPoints.size()+&quot; points&quot;);
+&nbsp;
+&nbsp;			// assume we start at the center of the image, for those machines with no pen up option.
+<b class="nc">&nbsp;			Point2D a = new Point2D.Double(0, 0);</b>
+&nbsp;
+<b class="nc">&nbsp;			if (!bucket.unsortedPoints.isEmpty()) {</b>
+<b class="nc">&nbsp;				while (!bucket.unsortedPoints.isEmpty()) {</b>
+<b class="nc">&nbsp;					double bestLen = Double.MAX_VALUE;</b>
+<b class="nc">&nbsp;					int bestI = 0;</b>
+<b class="nc">&nbsp;					for (int i = 0; i &lt; bucket.unsortedPoints.size(); ++i) {</b>
+<b class="nc">&nbsp;						double len = a.distanceSq(bucket.unsortedPoints.get(i));</b>
+<b class="nc">&nbsp;						if (bestLen &gt; len) {</b>
+<b class="nc">&nbsp;							bestLen = len;</b>
+<b class="nc">&nbsp;							bestI = i;</b>
+&nbsp;						}
+&nbsp;					}
+<b class="nc">&nbsp;					a = bucket.unsortedPoints.remove(bestI);</b>
+<b class="nc">&nbsp;					bucket.sortedPoints.addLast(a);</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;		
+&nbsp;		
+&nbsp;		// draw the sorted list of points.
+<b class="nc">&nbsp;		logger.debug(&quot;Drawing points...&quot;);	</b>
+<b class="nc">&nbsp;		turtle.setColor(newColor);</b>
+&nbsp;
+<b class="nc">&nbsp;		for (Bucket bucket : buckets) {</b>
+<b class="nc">&nbsp;			while (!bucket.sortedPoints.isEmpty()) {</b>
+<b class="nc">&nbsp;				Point2D a = bucket.sortedPoints.pop();</b>
+<b class="nc">&nbsp;				turtle.moveTo(px+a.getX(), py+a.getY());</b>
+<b class="nc">&nbsp;				turtle.penDown();</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	protected void finishCMYK() {
+<b class="nc">&nbsp;		FilterCMYK cmyk = new FilterCMYK(myImage);</b>
+<b class="nc">&nbsp;		cmyk.filter();</b>
+&nbsp;		
+<b class="nc">&nbsp;		turtle = new Turtle();</b>
+&nbsp;		
+<b class="nc">&nbsp;		logger.debug(&quot;Yellow...&quot;);		outputChannel(cmyk.getY(),Color.YELLOW,numLines,255.0*3.0/4.0);</b>
+<b class="nc">&nbsp;		logger.debug(&quot;Cyan...&quot;);		outputChannel(cmyk.getC(),Color.CYAN,numLines,128.0);</b>
+<b class="nc">&nbsp;		logger.debug(&quot;Magenta...&quot;);		outputChannel(cmyk.getM(),Color.MAGENTA,numLines,128.0);</b>
+<b class="nc">&nbsp;		logger.debug(&quot;Black...&quot;);		outputChannel(cmyk.getK(),Color.BLACK,numLines,128.0);</b>
+<b class="nc">&nbsp;		logger.debug(&quot;Finishing...&quot;);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	protected void finishBlackAndWhite() {
+&nbsp;		// The picture might be in color.  Smash it to 255 shades of grey.
+<b class="nc">&nbsp;		FilterDesaturate bw = new FilterDesaturate(myImage);</b>
+<b class="nc">&nbsp;		TransformedImage img = bw.filter();</b>
+&nbsp;		
+<b class="nc">&nbsp;		turtle = new Turtle();</b>
+&nbsp;		
+<b class="nc">&nbsp;		outputChannel(img,Color.BLACK,numLines,255.0/4.0);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;
+&nbsp;	public int getLineCount() {
+<b class="nc">&nbsp;		return numLines;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setLineCount(int value) {
+<b class="nc">&nbsp;		if(value&lt;1) value=1;</b>
+<b class="nc">&nbsp;		numLines = value;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public boolean isCMYK() {
+<b class="nc">&nbsp;		return isCMYK;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void setCMYK(boolean arg0) {
+<b class="nc">&nbsp;		isCMYK = arg0;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

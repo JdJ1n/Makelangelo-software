@@ -1,0 +1,1204 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > LoadScratch3</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.io</a>
+</div>
+
+<h1>Coverage Summary for Class: LoadScratch3 (com.marginallyclever.makelangelo.makeart.io)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LoadScratch3</td>
+<td class="coverageStat">
+  <span class="percent">
+    58.2%
+  </span>
+  <span class="absValue">
+    (39/67)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.9%
+  </span>
+  <span class="absValue">
+    (97/216)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    54.9%
+  </span>
+  <span class="absValue">
+    (253/461)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">LoadScratch3$Scratch3List</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">LoadScratch3$Scratch3Procedure</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">LoadScratch3$Scratch3Variable</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">LoadScratch3$Scratch3Variables</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    60.8%
+  </span>
+  <span class="absValue">
+    (45/74)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    45.4%
+  </span>
+  <span class="absValue">
+    (99/218)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    56%
+  </span>
+  <span class="absValue">
+    (269/480)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.io;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import org.json.JSONArray;
+&nbsp;import org.json.JSONObject;
+&nbsp;import org.json.JSONTokener;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.swing.filechooser.FileNameExtensionFilter;
+&nbsp;import java.awt.*;
+&nbsp;import java.io.*;
+&nbsp;import java.util.List;
+&nbsp;import java.util.*;
+&nbsp;import java.util.zip.ZipEntry;
+&nbsp;import java.util.zip.ZipInputStream;
+&nbsp;
+&nbsp;/**
+&nbsp; * {@link LoadScratch3} loads a limited set of Scratch 3.0 commands into memory. 
+&nbsp; * We ignore monitors, which are visual displays of variables, booleans, and lists
+&nbsp; * They don&#39;t contain any real information we need.
+&nbsp; * 
+&nbsp; * See https://en.scratch-wiki.info/wiki/Scratch_File_Format
+&nbsp; * See https://github.com/LLK/scratch-blocks/tree/develop/blocks_vertical
+&nbsp; * 
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.31.0
+&nbsp; */
+<b class="fc">&nbsp;public class LoadScratch3 implements TurtleLoader {</b>
+<b class="fc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(LoadScratch3.class);</b>
+<b class="fc">&nbsp;	private final String PROJECT_JSON = &quot;project.json&quot;;</b>
+<b class="fc">&nbsp;	private static int seed=0;</b>
+<b class="fc">&nbsp;	private static final Random random = new Random();</b>
+&nbsp;	
+&nbsp;	
+&nbsp;	private static class Scratch3Variable {
+&nbsp;		public String name;
+&nbsp;		
+&nbsp;		public String uniqueID;
+&nbsp;		public Object value;
+&nbsp;
+<b class="fc">&nbsp;		public Scratch3Variable(String name,String uniqueID,Object defaultValue) {</b>
+<b class="fc">&nbsp;			this.name=name;</b>
+<b class="fc">&nbsp;			this.uniqueID=uniqueID;</b>
+<b class="fc">&nbsp;			this.value=defaultValue;</b>
+&nbsp;		}
+&nbsp;		
+&nbsp;		@Override
+&nbsp;		public String toString() {
+<b class="fc">&nbsp;			return //uniqueID+&quot; &quot;+</b>
+&nbsp;					name+&quot;=&quot;+value;
+&nbsp;		}
+&nbsp;	};
+&nbsp;	
+&nbsp;	private static class Scratch3List {
+&nbsp;		public String name;
+&nbsp;		public ArrayList&lt;Double&gt; contents;
+&nbsp;
+<b class="nc">&nbsp;		public Scratch3List(String _name) {</b>
+<b class="nc">&nbsp;			name=_name;</b>
+<b class="nc">&nbsp;			contents=new ArrayList&lt;Double&gt;();</b>
+&nbsp;		}
+&nbsp;	};
+&nbsp;
+<b class="fc">&nbsp;	private static class Scratch3Variables extends ArrayList&lt;Scratch3Variable&gt; {</b>
+&nbsp;		public Scratch3Variables deepCopy() {
+<b class="fc">&nbsp;			Scratch3Variables copy = new Scratch3Variables();</b>
+<b class="fc">&nbsp;			for(Scratch3Variable v : this) {</b>
+<b class="fc">&nbsp;				copy.add(new Scratch3Variable(v.name,v.uniqueID,null));</b>
+&nbsp;			}
+<b class="fc">&nbsp;			return copy;</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private static class Scratch3Procedure {
+&nbsp;		public String proccode;  // name of procedure
+&nbsp;		public String uniqueID;
+<b class="fc">&nbsp;		public Scratch3Variables parameters = new Scratch3Variables();</b>
+&nbsp;		
+<b class="fc">&nbsp;		public Scratch3Procedure(String uniqueID,String proccode) {</b>
+<b class="fc">&nbsp;			this.uniqueID = uniqueID;</b>
+<b class="fc">&nbsp;			this.proccode = proccode;</b>
+&nbsp;		}
+&nbsp;		
+&nbsp;		public String toString() {
+<b class="fc">&nbsp;			return //uniqueID+&quot; &quot;+</b>
+<b class="fc">&nbsp;					proccode+parameters.toString();</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	private FileNameExtensionFilter filter;
+&nbsp;	
+&nbsp;	private Scratch3Variables scratchGlobalVariables;
+<b class="fc">&nbsp;	private final Stack&lt;Scratch3Variables&gt; myStack = new Stack&lt;&gt;();</b>
+<b class="fc">&nbsp;	private final List&lt;Scratch3List&gt; scratchLists = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;	private final List&lt;Scratch3Procedure&gt; scratchProcedures = new ArrayList&lt;&gt;();</b>
+&nbsp;	private JSONObject blocks;
+&nbsp;	private Set&lt;String&gt; blockKeys;
+&nbsp;	private Turtle myTurtle;
+&nbsp;
+&nbsp;	// used in doRepeatForever
+<b class="fc">&nbsp;	private final int loopNbCountInsteadOfForever = 1;// resilient : we can draw something, but it may be incomplete ...</b>
+&nbsp;	// used in doRepeatForever
+<b class="fc">&nbsp;	private final boolean foreverThrowAnException = false;// To be resilient and user-friendly this is not an error...</b>
+&nbsp;
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public FileNameExtensionFilter getFileNameFilter() {
+&nbsp;		// prevent get() before start()
+<b class="nc">&nbsp;		if(filter==null) filter = new FileNameExtensionFilter(Translator.get(&quot;FileTypeScratch3&quot;),&quot;SB3&quot;);</b>
+<b class="nc">&nbsp;		return filter;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean canLoad(String filename) {
+<b class="fc">&nbsp;		String filenameExtension = filename.substring(filename.lastIndexOf(&#39;.&#39;)).toUpperCase();</b>
+<b class="fc">&nbsp;		return filenameExtension.equalsIgnoreCase(&quot;.SB3&quot;);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public Turtle load(InputStream in) throws Exception {
+<b class="pc">&nbsp;		if (in == null) {</b>
+<b class="nc">&nbsp;			throw new NullPointerException(&quot;Input stream is null&quot;);</b>
+&nbsp;		}
+<b class="fc">&nbsp;		logger.debug(&quot;Loading...&quot;);</b>
+<b class="fc">&nbsp;		JSONObject tree = getTreeFromInputStream(in);</b>
+<b class="fc">&nbsp;		random.setSeed(0);</b>
+<b class="pc">&nbsp;		if(!confirmAtLeastVersion3(tree)) throw new Exception(&quot;File must be at least version 3.0.0.&quot;);</b>
+<b class="pc">&nbsp;		if(!confirmHasPenExtension(tree)) throw new Exception(&quot;File must include pen extension.&quot;);</b>
+&nbsp;		
+<b class="fc">&nbsp;		readScratchVariables(tree);</b>
+<b class="fc">&nbsp;		readScratchLists(tree);</b>
+<b class="fc">&nbsp;		findBlocks(tree);</b>
+<b class="fc">&nbsp;		readScratchProcedures();</b>
+<b class="fc">&nbsp;		readScratchInstructions();</b>
+&nbsp;
+<b class="fc">&nbsp;		return myTurtle;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private JSONObject getTreeFromInputStream(InputStream in) throws IOException {
+<b class="fc">&nbsp;		File tempZipFile = extractProjectJSON(in);</b>
+&nbsp;		
+<b class="fc">&nbsp;        logger.trace(&quot;Parsing JSON file...&quot;);</b>
+<b class="fc">&nbsp;        JSONTokener tokener = new JSONTokener(tempZipFile.toURI().toURL().openStream());</b>
+<b class="fc">&nbsp;        JSONObject tree = new JSONObject(tokener);</b>
+&nbsp;
+<b class="fc">&nbsp;		tempZipFile.delete();</b>
+&nbsp;		
+<b class="fc">&nbsp;		return tree;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private File extractProjectJSON(InputStream in) throws IOException {
+<b class="fc">&nbsp;		logger.trace(&quot;Searching for project.json...&quot;);</b>
+<b class="fc">&nbsp;		try (ZipInputStream zipInputStream = new ZipInputStream(in)) {</b>
+&nbsp;			ZipEntry entry;
+<b class="fc">&nbsp;			File tempZipFile = null;</b>
+<b class="pc">&nbsp;			while ((entry = zipInputStream.getNextEntry()) != null) {</b>
+<b class="pc">&nbsp;				if (entry.getName().equals(PROJECT_JSON)) {</b>
+<b class="fc">&nbsp;					logger.trace(&quot;Found project.json...&quot;);</b>
+&nbsp;
+&nbsp;					// read buffered stream into temp file.
+<b class="fc">&nbsp;					tempZipFile = File.createTempFile(&quot;project&quot;, &quot;json&quot;);</b>
+<b class="fc">&nbsp;					tempZipFile.setReadable(true);</b>
+<b class="fc">&nbsp;					tempZipFile.setWritable(true);</b>
+<b class="fc">&nbsp;					tempZipFile.deleteOnExit();</b>
+<b class="fc">&nbsp;					try (FileOutputStream fos = new FileOutputStream(tempZipFile)) {</b>
+<b class="fc">&nbsp;						byte[] buffer = new byte[2048];</b>
+&nbsp;						int len;
+<b class="fc">&nbsp;						while ((len = zipInputStream.read(buffer)) &gt; 0) {</b>
+<b class="fc">&nbsp;							fos.write(buffer, 0, len);</b>
+&nbsp;						}
+<b class="fc">&nbsp;						return tempZipFile;</b>
+<b class="fc">&nbsp;					}</b>
+&nbsp;				}
+&nbsp;			}
+<b class="fc">&nbsp;		}</b>
+<b class="nc">&nbsp;		throw new FileNotFoundException(&quot;SB3 missing project.json&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void findBlocks(JSONObject tree) throws Exception {
+<b class="fc">&nbsp;		JSONArray targets = (JSONArray)tree.get(&quot;targets&quot;);</b>
+<b class="pc">&nbsp;		for (Object target : targets) {</b>
+<b class="fc">&nbsp;			JSONObject targetN = (JSONObject) target;</b>
+<b class="fc">&nbsp;			if ((Boolean) targetN.get(&quot;isStage&quot;) ) continue;</b>
+<b class="fc">&nbsp;			blocks = targetN.getJSONObject(&quot;blocks&quot;);</b>
+&nbsp;			// we found the blocks.
+<b class="fc">&nbsp;			logger.debug(&quot;found {} blocks&quot;, blocks.length());</b>
+&nbsp;			// get the keys, too.
+<b class="fc">&nbsp;			blockKeys = blocks.keySet();</b>
+&nbsp;
+&nbsp;			return;
+&nbsp;		}
+<b class="nc">&nbsp;		throw new Exception(&quot;targets &gt; blocks missing&quot;);</b>
+&nbsp;	}
+&nbsp;
+<b class="fc">&nbsp;	private final int nbClicOnTheGreenFlag = 1;  // Let&#39;s be basic - one click for now.</b>
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * parse blocks in scratch3 format
+&nbsp;	 * @throws Exception if no program was run because no green flag was found.
+&nbsp;	 */
+&nbsp;	private void readScratchInstructions() throws Exception {
+<b class="fc">&nbsp;		logger.trace(&quot;readScratchInstructions ( and do a flagclicked {} times ) &quot;,nbClicOnTheGreenFlag);</b>
+<b class="fc">&nbsp;		myTurtle = new Turtle();// needed to be init here in case multiple &quot;event_whenflagclicked&quot;</b>
+&nbsp;		// TODO some myTurtle init to be like Scratch initial state. ( like initial color... )
+&nbsp;		
+<b class="fc">&nbsp;		int flagsClickedTotal = 0;</b>
+<b class="fc">&nbsp;		for (int i = 0; i &lt; nbClicOnTheGreenFlag; i++) {</b>
+&nbsp;			// find the first block with opcode=event_whenflagclicked.
+<b class="fc">&nbsp;			int flagsClickedInThisBlock = 0;</b>
+&nbsp;
+<b class="fc">&nbsp;			for (String k : blockKeys) {</b>
+<b class="fc">&nbsp;				Object getTmp = blocks.get(k);</b>
+<b class="pc">&nbsp;				if (getTmp instanceof JSONObject) {</b>
+<b class="fc">&nbsp;					JSONObject block = (JSONObject) getTmp;</b>
+<b class="fc">&nbsp;					final String key_scratch_block_opcode = &quot;opcode&quot;;</b>
+<b class="pc">&nbsp;					if (block.has(key_scratch_block_opcode)) {</b>
+<b class="fc">&nbsp;						String opcode = block.getString(key_scratch_block_opcode);</b>
+<b class="fc">&nbsp;						if (opcode.equals(&quot;event_whenflagclicked&quot;)) {</b>
+<b class="fc">&nbsp;							parseScratchCode(k);// TODO a stack (LIFO) with k to parseScratchCode(k) later (if multiple event_whenflagclicked this is in the Scratch3 interpretor reverse order ... and for scratch timing (wait, ...) if we want to implement it.)							</b>
+<b class="fc">&nbsp;							flagsClickedInThisBlock++;</b>
+&nbsp;						}
+&nbsp;					} else {
+&nbsp;						// starge no opcode ... but to be resilient no exception .
+<b class="nc">&nbsp;						logger.debug(&quot;no {} for block {} : {} // instanceof {}&quot;,key_scratch_block_opcode, k, getTmp, getTmp.getClass().toString());</b>
+&nbsp;					}
+&nbsp;				} else {					
+<b class="nc">&nbsp;					if ( getTmp != null ){</b>
+&nbsp;						// somethinge is not what expected ... maybe a lost variable in the scratch projet ...
+<b class="nc">&nbsp;						logger.debug(&quot;not expected for block {} : {} // instanceof {}&quot;, k, getTmp, getTmp.getClass().toString());</b>
+&nbsp;					}else{
+&nbsp;						// normaly should not happend but juste to be sure ...
+<b class="nc">&nbsp;						logger.debug(&quot;not expected for block {} : {} // null&quot;, k, getTmp);</b>
+&nbsp;					}
+&nbsp;				}
+&nbsp;			}
+<b class="fc">&nbsp;			flagsClickedTotal += flagsClickedInThisBlock;</b>
+&nbsp;		}
+<b class="pc">&nbsp;		if (flagsClickedTotal == 0) {</b>
+<b class="nc">&nbsp;			throw new Exception(&quot;WhenFlagClicked block not found.&quot;);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	private JSONObject getBlock(String key) {
+<b class="fc">&nbsp;		return blocks.getJSONObject(key);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private String findNextBlockKey(JSONObject currentBlock) {
+<b class="fc">&nbsp;		Object key = currentBlock.opt(&quot;next&quot;);</b>
+<b class="pc">&nbsp;		if(key==null || key == JSONObject.NULL) return null;</b>
+<b class="fc">&nbsp;		return (String)key;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void parseScratchCode(String currentKey) throws Exception {
+<b class="fc">&nbsp;		logger.trace(&quot;parseScratchCode {}&quot;,currentKey);</b>
+<b class="fc">&nbsp;		JSONObject currentBlock = getBlock(currentKey);</b>
+&nbsp;				
+<b class="pc">&nbsp;		while(currentBlock!=null) {</b>
+<b class="fc">&nbsp;			String opcode = (String)currentBlock.get(&quot;opcode&quot;);			</b>
+<b class="pc">&nbsp;			switch(opcode) {</b>
+&nbsp;			// control blocks start
+<b class="fc">&nbsp;			case &quot;event_whenflagclicked&quot;:	doStart(currentBlock);					break;</b>
+<b class="fc">&nbsp;			case &quot;control_repeat&quot;:			doRepeat(currentBlock);  				break;</b>
+<b class="nc">&nbsp;			case &quot;control_repeat_until&quot;:	doRepeatUntil(currentBlock);			break;</b>
+<b class="nc">&nbsp;			case &quot;control_forever&quot;:			doRepeatForever(currentBlock);			break;</b>
+<b class="nc">&nbsp;			case &quot;control_if&quot;:				doIf(currentBlock);						break;</b>
+<b class="fc">&nbsp;			case &quot;control_if_else&quot;:			doIfElse(currentBlock);					break;</b>
+&nbsp;			case &quot;control_stop&quot;:
+&nbsp;				//throw new Exception(&quot;control_stop not supported.&quot;);
+&nbsp;				return;
+<b class="fc">&nbsp;			case &quot;procedures_call&quot;:			doCall(currentBlock);					break;</b>
+&nbsp;			// control blocks end
+&nbsp;
+<b class="nc">&nbsp;			case &quot;data_setvariableto&quot;:		setVariableTo(currentBlock);			break;</b>
+<b class="nc">&nbsp;			case &quot;data_changevariableby&quot;:	changeVariableBy(currentBlock);			break;</b>
+&nbsp;/*			case &quot;data_variable&quot;:													break;
+&nbsp;			case &quot;data_hidevariable&quot;:												break;
+&nbsp;			case &quot;data_showvariable&quot;:												break;
+&nbsp;			case &quot;data_listcontents&quot;:												break;
+&nbsp;			case &quot;data_addtolist&quot;:													break;
+&nbsp;			case &quot;data_deleteoflist&quot;:												break;
+&nbsp;			case &quot;data_deletealloflist&quot;:											break;
+&nbsp;			case &quot;data_insertatlist&quot;:												break;
+&nbsp;			case &quot;data_replaceitemoflist&quot;:											break;
+&nbsp;			case &quot;data_itemoflist&quot;:													break;
+&nbsp;			case &quot;data_itemnumoflist&quot;:												break;
+&nbsp;			case &quot;data_lengthoflist&quot;:												break;
+&nbsp;			case &quot;data_listcontainsitem&quot;:											break;
+&nbsp;*/
+<b class="fc">&nbsp;			case &quot;motion_gotoxy&quot;: 			doMotionGotoXY(currentBlock);  			break;</b>
+<b class="fc">&nbsp;			case &quot;motion_pointindirection&quot;: doMotionPointInDirection(currentBlock);	break;</b>
+<b class="nc">&nbsp;			case &quot;motion_turnleft&quot;:			doMotionTurnLeft(currentBlock);  		break;</b>
+<b class="fc">&nbsp;			case &quot;motion_turnright&quot;:		doMotionTurnRight(currentBlock);  		break;</b>
+<b class="fc">&nbsp;			case &quot;motion_movesteps&quot;:		doMotionMoveSteps(currentBlock);		break;</b>
+&nbsp;			//case &quot;motion_pointtowards&quot;: 	doMotionPointTowards(currentBlock);  break;
+<b class="nc">&nbsp;			case &quot;motion_changexby&quot;: 		doMotionChangeX(currentBlock);  		break;</b>
+<b class="nc">&nbsp;			case &quot;motion_changeyby&quot;: 		doMotionChangeY(currentBlock);  		break;</b>
+<b class="nc">&nbsp;			case &quot;motion_setx&quot;: 			doMotionSetX(currentBlock);  			break;</b>
+<b class="nc">&nbsp;			case &quot;motion_sety&quot;: 			doMotionSetY(currentBlock);  			break;</b>
+<b class="fc">&nbsp;			case &quot;pen_penDown&quot;:				myTurtle.penDown();						break;</b>
+<b class="nc">&nbsp;			case &quot;pen_penUp&quot;:				myTurtle.penUp();						break;</b>
+<b class="nc">&nbsp;			case &quot;pen_setPenColorToColor&quot;:	doSetPenColor(currentBlock);			break;</b>
+<b class="fc">&nbsp;			default: logger.debug(&quot;Ignored {}&quot;, opcode);</b>
+&nbsp;			}
+&nbsp;
+<b class="fc">&nbsp;			currentKey = findNextBlockKey(currentBlock);</b>
+<b class="fc">&nbsp;			if(currentKey==null) break;</b>
+&nbsp;			
+<b class="fc">&nbsp;			logger.trace(&quot;next block {}&quot;,currentKey);</b>
+<b class="fc">&nbsp;			currentBlock = getBlock(currentKey);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doStart(JSONObject currentBlock) {
+<b class="fc">&nbsp;		logger.trace(&quot;START a block opcode event_whenflagclicked ...&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doIfElse(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		logger.trace(&quot;IF ELSE&quot;);</b>
+<b class="fc">&nbsp;		String condition = (String)findInputInBlock(currentBlock,&quot;CONDITION&quot;);</b>
+<b class="fc">&nbsp;		String substack = (String)findInputInBlock(currentBlock,&quot;SUBSTACK&quot;);</b>
+<b class="fc">&nbsp;		String substack2 = (String)findInputInBlock(currentBlock,&quot;SUBSTACK2&quot;);</b>
+<b class="fc">&nbsp;		if(resolveBoolean(getBlock(condition))) {</b>
+<b class="fc">&nbsp;			parseScratchCode(substack);</b>
+&nbsp;		} else {
+<b class="fc">&nbsp;			parseScratchCode(substack2);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void doCall(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		String proccode = (String)findMutationInBlock(currentBlock,&quot;proccode&quot;);</b>
+<b class="fc">&nbsp;		ArrayList&lt;Object&gt; args = resolveArgumentsForProcedure(currentBlock);</b>
+<b class="fc">&nbsp;		logger.trace(&quot;CALL {}({})&quot;,proccode,args.toString());</b>
+&nbsp;		
+<b class="fc">&nbsp;		Scratch3Procedure p = findProcedureWithProccode(proccode);</b>
+<b class="fc">&nbsp;		pushStack(p,args);</b>
+<b class="fc">&nbsp;		parseScratchCode(getBlock(p.uniqueID).getString(&quot;next&quot;));</b>
+<b class="fc">&nbsp;		myStack.pop();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private ArrayList&lt;Object&gt; resolveArgumentsForProcedure(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		ArrayList&lt;Object&gt; args = new ArrayList&lt;&gt;();</b>
+&nbsp;		
+<b class="fc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="fc">&nbsp;		JSONArray argumentids = new JSONArray((String)findMutationInBlock(currentBlock,&quot;argumentids&quot;));</b>
+<b class="fc">&nbsp;		for (Object argumentid : argumentids) {</b>
+<b class="fc">&nbsp;			JSONArray key = (JSONArray) inputs.get((String) argumentid);</b>
+<b class="fc">&nbsp;			args.add(resolveValue(key.get(1)));</b>
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		return args;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	// copy the parameters, set the values based on what was passed into the procedure, and then push that onto the stack.
+&nbsp;	private void pushStack(Scratch3Procedure p, ArrayList&lt;Object&gt; args) {
+<b class="fc">&nbsp;		Scratch3Variables list = p.parameters.deepCopy();</b>
+<b class="fc">&nbsp;		for(int i=0;i&lt;list.size();++i) {</b>
+<b class="fc">&nbsp;			list.get(i).value = args.get(i);</b>
+&nbsp;		}
+&nbsp;		
+<b class="fc">&nbsp;		myStack.push(list);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private Scratch3Procedure findProcedureWithProccode(String proccode) {
+<b class="pc">&nbsp;		for (Scratch3Procedure p : scratchProcedures) {</b>
+<b class="pc">&nbsp;			if (p.proccode.equals(proccode)) return p;</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return null;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doIf(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		logger.trace(&quot;IF&quot;);</b>
+<b class="nc">&nbsp;		String condition = (String)findInputInBlock(currentBlock,&quot;CONDITION&quot;);</b>
+<b class="nc">&nbsp;		String substack = (String)findInputInBlock(currentBlock,&quot;SUBSTACK&quot;);</b>
+<b class="nc">&nbsp;		if(resolveBoolean(getBlock(condition))) {</b>
+<b class="nc">&nbsp;			parseScratchCode(substack);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * dummy doReapeatForever. N.B. : For the current Makelangelo implementation
+&nbsp;	 * we need to assert the Scratch program has an end. (is not infinite ...
+&nbsp;	 * This is the easy case.) RepeatForever has to be altered (loop only n
+&nbsp;	 * time) or seen as an error.
+&nbsp;	 * @param currentBlock the block to parse
+&nbsp;	 * @throws Exception if the block tries to repeat forever
+&nbsp;	 */
+&nbsp;	private void doRepeatForever(JSONObject currentBlock) throws Exception {
+&nbsp;		if( foreverThrowAnException ) {
+&nbsp;			throw new Exception(Translator.get(&quot;LoadScratch3.foreverNotAllowed&quot;));
+&nbsp;		}		
+<b class="nc">&nbsp;		logger.trace(&quot;REPEAT FOREVER ( will only repeat {} times. )&quot;, loopNbCountInsteadOfForever);</b>
+<b class="nc">&nbsp;		String substack = (String)findInputInBlock(currentBlock,&quot;SUBSTACK&quot;);		</b>
+<b class="nc">&nbsp;		for (int i = 0; i &lt; loopNbCountInsteadOfForever; i++){</b>
+&nbsp;			//while(true) { // technically this would work and the program would never end.  It is here for reference.
+<b class="nc">&nbsp;				parseScratchCode(substack);</b>
+&nbsp;			//}
+&nbsp;		}		
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doRepeatUntil(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		logger.trace(&quot;REPEAT UNTIL&quot;);</b>
+<b class="nc">&nbsp;		String condition = (String)findInputInBlock(currentBlock,&quot;CONDITION&quot;);</b>
+<b class="nc">&nbsp;		String substack = (String)findInputInBlock(currentBlock,&quot;SUBSTACK&quot;);</b>
+&nbsp;		
+<b class="nc">&nbsp;		while(!resolveBoolean(getBlock(condition))) {</b>
+<b class="nc">&nbsp;			parseScratchCode(substack);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doRepeat(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		int count = (int)resolveValue(findInputInBlock(currentBlock,&quot;TIMES&quot;));</b>
+<b class="fc">&nbsp;		String substack = (String)findInputInBlock(currentBlock,&quot;SUBSTACK&quot;);</b>
+<b class="fc">&nbsp;		logger.trace(&quot;REPEAT {}&quot;,count);</b>
+<b class="fc">&nbsp;		for(int i=0;i&lt;count;++i) {</b>
+<b class="fc">&nbsp;			parseScratchCode(substack);</b>
+&nbsp;		}		
+&nbsp;	}
+&nbsp;
+&nbsp;	// relative change
+&nbsp;	private void changeVariableBy(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		Scratch3Variable v = getScratchVariable((String)findFieldsInBlock(currentBlock));</b>
+<b class="nc">&nbsp;		double newValue = resolveValue(findInputInBlock(currentBlock,&quot;VALUE&quot;));</b>
+&nbsp;		// set and report
+<b class="nc">&nbsp;		v.value = (double)v.value + newValue;</b>
+<b class="nc">&nbsp;		logger.trace(&quot;Set {} to {}&quot;, v.name, v.value);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	// absolute change
+&nbsp;	private void setVariableTo(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		Scratch3Variable v = getScratchVariable((String)findFieldsInBlock(currentBlock));</b>
+&nbsp;		// set and report
+<b class="nc">&nbsp;		v.value = resolveValue(findInputInBlock(currentBlock,&quot;VALUE&quot;));</b>
+<b class="nc">&nbsp;		logger.trace(&quot;Set {} to {}&quot;, v.name, v.value);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doMotionGotoXY(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		double px = resolveValue(findInputInBlock(currentBlock,&quot;X&quot;));</b>
+<b class="fc">&nbsp;		double py = resolveValue(findInputInBlock(currentBlock,&quot;Y&quot;));</b>
+<b class="fc">&nbsp;		logger.trace(&quot;GOTO {} {}&quot;,px,py);</b>
+<b class="fc">&nbsp;		myTurtle.moveTo(px, py);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doMotionPointInDirection(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		double v = resolveValue(findInputInBlock(currentBlock,&quot;DIRECTION&quot;));</b>
+<b class="fc">&nbsp;		logger.trace(&quot;POINT AT {}&quot;,v);</b>
+<b class="fc">&nbsp;		myTurtle.setAngle(90.0-v);// axial symmetry of an axis having an angle of 45° see https://github.com/MarginallyClever/Makelangelo-software/issues/564#issuecomment-1046217070</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void doMotionTurnLeft(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		double v = resolveValue(findInputInBlock(currentBlock,&quot;DEGREES&quot;));</b>
+<b class="nc">&nbsp;		logger.trace(&quot;LEFT {}&quot;,v);</b>
+<b class="nc">&nbsp;		myTurtle.setAngle(myTurtle.getAngle()+v);//myTurtle.turn(v);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void doMotionTurnRight(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		double v = resolveValue(findInputInBlock(currentBlock,&quot;DEGREES&quot;));</b>
+<b class="fc">&nbsp;		logger.trace(&quot;RIGHT {}&quot;,v);</b>
+<b class="fc">&nbsp;		myTurtle.setAngle(myTurtle.getAngle()-v);//myTurtle.turn(-v);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doMotionMoveSteps(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		double v = resolveValue(findInputInBlock(currentBlock,&quot;STEPS&quot;));</b>
+<b class="fc">&nbsp;		logger.trace(&quot;MOVE {}&quot;,v);</b>
+<b class="fc">&nbsp;		myTurtle.forward(v);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void doMotionChangeX(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		double v = resolveValue(findInputInBlock(currentBlock,&quot;DX&quot;));</b>
+<b class="nc">&nbsp;		logger.trace(&quot;MOVE X {}&quot;,v);</b>
+<b class="nc">&nbsp;		myTurtle.moveTo(myTurtle.getX()+v,myTurtle.getY());</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doMotionChangeY(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		double v = resolveValue(findInputInBlock(currentBlock,&quot;DY&quot;));</b>
+<b class="nc">&nbsp;		logger.trace(&quot;MOVE Y {}&quot;,v);</b>
+<b class="nc">&nbsp;		myTurtle.moveTo(myTurtle.getX(),myTurtle.getY()+v);</b>
+&nbsp;		
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doMotionSetX(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		double v = resolveValue(findInputInBlock(currentBlock,&quot;X&quot;));</b>
+<b class="nc">&nbsp;		logger.trace(&quot;SET X {}&quot;,v);</b>
+<b class="nc">&nbsp;		myTurtle.moveTo(v,myTurtle.getY());</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void doMotionSetY(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		double v = resolveValue(findInputInBlock(currentBlock,&quot;Y&quot;));</b>
+<b class="nc">&nbsp;		logger.trace(&quot;SET Y {}&quot;,v);</b>
+<b class="nc">&nbsp;		myTurtle.moveTo(myTurtle.getX(),v);</b>
+&nbsp;	}
+&nbsp;	
+<b class="fc">&nbsp;	boolean ignoreDoSetPenColor = false; // As setColor can bug the Makelangelo Render a quick/bad hack to enable/disable this implementation.</b>
+&nbsp;	private void doSetPenColor(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		Color c = new Color((int)resolveValue(findInputInBlock(currentBlock,&quot;COLOR&quot;)));</b>
+<b class="nc">&nbsp;		if ( !ignoreDoSetPenColor ){</b>
+<b class="nc">&nbsp;			logger.trace(&quot;SET COLOR {}&quot;,c);</b>
+<b class="nc">&nbsp;			myTurtle.setColor(c);</b>
+&nbsp;		}else{
+<b class="nc">&nbsp;			logger.trace(&quot;SET COLOR {} ignored&quot;,c);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Find and return currentBlock/fields/subKey/(first element).
+&nbsp;	 *
+&nbsp;	 * @param currentBlock the block to search.
+&nbsp;	 * @return the first element of currentBlock/inputs/subKey
+&nbsp;	 */
+&nbsp;	private Object findFieldsInBlock(JSONObject currentBlock) {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;fields&quot;);</b>
+<b class="nc">&nbsp;		JSONArray subKeyArray = (JSONArray)inputs.get(&quot;VARIABLE&quot;);</b>
+<b class="nc">&nbsp;		return subKeyArray.get(1);</b>
+&nbsp;	}
+&nbsp;		
+&nbsp;	/**
+&nbsp;	 * Find and return currentBlock/inputs/subKey/(first element). 
+&nbsp;	 * @param currentBlock the block to search.
+&nbsp;	 * @param subKey the key name inside currentBlock.
+&nbsp;	 * @return the first element of currentBlock/inputs/subKey
+&nbsp;	 */
+&nbsp;	private Object findInputInBlock(JSONObject currentBlock,String subKey) {
+<b class="fc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="fc">&nbsp;		JSONArray subKeyArray = (JSONArray)inputs.get(subKey);</b>
+<b class="fc">&nbsp;		return subKeyArray.get(1);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Find and return currentBlock/mutation/subKey. 
+&nbsp;	 * @param currentBlock the block to search.
+&nbsp;	 * @param subKey the key name inside currentBlock.
+&nbsp;	 * @return the element currentBlock/mutation/subKey
+&nbsp;	 * @throws Exception if any part of the operation fails, usually because of non-existent key.
+&nbsp;	 */
+&nbsp;	private Object findMutationInBlock(JSONObject currentBlock,String subKey) throws Exception {
+<b class="fc">&nbsp;		JSONObject mutation = currentBlock.getJSONObject(&quot;mutation&quot;);</b>
+<b class="fc">&nbsp;		return mutation.get(subKey);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Find and return the variable with uniqueID.  Search the top of myStack first, then the globals. 
+&nbsp;	 * @param uniqueID the id to match.
+&nbsp;	 * @return the variable found.
+&nbsp;	 * @throws Exception if variable not found.
+&nbsp;	 */
+&nbsp;	private Scratch3Variable getScratchVariable(String uniqueID) throws Exception {
+<b class="pc">&nbsp;		if(!myStack.isEmpty()) {</b>
+<b class="nc">&nbsp;			for(Scratch3Variable sv : myStack.peek()) {</b>
+<b class="nc">&nbsp;				if(sv.uniqueID.equals(uniqueID)) return sv;</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;		
+<b class="pc">&nbsp;		for(Scratch3Variable sv : scratchGlobalVariables) {</b>
+<b class="fc">&nbsp;			if(sv.uniqueID.equals(uniqueID)) return sv;</b>
+&nbsp;		}
+&nbsp;		
+<b class="nc">&nbsp;		throw new Exception(&quot;Variable &#39;&quot;+uniqueID+&quot;&#39; not found.&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Confirm this is version 3
+&nbsp;	 * @param tree the JSONObject tree read from the project.json/zip file.
+&nbsp;	 */
+&nbsp;	private boolean confirmAtLeastVersion3(JSONObject tree) {
+<b class="fc">&nbsp;		JSONObject meta = (JSONObject)tree.get(&quot;meta&quot;);  // this cannot be getJSONObject because it changes the exception response.</b>
+<b class="pc">&nbsp;		if(meta==null) return false;</b>
+&nbsp;		
+<b class="fc">&nbsp;		String semver = (String)meta.get(&quot;semver&quot;);  // this cannot be getJSONObject because it changes the exception response.</b>
+<b class="pc">&nbsp;		if(semver==null) return false;</b>
+&nbsp;		
+<b class="pc">&nbsp;		return ( semver.compareTo(&quot;3.0.0&quot;) &lt;= 0 ); </b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private boolean confirmHasPenExtension(JSONObject tree) {
+<b class="fc">&nbsp;		JSONArray extensions = (JSONArray)tree.get(&quot;extensions&quot;);  // this cannot be getJSONObject because it changes the exception response.</b>
+<b class="pc">&nbsp;		if(extensions==null) return false;</b>
+&nbsp;
+<b class="pc">&nbsp;		for (Object o : extensions) {</b>
+<b class="pc">&nbsp;			if (o instanceof String &amp;&amp; o.equals(&quot;pen&quot;)) return true;</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return false;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * read the list of Scratch variables
+&nbsp;	 * @param tree the JSONObject tree read from the project.json/zip file.
+&nbsp;	 * @throws Exception
+&nbsp;	 */
+&nbsp;	private void readScratchVariables(JSONObject tree) throws Exception {
+<b class="fc">&nbsp;		logger.trace(&quot;readScratchVariables&quot;);</b>
+<b class="fc">&nbsp;		scratchGlobalVariables = new Scratch3Variables();</b>
+<b class="fc">&nbsp;		JSONArray targets = tree.getJSONArray(&quot;targets&quot;);</b>
+<b class="fc">&nbsp;		for (Object target : targets) {</b>
+<b class="fc">&nbsp;			JSONObject targetN = (JSONObject) target;</b>
+<b class="fc">&nbsp;			if (!((Boolean) targetN.get(&quot;isStage&quot;))) continue;</b>
+&nbsp;
+<b class="fc">&nbsp;			JSONObject variables = targetN.getJSONObject(&quot;variables&quot;);</b>
+<b class="fc">&nbsp;			for (String k : variables.keySet()) {</b>
+<b class="fc">&nbsp;				JSONArray details = variables.getJSONArray(k);</b>
+<b class="fc">&nbsp;				String name = details.getString(0);</b>
+<b class="fc">&nbsp;				Object valueUnknown = details.get(1);</b>
+&nbsp;				Number value;
+<b class="fc">&nbsp;				if (valueUnknown instanceof String) value = Double.parseDouble((String) valueUnknown);</b>
+<b class="fc">&nbsp;				else value = (Number) valueUnknown;</b>
+&nbsp;				try {
+<b class="fc">&nbsp;					double d = value.doubleValue();</b>
+<b class="fc">&nbsp;					logger.debug(&quot;Variable {} {}&quot;, name, d);</b>
+<b class="fc">&nbsp;					scratchGlobalVariables.add(new Scratch3Variable(name, k, d));</b>
+<b class="nc">&nbsp;				} catch (Exception e) {</b>
+<b class="nc">&nbsp;					throw new Exception(&quot;Variables must be numbers.&quot;, e);</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * read the list of Scratch lists
+&nbsp;	 * @param tree the JSONObject tree read from the project.json/zip file.
+&nbsp;	 * @throws Exception
+&nbsp;	 */
+&nbsp;	private void readScratchLists(JSONObject tree) throws Exception {
+<b class="fc">&nbsp;		logger.trace(&quot;readScratchLists&quot;);</b>
+<b class="fc">&nbsp;		JSONArray targets = tree.getJSONArray(&quot;targets&quot;);</b>
+<b class="fc">&nbsp;		for (Object target : targets) {</b>
+<b class="fc">&nbsp;			JSONObject targetN = (JSONObject) target;</b>
+<b class="fc">&nbsp;			if (!((Boolean) targetN.get(&quot;isStage&quot;))) continue;</b>
+<b class="fc">&nbsp;			JSONObject listOfLists = targetN.getJSONObject(&quot;lists&quot;);</b>
+<b class="pc">&nbsp;			if (listOfLists == null) return;</b>
+<b class="fc">&nbsp;			Set&lt;?&gt; keys = listOfLists.keySet();</b>
+<b class="pc">&nbsp;			for (Object o : keys) {</b>
+<b class="nc">&nbsp;				String key = (String) o;</b>
+<b class="nc">&nbsp;				logger.trace(&quot;list key:{}&quot;, key);</b>
+<b class="nc">&nbsp;				JSONArray elem = listOfLists.getJSONArray(key);</b>
+<b class="nc">&nbsp;				String listName = elem.getString(0);</b>
+<b class="nc">&nbsp;				logger.trace(&quot;  list name:{}&quot;, listName);</b>
+<b class="nc">&nbsp;				Object contents = elem.get(1);</b>
+<b class="nc">&nbsp;				Scratch3List list = new Scratch3List(listName);</b>
+&nbsp;				// fill the list with any given contents
+<b class="nc">&nbsp;				if ( contents instanceof JSONArray) {</b>
+<b class="nc">&nbsp;					JSONArray arr = (JSONArray) contents;</b>
+&nbsp;
+<b class="nc">&nbsp;					for (Object varValue : arr) {</b>
+&nbsp;						double value;
+<b class="nc">&nbsp;						if (varValue instanceof Number) {</b>
+<b class="nc">&nbsp;							Number num = (Number) varValue;</b>
+<b class="nc">&nbsp;							value = (float) num.doubleValue();</b>
+<b class="nc">&nbsp;							logger.trace(&quot;  list float:{}&quot;, value);</b>
+<b class="nc">&nbsp;							list.contents.add(value);</b>
+<b class="nc">&nbsp;						} else if (varValue instanceof String) {</b>
+&nbsp;							try {
+<b class="nc">&nbsp;								value = Double.parseDouble((String) varValue);</b>
+<b class="nc">&nbsp;								logger.trace(&quot;  list string:{}&quot;, value);</b>
+<b class="nc">&nbsp;								list.contents.add(value);</b>
+<b class="nc">&nbsp;							} catch (Exception e) {</b>
+<b class="nc">&nbsp;								throw new Exception(&quot;List variables must be numbers.&quot;, e);</b>
+&nbsp;							}
+&nbsp;						} else
+<b class="nc">&nbsp;							throw new Exception(&quot;List variable &quot; + listName + &quot;(&quot; + list.contents.size() + &quot;) is &quot; + varValue.toString());</b>
+&nbsp;					}
+&nbsp;				}
+&nbsp;				// add the list to the list-of-lists.
+<b class="nc">&nbsp;				scratchLists.add(list);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Read in and store the description of procedures (methods)
+&nbsp;	 * @throws Exception
+&nbsp;	 */
+&nbsp;	private void readScratchProcedures() throws Exception {
+<b class="fc">&nbsp;		logger.trace(&quot;readScratchProcedures&quot;);</b>
+&nbsp;
+&nbsp;		// find the blocks with opcode=procedures_definition.
+<b class="fc">&nbsp;		for( String k : blockKeys ) {</b>
+<b class="fc">&nbsp;			String uniqueID = k.toString();</b>
+<b class="fc">&nbsp;			Object obj = blocks.get(uniqueID);</b>
+<b class="pc">&nbsp;			if(!(obj instanceof JSONObject)) continue;</b>
+&nbsp;
+<b class="fc">&nbsp;			JSONObject currentBlock = blocks.getJSONObject(uniqueID);</b>
+<b class="fc">&nbsp;			String opcode = currentBlock.getString(&quot;opcode&quot;);</b>
+<b class="fc">&nbsp;			if(opcode.equals(&quot;procedures_definition&quot;)) {</b>
+&nbsp;				// the procedures_definition block points to the procedures_prototype block
+<b class="fc">&nbsp;				JSONObject prototypeBlock = getBlock((String)findInputInBlock(currentBlock,&quot;custom_block&quot;));</b>
+&nbsp;				// which contains the human-readable name of the procedure
+<b class="fc">&nbsp;				String proccode = (String)findMutationInBlock(prototypeBlock,&quot;proccode&quot;);</b>
+&nbsp;				
+<b class="fc">&nbsp;				Scratch3Procedure p = new Scratch3Procedure(uniqueID, proccode);</b>
+<b class="fc">&nbsp;				scratchProcedures.add(p);</b>
+<b class="fc">&nbsp;				buildParameterListForProcedure(prototypeBlock,p);</b>
+<b class="fc">&nbsp;				logger.trace(&quot;procedure found: {}&quot;,p.toString());</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void buildParameterListForProcedure(JSONObject prototypeBlock, Scratch3Procedure p) throws Exception {
+<b class="fc">&nbsp;		JSONArray argumentIDs = new JSONArray((String)findMutationInBlock(prototypeBlock,&quot;argumentids&quot;));</b>
+<b class="fc">&nbsp;		JSONArray argumentNames = new JSONArray((String)findMutationInBlock(prototypeBlock,&quot;argumentnames&quot;));</b>
+&nbsp;
+&nbsp;		//JSONArray argumentDefaults = new JSONArray((String)findMutationInBlock(prototypeBlock,&quot;argumentdefaults&quot;));
+<b class="fc">&nbsp;		for(int i=0;i&lt;argumentIDs.length();++i) {</b>
+<b class="fc">&nbsp;			String uniqueID = argumentIDs.getString(i);</b>
+&nbsp;			//String defaultValue = argumentDefaults.getString(i);
+<b class="fc">&nbsp;			String name = argumentNames.getString(i);</b>
+&nbsp;
+<b class="fc">&nbsp;			p.parameters.add(new Scratch3Variable(name,uniqueID,0/*defaultValue*/));</b>
+&nbsp;			// TODO set defaults?
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Scratch block contains a boolean or boolean operator
+&nbsp;	 * @param currentBlock a String, Number, or JSONArray of elements to be calculated.
+&nbsp;	 * @return the calculated final value.
+&nbsp;	 * @throws Exception when an upsupported opcode is found.
+&nbsp;	 */
+&nbsp;	private boolean resolveBoolean(JSONObject currentBlock) throws Exception {
+<b class="pc">&nbsp;		if(currentBlock.has(&quot;opcode&quot;)) {</b>
+&nbsp;			// is equation
+<b class="fc">&nbsp;			String opcode = currentBlock.getString(&quot;opcode&quot;);</b>
+<b class="pc">&nbsp;			return switch (opcode) {</b>
+<b class="nc">&nbsp;				case &quot;operator_lt&quot; -&gt; doLessThan(currentBlock);</b>
+<b class="fc">&nbsp;				case &quot;operator_gt&quot; -&gt; doGreaterThan(currentBlock);</b>
+<b class="fc">&nbsp;				case &quot;operator_equals&quot; -&gt; doEquals(currentBlock);</b>
+<b class="nc">&nbsp;				case &quot;operator_and&quot; -&gt; doAnd(currentBlock);</b>
+<b class="nc">&nbsp;				case &quot;operator_or&quot; -&gt; doOr(currentBlock);</b>
+<b class="nc">&nbsp;				case &quot;operator_not&quot; -&gt; doNot(currentBlock);</b>
+<b class="nc">&nbsp;				default -&gt; throw new Exception(&quot;resolveBoolean unsupported opcode &quot; + opcode);</b>
+&nbsp;			};
+&nbsp;		}
+<b class="nc">&nbsp;		throw new Exception(&quot;Parse error (resolveBoolean missing opcode)&quot;);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private boolean doNot(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray OPERAND = inputs.getJSONArray(&quot;OPERAND&quot;);</b>
+<b class="nc">&nbsp;		boolean a = resolveBoolean(getBlock(OPERAND.getString(1)));</b>
+<b class="nc">&nbsp;		return !a;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private boolean doOr(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray OPERAND1 = inputs.getJSONArray(&quot;OPERAND1&quot;);</b>
+<b class="nc">&nbsp;		JSONArray OPERAND2 = inputs.getJSONArray(&quot;OPERAND2&quot;);</b>
+<b class="nc">&nbsp;		boolean a = resolveBoolean(getBlock(OPERAND1.getString(1)));</b>
+<b class="nc">&nbsp;		boolean b = resolveBoolean(getBlock(OPERAND2.getString(1)));</b>
+<b class="nc">&nbsp;		return a || b;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private boolean doAnd(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray OPERAND1 = inputs.getJSONArray(&quot;OPERAND1&quot;);</b>
+<b class="nc">&nbsp;		JSONArray OPERAND2 = inputs.getJSONArray(&quot;OPERAND2&quot;);</b>
+<b class="nc">&nbsp;		boolean a = resolveBoolean(getBlock(OPERAND1.getString(1)));</b>
+<b class="nc">&nbsp;		boolean b = resolveBoolean(getBlock(OPERAND2.getString(1)));</b>
+<b class="nc">&nbsp;		return a &amp;&amp; b;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private boolean doEquals(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="fc">&nbsp;		JSONArray OPERAND1 = inputs.getJSONArray(&quot;OPERAND1&quot;);</b>
+<b class="fc">&nbsp;		JSONArray OPERAND2 = inputs.getJSONArray(&quot;OPERAND2&quot;);</b>
+<b class="fc">&nbsp;		double a = resolveValue(OPERAND1.get(1));</b>
+<b class="fc">&nbsp;		double b = resolveValue(OPERAND2.get(1)); </b>
+<b class="fc">&nbsp;		return a == b;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private boolean doGreaterThan(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="fc">&nbsp;		JSONArray OPERAND1 = inputs.getJSONArray(&quot;OPERAND1&quot;);</b>
+<b class="fc">&nbsp;		JSONArray OPERAND2 = inputs.getJSONArray(&quot;OPERAND2&quot;);</b>
+<b class="fc">&nbsp;		double a = resolveValue(OPERAND1.get(1));</b>
+<b class="fc">&nbsp;		double b = resolveValue(OPERAND2.get(1)); </b>
+<b class="fc">&nbsp;		return a &gt; b;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private boolean doLessThan(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray OPERAND1 = inputs.getJSONArray(&quot;OPERAND1&quot;);</b>
+<b class="nc">&nbsp;		JSONArray OPERAND2 = inputs.getJSONArray(&quot;OPERAND2&quot;);</b>
+<b class="nc">&nbsp;		double a = resolveValue(OPERAND1.get(1));</b>
+<b class="nc">&nbsp;		double b = resolveValue(OPERAND2.get(1)); </b>
+<b class="nc">&nbsp;		return a &lt; b;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Scratch block contains an Operator (variable, constant, or math combination of the two). 
+&nbsp;	 * @param currentObject a String, Number, or JSONArray of elements to be calculated.
+&nbsp;	 * @return the calculated final value.
+&nbsp;	 * @throws Exception when an unknown value type is found.
+&nbsp;	 */
+&nbsp;	private double resolveValue(Object currentObject) throws Exception {
+<b class="fc">&nbsp;		if(currentObject instanceof JSONArray) {</b>
+<b class="fc">&nbsp;			JSONArray currentArray = (JSONArray)currentObject;</b>
+<b class="pc">&nbsp;			return switch (currentArray.getInt(0)) {</b>
+&nbsp;				case 4, 5, 6, 7, 8, 9, 10 -&gt;
+&nbsp;					// 4 number
+&nbsp;					// 5 positive number
+&nbsp;					// 6 positive integer
+&nbsp;					// 7 integer
+&nbsp;					// 8 angle
+&nbsp;					// 9 color (#rrggbbaa)
+&nbsp;					// 10 string, try to parse as number
+<b class="fc">&nbsp;						parseNumber(currentArray.get(1));</b>
+&nbsp;				case 12 -&gt;  // 12 variable
+<b class="fc">&nbsp;						(double) getScratchVariable(currentArray.getString(2)).value;</b>
+&nbsp;				// 13 is list [name,id,x,y]
+<b class="nc">&nbsp;				default -&gt; throw new Exception(&quot;resolveValue unknown value type &quot; + currentArray.getInt(0));</b>
+&nbsp;			};
+<b class="pc">&nbsp;		} else if(currentObject instanceof String) {</b>
+<b class="fc">&nbsp;			JSONObject currentBlock = getBlock((String)currentObject);</b>
+&nbsp;			// is equation
+<b class="fc">&nbsp;			String opcode = currentBlock.getString(&quot;opcode&quot;);</b>
+<b class="pc">&nbsp;			return switch (opcode) {</b>
+<b class="nc">&nbsp;				case &quot;operator_add&quot; -&gt; doAdd(currentBlock);</b>
+<b class="fc">&nbsp;				case &quot;operator_subtract&quot; -&gt; doSubstract(currentBlock);</b>
+<b class="nc">&nbsp;				case &quot;operator_multiply&quot; -&gt; doMultiply(currentBlock);</b>
+<b class="fc">&nbsp;				case &quot;operator_divide&quot; -&gt; doDivide(currentBlock);</b>
+<b class="nc">&nbsp;				case &quot;operator_mod&quot; -&gt; doModulus(currentBlock);</b>
+<b class="nc">&nbsp;				case &quot;operator_random&quot; -&gt; doRandom(currentBlock);</b>
+<b class="nc">&nbsp;				case &quot;operator_mathop&quot; -&gt; doMathOp(currentBlock);</b>
+<b class="nc">&nbsp;				case &quot;operator_round&quot; -&gt; doRound(currentBlock);</b>
+<b class="nc">&nbsp;				case &quot;motion_direction&quot; -&gt; doMotionDirection();</b>
+<b class="nc">&nbsp;				case &quot;motion_xposition&quot; -&gt; doMotionXPosition();</b>
+<b class="nc">&nbsp;				case &quot;motion_yposition&quot; -&gt; doMotionYPosition();</b>
+<b class="fc">&nbsp;				case &quot;argument_reporter_string_number&quot;, &quot;argument_reporter_boolean&quot; -&gt; (double) doReporterStringValue(currentBlock);</b>
+<b class="nc">&nbsp;				default -&gt; throw new Exception(&quot;resolveValue unsupported opcode &quot; + opcode);</b>
+&nbsp;			};
+&nbsp;		}
+<b class="nc">&nbsp;		throw new Exception(&quot;resolveValue unknown object type &quot;+currentObject.getClass().getSimpleName());</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private double parseNumber(Object object) {
+<b class="pc">&nbsp;		if(object instanceof String) {</b>
+<b class="fc">&nbsp;			String str = (String)object;</b>
+<b class="pc">&nbsp;			if(str.startsWith(&quot;#&quot;)) return (double)Integer.parseInt(str.substring(1),16);</b>
+<b class="fc">&nbsp;			return Double.parseDouble(str);</b>
+<b class="nc">&nbsp;		} else if(object instanceof Double) </b>
+<b class="nc">&nbsp;			return (double)object;</b>
+&nbsp;		else //if(object instanceof Integer)
+<b class="nc">&nbsp;			return (double)(int)object;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private double doAdd(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray NUM1 = inputs.getJSONArray(&quot;NUM1&quot;);</b>
+<b class="nc">&nbsp;		JSONArray NUM2 = inputs.getJSONArray(&quot;NUM2&quot;);</b>
+<b class="nc">&nbsp;		double a = resolveValue(NUM1.get(1));</b>
+<b class="nc">&nbsp;		double b = resolveValue(NUM2.get(1));</b>
+<b class="nc">&nbsp;		return a + b;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private double doSubstract(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="fc">&nbsp;		JSONArray NUM1 = inputs.getJSONArray(&quot;NUM1&quot;);</b>
+<b class="fc">&nbsp;		JSONArray NUM2 = inputs.getJSONArray(&quot;NUM2&quot;);</b>
+<b class="fc">&nbsp;		double a = resolveValue(NUM1.get(1));</b>
+<b class="fc">&nbsp;		double b = resolveValue(NUM2.get(1));</b>
+<b class="fc">&nbsp;		return a - b;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private double doMultiply(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray NUM1 = inputs.getJSONArray(&quot;NUM1&quot;);</b>
+<b class="nc">&nbsp;		JSONArray NUM2 = inputs.getJSONArray(&quot;NUM2&quot;);</b>
+<b class="nc">&nbsp;		double a = resolveValue(NUM1.get(1));</b>
+<b class="nc">&nbsp;		double b = resolveValue(NUM2.get(1));</b>
+<b class="nc">&nbsp;		return a * b;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private double doDivide(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="fc">&nbsp;		JSONArray NUM1 = inputs.getJSONArray(&quot;NUM1&quot;);</b>
+<b class="fc">&nbsp;		JSONArray NUM2 = inputs.getJSONArray(&quot;NUM2&quot;);</b>
+<b class="fc">&nbsp;		double a = resolveValue(NUM1.get(1));</b>
+<b class="fc">&nbsp;		double b = resolveValue(NUM2.get(1));</b>
+<b class="fc">&nbsp;		return a / b;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private double doModulus(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray NUM1 = inputs.getJSONArray(&quot;NUM1&quot;);</b>
+<b class="nc">&nbsp;		JSONArray NUM2 = inputs.getJSONArray(&quot;NUM2&quot;);</b>
+<b class="nc">&nbsp;		double a = resolveValue(NUM1.get(1));</b>
+<b class="nc">&nbsp;		double b = resolveValue(NUM2.get(1));</b>
+<b class="nc">&nbsp;		return a % b;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private double doRandom(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray FROM = inputs.getJSONArray(&quot;FROM&quot;);</b>
+<b class="nc">&nbsp;		JSONArray TO = inputs.getJSONArray(&quot;TO&quot;);</b>
+<b class="nc">&nbsp;		double a = resolveValue(FROM.get(1));</b>
+<b class="nc">&nbsp;		double b = resolveValue(TO.get(1));</b>
+<b class="nc">&nbsp;		return random.nextDouble() * (b-a) + a;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private double doRound(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray NUM = inputs.getJSONArray(&quot;NUM&quot;);</b>
+<b class="nc">&nbsp;		double a = resolveValue(NUM.get(1));</b>
+<b class="nc">&nbsp;		return Math.round(a);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private double doMathOp(JSONObject currentBlock) throws Exception {
+<b class="nc">&nbsp;		JSONObject inputs = currentBlock.getJSONObject(&quot;inputs&quot;);</b>
+<b class="nc">&nbsp;		JSONArray NUM = inputs.getJSONArray(&quot;NUM&quot;);</b>
+<b class="nc">&nbsp;		double v = resolveValue(NUM.get(1));</b>
+&nbsp;
+<b class="nc">&nbsp;		JSONObject fields = currentBlock.getJSONObject(&quot;fields&quot;);</b>
+<b class="nc">&nbsp;		JSONArray OPERATOR = fields.getJSONArray(&quot;OPERATOR&quot;);</b>
+<b class="nc">&nbsp;		return switch (OPERATOR.getString(0)) {</b>
+<b class="nc">&nbsp;			case &quot;abs&quot; -&gt; Math.abs(v);</b>
+<b class="nc">&nbsp;			case &quot;floor&quot; -&gt; Math.floor(v);</b>
+<b class="nc">&nbsp;			case &quot;ceiling&quot; -&gt; Math.ceil(v);</b>
+<b class="nc">&nbsp;			case &quot;sqrt&quot; -&gt; Math.sqrt(v);</b>
+<b class="nc">&nbsp;			case &quot;sin&quot; -&gt; Math.sin(Math.toRadians(v));</b>
+<b class="nc">&nbsp;			case &quot;cos&quot; -&gt; Math.cos(Math.toRadians(v));</b>
+<b class="nc">&nbsp;			case &quot;tan&quot; -&gt; Math.tan(Math.toRadians(v));</b>
+<b class="nc">&nbsp;			case &quot;asin&quot; -&gt; Math.asin(Math.toRadians(v));</b>
+<b class="nc">&nbsp;			case &quot;acos&quot; -&gt; Math.acos(Math.toRadians(v));</b>
+<b class="nc">&nbsp;			case &quot;atan&quot; -&gt; Math.atan(Math.toRadians(v));</b>
+<b class="nc">&nbsp;			case &quot;ln&quot; -&gt; Math.log(v);</b>
+<b class="nc">&nbsp;			case &quot;log&quot; -&gt; Math.log10(v);</b>
+<b class="nc">&nbsp;			case &quot;e ^&quot; -&gt; Math.exp(v);</b>
+<b class="nc">&nbsp;			case &quot;10 ^&quot; -&gt; Math.pow(10, v);</b>
+<b class="nc">&nbsp;			default -&gt; throw new Exception(&quot;doMathOp unknown operator &quot; + OPERATOR.getString(1));</b>
+&nbsp;		};
+&nbsp;	}
+&nbsp;
+&nbsp;	private double doMotionDirection() {
+<b class="nc">&nbsp;		return myTurtle.getAngle();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private double doMotionXPosition() {
+<b class="nc">&nbsp;		return myTurtle.getX();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private double doMotionYPosition() {
+<b class="nc">&nbsp;		return myTurtle.getY();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private Object doReporterStringValue(JSONObject currentBlock) throws Exception {
+<b class="fc">&nbsp;		String name = currentBlock.getJSONObject(&quot;fields&quot;).getJSONArray(&quot;VALUE&quot;).getString(0);</b>
+&nbsp;		
+<b class="pc">&nbsp;		if(!myStack.isEmpty()) {</b>
+<b class="pc">&nbsp;			for(Scratch3Variable sv : myStack.peek()) {</b>
+<b class="fc">&nbsp;				if(sv.name.equals(name)) return sv.value;</b>
+&nbsp;			}
+&nbsp;		}
+<b class="nc">&nbsp;		throw new Exception(&quot;Variable &#39;&quot;+name+&quot;&#39; not found.&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private int getListID(Object obj) throws Exception {
+<b class="nc">&nbsp;		if(!(obj instanceof String)) throw new Exception(&quot;List name not a string.&quot;);</b>
+<b class="nc">&nbsp;		String listName = obj.toString();</b>
+<b class="nc">&nbsp;		int index=0;</b>
+<b class="nc">&nbsp;		for (Scratch3List i : scratchLists) {</b>
+<b class="nc">&nbsp;			if (i.name.equals(listName)) return index;</b>
+<b class="nc">&nbsp;			++index;</b>
+&nbsp;		}
+<b class="nc">&nbsp;		throw new Exception(&quot;List &#39;&quot;+listName+&quot;&#39; not found.&quot;);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Find the requested index in a list.
+&nbsp;	 * @param o2 the index value.  could be &quot;random&quot;, &quot;last&quot;, or an index number
+&nbsp;	 * @param o3 the list name.
+&nbsp;	 * @return the resolved value as an integer.
+&nbsp;	 * @throws Exception
+&nbsp;	 */
+&nbsp;	@SuppressWarnings(&quot;unused&quot;)
+&nbsp;	private int resolveListIndex(Object o2,Object o3) throws Exception {
+<b class="nc">&nbsp;		String index = (String)o2;</b>
+<b class="nc">&nbsp;		String listName = (String)o3;</b>
+<b class="nc">&nbsp;		Scratch3List list = scratchLists.get(getListID(listName)); </b>
+&nbsp;		int listIndex;
+<b class="nc">&nbsp;		if(index.equals(&quot;last&quot;)) {</b>
+<b class="nc">&nbsp;			listIndex = list.contents.size()-1;</b>
+<b class="nc">&nbsp;		} else if(index.equals(&quot;random&quot;)) {</b>
+<b class="nc">&nbsp;			listIndex = (int) (random.nextDouble() * list.contents.size());</b>
+&nbsp;		} else {
+<b class="nc">&nbsp;			listIndex = Integer.parseInt(index);</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		return listIndex;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

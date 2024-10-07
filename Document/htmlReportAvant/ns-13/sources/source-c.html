@@ -1,0 +1,207 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > TurtleFactory</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.io</a>
+</div>
+
+<h1>Coverage Summary for Class: TurtleFactory (com.marginallyclever.makelangelo.makeart.io)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TurtleFactory</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/31)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.io;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import javax.swing.filechooser.FileNameExtensionFilter;
+&nbsp;import java.io.FileInputStream;
+&nbsp;import java.io.FileOutputStream;
+&nbsp;import java.security.InvalidParameterException;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * Factory for creating {@link Turtle} objects from vector files and writing them to vector files.
+&nbsp; * @author Dan Royer
+&nbsp; */
+<b class="nc">&nbsp;public class TurtleFactory {</b>
+<b class="nc">&nbsp;	private static final TurtleLoader [] loaders = {</b>
+&nbsp;			new LoadDXF(),
+&nbsp;			new LoadGCode(),
+&nbsp;			new LoadScratch2(),
+&nbsp;			new LoadScratch3(),
+&nbsp;			new LoadSVG(),
+&nbsp;	};
+&nbsp;	
+<b class="nc">&nbsp;	private static final TurtleSaver [] savers = {</b>
+&nbsp;			new SaveDXF(),
+&nbsp;			new SaveSVG(),
+&nbsp;			new SaveGCode(),
+&nbsp;			new SaveBitmap(&quot;bmp&quot;,false),
+&nbsp;			new SaveBitmap(&quot;gif&quot;,false),
+&nbsp;			new SaveBitmap(&quot;jpg&quot;,false),
+&nbsp;			new SaveBitmap(&quot;pio&quot;,false),
+&nbsp;			new SaveBitmap(&quot;png&quot;,true),
+&nbsp;			new SaveBitmap(&quot;tif&quot;,false),
+&nbsp;			new SaveBitmap(&quot;webp&quot;,true),
+&nbsp;	};
+&nbsp;	
+&nbsp;	public static Turtle load(String filename) throws Exception {
+<b class="nc">&nbsp;		if(filename == null || filename.trim().isEmpty()) throw new InvalidParameterException(&quot;filename cannot be empty&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;		for( TurtleLoader loader : loaders ) {</b>
+<b class="nc">&nbsp;			if(isValidExtension(filename,loader.getFileNameFilter())) {</b>
+<b class="nc">&nbsp;				try(FileInputStream in = new FileInputStream(filename)) {</b>
+<b class="nc">&nbsp;					return loader.load(in);</b>
+<b class="nc">&nbsp;				}</b>
+&nbsp;			}
+&nbsp;		}
+<b class="nc">&nbsp;		throw new IllegalStateException(&quot;TurtleFactory could not load &#39;&quot;+filename+&quot;&#39;.&quot;);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private static boolean isValidExtension(String filename, FileNameExtensionFilter filter) {
+<b class="nc">&nbsp;		filename = filename.toLowerCase();</b>
+<b class="nc">&nbsp;		String [] extensions = filter.getExtensions();</b>
+<b class="nc">&nbsp;		for( String e : extensions ) {</b>
+<b class="nc">&nbsp;			if(filename.endsWith(e.toLowerCase())) return true;</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return false;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public static List&lt;FileNameExtensionFilter&gt; getLoadExtensions() {
+<b class="nc">&nbsp;		List&lt;FileNameExtensionFilter&gt; filters = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;		for( TurtleLoader loader : loaders ) {</b>
+<b class="nc">&nbsp;			filters.add( loader.getFileNameFilter() );</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return filters;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public static List&lt;FileNameExtensionFilter&gt; getSaveExtensions() {
+<b class="nc">&nbsp;		List&lt;FileNameExtensionFilter&gt; filters = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;		for( TurtleSaver saver : savers ) {</b>
+<b class="nc">&nbsp;			filters.add( saver.getFileNameFilter() );</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return filters;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public static void save(Turtle turtle,String filename, PlotterSettings settings) throws Exception {
+<b class="nc">&nbsp;		if(filename == null || filename.trim().isEmpty()) throw new InvalidParameterException(&quot;filename cannot be empty&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;		for (TurtleSaver saver : savers) {</b>
+<b class="nc">&nbsp;			if(isValidExtension(filename,saver.getFileNameFilter())) {</b>
+<b class="nc">&nbsp;				try (FileOutputStream out = new FileOutputStream(filename)) {</b>
+<b class="nc">&nbsp;					saver.save(out, turtle,settings);</b>
+<b class="nc">&nbsp;				}</b>
+&nbsp;				return;
+&nbsp;			}
+&nbsp;		}
+<b class="nc">&nbsp;		String extension = filename.substring(filename.lastIndexOf(&quot;.&quot;));</b>
+<b class="nc">&nbsp;		throw new Exception(&quot;TurtleFactory could not save &#39;&quot;+filename+&quot;&#39; : invalid file format &#39;&quot; + extension + &quot;&#39;&quot;);</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

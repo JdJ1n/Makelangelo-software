@@ -1,0 +1,92 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > TurtleSaver</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.io</a>
+</div>
+
+<h1>Coverage Summary for Class: TurtleSaver (com.marginallyclever.makelangelo.makeart.io)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">TurtleSaver</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.io;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import javax.swing.filechooser.FileNameExtensionFilter;
+&nbsp;import java.io.OutputStream;
+&nbsp;
+&nbsp;/**
+&nbsp; * Save a {@link Turtle} to a file.
+&nbsp; */
+&nbsp;public interface TurtleSaver {
+&nbsp;	FileNameExtensionFilter getFileNameFilter();
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Save a turtle to a stream
+&nbsp;	 * @param outputStream destination of path
+&nbsp;	 * @param turtle source of path
+&nbsp;	 * @param settings plotter settings
+&nbsp;	 * @return true if save successful.
+&nbsp;	 * @throws Exception if save failed.
+&nbsp;	 */
+&nbsp;	boolean save(OutputStream outputStream,Turtle turtle, PlotterSettings settings) throws Exception;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

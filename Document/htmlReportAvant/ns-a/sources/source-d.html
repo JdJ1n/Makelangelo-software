@@ -1,0 +1,291 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > TranslatorLanguage</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo</a>
+</div>
+
+<h1>Coverage Summary for Class: TranslatorLanguage (com.marginallyclever.makelangelo)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TranslatorLanguage</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.9%
+  </span>
+  <span class="absValue">
+    (13/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    60%
+  </span>
+  <span class="absValue">
+    (12/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (48/60)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo;
+&nbsp;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import org.w3c.dom.Document;
+&nbsp;import org.w3c.dom.Element;
+&nbsp;import org.w3c.dom.Node;
+&nbsp;import org.w3c.dom.NodeList;
+&nbsp;import org.xml.sax.SAXException;
+&nbsp;
+&nbsp;import javax.xml.parsers.DocumentBuilder;
+&nbsp;import javax.xml.parsers.DocumentBuilderFactory;
+&nbsp;import javax.xml.parsers.ParserConfigurationException;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.InputStream;
+&nbsp;import java.util.*;
+&nbsp;
+<b class="fc">&nbsp;public class TranslatorLanguage {</b>
+<b class="fc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(TranslatorLanguage.class);</b>
+&nbsp;
+<b class="fc">&nbsp;	private String name = &quot;&quot;;</b>
+<b class="fc">&nbsp;	private final List&lt;String&gt; authors = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;	private final Map&lt;String, String&gt; strings = new HashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param languageFile
+&nbsp;	 */
+&nbsp;	public void loadFromString(String languageFile) {
+<b class="nc">&nbsp;		final DocumentBuilder db = getDocumentBuilder();</b>
+<b class="nc">&nbsp;		if (db == null) {</b>
+&nbsp;			return;
+&nbsp;		}
+<b class="nc">&nbsp;		Document dom = null;</b>
+&nbsp;		try {
+&nbsp;			//Using factory get an instance of document builder
+&nbsp;			//parse using builder to get DOM representation of the XML file
+<b class="nc">&nbsp;			dom = db.parse(languageFile);</b>
+<b class="nc">&nbsp;		} catch (SAXException | IOException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to load file {}&quot;, languageFile, e);</b>
+&nbsp;		}
+<b class="nc">&nbsp;		if (dom == null) {</b>
+&nbsp;			return;
+&nbsp;		}
+<b class="nc">&nbsp;		load(dom);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param inputStream
+&nbsp;	 */
+&nbsp;	public void loadFromInputStream(InputStream inputStream) {
+<b class="fc">&nbsp;		final DocumentBuilder db = getDocumentBuilder();</b>
+<b class="pc">&nbsp;		if (db == null) {</b>
+&nbsp;			return;
+&nbsp;		}
+&nbsp;		try {
+<b class="fc">&nbsp;			Document dom = db.parse(inputStream);</b>
+<b class="fc">&nbsp;			load(dom);</b>
+<b class="nc">&nbsp;		} catch (SAXException | IOException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to parse language file&quot;, e);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void load(Document dom) {
+<b class="fc">&nbsp;		final Element docEle = dom.getDocumentElement();</b>
+&nbsp;
+<b class="fc">&nbsp;		name = docEle.getElementsByTagName(&quot;name&quot;).item(0).getFirstChild().getNodeValue();</b>
+<b class="fc">&nbsp;		readAllAuthors(docEle);</b>
+<b class="fc">&nbsp;		readAllStrings(docEle);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void readAllAuthors(Element docEle) {
+<b class="fc">&nbsp;		NodeList authors = docEle.getElementsByTagName(&quot;authors&quot;);</b>
+<b class="fc">&nbsp;		for (int i = 0; i &lt; authors.getLength(); i++) {</b>
+<b class="fc">&nbsp;			Node authorNode = authors.item(i);</b>
+<b class="pc">&nbsp;			if (authorNode.getNodeType() == Node.ELEMENT_NODE) {</b>
+<b class="fc">&nbsp;				Element authorElement = (Element) authorNode;</b>
+<b class="fc">&nbsp;				NodeList authorList = authorElement.getElementsByTagName(&quot;author&quot;);</b>
+<b class="fc">&nbsp;				for (int j = 0; j &lt; authorList.getLength(); j++) {</b>
+<b class="fc">&nbsp;					Node author = authorList.item(j);</b>
+<b class="pc">&nbsp;					if (author.getNodeType() == Node.ELEMENT_NODE) {</b>
+<b class="fc">&nbsp;						Element authorElement2 = (Element) author;</b>
+<b class="fc">&nbsp;						this.authors.add(authorElement2.getFirstChild().getNodeValue());</b>
+&nbsp;					}
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * read all key/value pairs from the xml file.
+&nbsp;	 * @param docEle the root element of the xml file
+&nbsp;	 */
+&nbsp;	private void readAllStrings(Element docEle) {
+<b class="fc">&nbsp;		NodeList nl = docEle.getElementsByTagName(&quot;string&quot;);</b>
+<b class="fc">&nbsp;		for (int i = 0; i &lt; nl.getLength(); i++) {</b>
+&nbsp;
+&nbsp;			//get the element
+<b class="fc">&nbsp;			Element el = (Element) nl.item(i);</b>
+<b class="fc">&nbsp;			String key = getTextValue(el, &quot;key&quot;);</b>
+<b class="fc">&nbsp;			String value = getTextValue(el, &quot;value&quot;);</b>
+&nbsp;
+&nbsp;			// store key/value pairs into a map
+&nbsp;			//logger.debug(language_file +&quot;\t&quot;+key+&quot;\t=\t&quot;+value);
+<b class="fc">&nbsp;			strings.put(key, value);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private DocumentBuilder getDocumentBuilder() {
+<b class="fc">&nbsp;		DocumentBuilder db = null;</b>
+&nbsp;		try {
+<b class="fc">&nbsp;			db = buildDocumentBuilder().newDocumentBuilder();</b>
+<b class="nc">&nbsp;		} catch (ParserConfigurationException e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to create a new document&quot;, e);</b>
+&nbsp;		}
+<b class="fc">&nbsp;		return db;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private DocumentBuilderFactory buildDocumentBuilder() {
+<b class="fc">&nbsp;		return DocumentBuilderFactory.newInstance();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public String get(String key) {
+<b class="fc">&nbsp;		return strings.get(key);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * &lt;p&gt;
+&nbsp;	 * When a newline character &quot;\n&quot; was being read in from an xml file,
+&nbsp;	 * it was being escaped (&quot;\\n&quot;) and thus not behaving as an actual newline.
+&nbsp;	 * This method replaces any &quot;\\n&quot; with &quot;\n&quot;.
+&nbsp;	 * &lt;/p&gt;
+&nbsp;	 * &lt;p&gt;
+&nbsp;	 * &lt;p&gt;
+&nbsp;	 * I take a xml element and the tag name, look for the tag and get
+&nbsp;	 * the text content
+&nbsp;	 * i.e for &lt;employee&gt;&lt;name&gt;John&lt;/name&gt;&lt;/employee&gt; xml snippet if
+&nbsp;	 * the Element points to employee node and tagName is &#39;name&#39; I will return John
+&nbsp;	 * &lt;/p&gt;
+&nbsp;	 *
+&nbsp;	 * @param ele     XML element
+&nbsp;	 * @param tagName name of &#39;tag&#39; or child XML element of ele
+&nbsp;	 * @return text value of tagName
+&nbsp;	 */
+&nbsp;	private String getTextValue(Element ele, String tagName) {
+<b class="fc">&nbsp;		String textVal = null;</b>
+<b class="fc">&nbsp;		NodeList nl = ele.getElementsByTagName(tagName);</b>
+<b class="pc">&nbsp;		if (nl.getLength() &gt; 0) {</b>
+<b class="fc">&nbsp;			Element el = (Element) nl.item(0);</b>
+&nbsp;			// to allow empty value as translation 
+<b class="fc">&nbsp;			final Node firstChild = el.getFirstChild();</b>
+<b class="fc">&nbsp;			if ( firstChild != null){</b>
+<b class="fc">&nbsp;				textVal = firstChild.getNodeValue();</b>
+&nbsp;			}else{				
+<b class="fc">&nbsp;				textVal = &quot;&quot;;</b>
+&nbsp;			}
+&nbsp;		}
+<b class="fc">&nbsp;		textVal = textVal.replace(&quot;\\n&quot;, &quot;\n&quot;);</b>
+<b class="fc">&nbsp;		return textVal;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public String getName() {
+<b class="fc">&nbsp;		return name;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public List&lt;String&gt; getAuthors() {
+<b class="fc">&nbsp;		return authors;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Set&lt;String&gt; getKeys() {
+&nbsp;		// return a copy of strings
+<b class="fc">&nbsp;		return strings.keySet();</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

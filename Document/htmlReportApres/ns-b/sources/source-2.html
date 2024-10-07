@@ -1,0 +1,208 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > GFXPreferences</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.applicationsettings</a>
+</div>
+
+<h1>Coverage Summary for Class: GFXPreferences (com.marginallyclever.makelangelo.applicationsettings)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GFXPreferences</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/37)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.applicationsettings;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectBoolean;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectPanel;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectSpinner;
+&nbsp;import com.marginallyclever.util.PreferencesHelper;
+&nbsp;
+&nbsp;import javax.swing.event.EventListenerList;
+&nbsp;import java.beans.PropertyChangeEvent;
+&nbsp;import java.beans.PropertyChangeListener;
+&nbsp;import java.util.prefs.Preferences;
+&nbsp;
+&nbsp;/**
+&nbsp; * Graphics plottersettings
+&nbsp; * @author Dan Royer
+&nbsp; */
+<b class="nc">&nbsp;public class GFXPreferences {</b>
+&nbsp;	static private SelectBoolean showPenUp;
+&nbsp;	static private SelectBoolean antialias;
+&nbsp;	static private SelectBoolean speedOverQuality;
+&nbsp;	static private SelectBoolean showAllWhileDrawing;
+&nbsp;	static private SelectSpinner dragSpeed;
+<b class="nc">&nbsp;	static EventListenerList listeners = new EventListenerList();</b>
+&nbsp;
+&nbsp;	static public void addListener(PropertyChangeListener p) {
+<b class="nc">&nbsp;		listeners.add(PropertyChangeListener.class,p);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	static public void removeListener(PropertyChangeListener p) {
+<b class="nc">&nbsp;		listeners.remove(PropertyChangeListener.class,p);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	static protected void firePropertyChange(PropertyChangeEvent e) {
+<b class="nc">&nbsp;		for(PropertyChangeListener p : listeners.getListeners(PropertyChangeListener.class)) {</b>
+<b class="nc">&nbsp;			p.propertyChange(e);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	static private Preferences getMyNode() {
+<b class="nc">&nbsp;		return PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.GRAPHICS);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	static public SelectPanel buildPanel() {
+<b class="nc">&nbsp;		Preferences prefs = getMyNode();</b>
+&nbsp;
+<b class="nc">&nbsp;		SelectPanel panel = new SelectPanel();</b>
+<b class="nc">&nbsp;		showPenUp = new SelectBoolean(&quot;penup&quot;,Translator.get(&quot;GFXPreferences.showPenUp&quot;),prefs.getBoolean(&quot;show pen up&quot;, false));</b>
+<b class="nc">&nbsp;		antialias = new SelectBoolean(&quot;antialias&quot;,Translator.get(&quot;GFXPreferences.antialias&quot;),prefs.getBoolean(&quot;antialias&quot;, true));</b>
+<b class="nc">&nbsp;		speedOverQuality = new SelectBoolean(&quot;SpeedVSQuality&quot;,Translator.get(&quot;GFXPreferences.speedVSQuality&quot;),prefs.getBoolean(&quot;speed over quality&quot;, true));</b>
+<b class="nc">&nbsp;		showAllWhileDrawing = new SelectBoolean(&quot;drawWhileRunning&quot;,Translator.get(&quot;GFXPreferences.showAllWhileDrawing&quot;),prefs.getBoolean(&quot;Draw all while running&quot;, true));</b>
+<b class="nc">&nbsp;		dragSpeed = new SelectSpinner(&quot;dragSpeed&quot;, Translator.get(&quot;GFXPreferences.dragSpeed&quot;), 1, 5, prefs.getInt(&quot;dragSpeed&quot;, 1));</b>
+&nbsp;
+<b class="nc">&nbsp;		panel.add(showPenUp);</b>
+<b class="nc">&nbsp;		panel.add(showAllWhileDrawing);</b>
+<b class="nc">&nbsp;		panel.add(antialias);</b>
+<b class="nc">&nbsp;		panel.add(speedOverQuality);</b>
+<b class="nc">&nbsp;		panel.add(dragSpeed);</b>
+&nbsp;
+<b class="nc">&nbsp;		GFXPreferences.addListener((e)-&gt;{</b>
+<b class="nc">&nbsp;			showPenUp.setSelected((boolean)e.getNewValue());</b>
+&nbsp;		});
+<b class="nc">&nbsp;		showPenUp.addSelectListener((e)-&gt;{</b>
+<b class="nc">&nbsp;			GFXPreferences.setShowPenUp((boolean)e.getNewValue());</b>
+&nbsp;		});
+&nbsp;
+<b class="nc">&nbsp;		return panel;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	static public void save() {
+<b class="nc">&nbsp;		Preferences prefs = getMyNode();</b>
+<b class="nc">&nbsp;		prefs.putBoolean(&quot;show pen up&quot;, showPenUp.isSelected());</b>
+<b class="nc">&nbsp;		prefs.putBoolean(&quot;antialias&quot;, antialias.isSelected());</b>
+<b class="nc">&nbsp;		prefs.putBoolean(&quot;speed over quality&quot;, speedOverQuality.isSelected());</b>
+<b class="nc">&nbsp;		prefs.putBoolean(&quot;Draw all while running&quot;, showAllWhileDrawing.isSelected());</b>
+<b class="nc">&nbsp;		prefs.putInt(&quot;dragSpeed&quot;, dragSpeed.getValue());</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	static public boolean getShowPenUp() {
+<b class="nc">&nbsp;		Preferences prefs = getMyNode();</b>
+<b class="nc">&nbsp;		return prefs.getBoolean(&quot;show pen up&quot;,false);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	static public void setShowPenUp(boolean state) {
+<b class="nc">&nbsp;		boolean old = getShowPenUp();</b>
+<b class="nc">&nbsp;		if(old != state) {</b>
+<b class="nc">&nbsp;			Preferences prefs = getMyNode();</b>
+<b class="nc">&nbsp;			prefs.putBoolean(&quot;show pen up&quot;, state);</b>
+<b class="nc">&nbsp;			firePropertyChange(new PropertyChangeEvent(prefs,&quot;show pen up&quot;,old,state));</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

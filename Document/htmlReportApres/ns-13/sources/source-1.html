@@ -1,0 +1,265 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > LoadDXF</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.io</a>
+</div>
+
+<h1>Coverage Summary for Class: LoadDXF (com.marginallyclever.makelangelo.makeart.io)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LoadDXF</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90.9%
+  </span>
+  <span class="absValue">
+    (10/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.2%
+  </span>
+  <span class="absValue">
+    (25/26)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.8%
+  </span>
+  <span class="absValue">
+    (61/63)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.io;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import org.kabeja.dxf.*;
+&nbsp;import org.kabeja.dxf.helpers.DXFSplineConverter;
+&nbsp;import org.kabeja.dxf.helpers.Point;
+&nbsp;import org.kabeja.parser.DXFParser;
+&nbsp;import org.kabeja.parser.Parser;
+&nbsp;import org.kabeja.parser.ParserBuilder;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.swing.filechooser.FileNameExtensionFilter;
+&nbsp;import java.awt.*;
+&nbsp;import java.io.InputStream;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Dan Royer
+&nbsp; *
+&nbsp; */
+<b class="fc">&nbsp;public class LoadDXF implements TurtleLoader {</b>
+<b class="fc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(LoadDXF.class);</b>
+&nbsp;	public static final double EPSILON = 0.01;
+<b class="fc">&nbsp;	private static final FileNameExtensionFilter filter = new FileNameExtensionFilter(&quot;DXF R12&quot;, &quot;dxf&quot;);</b>
+<b class="fc">&nbsp;	private final Parser parser = ParserBuilder.createDefaultParser();</b>
+&nbsp;	private double previousX,previousY;
+&nbsp;	private Turtle myTurtle;
+&nbsp;	
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public FileNameExtensionFilter getFileNameFilter() {
+<b class="nc">&nbsp;		return filter;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean canLoad(String filename) {
+<b class="fc">&nbsp;		String ext = filename.substring(filename.lastIndexOf(&#39;.&#39;));</b>
+<b class="fc">&nbsp;		return (ext.equalsIgnoreCase(&quot;.dxf&quot;));</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Turtle load(InputStream in) throws Exception {
+<b class="fc">&nbsp;		if (in == null) {</b>
+<b class="fc">&nbsp;			throw new NullPointerException(&quot;Input stream is null&quot;);</b>
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		logger.debug(&quot;Loading...&quot;);</b>
+&nbsp;
+&nbsp;		// Read in the DXF file
+<b class="fc">&nbsp;		parser.parse(in, DXFParser.DEFAULT_ENCODING);</b>
+&nbsp;		
+<b class="fc">&nbsp;		DXFDocument doc = parser.getDocument();</b>
+&nbsp;
+<b class="fc">&nbsp;		myTurtle = new Turtle();</b>
+&nbsp;		
+&nbsp;		// convert each entity
+<b class="fc">&nbsp;		Iterator&lt;?&gt; layerItr = doc.getDXFLayerIterator();</b>
+<b class="fc">&nbsp;		while (layerItr.hasNext()) {</b>
+<b class="fc">&nbsp;			DXFLayer layer = (DXFLayer)layerItr.next();</b>
+<b class="fc">&nbsp;			int color = layer.getColor();</b>
+<b class="fc">&nbsp;			logger.debug(&quot;Found layer {} (color index={})&quot;, layer.getName(), color);</b>
+&nbsp;			
+&nbsp;			// Some DXF layers are empty.  Only write the tool change command if there&#39;s something on this layer.
+<b class="fc">&nbsp;			Iterator&lt;?&gt; entityTypeItr = layer.getDXFEntityTypeIterator();</b>
+<b class="fc">&nbsp;			if(entityTypeItr.hasNext()) {</b>
+&nbsp;				// ignore the color index, DXF is dumb.
+<b class="fc">&nbsp;				myTurtle.setColor(Color.BLACK);</b>
+&nbsp;
+<b class="fc">&nbsp;				parseLayer(layer);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		return myTurtle;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void parseLayer(DXFLayer layer) {
+<b class="fc">&nbsp;		logger.debug(&quot;Sorting layer &quot;+layer.getName()+&quot; into buckets...&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;		Iterator&lt;?&gt; entityTypeIter = layer.getDXFEntityTypeIterator();</b>
+<b class="fc">&nbsp;		while (entityTypeIter.hasNext()) {</b>
+<b class="fc">&nbsp;			String entityType = (String) entityTypeIter.next();</b>
+<b class="fc">&nbsp;			List&lt;?&gt; entityList = layer.getDXFEntities(entityType);</b>
+<b class="fc">&nbsp;			for (Object o : entityList) {</b>
+<b class="fc">&nbsp;				DXFEntity e = (DXFEntity) o;</b>
+&nbsp;
+<b class="pc">&nbsp;				switch(e.getType()) {</b>
+<b class="fc">&nbsp;					case DXFConstants.ENTITY_TYPE_LINE -&gt; parseDXFLine((DXFLine)e);</b>
+<b class="fc">&nbsp;					case DXFConstants.ENTITY_TYPE_SPLINE -&gt; parseDXFPolyline(DXFSplineConverter.toDXFPolyline((DXFSpline)e));</b>
+&nbsp;					case DXFConstants.ENTITY_TYPE_POLYLINE,
+<b class="fc">&nbsp;							DXFConstants.ENTITY_TYPE_LWPOLYLINE -&gt; parseDXFPolyline((DXFPolyline)e);</b>
+<b class="nc">&nbsp;					default -&gt; logger.error(&quot;Unknown DXF type {}&quot;, e.getType());</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void parseDXFLine(DXFLine entity) {
+<b class="fc">&nbsp;		Point start = entity.getStartPoint();</b>
+<b class="fc">&nbsp;		double x = start.getX();</b>
+<b class="fc">&nbsp;		double y = start.getY();</b>
+<b class="fc">&nbsp;		if(Math.abs(x-previousX)&gt;EPSILON || Math.abs(y-previousY)&gt;EPSILON) {</b>
+<b class="fc">&nbsp;			myTurtle.jumpTo(TX(x), TY(y));</b>
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		Point end = entity.getEndPoint();</b>
+<b class="fc">&nbsp;		double x2 = end.getX();</b>
+<b class="fc">&nbsp;		double y2 = end.getY();</b>
+<b class="fc">&nbsp;		myTurtle.moveTo(TX(x2),TY(y2));</b>
+<b class="fc">&nbsp;		previousX = x2;</b>
+<b class="fc">&nbsp;		previousY = y2;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void parseDXFPolyline(DXFPolyline entity) {
+<b class="fc">&nbsp;		boolean first = true;</b>
+<b class="fc">&nbsp;		int c = entity.getVertexCount();</b>
+<b class="fc">&nbsp;		int count = c + (entity.isClosed()?1:0);</b>
+&nbsp;		DXFVertex v;
+&nbsp;		double x,y;
+<b class="fc">&nbsp;		for (int j = 0; j &lt; count; ++j) {</b>
+<b class="fc">&nbsp;			v = entity.getVertex(j % c);</b>
+<b class="fc">&nbsp;			x = v.getX();</b>
+<b class="fc">&nbsp;			y = v.getY();</b>
+<b class="fc">&nbsp;			drawPolylinePoint(x,y,first);</b>
+<b class="fc">&nbsp;			first = false;</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void drawPolylinePoint(double x, double y, boolean first) {
+<b class="fc">&nbsp;		if (first) {</b>
+<b class="fc">&nbsp;			if(Math.abs(x-previousX)&gt;EPSILON || Math.abs(y-previousY)&gt;EPSILON) {</b>
+<b class="fc">&nbsp;				myTurtle.jumpTo(TX(x),TY(y));</b>
+&nbsp;			}
+&nbsp;		} else {
+<b class="fc">&nbsp;			myTurtle.moveTo(TX(x),TY(y));</b>
+&nbsp;		}
+<b class="fc">&nbsp;		previousX = x;</b>
+<b class="fc">&nbsp;		previousY = y;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private double TX(double x) {
+<b class="fc">&nbsp;		return x;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private double TY(double y) {
+<b class="fc">&nbsp;		return y;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

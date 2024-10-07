@@ -1,0 +1,356 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Converter_Moire</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imageconverter</a>
+</div>
+
+<h1>Coverage Summary for Class: Converter_Moire (com.marginallyclever.makelangelo.makeart.imageconverter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Converter_Moire</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/44)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/119)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imageconverter;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.LineInterpolator;
+&nbsp;import com.marginallyclever.convenience.LineInterpolatorSinCurve;
+&nbsp;import com.marginallyclever.convenience.Point2D;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+&nbsp;import com.marginallyclever.makelangelo.paper.Paper;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectDouble;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectOneOfMany;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.ListIterator;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * 
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class Converter_Moire extends ImageConverter {
+<b class="nc">&nbsp;	private static double blockScale = 4.0f;</b>
+<b class="nc">&nbsp;	private static int direction = 0;</b>
+<b class="nc">&nbsp;	private final String[] directionChoices = new String[]{Translator.get(&quot;horizontal&quot;), Translator.get(&quot;vertical&quot;) };</b>
+&nbsp;
+&nbsp;	public Converter_Moire() {
+<b class="nc">&nbsp;		super();</b>
+&nbsp;
+<b class="nc">&nbsp;		SelectDouble selectSize = new SelectDouble(&quot;size&quot;,Translator.get(&quot;HilbertCurveSize&quot;),getScale());</b>
+<b class="nc">&nbsp;		SelectOneOfMany selectDirection = new SelectOneOfMany(&quot;direction&quot;,Translator.get(&quot;Direction&quot;),getDirections(),getDirectionIndex());</b>
+&nbsp;
+<b class="nc">&nbsp;		add(selectSize);</b>
+<b class="nc">&nbsp;		add(selectDirection);</b>
+&nbsp;
+<b class="nc">&nbsp;		selectSize.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setScale((double)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+<b class="nc">&nbsp;		selectDirection.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setDirectionIndex((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="nc">&nbsp;		return Translator.get(&quot;MoireName&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public double getScale() {
+<b class="nc">&nbsp;		return blockScale;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void setScale(double value) {
+<b class="nc">&nbsp;		if(value&lt;1) value=1;</b>
+<b class="nc">&nbsp;		blockScale = value;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public String[] getDirections() {
+<b class="nc">&nbsp;		return directionChoices;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public int getDirectionIndex() {
+<b class="nc">&nbsp;		return direction;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void setDirectionIndex(int value) {
+<b class="nc">&nbsp;		if(value&lt;0) value=0;</b>
+<b class="nc">&nbsp;		if(value&gt;=directionChoices.length) value=directionChoices.length-1;</b>
+<b class="nc">&nbsp;		direction = value;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	protected void convertLine(TransformedImage img, double spaceBetweenLines, double halfStep, Point2D a, Point2D b) {
+<b class="nc">&nbsp;		LineInterpolatorSinCurve line = new LineInterpolatorSinCurve(a,b);</b>
+<b class="nc">&nbsp;		line.setAmplitude(0.4);</b>
+&nbsp;		
+<b class="nc">&nbsp;		double CUTOFF = 1.0/255.0;</b>
+<b class="nc">&nbsp;		double iterStepSize = 0.002;//machine.getDouble(PlotterSettings.DIAMETER)/2;</b>
+&nbsp;		
+&nbsp;		// examine the line once.  all Z values will be in the range 0...1
+<b class="nc">&nbsp;		ArrayList&lt;Double&gt; zList = new ArrayList&lt;&gt;();</b>
+&nbsp;		
+<b class="nc">&nbsp;		Point2D p = new Point2D();</b>
+&nbsp;		//Point2D n = new Point2D();
+<b class="nc">&nbsp;		double maxPixel=0;</b>
+&nbsp;		
+&nbsp;		
+<b class="nc">&nbsp;		for (double t = 0; t &lt;= 1.0; t += iterStepSize) {</b>
+<b class="nc">&nbsp;			line.getPoint(t, p);</b>
+&nbsp;			// read a block of the image and find the average intensity in this block
+<b class="nc">&nbsp;			double pixel = img.sample( p.x, p.y, halfStep*2 );</b>
+&nbsp;			// scale the intensity value
+<b class="nc">&nbsp;			double pixelNormalized = (255.0f - pixel) / 255.0f;</b>
+<b class="nc">&nbsp;			pixelNormalized = Math.max(Math.min(pixelNormalized,1), 0);</b>
+<b class="nc">&nbsp;			zList.add(pixelNormalized);</b>
+<b class="nc">&nbsp;			if(maxPixel&lt;pixelNormalized) maxPixel=pixelNormalized;</b>
+&nbsp;		}
+&nbsp;		
+&nbsp;		// find the maximum number of passes for any given line
+<b class="nc">&nbsp;		double pd = 0.7;</b>
+<b class="nc">&nbsp;		int maxPasses = (int)Math.floor( spaceBetweenLines / pd )-1;</b>
+&nbsp;		// adjust to the maximum number used in *this* line.
+<b class="nc">&nbsp;		int passesThisLine = (int)(maxPasses * maxPixel);</b>
+&nbsp;
+&nbsp;		//logger.debug(passesThisLine+&quot;/&quot;+maxPasses);
+&nbsp;		
+<b class="nc">&nbsp;		if(passesThisLine==0) return;  // empty line!</b>
+&nbsp;
+<b class="nc">&nbsp;		int ziMeta = 0;</b>
+<b class="nc">&nbsp;		int ziStart = -1;</b>
+<b class="nc">&nbsp;		int ziEnd = -1;</b>
+&nbsp;
+<b class="nc">&nbsp;		ListIterator&lt;Double&gt; zi = zList.listIterator(ziMeta);</b>
+<b class="nc">&nbsp;		while(zi.hasNext()) {</b>
+<b class="nc">&nbsp;			double z = zi.next();</b>
+<b class="nc">&nbsp;			ziMeta++;</b>
+<b class="nc">&nbsp;			if(ziStart == -1) {</b>
+&nbsp;				// is this the start of a segment?
+<b class="nc">&nbsp;				if(z&gt;CUTOFF) {</b>
+&nbsp;					// yes
+<b class="nc">&nbsp;					ziStart = ziMeta;</b>
+&nbsp;					continue;
+&nbsp;				}
+&nbsp;			} else {
+&nbsp;				// is this the end of a segment? (either image light enough OR end of the line)
+<b class="nc">&nbsp;				if(z&lt;=CUTOFF || !zi.hasNext()) {</b>
+&nbsp;					// yes
+<b class="nc">&nbsp;					ziEnd = ziMeta;</b>
+<b class="nc">&nbsp;					if(!zi.hasNext()) ziEnd--;</b>
+&nbsp;					
+&nbsp;					// now draw the segment.
+&nbsp;					// find the number of passes in this segment
+<b class="nc">&nbsp;					ListIterator&lt;Double&gt; zi2 = zList.listIterator(ziStart);</b>
+<b class="nc">&nbsp;					maxPixel=0;</b>
+<b class="nc">&nbsp;					for(int zc=ziStart; zc&lt;ziEnd; ++zc) {</b>
+<b class="nc">&nbsp;						z = zi2.next();</b>
+<b class="nc">&nbsp;						if(maxPixel&lt;z) maxPixel=z;</b>
+&nbsp;					}
+<b class="nc">&nbsp;					int passesThisSegment = (int)(maxPasses * maxPixel);</b>
+<b class="nc">&nbsp;					if(passesThisSegment&gt;0) {</b>
+&nbsp;						// jump to the start of the segment
+<b class="nc">&nbsp;						double t = ziStart * iterStepSize;</b>
+<b class="nc">&nbsp;						line.getPoint(t, p);</b>
+<b class="nc">&nbsp;						double x=p.x;</b>
+<b class="nc">&nbsp;						double y=p.y;</b>
+<b class="nc">&nbsp;						turtle.jumpTo(myPaper.getCenterX()+x,myPaper.getCenterY()+y);</b>
+&nbsp;						
+&nbsp;						// draw back and forth over the segment, each line a little offset from the one before.
+<b class="nc">&nbsp;						double halfSpace = pd*(double)passesThisSegment/2.0;</b>
+<b class="nc">&nbsp;						int direction=1;</b>
+&nbsp;						
+<b class="nc">&nbsp;						for(int k=0;k&lt;passesThisSegment;++k) {</b>
+<b class="nc">&nbsp;							double maxPulseNow = pd * k - halfSpace;</b>
+&nbsp;
+<b class="nc">&nbsp;							int zc=0;</b>
+<b class="nc">&nbsp;							if(direction==1) {</b>
+<b class="nc">&nbsp;								zi2 = zList.listIterator(ziStart);</b>
+<b class="nc">&nbsp;								for(zc=ziStart; zc&lt;ziEnd; ++zc) {</b>
+<b class="nc">&nbsp;									z = zi2.next();</b>
+<b class="nc">&nbsp;									lineInternal(maxPulseNow,z,line,zc*iterStepSize);</b>
+&nbsp;								}
+&nbsp;							} else {
+<b class="nc">&nbsp;								zi2 = zList.listIterator(ziEnd);</b>
+<b class="nc">&nbsp;								for(zc=ziEnd-1; zc&gt;=ziStart; --zc) {</b>
+<b class="nc">&nbsp;									z = zi2.previous();</b>
+<b class="nc">&nbsp;									lineInternal(maxPulseNow,z,line,zc*iterStepSize);</b>
+&nbsp;								}
+&nbsp;							}
+<b class="nc">&nbsp;							direction=-direction;</b>
+&nbsp;						}
+&nbsp;					}
+&nbsp;					// reset to go again.
+<b class="nc">&nbsp;					ziStart = -1;</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	protected void lineInternal(double maxPulseNow,double z,LineInterpolator line,double t) {
+<b class="nc">&nbsp;		double pulseSize = maxPulseNow * z;</b>
+<b class="nc">&nbsp;		Point2D p = new Point2D();</b>
+<b class="nc">&nbsp;		Point2D n = new Point2D();</b>
+<b class="nc">&nbsp;		line.getPoint(t, p);</b>
+<b class="nc">&nbsp;		line.getNormal(t, n);</b>
+<b class="nc">&nbsp;		double x=myPaper.getCenterX()+p.x + n.x*pulseSize;</b>
+<b class="nc">&nbsp;		double y=myPaper.getCenterY()+p.y + n.y*pulseSize;</b>
+<b class="nc">&nbsp;		turtle.moveTo(x,y);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void start(Paper paper, TransformedImage image) {
+<b class="nc">&nbsp;		super.start(paper, image);</b>
+&nbsp;
+<b class="nc">&nbsp;		FilterDesaturate bw = new FilterDesaturate(myImage);</b>
+<b class="nc">&nbsp;		TransformedImage img = bw.filter();</b>
+&nbsp;
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double xLeft   = rect.getMinX();</b>
+<b class="nc">&nbsp;		double yBottom = rect.getMinY();</b>
+<b class="nc">&nbsp;		double xRight  = rect.getMaxX();</b>
+<b class="nc">&nbsp;		double yTop    = rect.getMaxY();</b>
+&nbsp;
+<b class="nc">&nbsp;		double h=yTop-yBottom;</b>
+<b class="nc">&nbsp;		double w=xRight-xLeft;</b>
+&nbsp;		
+&nbsp;		// figure out how many lines we&#39;re going to have on this image.
+<b class="nc">&nbsp;		double halfStep = 1;</b>
+<b class="nc">&nbsp;		double spaceBetweenLines = blockScale;</b>
+&nbsp;
+&nbsp;		// from top to bottom of the image...
+<b class="nc">&nbsp;		Point2D a = new Point2D();</b>
+<b class="nc">&nbsp;		Point2D b = new Point2D();</b>
+&nbsp;		
+<b class="nc">&nbsp;		turtle = new Turtle();</b>
+&nbsp;
+<b class="nc">&nbsp;		if (direction == 0) {</b>
+&nbsp;			// horizontal
+<b class="nc">&nbsp;			yBottom -= h;</b>
+<b class="nc">&nbsp;			yTop    += h;</b>
+<b class="nc">&nbsp;			for (double y = yBottom; y &lt; yTop; y += spaceBetweenLines) {</b>
+<b class="nc">&nbsp;				a.set(xRight,y);</b>
+<b class="nc">&nbsp;				b.set(xLeft,y);</b>
+<b class="nc">&nbsp;				convertLine(img,spaceBetweenLines,halfStep,a,b);</b>
+&nbsp;			}
+&nbsp;		} else {
+&nbsp;			// vertical
+<b class="nc">&nbsp;			xLeft  -= w;</b>
+<b class="nc">&nbsp;			xRight += w;</b>
+<b class="nc">&nbsp;			for (double x = xLeft; x &lt; xRight; x += spaceBetweenLines) {</b>
+<b class="nc">&nbsp;				a.set(x,yTop);</b>
+<b class="nc">&nbsp;				b.set(x,yBottom);</b>
+<b class="nc">&nbsp;				convertLine(img,spaceBetweenLines,halfStep,a,b);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		fireConversionFinished();</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

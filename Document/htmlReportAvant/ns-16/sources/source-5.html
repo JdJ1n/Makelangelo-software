@@ -1,0 +1,242 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Generator_Package</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.turtlegenerator</a>
+</div>
+
+<h1>Coverage Summary for Class: Generator_Package (com.marginallyclever.makelangelo.makeart.turtlegenerator)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Generator_Package</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    35.7%
+  </span>
+  <span class="absValue">
+    (5/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    20.9%
+  </span>
+  <span class="absValue">
+    (14/67)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+&nbsp;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectInteger;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;/**
+&nbsp; * Draws a paper cutting pattern for a box.
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class Generator_Package extends TurtleGenerator {
+<b class="fc">&nbsp;	private int width=200;</b>
+<b class="fc">&nbsp;	private int length=200;</b>
+<b class="fc">&nbsp;	private int height=100;</b>
+&nbsp;
+&nbsp;	public Generator_Package() {
+<b class="fc">&nbsp;		super();</b>
+&nbsp;
+&nbsp;		SelectInteger width;
+&nbsp;		SelectInteger length;
+&nbsp;		SelectInteger height;
+&nbsp;
+<b class="fc">&nbsp;		add(width = new SelectInteger(&quot;width&quot;,Translator.get(&quot;Width&quot;),getLastWidth()));</b>
+<b class="fc">&nbsp;		width.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setWidth(((Number)width.getValue()).intValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(height = new SelectInteger(&quot;height&quot;,Translator.get(&quot;Height&quot;),getLastHeight()));</b>
+<b class="fc">&nbsp;		height.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setHeight(((Number)height.getValue()).intValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+<b class="fc">&nbsp;		add(length = new SelectInteger(&quot;length&quot;,Translator.get(&quot;Length&quot;),getLastLength()));</b>
+<b class="fc">&nbsp;		length.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setLength(((Number)length.getValue()).intValue());</b>
+<b class="nc">&nbsp;			generate();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="fc">&nbsp;		return Translator.get(&quot;Package&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	void drawRect(Turtle turtle,int x1,int y1,int x2,int y2) {
+<b class="nc">&nbsp;		turtle.moveTo(x1,y1);</b>
+<b class="nc">&nbsp;		turtle.penDown();</b>
+<b class="nc">&nbsp;		turtle.moveTo(x2,y1);</b>
+<b class="nc">&nbsp;		turtle.moveTo(x2,y2);</b>
+<b class="nc">&nbsp;		turtle.moveTo(x1,y2);</b>
+<b class="nc">&nbsp;		turtle.moveTo(x1,y1);</b>
+<b class="nc">&nbsp;		turtle.penUp();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	void drawLine(Turtle turtle,int x1,int y1,int x2,int y2) {
+<b class="nc">&nbsp;		turtle.moveTo(x1,y1);</b>
+<b class="nc">&nbsp;		turtle.penDown();</b>
+<b class="nc">&nbsp;		turtle.moveTo(x2,y2);</b>
+<b class="nc">&nbsp;		turtle.penUp();</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void generate() {
+<b class="nc">&nbsp;		int ytot=2*width+3*height+20;</b>
+<b class="nc">&nbsp;		int xtot=length+2*height;</b>
+&nbsp;		
+<b class="nc">&nbsp;		int x1=-xtot/2;</b>
+<b class="nc">&nbsp;		int x2=x1+height;</b>
+<b class="nc">&nbsp;		int x3=x2+length;</b>
+<b class="nc">&nbsp;		int x4=x3+height;</b>
+&nbsp;		
+<b class="nc">&nbsp;		int y1=-ytot/2;</b>
+<b class="nc">&nbsp;		int y2=y1+20;</b>
+<b class="nc">&nbsp;		int y3=y2+width;</b>
+<b class="nc">&nbsp;		int y4=y3+height;</b>
+<b class="nc">&nbsp;		int y5=y4+width;</b>
+<b class="nc">&nbsp;		int y6=y5+height;</b>
+<b class="nc">&nbsp;		int y7=y6+height+5;</b>
+&nbsp;		
+&nbsp;
+<b class="nc">&nbsp;		Turtle turtle = new Turtle();</b>
+<b class="nc">&nbsp;		turtle.penUp();</b>
+&nbsp;		// show extent
+<b class="nc">&nbsp;		turtle.moveTo(x1,y1);</b>
+<b class="nc">&nbsp;		turtle.moveTo(x4,y1);</b>
+<b class="nc">&nbsp;		turtle.moveTo(x4,y7);</b>
+<b class="nc">&nbsp;		turtle.moveTo(x1,y7);</b>
+<b class="nc">&nbsp;		turtle.moveTo(x1,y1);</b>
+&nbsp;		// start drawing
+&nbsp;
+<b class="nc">&nbsp;		drawRect(turtle,x2,y2,x3,y7);</b>
+<b class="nc">&nbsp;		drawRect(turtle,x1,y3,x4,y6);</b>
+&nbsp;
+<b class="nc">&nbsp;		drawLine(turtle,x1,y4,x4,y4);</b>
+<b class="nc">&nbsp;		drawLine(turtle,x1,y5,x4,y5);</b>
+&nbsp;		
+<b class="nc">&nbsp;		drawLine(turtle,x1,y3,x2,y4); // 4 diags</b>
+<b class="nc">&nbsp;		drawLine(turtle,x3,y5,x4,y6);</b>
+<b class="nc">&nbsp;		drawLine(turtle,x1,y6,x2,y5);</b>
+<b class="nc">&nbsp;		drawLine(turtle,x3,y4,x4,y3);</b>
+&nbsp;
+<b class="nc">&nbsp;		drawRect(turtle,x2+20,y6-1,x3-20,y6+1); // lasche</b>
+<b class="nc">&nbsp;		drawRect(turtle,x2,y5-1,x3,y5+1); // lasche</b>
+<b class="nc">&nbsp;		drawRect(turtle,x2+20,y1,x3-20,y2); // lasche</b>
+&nbsp;
+<b class="nc">&nbsp;		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</b>
+&nbsp;
+<b class="nc">&nbsp;		notifyListeners(turtle);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	
+&nbsp;	public int getLastWidth() {
+<b class="fc">&nbsp;		return width;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public int getLastHeight() {
+<b class="fc">&nbsp;		return height;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public int getLastLength() {
+<b class="fc">&nbsp;		return length;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setWidth(int intValue) {
+<b class="nc">&nbsp;		this.width=intValue;</b>
+&nbsp;		
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setHeight(int intValue) {
+<b class="nc">&nbsp;		this.height=intValue;</b>
+&nbsp;		
+&nbsp;	}
+&nbsp;	public void setLength(int intValue) {
+<b class="nc">&nbsp;		this.length=intValue;</b>
+&nbsp;		
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

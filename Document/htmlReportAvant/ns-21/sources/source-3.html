@@ -1,0 +1,360 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > PlotterSettingsManagerPanel</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.plotter.plottersettings</a>
+</div>
+
+<h1>Coverage Summary for Class: PlotterSettingsManagerPanel (com.marginallyclever.makelangelo.plotter.plottersettings)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PlotterSettingsManagerPanel</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/75)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">PlotterSettingsManagerPanel$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">PlotterSettingsManagerPanel$2</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/79)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.plotter.plottersettings;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.CommandLineOptions;
+&nbsp;import com.marginallyclever.convenience.log.Log;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.plotter.Plotter;
+&nbsp;import com.marginallyclever.util.PreferencesHelper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.swing.*;
+&nbsp;import javax.swing.border.BevelBorder;
+&nbsp;import java.awt.*;
+&nbsp;import java.util.Collection;
+&nbsp;
+&nbsp;/**
+&nbsp; * {@link PlotterSettingsManagerPanel} manages the list of available machine configurations.
+&nbsp; * A single machine configuration must be loaded into the active {@link Plotter} at any given time. 
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class PlotterSettingsManagerPanel extends JPanel {
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(PlotterSettingsManagerPanel.class);</b>
+&nbsp;
+&nbsp;	private final PlotterSettingsManager plotterSettingsManager;
+<b class="nc">&nbsp;	private final DefaultComboBoxModel&lt;String&gt; model = new DefaultComboBoxModel&lt;&gt;();</b>
+<b class="nc">&nbsp;	private final JComboBox&lt;String&gt; configurationList = new JComboBox&lt;&gt;(model);</b>
+<b class="nc">&nbsp;	private final JPanel container = new JPanel(new BorderLayout());</b>
+<b class="nc">&nbsp;	private PlotterSettingsPanel plotterSettingsPanel = null;</b>
+&nbsp;	private PlotterSettingsListener listener;
+&nbsp;
+&nbsp;	public PlotterSettingsManagerPanel(PlotterSettingsManager plotterSettingsManager) {
+<b class="nc">&nbsp;		super(new BorderLayout());</b>
+<b class="nc">&nbsp;		this.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));</b>
+<b class="nc">&nbsp;		this.plotterSettingsManager = plotterSettingsManager;</b>
+&nbsp;
+<b class="nc">&nbsp;		model.addAll(plotterSettingsManager.getProfileNames());</b>
+&nbsp;
+<b class="nc">&nbsp;		Component topButtons = createTopButtons();</b>
+<b class="nc">&nbsp;		this.add(topButtons,BorderLayout.NORTH);</b>
+<b class="nc">&nbsp;		this.add(container,BorderLayout.CENTER);</b>
+<b class="nc">&nbsp;		container.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));</b>
+&nbsp;
+<b class="nc">&nbsp;		configurationList.setName(&quot;configurationList&quot;);</b>
+<b class="nc">&nbsp;		configurationList.addActionListener((e)-&gt;changeProfile());</b>
+<b class="nc">&nbsp;		if(model.getSize()&gt;0) {</b>
+<b class="nc">&nbsp;			PlotterSettings lastSelectedProfile = plotterSettingsManager.getLastSelectedProfile();</b>
+<b class="nc">&nbsp;			model.setSelectedItem(lastSelectedProfile.getUID());</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private Component createTopButtons() {
+<b class="nc">&nbsp;		JPanel topButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));</b>
+<b class="nc">&nbsp;		topButtons.add(configurationList);</b>
+<b class="nc">&nbsp;		JButton add = new JButton(new AbstractAction(Translator.get(&quot;PlotterSettingsManagerPanel.AddProfile&quot;)) {</b>
+&nbsp;			@Override
+&nbsp;			public void actionPerformed(java.awt.event.ActionEvent e) {
+&nbsp;				// copy the current profile and rename the new instance.
+<b class="nc">&nbsp;				runRenameProfileDialog((String)model.getSelectedItem());</b>
+&nbsp;			}
+&nbsp;		});
+<b class="nc">&nbsp;		add.setName(&quot;addProfile&quot;);</b>
+<b class="nc">&nbsp;		topButtons.add(add);</b>
+&nbsp;
+<b class="nc">&nbsp;		JButton remove = new JButton(new AbstractAction(Translator.get(&quot;PlotterSettingsManagerPanel.RemoveProfile&quot;)) {</b>
+&nbsp;			@Override
+&nbsp;			public void actionPerformed(java.awt.event.ActionEvent e) {
+<b class="nc">&nbsp;				deleteProfile((String)model.getSelectedItem());</b>
+&nbsp;			}
+&nbsp;		});
+<b class="nc">&nbsp;		add.setName(&quot;removeProfile&quot;);</b>
+<b class="nc">&nbsp;		topButtons.add(remove);</b>
+&nbsp;
+<b class="nc">&nbsp;		return topButtons;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void runRenameProfileDialog(String uid) {
+&nbsp;		boolean goAgain;
+&nbsp;
+&nbsp;		do {
+<b class="nc">&nbsp;			String newUID = JOptionPane.showInputDialog(this, Translator.get(&quot;PlotterSettingsManagerPanel.NewProfileName&quot;), uid);</b>
+<b class="nc">&nbsp;			if( newUID.isEmpty() || newUID.isBlank() ) {</b>
+<b class="nc">&nbsp;				JOptionPane.showMessageDialog(this, Translator.get(&quot;PlotterSettingsManagerPanel.NewProfileNameCannotBeBlank&quot;));</b>
+<b class="nc">&nbsp;				goAgain = true;</b>
+&nbsp;			}
+<b class="nc">&nbsp;			if( nameIsTaken(newUID) ) {</b>
+<b class="nc">&nbsp;				JOptionPane.showMessageDialog(this, Translator.get(&quot;PlotterSettingsManagerPanel.NewProfileNameAlreadyExists&quot;));</b>
+<b class="nc">&nbsp;				goAgain = true;</b>
+&nbsp;			} else {
+&nbsp;				// found a unique name.  try to update the backing store.
+<b class="nc">&nbsp;				goAgain = copyAndRenameProfile(uid,newUID);</b>
+&nbsp;			}
+<b class="nc">&nbsp;		} while(goAgain);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Creates a copy of the current profile, changes the RobotUID, and saves it as a new instance.  Does not change the
+&nbsp;	 * old profile.
+&nbsp;	 *
+&nbsp;	 * @param oldUID the name of the profile to copy
+&nbsp;	 * @param newUID the name of the new profile
+&nbsp;	 * @return true if there was a problem.
+&nbsp;	 */
+&nbsp;	private boolean copyAndRenameProfile(String oldUID, String newUID) {
+<b class="nc">&nbsp;		plotterSettingsManager.saveAs(oldUID,newUID);</b>
+&nbsp;		// in with the new
+<b class="nc">&nbsp;		model.addElement(newUID);</b>
+<b class="nc">&nbsp;		model.setSelectedItem(newUID);</b>
+<b class="nc">&nbsp;		return false;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Checks if the given name is already in use.
+&nbsp;	 * @param newUID the name to check
+&nbsp;	 * @return true if the name is already in use.
+&nbsp;	 */
+&nbsp;	private boolean nameIsTaken(String newUID) {
+<b class="nc">&nbsp;		Collection&lt;String&gt; list = plotterSettingsManager.getProfileNames();</b>
+<b class="nc">&nbsp;		return list.contains(newUID);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void deleteProfile(String uid) {
+<b class="nc">&nbsp;		PlotterSettings me = new PlotterSettings(uid);</b>
+<b class="nc">&nbsp;		String ancestorName = me.getString(PlotterSettings.ANCESTOR);</b>
+<b class="nc">&nbsp;		if(!plotterSettingsManager.deleteProfile(uid)) {</b>
+<b class="nc">&nbsp;			model.removeElement(uid);</b>
+<b class="nc">&nbsp;			model.setSelectedItem(ancestorName);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Swap the active profile.
+&nbsp;	 */
+&nbsp;	private void changeProfile() {
+<b class="nc">&nbsp;		String name = (String)configurationList.getSelectedItem();</b>
+<b class="nc">&nbsp;		if(name!=null) {</b>
+<b class="nc">&nbsp;			logger.debug(&quot;changing profile to {}&quot;,name);</b>
+<b class="nc">&nbsp;			if(plotterSettingsPanel!=null) {</b>
+<b class="nc">&nbsp;				this.remove(plotterSettingsPanel);</b>
+&nbsp;			}
+<b class="nc">&nbsp;			plotterSettingsManager.setLastSelectedProfile(name);</b>
+<b class="nc">&nbsp;			PlotterSettings plotterSettings = new PlotterSettings(name);</b>
+<b class="nc">&nbsp;			plotterSettingsPanel = new PlotterSettingsPanel(plotterSettings);</b>
+<b class="nc">&nbsp;			container.add(plotterSettingsPanel,BorderLayout.CENTER);</b>
+<b class="nc">&nbsp;			this.revalidate();</b>
+<b class="nc">&nbsp;			plotterSettingsPanel.addListener(this::firePlotterSettingsChanged);</b>
+<b class="nc">&nbsp;			firePlotterSettingsChanged(plotterSettings);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Add a listener to be notified when the settings change.
+&nbsp;	 * @param listener the listener to add
+&nbsp;	 */
+&nbsp;	public void addListener(PlotterSettingsListener listener) {
+<b class="nc">&nbsp;		this.listener = listener;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Fire a settings changed event.
+&nbsp;	 * @param settings the new settings
+&nbsp;	 */
+&nbsp;	private void firePlotterSettingsChanged(PlotterSettings settings) {
+<b class="nc">&nbsp;		if(listener!=null) {</b>
+<b class="nc">&nbsp;			listener.settingsChangedEvent(settings);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Test the PlotterSettingsManagerPanel
+&nbsp;	 * @param args not used
+&nbsp;	 */
+&nbsp;	public static void main(String[] args) {
+<b class="nc">&nbsp;		Log.start();</b>
+<b class="nc">&nbsp;		PreferencesHelper.start();</b>
+<b class="nc">&nbsp;		CommandLineOptions.setFromMain(args);</b>
+<b class="nc">&nbsp;		Translator.start();</b>
+&nbsp;
+&nbsp;		try {
+<b class="nc">&nbsp;			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());</b>
+<b class="nc">&nbsp;		} catch (Exception ex) {</b>
+<b class="nc">&nbsp;			logger.warn(&quot;failed to set native look and feel.&quot;, ex);</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		JFrame frame = new JFrame(PlotterSettingsManagerPanel.class.getSimpleName());</b>
+<b class="nc">&nbsp;		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);</b>
+<b class="nc">&nbsp;		frame.add(new PlotterSettingsManagerPanel(new PlotterSettingsManager()));</b>
+<b class="nc">&nbsp;		frame.setMinimumSize(new Dimension(350,300));</b>
+<b class="nc">&nbsp;		frame.pack();</b>
+<b class="nc">&nbsp;		frame.setVisible(true);</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

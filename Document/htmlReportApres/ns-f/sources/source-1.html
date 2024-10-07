@@ -1,0 +1,425 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > AVRDudeDownloader</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.firmwareuploader</a>
+</div>
+
+<h1>Coverage Summary for Class: AVRDudeDownloader (com.marginallyclever.makelangelo.firmwareuploader)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AVRDudeDownloader</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/82)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/150)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.firmwareuploader;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.helpers.OSHelper;
+&nbsp;import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+&nbsp;import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+&nbsp;import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+&nbsp;import org.apache.http.HttpResponse;
+&nbsp;import org.apache.http.client.methods.CloseableHttpResponse;
+&nbsp;import org.apache.http.client.methods.HttpGet;
+&nbsp;import org.apache.http.impl.client.CloseableHttpClient;
+&nbsp;import org.apache.http.impl.client.HttpClients;
+&nbsp;import org.apache.http.util.EntityUtils;
+&nbsp;import org.json.JSONArray;
+&nbsp;import org.json.JSONObject;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.net.URL;
+&nbsp;import java.nio.file.Files;
+&nbsp;import java.nio.file.Path;
+&nbsp;import java.nio.file.Paths;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.zip.ZipEntry;
+&nbsp;import java.util.zip.ZipInputStream;
+&nbsp;
+<b class="nc">&nbsp;public class AVRDudeDownloader {</b>
+<b class="nc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(AVRDudeDownloader.class);</b>
+&nbsp;    public static final String WINDOWS = &quot;mingw&quot;;
+&nbsp;    public static final String LINUX = &quot;linux&quot;;
+&nbsp;    public static final String MACOS = &quot;apple&quot;;
+&nbsp;    private static final String ARDUINO_PACKAGE_INDEX = &quot;https://downloads.arduino.cc/packages/package_index.json&quot;;
+&nbsp;
+&nbsp;    public static void main(String[] args) throws IOException {
+<b class="nc">&nbsp;        downloadAVRDude(getArch());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Download AVRDude for the current OS architecture.
+&nbsp;     * @return the path to the extracted avrdude executable.
+&nbsp;     * @throws IOException if the download fails.
+&nbsp;     */
+&nbsp;    public static String downloadAVRDude() throws IOException {
+<b class="nc">&nbsp;        return downloadAVRDude(getArch());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Download AVRDude for the given OS architecture.
+&nbsp;     * @param arch one of WINDOWS, LINUX, MACOS
+&nbsp;     * @return the path to the extracted avrdude executable.
+&nbsp;     * @throws IOException if the download fails.
+&nbsp;     */
+&nbsp;    public static String downloadAVRDude(String arch) throws IOException {
+<b class="nc">&nbsp;        String url = getURLforOS(arch);</b>
+<b class="nc">&nbsp;        if (url != null) {</b>
+&nbsp;            try {
+<b class="nc">&nbsp;                return downloadAndExtract(url);</b>
+<b class="nc">&nbsp;            } catch (IOException e) {</b>
+<b class="nc">&nbsp;                logger.error(&quot;Error downloading avrdude&quot;, e);</b>
+<b class="nc">&nbsp;                throw e;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String getArch() {
+<b class="nc">&nbsp;        String arch = LINUX;</b>
+<b class="nc">&nbsp;        if (OSHelper.isWindows()) arch = WINDOWS;</b>
+<b class="nc">&nbsp;        if (OSHelper.isOSX()) arch = MACOS;</b>
+<b class="nc">&nbsp;        return arch;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param arch one of WINDOWS, LINUX, MACOS
+&nbsp;     * @return URL to download the latest avrdude package for the given OS.
+&nbsp;     * @throws IOException
+&nbsp;     */
+&nbsp;    public static String getURLforOS(String arch) throws IOException {
+<b class="nc">&nbsp;        JSONObject jsonObject = getJSONFromURL(ARDUINO_PACKAGE_INDEX);</b>
+<b class="nc">&nbsp;        JSONObject arduinoPackage = getPackageNamedArduino(jsonObject);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (arduinoPackage != null) {</b>
+<b class="nc">&nbsp;            JSONObject avrdudeTool = getLastToolNamedAVRDude(arduinoPackage);</b>
+<b class="nc">&nbsp;            if (avrdudeTool != null) {</b>
+<b class="nc">&nbsp;                JSONObject system = getSystemForHost(avrdudeTool, arch);</b>
+<b class="nc">&nbsp;                if (system != null) {</b>
+<b class="nc">&nbsp;                    return system.getString(&quot;url&quot;);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Search the systems list for the one where host contains the given architecture.
+&nbsp;     * @param jsonObject the avrdude tool object
+&nbsp;     * @param arch the architecture to search for
+&nbsp;     * @return the system object that matches the given architecture
+&nbsp;     */
+&nbsp;    private static JSONObject getSystemForHost(JSONObject jsonObject, String arch) {
+<b class="nc">&nbsp;        JSONArray systems = jsonObject.getJSONArray(&quot;systems&quot;);</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; systems.length(); i++) {</b>
+<b class="nc">&nbsp;            JSONObject systemObject = systems.getJSONObject(i);</b>
+<b class="nc">&nbsp;            if (systemObject.getString(&quot;host&quot;).contains(arch)) {</b>
+<b class="nc">&nbsp;                return systemObject;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Search the arduinoPackage for element with name=avrdude.  the last item is the latest release.
+&nbsp;     * @param arduinoPackage the package to search
+&nbsp;     * @return the last item in the tools list with name=avrdude
+&nbsp;     */
+&nbsp;    private static JSONObject getLastToolNamedAVRDude(JSONObject arduinoPackage) {
+<b class="nc">&nbsp;        JSONArray tools = arduinoPackage.getJSONArray(&quot;tools&quot;);</b>
+<b class="nc">&nbsp;        JSONObject avrdudeTool = null;</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; tools.length(); i++) {</b>
+<b class="nc">&nbsp;            JSONObject toolObject = tools.getJSONObject(i);</b>
+<b class="nc">&nbsp;            if (toolObject.getString(&quot;name&quot;).equals(&quot;avrdude&quot;)) {</b>
+<b class="nc">&nbsp;                avrdudeTool = toolObject;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return avrdudeTool;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // find the element in packages with name=arduino
+&nbsp;    private static JSONObject getPackageNamedArduino(JSONObject jsonObject) {
+<b class="nc">&nbsp;        JSONArray packages = jsonObject.getJSONArray(&quot;packages&quot;);</b>
+<b class="nc">&nbsp;        JSONObject arduinoPackage = null;</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; packages.length(); i++) {</b>
+<b class="nc">&nbsp;            JSONObject packageObject = packages.getJSONObject(i);</b>
+<b class="nc">&nbsp;            if (packageObject.getString(&quot;name&quot;).equals(&quot;arduino&quot;)) {</b>
+<b class="nc">&nbsp;                arduinoPackage = packageObject;</b>
+&nbsp;                break;
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return arduinoPackage;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static JSONObject getJSONFromURL(String url) throws IOException {
+<b class="nc">&nbsp;        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {</b>
+<b class="nc">&nbsp;            HttpGet httpGet = new HttpGet(url);</b>
+<b class="nc">&nbsp;            HttpResponse httpResponse = httpClient.execute(httpGet);</b>
+<b class="nc">&nbsp;            String json = EntityUtils.toString(httpResponse.getEntity());</b>
+<b class="nc">&nbsp;            return new JSONObject(json);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String downloadAndExtract(String urlStr) throws IOException {
+<b class="nc">&nbsp;        File toDeleteLater = downloadFileToTemp(urlStr);</b>
+<b class="nc">&nbsp;        String path = extractFile(toDeleteLater, urlStr);</b>
+<b class="nc">&nbsp;        logger.info(&quot;new path: &quot;+path);</b>
+<b class="nc">&nbsp;        makeExecutable(path);</b>
+&nbsp;
+<b class="nc">&nbsp;        return path;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void makeExecutable(String targetPath) throws IOException {
+<b class="nc">&nbsp;        String app = &quot;avrdude&quot;;</b>
+<b class="nc">&nbsp;        if(OSHelper.isWindows()) app+=&quot;.exe&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;        File avrDudeFile = tryPath(Paths.get(targetPath, app));</b>
+<b class="nc">&nbsp;        if(!avrDudeFile.exists()) avrDudeFile = tryPath(Paths.get(targetPath, &quot;bin&quot;, app));</b>
+<b class="nc">&nbsp;        if(!avrDudeFile.exists()) {</b>
+<b class="nc">&nbsp;            throw new IOException(&quot;File &quot; + app + &quot; does not exist&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if(!avrDudeFile.setExecutable(true)) {</b>
+<b class="nc">&nbsp;            throw new IOException(&quot;Could not set executable permissions for &quot; + avrDudeFile.getAbsolutePath());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static File tryPath(Path avrdudePath) {
+<b class="nc">&nbsp;        logger.info(&quot;trying path: &quot; + avrdudePath.toAbsolutePath());</b>
+<b class="nc">&nbsp;        return avrdudePath.toFile();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static File downloadFileToTemp(String urlStr) throws IOException {
+<b class="nc">&nbsp;        logger.info(&quot;download from: &quot; + urlStr);</b>
+<b class="nc">&nbsp;        URL url = new URL(urlStr);</b>
+<b class="nc">&nbsp;        String fileExtension = getFileExtension(url.getPath());</b>
+<b class="nc">&nbsp;        File toDeleteLater = File.createTempFile(&quot;download&quot;, fileExtension);</b>
+<b class="nc">&nbsp;        toDeleteLater.deleteOnExit();</b>
+<b class="nc">&nbsp;        Path tempFile = toDeleteLater.toPath();</b>
+<b class="nc">&nbsp;        logger.info(&quot;temp file: &quot; + tempFile);</b>
+&nbsp;
+<b class="nc">&nbsp;        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {</b>
+<b class="nc">&nbsp;            HttpGet httpGet = new HttpGet(urlStr);</b>
+<b class="nc">&nbsp;            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {</b>
+<b class="nc">&nbsp;                try (InputStream inputStream = response.getEntity().getContent();</b>
+<b class="nc">&nbsp;                     OutputStream outputStream = new FileOutputStream(tempFile.toFile())) {</b>
+<b class="nc">&nbsp;                    byte[] buffer = new byte[4096];</b>
+&nbsp;                    int len;
+<b class="nc">&nbsp;                    while ((len = inputStream.read(buffer)) != -1) {</b>
+<b class="nc">&nbsp;                        outputStream.write(buffer, 0, len);</b>
+&nbsp;                    }
+<b class="nc">&nbsp;                }</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return toDeleteLater;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String extractFile(File toDeleteLater, String urlStr) throws IOException {
+<b class="nc">&nbsp;        String targetDirStr = System.getProperty(&quot;user.home&quot;) + File.separator + &quot;.makelangelo&quot; + File.separator;</b>
+<b class="nc">&nbsp;        String newFolderName = &quot;&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (urlStr.endsWith(&quot;.zip&quot;)) {</b>
+<b class="nc">&nbsp;            logger.info(&quot;Extracting zip file&quot;);</b>
+<b class="nc">&nbsp;            newFolderName = extractZipFile(toDeleteLater, targetDirStr);</b>
+<b class="nc">&nbsp;        } else if (urlStr.endsWith(&quot;.tar.bz2&quot;)) {</b>
+<b class="nc">&nbsp;            logger.info(&quot;Extracting tar.bz2 file&quot;);</b>
+<b class="nc">&nbsp;            newFolderName = extractTarBz2File(toDeleteLater, targetDirStr);</b>
+<b class="nc">&nbsp;        } else if (urlStr.endsWith(&quot;.bz2&quot;)) {</b>
+<b class="nc">&nbsp;            logger.info(&quot;Extracting bz2 file&quot;);</b>
+<b class="nc">&nbsp;            newFolderName = extractBz2File(toDeleteLater, targetDirStr);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if(!newFolderName.isEmpty()) {</b>
+<b class="nc">&nbsp;            newFolderName = targetDirStr + newFolderName;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return newFolderName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String getFileExtension(String fileName) {
+<b class="nc">&nbsp;        int dotIndex = fileName.lastIndexOf(&#39;.&#39;);</b>
+<b class="nc">&nbsp;        return (dotIndex == -1) ? &quot;&quot; : fileName.substring(dotIndex);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String extractZipFile(File file, String targetDirStr) throws IOException {
+<b class="nc">&nbsp;        try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(file))) {</b>
+<b class="nc">&nbsp;            ZipEntry entry = zipIn.getNextEntry();</b>
+<b class="nc">&nbsp;            String newFolderName = &quot;&quot;;</b>
+<b class="nc">&nbsp;            while (entry != null) {</b>
+<b class="nc">&nbsp;                Path filePath = Paths.get(targetDirStr, entry.getName());</b>
+<b class="nc">&nbsp;                if (entry.isDirectory()) {</b>
+<b class="nc">&nbsp;                    Files.createDirectories(filePath);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    Files.createDirectories(filePath.getParent());</b>
+<b class="nc">&nbsp;                    try (OutputStream outputStream = new FileOutputStream(filePath.toFile())) {</b>
+<b class="nc">&nbsp;                        byte[] buffer = new byte[4096];</b>
+&nbsp;                        int len;
+<b class="nc">&nbsp;                        while ((len = zipIn.read(buffer)) &gt; -1) {</b>
+<b class="nc">&nbsp;                            outputStream.write(buffer, 0, len);</b>
+&nbsp;                        }
+<b class="nc">&nbsp;                    }</b>
+&nbsp;                }
+<b class="nc">&nbsp;                zipIn.closeEntry();</b>
+<b class="nc">&nbsp;                if (newFolderName.isEmpty() &amp;&amp; entry.isDirectory()) {</b>
+<b class="nc">&nbsp;                    newFolderName = entry.getName();</b>
+&nbsp;                }
+<b class="nc">&nbsp;                entry = zipIn.getNextEntry();</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return newFolderName;</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String extractBz2File(File file, String targetDirStr) throws IOException {
+<b class="nc">&nbsp;        try (BZip2CompressorInputStream bzIn = new BZip2CompressorInputStream(new FileInputStream(file))) {</b>
+<b class="nc">&nbsp;            Path targetFilePath = Paths.get(targetDirStr, file.getName().replace(&quot;.bz2&quot;, &quot;&quot;));</b>
+<b class="nc">&nbsp;            Files.createDirectories(targetFilePath.getParent());</b>
+<b class="nc">&nbsp;            try (OutputStream outputStream = new FileOutputStream(targetFilePath.toFile())) {</b>
+<b class="nc">&nbsp;                byte[] buffer = new byte[4096];</b>
+&nbsp;                int len;
+<b class="nc">&nbsp;                while ((len = bzIn.read(buffer)) &gt; -1) {</b>
+<b class="nc">&nbsp;                    outputStream.write(buffer, 0, len);</b>
+&nbsp;                }
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;            return targetFilePath.getFileName().toString();</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String extractTarBz2File(File file, String targetDirStr) throws IOException {
+<b class="nc">&nbsp;        try (BZip2CompressorInputStream bzIn = new BZip2CompressorInputStream(new FileInputStream(file));</b>
+<b class="nc">&nbsp;             TarArchiveInputStream tarIn = new TarArchiveInputStream(bzIn)) {</b>
+&nbsp;            TarArchiveEntry entry;
+<b class="nc">&nbsp;            String newFolderName = &quot;&quot;;</b>
+<b class="nc">&nbsp;            while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {</b>
+<b class="nc">&nbsp;                Path filePath = Paths.get(targetDirStr, entry.getName());</b>
+<b class="nc">&nbsp;                if (entry.isDirectory()) {</b>
+<b class="nc">&nbsp;                    Files.createDirectories(filePath);</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    Files.createDirectories(filePath.getParent());</b>
+<b class="nc">&nbsp;                    try (OutputStream outputStream = new FileOutputStream(filePath.toFile())) {</b>
+<b class="nc">&nbsp;                        byte[] buffer = new byte[4096];</b>
+&nbsp;                        int len;
+<b class="nc">&nbsp;                        while ((len = tarIn.read(buffer)) &gt; -1) {</b>
+<b class="nc">&nbsp;                            outputStream.write(buffer, 0, len);</b>
+&nbsp;                        }
+<b class="nc">&nbsp;                    }</b>
+&nbsp;                }
+<b class="nc">&nbsp;                if (newFolderName.isEmpty()) {</b>
+<b class="nc">&nbsp;                    newFolderName = getFolderNameFromEntry(entry.getName());</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            return newFolderName;</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String getFolderNameFromEntry(String entryName) {
+<b class="nc">&nbsp;        String[] parts = entryName.split(&quot;/&quot;);</b>
+<b class="nc">&nbsp;        if (parts.length &gt; 1) {</b>
+<b class="nc">&nbsp;            return String.join(File.separator, Arrays.copyOfRange(parts, 0, parts.length - 1)) + File.separator;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return parts[0];</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

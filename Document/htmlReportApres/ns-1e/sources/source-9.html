@@ -1,0 +1,168 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > MarlinPanelEvent</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.plotter.plottercontrols</a>
+</div>
+
+<h1>Coverage Summary for Class: MarlinPanelEvent (com.marginallyclever.makelangelo.plotter.plottercontrols)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MarlinPanelEvent</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    85.7%
+  </span>
+  <span class="absValue">
+    (6/7)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.plotter.plottercontrols;
+&nbsp;
+&nbsp;/**
+&nbsp; * MarlinInterface sends this to let listeners know about important events.
+&nbsp; */
+&nbsp;public class MarlinPanelEvent {
+&nbsp;    /**
+&nbsp;     * MarlinInterface sends this to let listeners know it is ready to receive more commands.
+&nbsp;     */
+&nbsp;    public static final int IDLE = 1;
+&nbsp;    /**
+&nbsp;     * MarlinInterface sends this to let listeners know a generic error occurred.
+&nbsp;     */
+&nbsp;    public static final int ERROR = 2;
+&nbsp;    /**
+&nbsp;     * MarlinInterface sends this to let listeners know the robot demands to home first.
+&nbsp;     */
+&nbsp;    public static final int HOME_XY_FIRST = 3;
+&nbsp;    /**
+&nbsp;     * MarlinInterface sends this to let listeners know there is an error in the transmission.
+&nbsp;     * MarlinInterface contains a short history of commands that have been sent in case one needs to be resent.
+&nbsp;     * If the requested command is no longer in the history this error is sent.
+&nbsp;     */
+&nbsp;    public static final int DID_NOT_FIND = 4;
+&nbsp;    /**
+&nbsp;     * MarlinInterface sends this to let listeners know there is an action command.
+&nbsp;     * Action commands are used by the robot to request feedback from the user.
+&nbsp;     * Typical use for a plotter is a color change command.
+&nbsp;     */
+&nbsp;    public static final int ACTION_COMMAND = 5;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * MarlinInterface sends this to let listeners know there is no news from the robot.
+&nbsp;     * There should have been news and very likely the connection has failed.
+&nbsp;     */
+&nbsp;    public static final int COMMUNICATION_FAILURE = 6;
+&nbsp;    public static final String HALTED_COMMAND = &quot;Printer halted&quot;;
+&nbsp;    public static final String HOME_XY_COMMAND = &quot;homeXYFirst&quot;;
+&nbsp;    public static final String COMMUNICATION_COMMAND = &quot;communicationFailure&quot;;
+&nbsp;    public static final String DID_NOT_FIND_COMMAND = &quot;didNotFind&quot;;
+&nbsp;    public static final String IDLE_COMMAND = &quot;idle&quot;;
+&nbsp;
+&nbsp;    private final Object source;
+&nbsp;    private final int id;
+&nbsp;    private final String command;
+&nbsp;
+<b class="fc">&nbsp;    public MarlinPanelEvent(Object source, int id, String command) {</b>
+<b class="fc">&nbsp;        this.source = source;</b>
+<b class="fc">&nbsp;        this.id = id;</b>
+<b class="fc">&nbsp;        this.command = command;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getActionCommand() {
+<b class="fc">&nbsp;        return command;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getID() {
+<b class="fc">&nbsp;        return id;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Object getSource() {
+<b class="nc">&nbsp;        return source;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

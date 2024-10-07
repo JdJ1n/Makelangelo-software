@@ -1,0 +1,242 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Converter_Multipass</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imageconverter</a>
+</div>
+
+<h1>Coverage Summary for Class: Converter_Multipass (com.marginallyclever.makelangelo.makeart.imageconverter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Converter_Multipass</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/57)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imageconverter;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+&nbsp;import com.marginallyclever.makelangelo.paper.Paper;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectDouble;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectInteger;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * 
+&nbsp; * @author Dan Royer
+&nbsp; */
+&nbsp;public class Converter_Multipass extends ImageConverter {
+<b class="nc">&nbsp;	static private double angle=0;</b>
+<b class="nc">&nbsp;	static private int passes=4;</b>
+&nbsp;
+&nbsp;	public Converter_Multipass() {
+<b class="nc">&nbsp;		super();</b>
+&nbsp;
+<b class="nc">&nbsp;		SelectDouble  selectAngle = new SelectDouble(&quot;angle&quot;,Translator.get(&quot;ConverterMultipassAngle&quot;),getAngle());</b>
+<b class="nc">&nbsp;		SelectInteger selectLevel = new SelectInteger(&quot;level&quot;,Translator.get(&quot;ConverterMultipassLevels&quot;),getPasses());</b>
+&nbsp;
+<b class="nc">&nbsp;		add(selectAngle);</b>
+<b class="nc">&nbsp;		add(selectLevel);</b>
+&nbsp;
+<b class="nc">&nbsp;		selectAngle.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setAngle((double)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+&nbsp;
+<b class="nc">&nbsp;		selectLevel.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;			setPasses((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;			fireRestart();</b>
+&nbsp;		});
+&nbsp;	}
+&nbsp;	
+&nbsp;	@Override
+&nbsp;	public String getName() {
+<b class="nc">&nbsp;		return Translator.get(&quot;ConverterMultipassName&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public double getAngle() {
+<b class="nc">&nbsp;		return angle;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void setAngle(double value) {
+<b class="nc">&nbsp;		angle = value;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public int getPasses() {
+<b class="nc">&nbsp;		return passes;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void setPasses(int value) {
+<b class="nc">&nbsp;		if(passes&lt;1) passes=1;</b>
+<b class="nc">&nbsp;		passes=value;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * create parallel lines across the image.  Raise and lower the pen to darken the appropriate areas
+&nbsp;	 */
+&nbsp;	@Override
+&nbsp;	public void start(Paper paper, TransformedImage image) {
+<b class="nc">&nbsp;		super.start(paper, image);</b>
+&nbsp;
+&nbsp;		// The picture might be in color.  Smash it to 255 shades of grey.
+<b class="nc">&nbsp;		FilterDesaturate bw = new FilterDesaturate(myImage);</b>
+<b class="nc">&nbsp;		TransformedImage img = bw.filter();</b>
+&nbsp;		
+<b class="nc">&nbsp;		double dx = Math.cos(Math.toRadians(angle));</b>
+<b class="nc">&nbsp;		double dy = Math.sin(Math.toRadians(angle));</b>
+&nbsp;
+<b class="nc">&nbsp;		double stepSize = 1;</b>
+&nbsp;
+&nbsp;		// Color values are from 0...255 inclusive.  255 is white, 0 is black.
+&nbsp;		// Lift the pen any time the color value is &gt; level (128 or more).
+<b class="nc">&nbsp;		double level = 255.0 / (double)(passes+1);</b>
+&nbsp;
+&nbsp;		// from top to bottom of the margin area...
+<b class="nc">&nbsp;		Rectangle2D.Double rect = myPaper.getMarginRectangle();</b>
+<b class="nc">&nbsp;		double yBottom = rect.getMinY();</b>
+<b class="nc">&nbsp;		double yTop    = rect.getMaxY();</b>
+<b class="nc">&nbsp;		double xLeft   = rect.getMinX();</b>
+<b class="nc">&nbsp;		double xRight  = rect.getMaxX();</b>
+<b class="nc">&nbsp;		double height = yTop - yBottom;</b>
+<b class="nc">&nbsp;		double width = xRight - xLeft;</b>
+<b class="nc">&nbsp;		double maxLen = Math.sqrt(width*width+height*height);</b>
+<b class="nc">&nbsp;		double [] error0 = new double[(int)Math.ceil(maxLen)];</b>
+<b class="nc">&nbsp;		double [] error1 = new double[(int)Math.ceil(maxLen)];</b>
+&nbsp;
+<b class="nc">&nbsp;		turtle = new Turtle();</b>
+&nbsp;		
+<b class="nc">&nbsp;		boolean useError=false;</b>
+&nbsp;		
+<b class="nc">&nbsp;		int i=0;</b>
+<b class="nc">&nbsp;		for(double a = -maxLen;a&lt;maxLen;a+=stepSize) {</b>
+<b class="nc">&nbsp;			double px = dx * a;</b>
+<b class="nc">&nbsp;			double py = dy * a;</b>
+<b class="nc">&nbsp;			double x0 = px - dy * maxLen;</b>
+<b class="nc">&nbsp;			double y0 = py + dx * maxLen;</b>
+<b class="nc">&nbsp;			double x1 = px + dy * maxLen;</b>
+<b class="nc">&nbsp;			double y1 = py - dx * maxLen;</b>
+&nbsp;		
+<b class="nc">&nbsp;			double l2 = level * (1 + (i % passes));</b>
+<b class="nc">&nbsp;			if ((i % 2) == 0) {</b>
+<b class="nc">&nbsp;				if(!useError) convertAlongLine(x0, y0, x1, y1, stepSize, l2, img);</b>
+<b class="nc">&nbsp;				else convertAlongLineErrorTerms(x0,y0,x1,y1,stepSize,l2,error0,error1,img);</b>
+&nbsp;			} else {
+<b class="nc">&nbsp;				if(!useError) convertAlongLine(x1, y1, x0, y0, stepSize, l2, img);</b>
+<b class="nc">&nbsp;				else convertAlongLineErrorTerms(x1,y1,x0,y0,stepSize,l2,error0,error1,img);</b>
+&nbsp;			}
+<b class="nc">&nbsp;			for(int j=0;j&lt;error0.length;++j) {</b>
+<b class="nc">&nbsp;				error0[j]=error1[error0.length-1-j];</b>
+<b class="nc">&nbsp;				error1[error0.length-1-j]=0;</b>
+&nbsp;			}
+<b class="nc">&nbsp;			++i;</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		fireConversionFinished();</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

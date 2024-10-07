@@ -1,0 +1,439 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Converter_Voronoi</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imageconverter</a>
+</div>
+
+<h1>Coverage Summary for Class: Converter_Voronoi (com.marginallyclever.makelangelo.makeart.imageconverter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Converter_Voronoi</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/40)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/156)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imageconverter;
+&nbsp;
+&nbsp;import com.jogamp.opengl.GL2;
+&nbsp;import com.marginallyclever.convenience.voronoi.VoronoiCell;
+&nbsp;import com.marginallyclever.convenience.voronoi.VoronoiTesselator2;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+&nbsp;import com.marginallyclever.makelangelo.paper.Paper;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectBoolean;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectInteger;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectRandomSeed;
+&nbsp;import com.marginallyclever.makelangelo.select.SelectSlider;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import org.locationtech.jts.geom.*;
+&nbsp;import org.locationtech.jts.geom.prep.PreparedPolygon;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Random;
+&nbsp;
+&nbsp;/**
+&nbsp; * Shared methods for Voronoi converters
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.39.9
+&nbsp; */
+&nbsp;public abstract class Converter_Voronoi extends ImageConverterIterative {
+<b class="nc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(Converter_Voronoi.class);</b>
+<b class="nc">&nbsp;    private static int numCells = 9000;</b>
+<b class="nc">&nbsp;    private static boolean drawVoronoi = false;</b>
+&nbsp;
+<b class="nc">&nbsp;    private final VoronoiTesselator2 voronoiDiagram = new VoronoiTesselator2();</b>
+<b class="nc">&nbsp;    protected final List&lt;VoronoiCell&gt; cells = new ArrayList&lt;&gt;();</b>
+&nbsp;    private int iterations;
+<b class="nc">&nbsp;    private int lowpassCutoff = 128;</b>
+<b class="nc">&nbsp;    private int cellBuffer = 100;</b>
+<b class="nc">&nbsp;    private static int seed=0;</b>
+<b class="nc">&nbsp;    private static final Random random = new Random();</b>
+&nbsp;
+&nbsp;
+&nbsp;    public Converter_Voronoi() {
+<b class="nc">&nbsp;        super();</b>
+&nbsp;
+<b class="nc">&nbsp;        SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;,Translator.get(&quot;Generator.randomSeed&quot;),seed);</b>
+<b class="nc">&nbsp;        add(selectRandomSeed);</b>
+<b class="nc">&nbsp;        selectRandomSeed.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;            seed = (int)evt.getNewValue();</b>
+<b class="nc">&nbsp;            random.setSeed(seed);</b>
+<b class="nc">&nbsp;            fireRestart();</b>
+&nbsp;        });
+&nbsp;        
+<b class="nc">&nbsp;        SelectInteger selectCells = new SelectInteger(&quot;cells&quot;,Translator.get(&quot;Converter_VoronoiStippling.CellCount&quot;),getNumCells());</b>
+<b class="nc">&nbsp;        add(selectCells);</b>
+<b class="nc">&nbsp;        selectCells.addSelectListener(evt-&gt;{</b>
+<b class="nc">&nbsp;            setNumCells((int)evt.getNewValue());</b>
+<b class="nc">&nbsp;            fireRestart();</b>
+&nbsp;        });
+&nbsp;
+<b class="nc">&nbsp;        SelectBoolean selectDrawVoronoi = new SelectBoolean(&quot;drawVoronoi&quot;, Translator.get(&quot;Converter_VoronoiStippling.DrawBorders&quot;), getDrawVoronoi());</b>
+<b class="nc">&nbsp;        add(selectDrawVoronoi);</b>
+<b class="nc">&nbsp;        selectDrawVoronoi.addSelectListener(evt -&gt; setDrawVoronoi((boolean) evt.getNewValue()));</b>
+&nbsp;
+<b class="nc">&nbsp;        SelectSlider selectCutoff = new SelectSlider(&quot;cutoff&quot;, Translator.get(&quot;Converter_VoronoiStippling.Cutoff&quot;),255,0,getLowpassCutoff());</b>
+<b class="nc">&nbsp;        add(selectCutoff);</b>
+<b class="nc">&nbsp;        selectCutoff.addSelectListener(evt-&gt; setLowpassCutoff((int)evt.getNewValue()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void start(Paper paper, TransformedImage image) {
+&nbsp;        // make black &amp; white
+<b class="nc">&nbsp;        FilterDesaturate bw = new FilterDesaturate(image);</b>
+<b class="nc">&nbsp;        super.start(paper, bw.filter());</b>
+&nbsp;
+<b class="nc">&nbsp;        lock.lock();</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            turtle = new Turtle();</b>
+&nbsp;
+<b class="nc">&nbsp;            iterations=0;</b>
+&nbsp;
+<b class="nc">&nbsp;            Rectangle2D bounds = paper.getMarginRectangle();</b>
+&nbsp;
+<b class="nc">&nbsp;            cells.clear();</b>
+<b class="nc">&nbsp;            int i=0;</b>
+&nbsp;            do {
+<b class="nc">&nbsp;                double x = random.nextDouble() * bounds.getWidth()+bounds.getMinX();</b>
+<b class="nc">&nbsp;                double y = random.nextDouble() * bounds.getHeight()+bounds.getMinY();</b>
+<b class="nc">&nbsp;                if(image.canSampleAt(x,y)) {</b>
+<b class="nc">&nbsp;                    if(image.sample1x1Unchecked(x,y) &lt; random.nextDouble()*255) {</b>
+<b class="nc">&nbsp;                        cells.add( new VoronoiCell(x,y) );</b>
+<b class="nc">&nbsp;                        i++;</b>
+&nbsp;                    }
+&nbsp;                }
+<b class="nc">&nbsp;            } while(i&lt;numCells);</b>
+<b class="nc">&nbsp;            voronoiDiagram.setNumHulls(numCells);</b>
+&nbsp;        }
+&nbsp;        finally {
+<b class="nc">&nbsp;            lock.unlock();</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean iterate() {
+<b class="nc">&nbsp;        iterations++;</b>
+<b class="nc">&nbsp;        lock.lock();</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            double noiseLevel = evolveCells();</b>
+<b class="nc">&nbsp;            System.out.println(iterations+&quot;: &quot;+noiseLevel+&quot; &quot;+(noiseLevel/(float)numCells));</b>
+&nbsp;        }
+&nbsp;        finally {
+<b class="nc">&nbsp;            lock.unlock();</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Jiggle the dots until they make a nice picture
+&nbsp;     */
+&nbsp;    private double evolveCells() {
+<b class="nc">&nbsp;        double change=10000;</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            voronoiDiagram.tessellate(cells,myPaper.getMarginRectangle(),1e-2);</b>
+<b class="nc">&nbsp;            change = adjustCenters(myImage);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch (Exception e) {</b>
+<b class="nc">&nbsp;            logger.error(&quot;Failed to evolve&quot;, e);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return change;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private double adjustCenters(TransformedImage image) {
+<b class="nc">&nbsp;        double change=0;</b>
+<b class="nc">&nbsp;        GeometryFactory factory = new GeometryFactory();</b>
+&nbsp;
+<b class="nc">&nbsp;        for(int i=0;i&lt;voronoiDiagram.getNumHulls();++i) {</b>
+<b class="nc">&nbsp;            Polygon poly = voronoiDiagram.getHull(i);</b>
+<b class="nc">&nbsp;            PreparedPolygon hull = new PreparedPolygon(poly);</b>
+<b class="nc">&nbsp;            VoronoiCell cell = cells.get(i);</b>
+<b class="nc">&nbsp;            cell.weight=0;</b>
+<b class="nc">&nbsp;            cell.change=0;</b>
+&nbsp;
+&nbsp;            // sample every image coordinate inside the voronoi cell and find the weighted center
+<b class="nc">&nbsp;            double wx=0,wy=0;</b>
+<b class="nc">&nbsp;            double weight=0;</b>
+<b class="nc">&nbsp;            int hits=0;</b>
+&nbsp;
+<b class="nc">&nbsp;            Point centroid = poly.getCentroid();</b>
+<b class="nc">&nbsp;            cell.set(centroid.getX(),centroid.getY());</b>
+&nbsp;
+<b class="nc">&nbsp;            Envelope e = poly.getEnvelopeInternal();</b>
+<b class="nc">&nbsp;            double miny = Math.floor(e.getMinY());</b>
+<b class="nc">&nbsp;            double maxy = Math.ceil(e.getMaxY());</b>
+<b class="nc">&nbsp;            double minx = Math.floor(e.getMinX());</b>
+<b class="nc">&nbsp;            double maxx = Math.ceil(e.getMaxX());</b>
+&nbsp;
+<b class="nc">&nbsp;            double xDiff = maxx-minx;</b>
+<b class="nc">&nbsp;            double stepSize = getStepSize(maxy, miny, xDiff);</b>
+&nbsp;
+<b class="nc">&nbsp;            for(double y=miny;y&lt;maxy;y+=stepSize) {</b>
+<b class="nc">&nbsp;                double x0 = findLeftEdge(hull,factory,y,minx,maxx,stepSize);</b>
+<b class="nc">&nbsp;                double x1 = findRightEdge(hull,factory,y,minx,maxx,stepSize);</b>
+<b class="nc">&nbsp;                for (double x = x0; x &lt;= x1; x+=stepSize) {</b>
+<b class="nc">&nbsp;                    if(!image.canSampleAt(x,y)) continue;</b>
+<b class="nc">&nbsp;                    double v = 255 - image.sample1x1Unchecked(x,y);</b>
+<b class="nc">&nbsp;                    weight += v;</b>
+<b class="nc">&nbsp;                    wx += v * x;</b>
+<b class="nc">&nbsp;                    wy += v * y;</b>
+<b class="nc">&nbsp;                    hits++;</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            if(weight&gt;0) {</b>
+<b class="nc">&nbsp;                cell.weight = weight / hits;</b>
+<b class="nc">&nbsp;                wx /= weight;</b>
+<b class="nc">&nbsp;                wy /= weight;</b>
+<b class="nc">&nbsp;                double dx = wx - cell.center.x;</b>
+<b class="nc">&nbsp;                double dy = wy - cell.center.y;</b>
+<b class="nc">&nbsp;                cell.change = (dx*dx+dy*dy);</b>
+<b class="nc">&nbsp;                change += cell.change;</b>
+<b class="nc">&nbsp;                cell.set(wx,wy);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return change;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private double getStepSize(double maxy, double miny, double xDiff) {
+<b class="nc">&nbsp;        double yDiff = maxy - miny;</b>
+<b class="nc">&nbsp;        double maxSize = Math.max(xDiff, yDiff);</b>
+<b class="nc">&nbsp;        double minSize = Math.min(xDiff, yDiff);</b>
+&nbsp;
+<b class="nc">&nbsp;        double scaleFactor = 1;</b>
+&nbsp;        // Maximum voronoi cell extent should be between
+&nbsp;        // cellBuffer/2 and cellBuffer in size.
+<b class="nc">&nbsp;        while (maxSize &gt; cellBuffer) {</b>
+<b class="nc">&nbsp;            scaleFactor *= 0.5;</b>
+<b class="nc">&nbsp;            maxSize *= 0.5;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        while (maxSize &lt; (cellBuffer / 2.0)) {</b>
+<b class="nc">&nbsp;            scaleFactor *= 2;</b>
+<b class="nc">&nbsp;            maxSize *= 2;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if ((minSize * scaleFactor) &gt; (cellBuffer/2.0)) {</b>
+&nbsp;            // Special correction for objects of near-unity (square-like) aspect ratio,
+&nbsp;            // which have larger area *and* where it is less essential to find the exact centroid:
+<b class="nc">&nbsp;            scaleFactor *= 0.5;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        double stepSize = 1.0/scaleFactor;</b>
+<b class="nc">&nbsp;        return stepSize;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private double findLeftEdge(PreparedPolygon poly,GeometryFactory factory,double y,double minx,double maxx,double stepSize) {
+<b class="nc">&nbsp;        Coordinate c = new Coordinate(minx,y);</b>
+<b class="nc">&nbsp;        for(double x = minx; x &lt; maxx; x+=stepSize) {</b>
+<b class="nc">&nbsp;            c.x=x;</b>
+<b class="nc">&nbsp;            if(poly.intersects(factory.createPoint(c))) return x;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return maxx;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private double findRightEdge(PreparedPolygon poly,GeometryFactory factory, double y,double minx,double maxx,double stepSize) {
+<b class="nc">&nbsp;        Coordinate c = new Coordinate(maxx,y);</b>
+<b class="nc">&nbsp;        for(double x = maxx; x &gt; minx; x-=stepSize) {</b>
+<b class="nc">&nbsp;            c.x=x;</b>
+<b class="nc">&nbsp;            if(poly.intersects(factory.createPoint(c))) return x;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return minx;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void stop() {
+<b class="nc">&nbsp;        super.stop();</b>
+<b class="nc">&nbsp;        lock.lock();</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            writeOutCells();</b>
+&nbsp;        }
+&nbsp;        finally {
+<b class="nc">&nbsp;            lock.unlock();</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        fireConversionFinished();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected void renderEdges(GL2 gl2) {
+<b class="nc">&nbsp;        gl2.glColor3d(0.9, 0.9, 0.9);</b>
+&nbsp;
+<b class="nc">&nbsp;        double cx = myPaper.getCenterX();</b>
+<b class="nc">&nbsp;        double cy = myPaper.getCenterY();</b>
+<b class="nc">&nbsp;        gl2.glPushMatrix();</b>
+<b class="nc">&nbsp;        gl2.glTranslated(cx, cy, 0);</b>
+&nbsp;
+<b class="nc">&nbsp;        for(int i=0;i&lt;voronoiDiagram.getNumHulls();++i) {</b>
+<b class="nc">&nbsp;            Polygon poly = voronoiDiagram.getHull(i);</b>
+<b class="nc">&nbsp;            gl2.glBegin(GL2.GL_LINE_LOOP);</b>
+<b class="nc">&nbsp;            for (Coordinate p : poly.getExteriorRing().getCoordinates()) {</b>
+<b class="nc">&nbsp;                gl2.glVertex2d(p.x, p.y);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            gl2.glEnd();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        gl2.glPopMatrix();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setNumCells(int value) {
+<b class="nc">&nbsp;        numCells = Math.max(1,value);</b>
+&nbsp;    }
+&nbsp;    public int getNumCells() {
+<b class="nc">&nbsp;        return numCells;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setDrawVoronoi(boolean arg0) {
+<b class="nc">&nbsp;        drawVoronoi = arg0;</b>
+&nbsp;    }
+&nbsp;    public boolean getDrawVoronoi() {
+<b class="nc">&nbsp;        return drawVoronoi;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void generateOutput() {
+<b class="nc">&nbsp;        writeOutCells();</b>
+&nbsp;
+<b class="nc">&nbsp;        fireConversionFinished();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void resume() {
+&nbsp;
+<b class="nc">&nbsp;    }</b>
+&nbsp;
+&nbsp;    abstract void writeOutCells();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Callback from {@link com.marginallyclever.makelangelo.preview.PreviewPanel} that it is time to render to the WYSIWYG display.
+&nbsp;     *
+&nbsp;     * @param gl2 the render context
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public void render(GL2 gl2) {
+<b class="nc">&nbsp;        ImageConverterThread thread = getThread();</b>
+<b class="nc">&nbsp;        if(thread==null || thread.getPaused()) return;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!drawVoronoi) return;</b>
+&nbsp;
+<b class="nc">&nbsp;        lock.lock();</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            renderEdges(gl2);</b>
+&nbsp;        }
+&nbsp;        finally {
+<b class="nc">&nbsp;            lock.unlock();</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getLowpassCutoff() {
+<b class="nc">&nbsp;        return lowpassCutoff;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void setLowpassCutoff(int lowpassCutoff) {
+<b class="nc">&nbsp;        this.lowpassCutoff = lowpassCutoff;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

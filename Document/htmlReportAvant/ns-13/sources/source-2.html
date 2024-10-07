@@ -1,0 +1,241 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > LoadFilePanel</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.io</a>
+</div>
+
+<h1>Coverage Summary for Class: LoadFilePanel (com.marginallyclever.makelangelo.makeart.io)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LoadFilePanel</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/47)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.io;
+&nbsp;
+&nbsp;import com.jogamp.opengl.GL2;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;import com.marginallyclever.makelangelo.makeart.imageconverter.SelectImageConverterPanel;
+&nbsp;import com.marginallyclever.makelangelo.paper.Paper;
+&nbsp;import com.marginallyclever.makelangelo.preview.PreviewListener;
+&nbsp;import com.marginallyclever.makelangelo.turtle.Turtle;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import javax.imageio.ImageIO;
+&nbsp;import javax.swing.*;
+&nbsp;import javax.swing.event.EventListenerList;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.event.ActionEvent;
+&nbsp;import java.awt.event.ActionListener;
+&nbsp;import java.awt.event.WindowEvent;
+&nbsp;import java.io.FileInputStream;
+&nbsp;
+&nbsp;public class LoadFilePanel extends JPanel implements PreviewListener {
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(LoadFilePanel.class);</b>
+&nbsp;	public static final String COMMAND_TURTLE = &quot;turtle&quot;;
+&nbsp;	private final Paper myPaper;
+<b class="nc">&nbsp;	private final JButton bChoose = new JButton(Translator.get(&quot;Open&quot;));</b>
+<b class="nc">&nbsp;	private final OpenFileChooser openFileChooser = new OpenFileChooser(this);</b>
+<b class="nc">&nbsp;	private final JLabel selectedFilename = new JLabel();</b>
+&nbsp;	private SelectImageConverterPanel myConvertImage;
+&nbsp;	private PreviewListener mySubPreviewListener;
+&nbsp;	private JDialog parent;
+&nbsp;
+&nbsp;	public LoadFilePanel(Paper paper,String filename) {
+<b class="nc">&nbsp;		super(new BorderLayout());</b>
+<b class="nc">&nbsp;		setBorder(BorderFactory.createEmptyBorder(5,5,5,5));</b>
+&nbsp;
+<b class="nc">&nbsp;		myPaper = paper;</b>
+<b class="nc">&nbsp;		add(getFileSelectionPanel(filename),BorderLayout.NORTH);</b>
+<b class="nc">&nbsp;		selectedFilename.setBorder(BorderFactory.createEmptyBorder(0,5,0,0));</b>
+&nbsp;
+<b class="nc">&nbsp;		openFileChooser.setOpenListener(this::onNewFilenameChosen);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private JPanel getFileSelectionPanel(String previousFile) {
+<b class="nc">&nbsp;		JPanel panel = new JPanel(new BorderLayout());</b>
+<b class="nc">&nbsp;		panel.add(bChoose,BorderLayout.WEST);</b>
+<b class="nc">&nbsp;		panel.add(selectedFilename,BorderLayout.CENTER);</b>
+&nbsp;		
+<b class="nc">&nbsp;		selectedFilename.setText(previousFile);</b>
+&nbsp;		
+<b class="nc">&nbsp;		bChoose.addActionListener((e)-&gt; openFileChooser.chooseFile());</b>
+&nbsp;		
+<b class="nc">&nbsp;		return panel;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void stopExistingImageConverter() {
+<b class="nc">&nbsp;		if(myConvertImage!=null) {</b>
+<b class="nc">&nbsp;			myConvertImage.loadingFinished();</b>
+<b class="nc">&nbsp;			remove(myConvertImage);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	public boolean onNewFilenameChosen(String filename) {
+<b class="nc">&nbsp;		stopExistingImageConverter();</b>
+<b class="nc">&nbsp;		selectedFilename.setText(filename);</b>
+&nbsp;
+&nbsp;		try {
+<b class="nc">&nbsp;			if (SelectImageConverterPanel.isFilenameForAnImage(filename)) {</b>
+<b class="nc">&nbsp;				TransformedImage image = new TransformedImage( ImageIO.read(new FileInputStream(filename)) );</b>
+<b class="nc">&nbsp;				myConvertImage = new SelectImageConverterPanel(myPaper, image);</b>
+<b class="nc">&nbsp;				myConvertImage.addActionListener(this::notifyListeners);</b>
+&nbsp;
+<b class="nc">&nbsp;				add(myConvertImage,BorderLayout.CENTER);</b>
+&nbsp;
+<b class="nc">&nbsp;				myConvertImage.run();</b>
+<b class="nc">&nbsp;				mySubPreviewListener = myConvertImage;</b>
+<b class="nc">&nbsp;				return true;</b>
+&nbsp;			} else {
+<b class="nc">&nbsp;				Turtle t = TurtleFactory.load(filename);</b>
+<b class="nc">&nbsp;				notifyListeners(new ActionEvent(t,0, COMMAND_TURTLE));</b>
+<b class="nc">&nbsp;				if (parent != null) {</b>
+<b class="nc">&nbsp;					parent.dispatchEvent(new WindowEvent(parent, WindowEvent.WINDOW_CLOSING));</b>
+&nbsp;				}
+&nbsp;			}
+<b class="nc">&nbsp;		} catch(Exception e) {</b>
+<b class="nc">&nbsp;			logger.error(&quot;Failed to load {}&quot;, filename, e);</b>
+<b class="nc">&nbsp;			JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), Translator.get(&quot;ErrorTitle&quot;), JOptionPane.ERROR_MESSAGE);</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return false;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void render(GL2 gl2) {
+<b class="nc">&nbsp;		if(mySubPreviewListener!=null) mySubPreviewListener.render(gl2);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setParent(JDialog parent) {
+<b class="nc">&nbsp;		this.parent = parent;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void loadingFinished() {
+<b class="nc">&nbsp;		logger.debug(&quot;loadingFinished()&quot;);</b>
+<b class="nc">&nbsp;		if(myConvertImage!=null) {</b>
+<b class="nc">&nbsp;			myConvertImage.loadingFinished();</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	// OBSERVER PATTERN
+&nbsp;
+<b class="nc">&nbsp;	private final EventListenerList listeners = new EventListenerList();</b>
+&nbsp;
+&nbsp;	public void addActionListener(ActionListener a) {
+<b class="nc">&nbsp;		listeners.add(ActionListener.class,a);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void removeActionListener(ActionListener a) {
+<b class="nc">&nbsp;		listeners.remove(ActionListener.class,a);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	private void notifyListeners(ActionEvent e) {
+<b class="nc">&nbsp;		for( ActionListener a : listeners.getListeners(ActionListener.class) ) {</b>
+<b class="nc">&nbsp;			a.actionPerformed(e);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:10</div>
+</div>
+</body>
+</html>

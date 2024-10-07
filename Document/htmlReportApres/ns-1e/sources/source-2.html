@@ -1,0 +1,531 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > CartesianButtons</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.plotter.plottercontrols</a>
+</div>
+
+<h1>Coverage Summary for Class: CartesianButtons (com.marginallyclever.makelangelo.plotter.plottercontrols)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CartesianButtons</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/27)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/54)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/133)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">CartesianButtons$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">CartesianButtons$2</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/11)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/64)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/151)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.plotter.plottercontrols;
+&nbsp;
+&nbsp;import com.marginallyclever.util.PreferencesHelper;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;
+&nbsp;import com.marginallyclever.makelangelo.Translator;
+&nbsp;
+&nbsp;import javax.swing.*;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.event.ActionEvent;
+&nbsp;import java.awt.event.ActionListener;
+&nbsp;import java.awt.event.MouseAdapter;
+&nbsp;import java.awt.event.MouseEvent;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.util.ArrayList;
+&nbsp;
+&nbsp;/**
+&nbsp; * {@link CartesianButtons} is a GUI to provide Pronterface-style buttons for XY
+&nbsp; * driving. {@link ActionListener}s can listen for click events on each button.
+&nbsp; * Button {@link ActionEvent}s are named for their button. Button are divided
+&nbsp; * into quadrants. In each quadrant, outside zones are lower numbers than inside
+&nbsp; * zones. Quadrants are numbered counter-clockwise, starting with eastern
+&nbsp; * quadrant.  So the zone 0 is the +100 east and zone 11 is the -1 south.
+&nbsp; * The center button is 12. The outside is zone 0.
+&nbsp; *       3
+&nbsp; *       4
+&nbsp; *       5
+&nbsp; * 6 7 8 12  2 1 0
+&nbsp; *       11
+&nbsp; *       10    (-1)
+&nbsp; *       9
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.28.0
+&nbsp; */
+&nbsp;public class CartesianButtons extends JComponent {
+<b class="nc">&nbsp;	private static final Logger logger = LoggerFactory.getLogger(CartesianButtons.class);</b>
+&nbsp;
+&nbsp;	public static final int NUM_ZONES_PER_QUADRANT = 3;
+&nbsp;	public static final int TOTAL_ZONES = NUM_ZONES_PER_QUADRANT * 4 + 1;
+&nbsp;	public static final int ZONE_CENTER = NUM_ZONES_PER_QUADRANT * 4;
+&nbsp;
+<b class="nc">&nbsp;	private int centerRadius = 30;</b>
+<b class="nc">&nbsp;	private int buttonWidth = 30;</b>
+<b class="nc">&nbsp;	private int highlightZone = -1;</b>
+&nbsp;	private Color highlightColor;
+<b class="nc">&nbsp;	private String[] labels = new String[TOTAL_ZONES];</b>
+&nbsp;
+<b class="nc">&nbsp;	private ArrayList&lt;ActionListener&gt; listeners = new ArrayList&lt;ActionListener&gt;();</b>
+&nbsp;
+&nbsp;	public CartesianButtons() {
+<b class="nc">&nbsp;		super();</b>
+&nbsp;
+<b class="nc">&nbsp;		assignDefaultLabels();</b>
+&nbsp;
+<b class="nc">&nbsp;		setMinimumSize(getPreferredSize());</b>
+<b class="nc">&nbsp;		setMaximumSize(getPreferredSize());</b>
+&nbsp;
+<b class="nc">&nbsp;		addMouseMotionListener(new MouseAdapter() {</b>
+&nbsp;			@Override
+&nbsp;			public void mouseMoved(MouseEvent e) {
+<b class="nc">&nbsp;				if (!isEnabled())</b>
+&nbsp;					return;
+&nbsp;				// logger.debug(&quot;moved&quot;);
+<b class="nc">&nbsp;				int zone = getZoneUnderPoint(e.getPoint());</b>
+<b class="nc">&nbsp;				if (highlightZone != zone) {</b>
+<b class="nc">&nbsp;					highlightZone = zone;</b>
+<b class="nc">&nbsp;					highlightColor = getColorButtonHighlight();</b>
+<b class="nc">&nbsp;					repaint();</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;		});
+&nbsp;
+<b class="nc">&nbsp;		addMouseListener(new MouseAdapter() {</b>
+&nbsp;			@Override
+&nbsp;			public void mousePressed(MouseEvent e) {
+<b class="nc">&nbsp;				if (!isEnabled())</b>
+&nbsp;					return;
+<b class="nc">&nbsp;				highlightZone = getZoneUnderPoint(e.getPoint());</b>
+<b class="nc">&nbsp;				highlightColor = getColorButtonSelect();</b>
+&nbsp;				// logger.debug(&quot;pressed&quot;);
+<b class="nc">&nbsp;				repaint();</b>
+&nbsp;			}
+&nbsp;
+&nbsp;			@Override
+&nbsp;			public void mouseReleased(MouseEvent e) {
+<b class="nc">&nbsp;				highlightColor = getColorButtonHighlight();</b>
+&nbsp;				// logger.debug(&quot;released&quot;);
+<b class="nc">&nbsp;				int zone = getZoneUnderPoint(e.getPoint());</b>
+<b class="nc">&nbsp;				if(zone!=-1 &amp;&amp; highlightZone == zone) {</b>
+&nbsp;					// logger.debug(&quot;clicked zone {}&quot;,zone);
+<b class="nc">&nbsp;					notifyActionListeners(new ActionEvent(this, zone, &quot;clicked&quot;));</b>
+&nbsp;				}
+<b class="nc">&nbsp;				highlightZone = -1;</b>
+<b class="nc">&nbsp;				repaint();</b>
+&nbsp;			}
+&nbsp;		});
+&nbsp;	}
+&nbsp;
+&nbsp;	private void assignDefaultLabels() {
+<b class="nc">&nbsp;		int j = 0;</b>
+<b class="nc">&nbsp;		int v = 2;</b>
+<b class="nc">&nbsp;		for (int a = 0; a &lt; 4; ++a) {</b>
+<b class="nc">&nbsp;			int n = 100 * (v &gt; 0 ? 1 : -1);</b>
+<b class="nc">&nbsp;			for (int i = NUM_ZONES_PER_QUADRANT - 1; i &gt;= 0; --i) {</b>
+<b class="nc">&nbsp;				labels[j++] = Integer.toString(n);</b>
+<b class="nc">&nbsp;				n /= 10;</b>
+&nbsp;			}
+<b class="nc">&nbsp;			--v;</b>
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		labels[ZONE_CENTER] = Translator.get(&quot;CartesianButtons.buttonCenter&quot;);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public void paintComponent(Graphics g) {
+<b class="nc">&nbsp;		super.paintComponent(g);</b>
+&nbsp;
+<b class="nc">&nbsp;		Rectangle r = this.getBounds();</b>
+<b class="nc">&nbsp;		g.translate(r.width / 2, r.height / 2);</b>
+&nbsp;
+<b class="nc">&nbsp;		drawAllQuadrantButtons(g);</b>
+<b class="nc">&nbsp;		drawCenterButton(g);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void drawAllQuadrantButtons(Graphics g) {
+<b class="nc">&nbsp;		g.setColor(new Color(1.0f, 0.0f, 0.0f));</b>
+&nbsp;
+<b class="nc">&nbsp;		int k = 0;</b>
+<b class="nc">&nbsp;		for (int a = 0; a &lt; 4; ++a) {</b>
+<b class="nc">&nbsp;			for (int i = NUM_ZONES_PER_QUADRANT - 1; i &gt;= 0; --i) {</b>
+<b class="nc">&nbsp;				int j = i + 1;</b>
+<b class="nc">&nbsp;				int angle = a * 90;</b>
+<b class="nc">&nbsp;				drawArcingButtonInternal(g, angle - 44, angle + 44, centerRadius + i * buttonWidth,</b>
+&nbsp;						centerRadius + j * buttonWidth, (k == highlightZone), labels[k]);
+<b class="nc">&nbsp;				k++;</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void drawCenterButton(Graphics g) {
+<b class="nc">&nbsp;		if (highlightZone == NUM_ZONES_PER_QUADRANT * 4 &amp;&amp; this.isEnabled()) {</b>
+<b class="nc">&nbsp;			g.setColor(highlightColor);</b>
+&nbsp;		} else {
+<b class="nc">&nbsp;			g.setColor(getColorControl());</b>
+&nbsp;		}
+<b class="nc">&nbsp;		g.fillArc(-centerRadius, -centerRadius, centerRadius * 2, centerRadius * 2, 0, 360);</b>
+<b class="nc">&nbsp;		g.setColor(this.isEnabled() ? getColorForegroundText() : getColorDisabledText());</b>
+<b class="nc">&nbsp;		g.drawArc(-centerRadius, -centerRadius, centerRadius * 2, centerRadius * 2, 0, 360);</b>
+&nbsp;
+<b class="nc">&nbsp;		drawCenteredText(g, labels[ZONE_CENTER], 0, 0);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void drawCenteredText(Graphics g, String string, int x, int y) {
+<b class="nc">&nbsp;		FontMetrics fm = g.getFontMetrics();</b>
+<b class="nc">&nbsp;		Rectangle2D r = fm.getStringBounds(string, g);</b>
+<b class="nc">&nbsp;		int w = (int) r.getWidth();</b>
+<b class="nc">&nbsp;		int h = (int) r.getHeight() - fm.getLeading();</b>
+&nbsp;
+<b class="nc">&nbsp;		g.setColor(this.isEnabled() ? getColorForegroundText() : getColorDisabledText());</b>
+<b class="nc">&nbsp;		g.drawString(string, x - w / 2, y + h / 2);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private Color getColorControl() {
+<b class="nc">&nbsp;		Color c = UIManager.getColor(&quot;control&quot;);</b>
+<b class="nc">&nbsp;		if (c == null)</b>
+<b class="nc">&nbsp;			c = SystemColor.control;</b>
+<b class="nc">&nbsp;		return c;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private Color getColorDisabledText() {
+<b class="nc">&nbsp;		Color c = UIManager.getColor(&quot;Button.disabledText&quot;);</b>
+<b class="nc">&nbsp;		if (c == null)</b>
+<b class="nc">&nbsp;			c = SystemColor.lightGray;</b>
+<b class="nc">&nbsp;		return c;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	// UIManager.getColor(&quot;Button.darkShadow&quot;)
+&nbsp;
+&nbsp;	private Color getColorForegroundText() {
+<b class="nc">&nbsp;		Color c = UIManager.getColor(&quot;Label.foreground&quot;);</b>
+<b class="nc">&nbsp;		if (c == null)</b>
+<b class="nc">&nbsp;			c = SystemColor.darkGray;</b>
+<b class="nc">&nbsp;		return c;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private Color getColorButtonHighlight() {
+<b class="nc">&nbsp;		Color c = UIManager.getColor(&quot;Button.highlight&quot;);</b>
+<b class="nc">&nbsp;		if (c == null)</b>
+<b class="nc">&nbsp;			c = SystemColor.controlHighlight;</b>
+<b class="nc">&nbsp;		return c;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private Color getColorButtonSelect() {
+<b class="nc">&nbsp;		Color c = UIManager.getColor(&quot;Button.select&quot;);</b>
+<b class="nc">&nbsp;		if (c == null)</b>
+<b class="nc">&nbsp;			c = SystemColor.textHighlight;</b>
+<b class="nc">&nbsp;		return c;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @param p
+&nbsp;	 * @return The zone under point p. in each quadrant, outside zones are lower
+&nbsp;	 *         numbers than inside zones. Quadrants are numbered counter-clockwise,
+&nbsp;	 *         starting with eastern quadrant.  Outer buttons have a lower index than inner buttons.
+&nbsp;	 */
+&nbsp;	private int getZoneUnderPoint(Point p) {
+<b class="nc">&nbsp;		Rectangle r = this.getBounds();</b>
+<b class="nc">&nbsp;		double dx = p.x - r.width / 2;</b>
+<b class="nc">&nbsp;		double dy = -(p.y - r.height / 2);</b>
+<b class="nc">&nbsp;		int len = (int) Math.sqrt(dx * dx + dy * dy);</b>
+<b class="nc">&nbsp;		if (len &gt;= centerRadius + buttonWidth*NUM_ZONES_PER_QUADRANT)</b>
+<b class="nc">&nbsp;			return -1;  // miss</b>
+<b class="nc">&nbsp;		if (len &lt; centerRadius) </b>
+<b class="nc">&nbsp;			return NUM_ZONES_PER_QUADRANT * 4;</b>
+&nbsp;
+<b class="nc">&nbsp;		double mouseAngle = (Math.toDegrees(Math.atan2(dy, dx) + Math.PI) + 180) % 360;</b>
+<b class="nc">&nbsp;		int quadrant = (int) ((mouseAngle + 45) / 90) % 4;</b>
+&nbsp;		// 0 west 1 north 2 east 3 south
+<b class="nc">&nbsp;		int zone = (int) ((len - centerRadius) / buttonWidth);</b>
+<b class="nc">&nbsp;		zone = NUM_ZONES_PER_QUADRANT - 1 - zone;</b>
+&nbsp;
+&nbsp;		// logger.debug(&quot;{}\t{}\t{}\t{}&quot;,dx,dy,mouseAngle,quadrant,len);
+&nbsp;
+<b class="nc">&nbsp;		return quadrant * NUM_ZONES_PER_QUADRANT + zone;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void drawArcingButtonInternal(Graphics g, int startAngle, int endAngle, int r0, int r1, boolean highlight,
+&nbsp;			String label) {
+<b class="nc">&nbsp;		boolean shouldHighlight = highlight &amp;&amp; this.isEnabled();</b>
+<b class="nc">&nbsp;		g.setColor(shouldHighlight ? highlightColor : getColorControl());</b>
+&nbsp;
+<b class="nc">&nbsp;		g.fillArc(-r1, -r1, r1 * 2, r1 * 2, startAngle, endAngle - startAngle);</b>
+<b class="nc">&nbsp;		g.setColor(getColorControl());</b>
+<b class="nc">&nbsp;		g.fillArc(-r0, -r0, r0 * 2, r0 * 2, startAngle, endAngle - startAngle);</b>
+&nbsp;
+<b class="nc">&nbsp;		g.setColor(this.isEnabled() ? getColorForegroundText() : getColorDisabledText());</b>
+&nbsp;		// g.setColor(SystemColor.BLACK);
+&nbsp;		// g.drawArc(-r0, -r0, r0*2, r0*2, startAngle, endAngle-startAngle);
+<b class="nc">&nbsp;		g.drawArc(-r1, -r1, r1 * 2, r1 * 2, startAngle, endAngle - startAngle);</b>
+<b class="nc">&nbsp;		drawLineInternal(g, startAngle, r0, r1);</b>
+<b class="nc">&nbsp;		drawLineInternal(g, endAngle, r0, r1);</b>
+&nbsp;
+<b class="nc">&nbsp;		drawLabel(g, (endAngle + startAngle) / 2, (r1 + r0) / 2, label);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void drawLabel(Graphics g, int angle, int radius, String label) {
+<b class="nc">&nbsp;		double r = Math.toRadians(angle);</b>
+<b class="nc">&nbsp;		double s = Math.sin(r);</b>
+<b class="nc">&nbsp;		double c = Math.cos(r);</b>
+<b class="nc">&nbsp;		int x1 = (int) Math.round(c * radius);</b>
+<b class="nc">&nbsp;		int y1 = (int) Math.round(s * radius);</b>
+<b class="nc">&nbsp;		drawCenteredText(g, label, x1, -y1);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void drawLineInternal(Graphics g, int angle, int r0, int r1) {
+<b class="nc">&nbsp;		double r = Math.toRadians(angle);</b>
+<b class="nc">&nbsp;		double s = Math.sin(r);</b>
+<b class="nc">&nbsp;		double c = Math.cos(r);</b>
+&nbsp;
+<b class="nc">&nbsp;		int x1 = (int) Math.round(c * r0);</b>
+<b class="nc">&nbsp;		int y1 = (int) Math.round(s * r0);</b>
+&nbsp;
+<b class="nc">&nbsp;		int x2 = (int) Math.round(c * r1);</b>
+<b class="nc">&nbsp;		int y2 = (int) Math.round(s * r1);</b>
+&nbsp;
+<b class="nc">&nbsp;		g.drawLine(x1, -y1, x2, -y2);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void addActionListener(ActionListener a) {
+<b class="nc">&nbsp;		listeners.add(a);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void removeActionListener(ActionListener a) {
+<b class="nc">&nbsp;		listeners.remove(a);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private void notifyActionListeners(ActionEvent ae) {
+<b class="nc">&nbsp;		for (ActionListener a : listeners)</b>
+<b class="nc">&nbsp;			a.actionPerformed(ae);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public Dimension getPreferredSize() {
+<b class="nc">&nbsp;		int w = (centerRadius + NUM_ZONES_PER_QUADRANT * buttonWidth) * 2;</b>
+<b class="nc">&nbsp;		int h = (centerRadius + NUM_ZONES_PER_QUADRANT * buttonWidth) * 2;</b>
+<b class="nc">&nbsp;		return new Dimension(w + 1, h + 1);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * 
+&nbsp;	 * @param id
+&nbsp;	 * @return quandrant 0-4, or 5 for center button.
+&nbsp;	 */
+&nbsp;	public static boolean isCenterZone(int id) {
+<b class="nc">&nbsp;		return id == ZONE_CENTER;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * 
+&nbsp;	 * @param id
+&nbsp;	 * @return quandrant 0-4, or 5 for center button.
+&nbsp;	 */
+&nbsp;	public static int getQuadrant(int id) {
+<b class="nc">&nbsp;		return (int) (id / NUM_ZONES_PER_QUADRANT);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * 
+&nbsp;	 * @param id
+&nbsp;	 * @return zone number, or -1 for
+&nbsp;	 */
+&nbsp;	public static int getZone(int id) {
+<b class="nc">&nbsp;		if (id &gt;= ZONE_CENTER)</b>
+<b class="nc">&nbsp;			return -1;</b>
+<b class="nc">&nbsp;		return (int) (id % NUM_ZONES_PER_QUADRANT);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public String getLabel(int id) throws IllegalArgumentException {
+<b class="nc">&nbsp;		if (id &lt; 0 || id &gt;= TOTAL_ZONES)</b>
+<b class="nc">&nbsp;			throw new IllegalArgumentException(&quot;must be 0...TOTAL_ZONES-1&quot;);</b>
+<b class="nc">&nbsp;		return labels[id];</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setLabel(int id, String arg0) throws IllegalArgumentException {
+<b class="nc">&nbsp;		if (id &lt; 0 || id &gt;= TOTAL_ZONES)</b>
+<b class="nc">&nbsp;			throw new IllegalArgumentException(&quot;must be 0...TOTAL_ZONES-1&quot;);</b>
+<b class="nc">&nbsp;		labels[id] = arg0;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public static void main(String[] args) {
+<b class="nc">&nbsp;		PreferencesHelper.start();</b>
+<b class="nc">&nbsp;		Translator.start();</b>
+<b class="nc">&nbsp;		JFrame frame = new JFrame(&quot;CartesianButtons&quot;);</b>
+<b class="nc">&nbsp;		frame.setLocationByPlatform(true);</b>
+<b class="nc">&nbsp;		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</b>
+&nbsp;
+<b class="nc">&nbsp;		CartesianButtons button = new CartesianButtons();</b>
+<b class="nc">&nbsp;		frame.add(button);</b>
+<b class="nc">&nbsp;		button.addActionListener((e) -&gt; {</b>
+<b class="nc">&nbsp;			logger.debug(&quot;{} {}&quot;, e.getActionCommand(), button.getLabel(e.getID()));</b>
+&nbsp;		});
+<b class="nc">&nbsp;		frame.pack();</b>
+<b class="nc">&nbsp;		frame.setVisible(true);</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

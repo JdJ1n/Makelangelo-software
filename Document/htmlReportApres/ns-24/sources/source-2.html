@@ -1,0 +1,151 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Select</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.select</a>
+</div>
+
+<h1>Coverage Summary for Class: Select (com.marginallyclever.makelangelo.select)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Select</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (7/8)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.select;
+&nbsp;
+&nbsp;import javax.swing.*;
+&nbsp;import javax.swing.event.EventListenerList;
+&nbsp;import java.awt.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * Base class for all Select.  A Select is a UI panel item the user can control.
+&nbsp; * This system provides consistent look and behavior across all elements in the app.
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.24.0
+&nbsp; */
+&nbsp;public abstract class Select extends JPanel {
+<b class="fc">&nbsp;	private final EventListenerList listeners = new EventListenerList();</b>
+&nbsp;
+&nbsp;	protected Select(String name) {
+<b class="fc">&nbsp;		super(new BorderLayout(2,0));</b>
+<b class="fc">&nbsp;		setName(name);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void addSelectListener(SelectListener listener) {
+<b class="fc">&nbsp;		listeners.add(SelectListener.class,listener);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void removeSelectListener(SelectListener listener) {
+<b class="nc">&nbsp;		listeners.remove(SelectListener.class,listener);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	protected void fireSelectEvent(Object oldValue,Object newValue) {
+<b class="fc">&nbsp;		SelectEvent evt = new SelectEvent(this,oldValue,newValue);</b>
+<b class="fc">&nbsp;		for(SelectListener listener : listeners.getListeners(SelectListener.class)) {</b>
+<b class="fc">&nbsp;			listener.selectEvent(evt);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

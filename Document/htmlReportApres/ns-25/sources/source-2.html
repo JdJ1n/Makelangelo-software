@@ -1,0 +1,766 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > Turtle</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.turtle</a>
+</div>
+
+<h1>Coverage Summary for Class: Turtle (com.marginallyclever.makelangelo.turtle)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Turtle</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.9%
+  </span>
+  <span class="absValue">
+    (35/48)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68.3%
+  </span>
+  <span class="absValue">
+    (95/139)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    77.4%
+  </span>
+  <span class="absValue">
+    (178/230)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Turtle$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    73.5%
+  </span>
+  <span class="absValue">
+    (36/49)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68.3%
+  </span>
+  <span class="absValue">
+    (95/139)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    77.5%
+  </span>
+  <span class="absValue">
+    (179/231)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.turtle;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.LineCollection;
+&nbsp;import com.marginallyclever.convenience.LineSegment2D;
+&nbsp;import com.marginallyclever.convenience.Point2D;
+&nbsp;
+&nbsp;import javax.vecmath.Vector2d;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.geom.Rectangle2D;
+&nbsp;import java.security.InvalidParameterException;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Objects;
+&nbsp;import java.util.concurrent.locks.ReentrantLock;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * A {@link Turtle} is a collection of instructions which, combined, form a drawing on a 2D surface.
+&nbsp; * The name is based on the Commodore 64 turtle from the LOGO programming language, and movement is very similar.
+&nbsp; * Commands include:
+&nbsp; * &lt;ul&gt;
+&nbsp; *     &lt;li&gt;lifting and lowering the turtle&#39;s tail&lt;/li&gt;
+&nbsp; *     &lt;li&gt;turning relative or absolute amounts&lt;/li&gt;
+&nbsp; *     &lt;li&gt;moving forward or backward relative amounts&lt;/li&gt;
+&nbsp; *     &lt;li&gt;moving relative or absolute amounts regardless of direction&lt;/li&gt;
+&nbsp; *     &lt;li&gt;changing the tool (color and diameter)&lt;/li&gt;
+&nbsp; * &lt;/ul&gt;
+&nbsp; * The turtle&#39;s starting angle is 0 degrees, which is to the right.  The turtle starts with the tail down.
+&nbsp; *
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.0?
+&nbsp; */
+&nbsp;public class Turtle implements Cloneable {
+<b class="fc">&nbsp;	public final List&lt;TurtleMove&gt; history = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;	private final transient ReentrantLock lock = new ReentrantLock();</b>
+&nbsp;
+&nbsp;	// current state
+&nbsp;	private double px, py;
+&nbsp;	private double nx, ny;  // normal of angle. aka sin() and cos() of angle.
+&nbsp;	private double angle;
+&nbsp;	private boolean isUp;
+&nbsp;	private Color color;
+<b class="fc">&nbsp;	private double diameter=1;</b>
+&nbsp;
+&nbsp;	public Turtle() {
+<b class="fc">&nbsp;		super();</b>
+<b class="fc">&nbsp;		reset(Color.BLACK);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public Turtle(Turtle t) {
+<b class="nc">&nbsp;		this();</b>
+<b class="nc">&nbsp;		this.px = t.px;</b>
+<b class="nc">&nbsp;		this.py = t.py;</b>
+<b class="nc">&nbsp;		this.nx = t.nx;</b>
+<b class="nc">&nbsp;		this.ny = t.ny;</b>
+<b class="nc">&nbsp;		this.angle = t.angle;</b>
+<b class="nc">&nbsp;		this.isUp = t.isUp;</b>
+<b class="nc">&nbsp;		this.color=t.color;</b>
+<b class="nc">&nbsp;		this.diameter = t.diameter; </b>
+&nbsp;		// deep copy
+<b class="nc">&nbsp;		history.clear();</b>
+<b class="nc">&nbsp;		for( TurtleMove m : t.history ) {</b>
+<b class="nc">&nbsp;			this.history.add(new TurtleMove(m));</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;	
+&nbsp;	public Turtle(Color firstColor) {
+<b class="fc">&nbsp;		super();</b>
+<b class="fc">&nbsp;		reset(firstColor);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	protected Object clone() throws CloneNotSupportedException {
+<b class="nc">&nbsp;		Turtle t = (Turtle)super.clone();</b>
+<b class="nc">&nbsp;		for( TurtleMove m : history ) {</b>
+<b class="nc">&nbsp;			t.history.add(new TurtleMove(m));</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return t;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public String toString() {
+<b class="fc">&nbsp;		return &quot;Turtle{&quot; +</b>
+<b class="fc">&nbsp;				&quot;history=&quot; + history.size() +</b>
+&nbsp;				&quot;, px=&quot; + px +
+&nbsp;				&quot;, py=&quot; + py +
+&nbsp;				&quot;, nx=&quot; + nx +
+&nbsp;				&quot;, ny=&quot; + ny +
+&nbsp;				&quot;, angle=&quot; + angle +
+&nbsp;				&quot;, isUp=&quot; + isUp +
+&nbsp;				&quot;, color=&quot; + color +
+&nbsp;				&quot;, diameter=&quot; + diameter +
+&nbsp;				&#39;}&#39;;
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Returns this {@link Turtle} to mint condition.  Erases history and resets all parameters.  Called by constructor.
+&nbsp;	 * @param c The starting color for this {@link Turtle}.
+&nbsp;	 */
+&nbsp;	private void reset(Color c) {
+<b class="fc">&nbsp;		px = 0;</b>
+<b class="fc">&nbsp;		py = 0;</b>
+<b class="fc">&nbsp;		setAngle(0);</b>
+<b class="fc">&nbsp;		penUp();</b>
+<b class="fc">&nbsp;		history.clear();</b>
+<b class="fc">&nbsp;		setColor(c);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	// multithreading lock safety
+&nbsp;	public boolean isLocked() {
+<b class="nc">&nbsp;		return lock.isLocked();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	// multithreading lock safety
+&nbsp;	public void lock() {
+<b class="nc">&nbsp;		lock.lock();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	// multithreading lock safety
+&nbsp;	public void unlock() {
+<b class="nc">&nbsp;		if(lock.isLocked()) {  // prevents &quot;illegal state exception - not locked&quot;</b>
+<b class="nc">&nbsp;			lock.unlock();</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	public void setColor(Color c) {
+<b class="fc">&nbsp;		if(color!=null) {</b>
+<b class="fc">&nbsp;			if(color.getRed()==c.getRed() &amp;&amp;</b>
+<b class="pc">&nbsp;				color.getGreen()==c.getGreen() &amp;&amp;</b>
+<b class="pc">&nbsp;				color.getBlue()==c.getBlue()) return;</b>
+&nbsp;		}
+<b class="fc">&nbsp;		color = c;</b>
+<b class="fc">&nbsp;		history.add( new TurtleMove(color.hashCode(),diameter,MovementType.TOOL_CHANGE) );</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public Color getColor() {
+<b class="fc">&nbsp;		return color;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void setDiameter(double d) {
+<b class="pc">&nbsp;		if(diameter==d) return;</b>
+<b class="fc">&nbsp;		diameter=d;</b>
+<b class="fc">&nbsp;		history.add( new TurtleMove(color.hashCode(),diameter,MovementType.TOOL_CHANGE) );</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public double getDiameter() {
+<b class="nc">&nbsp;		return diameter;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Absolute position change. Raise the pen before move and lower pen after move.
+&nbsp;	 * @param x absolute x position
+&nbsp;	 * @param y absolute y position
+&nbsp;	 */
+&nbsp;	public void jumpTo(double x,double y) {
+<b class="fc">&nbsp;		penUp();</b>
+<b class="fc">&nbsp;		moveTo(x,y);</b>
+<b class="fc">&nbsp;		penDown();</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Absolute position change, do not change current pen status
+&nbsp;	 * @param x relative x position
+&nbsp;	 * @param y relative y position
+&nbsp;	 */
+&nbsp;	public void moveTo(double x,double y) {
+<b class="fc">&nbsp;		px=x;</b>
+<b class="fc">&nbsp;		py=y;</b>
+<b class="fc">&nbsp;		history.add( new TurtleMove(x, y, isUp ? MovementType.TRAVEL : MovementType.DRAW_LINE) );</b>
+&nbsp;	}
+&nbsp;		
+&nbsp;	/**
+&nbsp;	 * Absolute position
+&nbsp;	 * @param arg0 x axis
+&nbsp;	 */
+&nbsp;	public void setX(double arg0) {
+<b class="nc">&nbsp;		moveTo(arg0,py);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Absolute position
+&nbsp;	 * @param arg0 y axis
+&nbsp;	 */
+&nbsp;	public void setY(double arg0) {
+<b class="nc">&nbsp;		moveTo(px,arg0);</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public double getX() {
+<b class="fc">&nbsp;		return px;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public double getY() {
+<b class="fc">&nbsp;		return py;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void penUp() {
+<b class="fc">&nbsp;		isUp=true;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public void penDown() {
+<b class="fc">&nbsp;		isUp=false;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Returns true if pen is up.
+&nbsp;	 * @return true if pen is up
+&nbsp;	 */
+&nbsp;	public boolean isUp() {
+<b class="fc">&nbsp;		return isUp;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Relative turn in degrees.
+&nbsp;	 * @param degreesCCW relative change in degrees.  Positive is counter clockwise.
+&nbsp;	 */
+&nbsp;	public void turn(double degreesCCW) {
+<b class="fc">&nbsp;		setAngle(angle+degreesCCW);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	// Get absolute angle degrees
+&nbsp;	public double getAngle() {
+<b class="fc">&nbsp;		return angle;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	/**
+&nbsp;	 * Set absolute angle in degrees.
+&nbsp;	 * @param degrees absolute degrees.
+&nbsp;	 */
+&nbsp;	public void setAngle(double degrees) {
+<b class="fc">&nbsp;		angle=degrees;</b>
+<b class="fc">&nbsp;		double radians=Math.toRadians(angle);</b>
+<b class="fc">&nbsp;		nx = Math.cos(radians);</b>
+<b class="fc">&nbsp;		ny = Math.sin(radians);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Relative move forward/back
+&nbsp;	 * @param distance how far to travel
+&nbsp;	 */
+&nbsp;	public void forward(double distance) {
+<b class="fc">&nbsp;		moveTo(</b>
+&nbsp;			px + nx * distance,
+&nbsp;			py + ny * distance
+&nbsp;		);
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Calculate the limits of drawing lines in this turtle history
+&nbsp;	 **/
+&nbsp;	public Rectangle2D.Double getBounds() {
+<b class="fc">&nbsp;		Point2D top = new Point2D();</b>
+<b class="fc">&nbsp;		Point2D bottom = new Point2D();</b>
+<b class="fc">&nbsp;		getBounds(top,bottom);</b>
+&nbsp;		
+<b class="fc">&nbsp;		Rectangle2D.Double r = new Rectangle.Double();</b>
+<b class="fc">&nbsp;		r.x=bottom.x;</b>
+<b class="fc">&nbsp;		r.y=bottom.y;</b>
+<b class="fc">&nbsp;		r.width=top.x-bottom.x;</b>
+<b class="fc">&nbsp;		r.height=top.y-bottom.y;</b>
+&nbsp;		
+<b class="fc">&nbsp;		return r;</b>
+&nbsp;	}
+&nbsp;        
+&nbsp;	/**
+&nbsp;	 * Calculate the limits of drawing lines in this turtle history
+&nbsp;	 * @param top maximum limits
+&nbsp;	 * @param bottom minimum limits
+&nbsp;	 */
+&nbsp;	private void getBounds(Point2D top,Point2D bottom) {
+<b class="fc">&nbsp;		bottom.x=Float.MAX_VALUE;</b>
+<b class="fc">&nbsp;		bottom.y=Float.MAX_VALUE;</b>
+<b class="fc">&nbsp;		top.x=-Float.MAX_VALUE;</b>
+<b class="fc">&nbsp;		top.y=-Float.MAX_VALUE;</b>
+<b class="fc">&nbsp;		TurtleMove lastTravelMove=null;</b>
+&nbsp;		
+<b class="fc">&nbsp;		int hits=0;</b>
+&nbsp;
+<b class="fc">&nbsp;		for( TurtleMove m : history ) {</b>
+<b class="fc">&nbsp;			switch(m.type) {</b>
+&nbsp;				case TRAVEL -&gt; {
+<b class="fc">&nbsp;					lastTravelMove = m;</b>
+&nbsp;				}
+&nbsp;				case DRAW_LINE -&gt; {
+<b class="fc">&nbsp;					if (lastTravelMove != null) {</b>
+<b class="fc">&nbsp;						hits++;</b>
+<b class="fc">&nbsp;						getBoundsInternal(top,bottom,lastTravelMove);</b>
+<b class="fc">&nbsp;						lastTravelMove = null;</b>
+&nbsp;					}
+<b class="fc">&nbsp;					hits++;</b>
+<b class="fc">&nbsp;					getBoundsInternal(top,bottom,m);</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;		
+<b class="pc">&nbsp;		if(hits==0) {</b>
+<b class="nc">&nbsp;			bottom.set(0,0);</b>
+<b class="nc">&nbsp;			top.set(0,0);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private void getBoundsInternal(Point2D top,Point2D bottom,TurtleMove m) {
+<b class="fc">&nbsp;		if (top.x &lt; m.x) top.x = m.x;</b>
+<b class="fc">&nbsp;		if (top.y &lt; m.y) top.y = m.y;</b>
+<b class="fc">&nbsp;		if (bottom.x &gt; m.x) bottom.x = m.x;</b>
+<b class="fc">&nbsp;		if (bottom.y &gt; m.y) bottom.y = m.y;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Scale all draw and move segments by the given amounts
+&nbsp;	 * @param sx the x axis scale factor.
+&nbsp;	 * @param sy the y axis scale factor.
+&nbsp;	 */
+&nbsp;	public void scale(double sx, double sy) {
+<b class="fc">&nbsp;		for( TurtleMove m : history ) {</b>
+<b class="fc">&nbsp;			switch (m.type) {</b>
+&nbsp;				case DRAW_LINE, TRAVEL -&gt; {
+<b class="fc">&nbsp;					m.x *= sx;</b>
+<b class="fc">&nbsp;					m.y *= sy;</b>
+&nbsp;				}
+&nbsp;				default -&gt; {
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Translate all draw and move segments by parameters
+&nbsp;	 * @param dx relative move x
+&nbsp;	 * @param dy relative move y
+&nbsp;	 */
+&nbsp;	public void translate(double dx, double dy) {
+<b class="fc">&nbsp;		for( TurtleMove m : history ) {</b>
+<b class="fc">&nbsp;			switch (m.type) {</b>
+&nbsp;				case DRAW_LINE, TRAVEL -&gt; {
+<b class="fc">&nbsp;					m.x += dx;</b>
+<b class="fc">&nbsp;					m.y += dy;</b>
+&nbsp;				}
+&nbsp;				default -&gt; {}
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Translate all draw and move segments by degrees
+&nbsp;	 * @param degrees relative ccw rotation
+&nbsp;	 */
+&nbsp;	public void rotate(double degrees) {
+<b class="nc">&nbsp;		double r = Math.toRadians(degrees);</b>
+<b class="nc">&nbsp;		double c = Math.cos(r);</b>
+<b class="nc">&nbsp;		double s = Math.sin(r);</b>
+&nbsp;
+<b class="nc">&nbsp;		for( TurtleMove m : history ) {</b>
+<b class="nc">&nbsp;			switch (m.type) {</b>
+&nbsp;				case DRAW_LINE, TRAVEL -&gt; {
+<b class="nc">&nbsp;					double ox=m.x;</b>
+<b class="nc">&nbsp;					double oy=m.y;</b>
+<b class="nc">&nbsp;					m.x = ox * c + oy * -s;</b>
+<b class="nc">&nbsp;					m.y = ox * s + oy *  c;</b>
+&nbsp;				}
+&nbsp;				default -&gt; {}
+&nbsp;			}
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Draw an arc.
+&nbsp;	 * @param cx absolute center of arc
+&nbsp;	 * @param cy absolute center of arc
+&nbsp;	 * @param radius of arc
+&nbsp;	 * @param a1 start angle, in radians
+&nbsp;	 * @param a2 end angle, in radians
+&nbsp;	 * @param steps must be greater than zero.
+&nbsp;	 */
+&nbsp;	public void drawArc(double cx, double cy, double radius, double a1, double a2,int steps) {
+<b class="pc">&nbsp;		if(steps&lt;=0) throw new InvalidParameterException(&quot;steps must be greater than zero.&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;		double delta = (a2 - a1) / (double) steps;</b>
+&nbsp;
+<b class="fc">&nbsp;		for (int i = 0; i &lt;= steps; i++) {</b>
+<b class="fc">&nbsp;			double f = a1 + delta * i;</b>
+<b class="fc">&nbsp;			double x2 = cx + Math.cos(f) * radius;</b>
+<b class="fc">&nbsp;			double y2 = cy + Math.sin(f) * radius;</b>
+<b class="fc">&nbsp;			if(i==0) this.jumpTo(x2, y2);</b>
+<b class="fc">&nbsp;			else     this.moveTo(x2, y2);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return a list of all the pen-down lines while remembering their color.
+&nbsp; 	 */
+&nbsp;	public LineCollection getAsLineSegments() {
+<b class="fc">&nbsp;		LineCollection lines = new LineCollection();</b>
+<b class="fc">&nbsp;		TurtleMove previousMovement=null;</b>
+<b class="fc">&nbsp;		Color color = Color.BLACK;</b>
+&nbsp;
+&nbsp;		//logger.debug(&quot;  Found {} instructions.&quot;, history.size());
+&nbsp;		
+<b class="fc">&nbsp;		for( TurtleMove m : history ) {</b>
+<b class="pc">&nbsp;			switch (m.type) {</b>
+&nbsp;				case DRAW_LINE -&gt; {
+<b class="pc">&nbsp;					if (previousMovement != null) {</b>
+<b class="fc">&nbsp;						LineSegment2D line = new LineSegment2D(</b>
+&nbsp;								new Point2D(previousMovement.x, previousMovement.y),
+&nbsp;								new Point2D(m.x, m.y),
+&nbsp;								color);
+<b class="fc">&nbsp;						if (line.lengthSquared() &gt; 0) {</b>
+<b class="fc">&nbsp;							lines.add(line);</b>
+&nbsp;						}
+&nbsp;					}
+<b class="fc">&nbsp;					previousMovement = m;</b>
+&nbsp;				}
+<b class="fc">&nbsp;				case TRAVEL -&gt; previousMovement = m;</b>
+<b class="fc">&nbsp;				case TOOL_CHANGE -&gt; color = m.getColor();</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		return lines;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Calls {@code addLineSegments} with a default minimum jump size.
+&nbsp;	 * @param segments the list of line segments to add.
+&nbsp;	 */
+&nbsp;	public void addLineSegments(LineCollection segments) {
+<b class="fc">&nbsp;		addLineSegments(segments,1e-6,1e-6);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Appends the list of segments to this {@link Turtle}.
+&nbsp;	 * @param segments the ordered list of segments to add.
+&nbsp;	 * @param minimumJumpSize For any {@link LineSegment2D} N being added, the Turtle will jump if N.b and (N+1).a are more than minimumJumpSize apart.
+&nbsp;	 * @param minDrawDistance For any {@link LineSegment2D} N being added, the Turtle will not draw line where N.b-N.a is less than minDrawDistance.
+&nbsp;	 */
+&nbsp;	public void addLineSegments(LineCollection segments, double minimumJumpSize, double minDrawDistance) {
+<b class="pc">&nbsp;		if(segments.isEmpty()) return;</b>
+&nbsp;		
+<b class="fc">&nbsp;		LineSegment2D first = segments.get(0);</b>
+<b class="fc">&nbsp;		jumpTo(first.start.x,first.start.y);</b>
+<b class="fc">&nbsp;		moveTo(first.end.x,first.end.y);</b>
+&nbsp;		
+<b class="fc">&nbsp;		double minJumpSquared = minimumJumpSize*minimumJumpSize;</b>
+<b class="fc">&nbsp;		double minDrawSquared = minDrawDistance*minDrawDistance;</b>
+&nbsp;		
+<b class="fc">&nbsp;		for( LineSegment2D line : segments ) {</b>
+&nbsp;			// change color if needed
+<b class="pc">&nbsp;			if(line.color !=getColor()) {</b>
+<b class="fc">&nbsp;				setColor(line.color);</b>
+&nbsp;			}
+&nbsp;
+<b class="fc">&nbsp;			double d = distanceSquared(line.start);</b>
+<b class="fc">&nbsp;			if(d &gt; minJumpSquared) {</b>
+&nbsp;				// The previous line ends too far from the start point of this line,
+&nbsp;				// need to make a travel with the pen up to the start point of this line.
+<b class="fc">&nbsp;				jumpTo(line.start.x,line.start.y);</b>
+<b class="pc">&nbsp;			} else if(d&gt;minDrawSquared) {</b>
+<b class="nc">&nbsp;				moveTo(line.start.x,line.start.y);</b>
+&nbsp;			}
+&nbsp;			// Make a pen down move to the end of this line
+<b class="fc">&nbsp;			moveTo(line.end.x,line.end.y);</b>
+&nbsp;		}
+&nbsp;	}
+&nbsp;
+&nbsp;	private double distanceSquared(Point2D b) {
+<b class="fc">&nbsp;		double dx = px-b.x;</b>
+<b class="fc">&nbsp;		double dy = py-b.y;</b>
+<b class="fc">&nbsp;		return dx*dx + dy*dy; </b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public List&lt;Turtle&gt; splitByToolChange() {
+<b class="fc">&nbsp;		List&lt;Turtle&gt; list = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;		Turtle t = new Turtle();</b>
+<b class="fc">&nbsp;		list.add(t);</b>
+<b class="fc">&nbsp;		TurtleMove lastToolChange = null;</b>
+&nbsp;		
+<b class="fc">&nbsp;		for( TurtleMove m : history) {</b>
+<b class="fc">&nbsp;			if(m.type==MovementType.TOOL_CHANGE) {</b>
+<b class="fc">&nbsp;				if(lastToolChange==null</b>
+<b class="fc">&nbsp;						|| !lastToolChange.getColor().equals(m.getColor())</b>
+<b class="pc">&nbsp;						|| lastToolChange.getDiameter() != m.getDiameter() ) {</b>
+<b class="fc">&nbsp;					t = new Turtle();</b>
+<b class="fc">&nbsp;					t.history.clear();</b>
+<b class="fc">&nbsp;					list.add(t);</b>
+<b class="fc">&nbsp;					lastToolChange = m;</b>
+&nbsp;				}
+&nbsp;			}
+<b class="fc">&nbsp;			t.history.add(m);</b>
+&nbsp;		}
+&nbsp;		//logger.debug(&quot;Turtle.splitByToolChange() into {} sections.&quot;, list.size());
+&nbsp;
+<b class="fc">&nbsp;		List&lt;Turtle&gt; notEmptyList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;		for( Turtle t2 : list ) {</b>
+<b class="fc">&nbsp;			if(t2.getHasAnyDrawingMoves()) {</b>
+<b class="fc">&nbsp;				notEmptyList.add(t2);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;		//logger.debug(&quot;Turtle.splitByToolChange() {} not-empty sections.&quot;, notEmptyList.size());
+&nbsp;		
+<b class="fc">&nbsp;		return notEmptyList;</b>
+&nbsp;	}
+&nbsp;	
+&nbsp;	public boolean getHasAnyDrawingMoves() {
+<b class="fc">&nbsp;		for( TurtleMove m : history) {</b>
+<b class="fc">&nbsp;			if(m.type==MovementType.DRAW_LINE) return true;</b>
+&nbsp;		}
+<b class="fc">&nbsp;		return false;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void add(Turtle t) {
+<b class="fc">&nbsp;		this.history.addAll(t.history);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Color getFirstColor() {
+<b class="pc">&nbsp;		for( TurtleMove m : history) {</b>
+<b class="pc">&nbsp;			if(m.type==MovementType.TOOL_CHANGE)</b>
+<b class="fc">&nbsp;				return m.getColor();</b>
+&nbsp;		}
+&nbsp;		
+<b class="nc">&nbsp;		return Color.BLACK;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Returns the total distance of all pen-down moves within this {@link Turtle}.
+&nbsp;	 * @return the total distance of all pen-down moves within this {@link Turtle}.
+&nbsp;	 */
+&nbsp;    public double getDrawDistance() {
+<b class="fc">&nbsp;		double d=0;</b>
+<b class="fc">&nbsp;		TurtleMove prev = new TurtleMove(0,0,MovementType.TRAVEL);</b>
+<b class="fc">&nbsp;		for( TurtleMove m : history) {</b>
+<b class="fc">&nbsp;			if(m.type == MovementType.DRAW_LINE) {</b>
+<b class="fc">&nbsp;				double dx = m.x-prev.x;</b>
+<b class="fc">&nbsp;				double dy = m.y-prev.y;</b>
+<b class="fc">&nbsp;				d += Math.sqrt(dx*dx+dy*dy);</b>
+<b class="fc">&nbsp;				prev = m;</b>
+<b class="fc">&nbsp;			} else if(m.type == MovementType.TRAVEL) {</b>
+<b class="fc">&nbsp;				prev = m;</b>
+&nbsp;			}
+&nbsp;		}
+<b class="fc">&nbsp;		return d;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Returns a point along the drawn lines of this {@link Turtle}
+&nbsp;	 * @param t a value from 0...{@link Turtle#getDrawDistance()}, inclusive.
+&nbsp;	 * @return a point along the drawn lines of this {@link Turtle}
+&nbsp;	 */
+&nbsp;	public Point2D interpolate(double t) {
+<b class="fc">&nbsp;		double d=0;</b>
+<b class="fc">&nbsp;		TurtleMove prev = new TurtleMove(0,0,MovementType.TRAVEL);</b>
+<b class="pc">&nbsp;		for( TurtleMove m : history) {</b>
+<b class="fc">&nbsp;			if(m.type == MovementType.DRAW_LINE) {</b>
+<b class="fc">&nbsp;				double dx = m.x-prev.x;</b>
+<b class="fc">&nbsp;				double dy = m.y-prev.y;</b>
+<b class="fc">&nbsp;				double change = Math.sqrt(dx*dx+dy*dy);</b>
+<b class="pc">&nbsp;				if(d+change&gt;=t) {  // d &lt; t &lt; d+change</b>
+<b class="fc">&nbsp;					double v = (t-d==0)? 0 : (t-d) / change;</b>
+<b class="fc">&nbsp;					v = Math.max(Math.min(v,1),0);</b>
+<b class="fc">&nbsp;					return new Point2D(</b>
+&nbsp;							prev.x + dx * v,
+&nbsp;							prev.y + dy * v);
+&nbsp;				}
+<b class="nc">&nbsp;				d += change;</b>
+<b class="nc">&nbsp;				prev = m;</b>
+<b class="nc">&nbsp;			} else if(m.type == MovementType.TRAVEL) {</b>
+<b class="nc">&nbsp;				prev = m;</b>
+&nbsp;			}
+&nbsp;		}
+<b class="nc">&nbsp;		return new Point2D(prev.x,prev.y);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public boolean equals(Object o) {
+<b class="pc">&nbsp;		if (this == o) return true;</b>
+<b class="pc">&nbsp;		if (o == null || getClass() != o.getClass()) return false;</b>
+<b class="fc">&nbsp;		Turtle turtle = (Turtle) o;</b>
+<b class="pc">&nbsp;		return Double.compare(turtle.px, px) == 0 &amp;&amp;</b>
+<b class="pc">&nbsp;				Double.compare(turtle.py, py) == 0 &amp;&amp;</b>
+<b class="pc">&nbsp;				Double.compare(turtle.nx, nx) == 0 &amp;&amp;</b>
+<b class="pc">&nbsp;				Double.compare(turtle.ny, ny) == 0 &amp;&amp;</b>
+<b class="pc">&nbsp;				Double.compare(turtle.angle, angle) == 0 &amp;&amp;</b>
+&nbsp;				isUp == turtle.isUp &amp;&amp;
+<b class="pc">&nbsp;				Double.compare(turtle.diameter, diameter) == 0 &amp;&amp;</b>
+<b class="fc">&nbsp;				history.equals(turtle.history) &amp;&amp;</b>
+<b class="fc">&nbsp;				Objects.equals(color, turtle.color);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public int hashCode() {
+<b class="nc">&nbsp;		return Objects.hash(history, px, py, nx, ny, angle, isUp, color, diameter);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Vector2d getHeading() {
+<b class="nc">&nbsp;		return new Vector2d(nx,ny);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public Vector2d getPosition() {
+<b class="nc">&nbsp;		return new Vector2d(px,py);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * @return the number of times the pen is lowered to draw a line.
+&nbsp;	 */
+&nbsp;	public int countLoops() {
+<b class="nc">&nbsp;		int sum=0;</b>
+<b class="nc">&nbsp;		MovementType before = MovementType.TRAVEL;</b>
+&nbsp;
+<b class="nc">&nbsp;		for( TurtleMove m : history) {</b>
+<b class="nc">&nbsp;			if(m.type==before) continue;</b>
+<b class="nc">&nbsp;			if(m.type==MovementType.DRAW_LINE &amp;&amp; before==MovementType.TRAVEL) {</b>
+<b class="nc">&nbsp;				sum++;</b>
+&nbsp;			}
+<b class="nc">&nbsp;			before = m.type;</b>
+&nbsp;		}
+<b class="nc">&nbsp;		return sum;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>

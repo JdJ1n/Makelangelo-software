@@ -1,0 +1,207 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=GBK"> 
+  <title>Coverage Report > FilterContrastAdjust</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.marginallyclever.makelangelo.makeart.imagefilter</a>
+</div>
+
+<h1>Coverage Summary for Class: FilterContrastAdjust (com.marginallyclever.makelangelo.makeart.imagefilter)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FilterContrastAdjust</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/41)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.marginallyclever.makelangelo.makeart.imagefilter;
+&nbsp;
+&nbsp;import com.marginallyclever.convenience.ResizableImagePanel;
+&nbsp;import com.marginallyclever.makelangelo.makeart.TransformedImage;
+&nbsp;import com.marginallyclever.makelangelo.rangeslider.RangeSlider;
+&nbsp;
+&nbsp;import javax.imageio.ImageIO;
+&nbsp;import javax.swing.*;
+&nbsp;import java.awt.*;
+&nbsp;import java.awt.image.BufferedImage;
+&nbsp;import java.io.FileInputStream;
+&nbsp;import java.io.IOException;
+&nbsp;
+&nbsp;/**
+&nbsp; * Adjusts the top and bottom of the constrast curve.
+&nbsp; * @author Dan Royer
+&nbsp; * @since 7.39.9
+&nbsp; */
+&nbsp;public class FilterContrastAdjust extends ImageFilter {
+&nbsp;	private final TransformedImage img;
+&nbsp;	private final int bottom;
+&nbsp;	private final float range;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Scale the colors so that bottom...top becomes 0...255
+&nbsp;	 * @param bottom the new bottom range
+&nbsp;	 * @param top the new top range.
+&nbsp;	 */
+&nbsp;	public FilterContrastAdjust(TransformedImage img, int bottom, int top) {
+<b class="nc">&nbsp;		super();</b>
+<b class="nc">&nbsp;		this.img = img;</b>
+<b class="nc">&nbsp;		this.bottom = bottom;</b>
+<b class="nc">&nbsp;		range = 255f / (top-bottom);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	@Override
+&nbsp;	public TransformedImage filter() {
+<b class="nc">&nbsp;		int h = img.getSourceImage().getHeight();</b>
+<b class="nc">&nbsp;		int w = img.getSourceImage().getWidth();</b>
+<b class="nc">&nbsp;		BufferedImage bi = img.getSourceImage();</b>
+<b class="nc">&nbsp;		TransformedImage after = new TransformedImage(img);</b>
+<b class="nc">&nbsp;		BufferedImage afterBI = after.getSourceImage();</b>
+&nbsp;
+<b class="nc">&nbsp;		for (int y = 0; y &lt; h; ++y) {</b>
+<b class="nc">&nbsp;			for (int x = 0; x &lt; w; ++x) {</b>
+<b class="nc">&nbsp;				int color = bi.getRGB(x, y);</b>
+<b class="nc">&nbsp;				int red = adjust(red32(color));</b>
+<b class="nc">&nbsp;				int green = adjust(green32(color));</b>
+<b class="nc">&nbsp;				int blue = adjust(blue32(color));</b>
+<b class="nc">&nbsp;				int alpha = alpha32(color);</b>
+&nbsp;
+<b class="nc">&nbsp;				afterBI.setRGB(x, y, ImageFilter.encode32bit(red,green,blue,alpha));</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+<b class="nc">&nbsp;		return after;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	private int adjust(int color) {
+<b class="nc">&nbsp;		color = Math.max(color-bottom,0);</b>
+<b class="nc">&nbsp;		return Math.min((int)(color*range),255);</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public static void main(String[] args) throws IOException {
+<b class="nc">&nbsp;		TransformedImage src = new TransformedImage( ImageIO.read(new FileInputStream(&quot;src/test/resources/mandrill.png&quot;)) );</b>
+<b class="nc">&nbsp;		JPanel panel = new JPanel();</b>
+<b class="nc">&nbsp;		panel.setLayout(new BorderLayout());</b>
+&nbsp;
+<b class="nc">&nbsp;		final RangeSlider slider = new RangeSlider(0,255);</b>
+<b class="nc">&nbsp;		slider.setValue(0);</b>
+<b class="nc">&nbsp;		slider.setUpperValue(255);</b>
+<b class="nc">&nbsp;		panel.add(slider,BorderLayout.NORTH);</b>
+&nbsp;
+<b class="nc">&nbsp;		slider.addChangeListener(e-&gt;{</b>
+<b class="nc">&nbsp;			FilterContrastAdjust f = new FilterContrastAdjust(src,slider.getValue(),slider.getUpperValue());</b>
+<b class="nc">&nbsp;			ResizableImagePanel rip = new ResizableImagePanel(f.filter().getSourceImage());</b>
+<b class="nc">&nbsp;			BorderLayout layout = (BorderLayout)panel.getLayout();</b>
+<b class="nc">&nbsp;			Component c = layout.getLayoutComponent(BorderLayout.CENTER);</b>
+<b class="nc">&nbsp;			if(c!=null) panel.remove(c);</b>
+<b class="nc">&nbsp;			panel.add(rip,BorderLayout.CENTER);</b>
+<b class="nc">&nbsp;			rip.revalidate();</b>
+<b class="nc">&nbsp;			rip.repaint();</b>
+&nbsp;		});
+&nbsp;
+<b class="nc">&nbsp;		JFrame frame = new JFrame(&quot;Filter_ContrastAdjust&quot;);</b>
+<b class="nc">&nbsp;		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</b>
+<b class="nc">&nbsp;		frame.setSize(400, 500);</b>
+<b class="nc">&nbsp;		frame.add(panel);</b>
+<b class="nc">&nbsp;		frame.setVisible(true);</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-10-07 14:44</div>
+</div>
+</body>
+</html>
