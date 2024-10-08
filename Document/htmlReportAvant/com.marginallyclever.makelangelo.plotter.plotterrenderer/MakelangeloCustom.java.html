@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MakelangeloCustom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plotterrenderer</a> &gt; <span class="el_source">MakelangeloCustom.java</span></div><h1>MakelangeloCustom.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plotterrenderer;
+
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.util.texture.Texture;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.plotter.Plotter;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+
+import static com.marginallyclever.convenience.helpers.DrawingHelper.*;
+
+<span class="fc" id="L11">public class MakelangeloCustom implements PlotterRenderer {</span>
+	public final static float PEN_HOLDER_RADIUS_5 = 25; // mm
+	public final static double COUNTERWEIGHT_W = 30;
+	public final static double COUNTERWEIGHT_H = 60;
+	public final static double PULLEY_RADIUS = 1.27;
+	public final static double MOTOR_WIDTH = 42;
+	private static Texture controlBoard;
+
+	@Override
+	public void render(GL2 gl2,Plotter robot) {
+<span class="nc" id="L21">		PlotterSettings settings = robot.getSettings();</span>
+
+<span class="nc" id="L23">		paintControlBox(gl2,settings);</span>
+<span class="nc" id="L24">		paintMotors(gl2,settings);</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">		if(robot.getDidFindHome())</span>
+<span class="nc" id="L26">			paintPenHolderToCounterweights(gl2,robot);</span>
+<span class="nc" id="L27">	}</span>
+
+	/**
+	 * paint the controller and the LCD panel
+	 * @param gl2 the render context
+	 * @param settings plottersettings of the robot
+	 */
+	private void paintControlBox(GL2 gl2, PlotterSettings settings) {
+<span class="nc" id="L35">		double cy = settings.getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L36">		double left = settings.getDouble(PlotterSettings.LIMIT_LEFT);</span>
+<span class="nc" id="L37">		double right = settings.getDouble(PlotterSettings.LIMIT_RIGHT);</span>
+<span class="nc" id="L38">		double top = settings.getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L39">		double cx = 0;</span>
+
+<span class="nc" id="L41">		gl2.glPushMatrix();</span>
+
+		// mounting plate for PCB
+<span class="nc" id="L44">		gl2.glColor3f(1,0.8f,0.5f);</span>
+		// frame
+<span class="nc" id="L46">		drawRectangle(gl2, top+35f, right+30f, top-35f, left-30f);</span>
+
+<span class="nc" id="L48">		gl2.glTranslated(cx, cy, 0);</span>
+
+		// wires to each motor
+<span class="nc" id="L51">		gl2.glBegin(GL2.GL_LINES);</span>
+<span class="nc" id="L52">		final float SPACING=2;</span>
+<span class="nc" id="L53">		float y=SPACING*-1.5f;</span>
+<span class="nc" id="L54">		gl2.glColor3f(1, 0, 0);		gl2.glVertex2d(left, y);	gl2.glVertex2d(right, y);  y+=SPACING;</span>
+<span class="nc" id="L55">		gl2.glColor3f(0, 1, 0);		gl2.glVertex2d(left, y);	gl2.glVertex2d(right, y);  y+=SPACING;</span>
+<span class="nc" id="L56">		gl2.glColor3f(0, 0, 1);		gl2.glVertex2d(left, y);	gl2.glVertex2d(right, y);  y+=SPACING;</span>
+<span class="nc" id="L57">		gl2.glColor3f(1, 1, 0);		gl2.glVertex2d(left, y);	gl2.glVertex2d(right, y);;</span>
+<span class="nc" id="L58">		gl2.glEnd();</span>
+		
+<span class="nc" id="L60">		float shiftX = (float) right / 2;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (controlBoard == null) controlBoard = loadTexture(&quot;/textures/rampsv14.png&quot;);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (controlBoard != null) {</span>
+<span class="nc" id="L63">			final double scale = 0.1;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (shiftX &lt; 100) {</span>
+<span class="nc" id="L65">				shiftX = 45;</span>
+			}
+<span class="nc" id="L67">			paintTexture(gl2, controlBoard, shiftX, -72, 1024 * scale, 1024 * scale);</span>
+<span class="nc" id="L68">		} else {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			if (shiftX &lt; 100) {</span>
+<span class="nc" id="L70">				shiftX = 85;</span>
+			}
+			// RUMBA in v3 (135mm*75mm)
+<span class="nc" id="L73">			float w = 135f / 2;</span>
+<span class="nc" id="L74">			float h = 75f / 2;</span>
+<span class="nc" id="L75">			gl2.glPushMatrix();</span>
+<span class="nc" id="L76">			gl2.glColor3d(0.9, 0.9, 0.9);</span>
+<span class="nc" id="L77">			gl2.glTranslated(shiftX, 0, 0);</span>
+<span class="nc" id="L78">			drawRectangle(gl2, h, w, -h, -w);</span>
+<span class="nc" id="L79">			gl2.glPopMatrix();</span>
+		}
+
+<span class="nc" id="L82">		renderLCD(gl2, left);</span>
+
+<span class="nc" id="L84">		gl2.glPopMatrix();</span>
+<span class="nc" id="L85">	}</span>
+
+	// draw left &amp; right motor
+	private void paintMotors(GL2 gl2, PlotterSettings settings) {
+<span class="nc" id="L89">		double top = settings.getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L90">		double right = settings.getDouble(PlotterSettings.LIMIT_RIGHT);</span>
+<span class="nc" id="L91">		double left = settings.getDouble(PlotterSettings.LIMIT_LEFT);</span>
+
+		// left motor
+<span class="nc" id="L94">		gl2.glColor3d(0.3,0.3,0.3);</span>
+<span class="nc" id="L95">		drawRectangle(gl2, top+MOTOR_WIDTH/2, left+MOTOR_WIDTH/2, top-MOTOR_WIDTH/2, left-MOTOR_WIDTH/2);</span>
+
+		// right motor
+<span class="nc" id="L98">		drawRectangle(gl2, top+MOTOR_WIDTH/2, right+MOTOR_WIDTH/2, top-MOTOR_WIDTH/2, right-MOTOR_WIDTH/2);</span>
+<span class="nc" id="L99">	}</span>
+	
+	private void renderLCD(GL2 gl2, double left) {
+		// position
+<span class="nc" id="L103">		float shiftX = (float) left / 2;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (shiftX &gt; -100) {</span>
+<span class="nc" id="L105">			shiftX = -75;</span>
+		}
+<span class="nc" id="L107">		gl2.glPushMatrix();</span>
+<span class="nc" id="L108">		gl2.glTranslated(shiftX, 0, 0);</span>
+
+		// LCD red
+<span class="nc" id="L111">		float w = 150f/2;</span>
+<span class="nc" id="L112">		float h = 56f/2;</span>
+<span class="nc" id="L113">		gl2.glColor3f(0.8f,0.0f,0.0f);</span>
+<span class="nc" id="L114">		drawRectangle(gl2, h, w, -h, -w);</span>
+
+		// LCD green
+<span class="nc" id="L117">		gl2.glPushMatrix();</span>
+<span class="nc" id="L118">		gl2.glTranslated(-(2.6)/2, -0.771, 0);</span>
+		
+<span class="nc" id="L120">		w = 98f/2;</span>
+<span class="nc" id="L121">		h = 60f/2;</span>
+<span class="nc" id="L122">		gl2.glColor3f(0,0.6f,0.0f);</span>
+<span class="nc" id="L123">		drawRectangle(gl2, h, w, -h, -w);</span>
+
+		// LCD black
+<span class="nc" id="L126">		h = 40f/2;</span>
+<span class="nc" id="L127">		gl2.glColor3f(0,0,0);</span>
+<span class="nc" id="L128">		drawRectangle(gl2, h, w, -h, -w);</span>
+
+		// LCD blue
+<span class="nc" id="L131">		h = 25f/2;</span>
+<span class="nc" id="L132">		w = 75f/2;</span>
+<span class="nc" id="L133">		gl2.glColor3f(0,0,0.7f);</span>
+<span class="nc" id="L134">		drawRectangle(gl2, h, w, -h, -w);</span>
+		
+<span class="nc" id="L136">		gl2.glPopMatrix();</span>
+
+		// clean up
+<span class="nc" id="L139">		gl2.glPopMatrix();</span>
+<span class="nc" id="L140">	}</span>
+
+	private void paintPenHolderToCounterweights(GL2 gl2, Plotter robot ) {
+<span class="nc" id="L143">		PlotterSettings settings = robot.getSettings();</span>
+		double dx,dy;
+<span class="nc" id="L145">		Point2D pos = robot.getPos();</span>
+<span class="nc" id="L146">		double gx = pos.x;</span>
+<span class="nc" id="L147">		double gy = pos.y;</span>
+		
+<span class="nc" id="L149">		double top = settings.getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L150">		double bottom = settings.getDouble(PlotterSettings.LIMIT_BOTTOM);</span>
+<span class="nc" id="L151">		double left = settings.getDouble(PlotterSettings.LIMIT_LEFT);</span>
+<span class="nc" id="L152">		double right = settings.getDouble(PlotterSettings.LIMIT_RIGHT);</span>
+		
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if(gx&lt;left  ) return;</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if(gx&gt;right ) return;</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if(gy&gt;top   ) return;</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if(gy&lt;bottom) return;</span>
+		
+<span class="nc" id="L159">		float bottleCenter = 8f+7.5f;</span>
+		
+<span class="nc" id="L161">		double mw = right-left;</span>
+<span class="nc" id="L162">		double mh = top-settings.getDouble(PlotterSettings.LIMIT_BOTTOM);</span>
+<span class="nc" id="L163">		double suggestedLength = Math.sqrt(mw*mw+mh*mh)+50;</span>
+
+<span class="nc" id="L165">		dx = gx - left;</span>
+<span class="nc" id="L166">		dy = gy - top;</span>
+<span class="nc" id="L167">		double left_a = Math.sqrt(dx*dx+dy*dy);</span>
+<span class="nc" id="L168">		double left_b = (suggestedLength - left_a)/2;</span>
+
+<span class="nc" id="L170">		dx = gx - right;</span>
+<span class="nc" id="L171">		double right_a = Math.sqrt(dx*dx+dy*dy);</span>
+<span class="nc" id="L172">		double right_b = (suggestedLength - right_a)/2;</span>
+
+<span class="nc" id="L174">		paintPlotter(gl2,(float)gx,(float)gy);</span>
+
+		// belts
+<span class="nc" id="L177">		gl2.glBegin(GL2.GL_LINES);</span>
+<span class="nc" id="L178">		gl2.glColor3d(0.2,0.2,0.2);</span>
+		
+		// belt from motor to pen holder left
+<span class="nc" id="L181">		gl2.glVertex2d(left, top);</span>
+<span class="nc" id="L182">		gl2.glVertex2d(gx,gy);</span>
+		// belt from motor to pen holder right
+<span class="nc" id="L184">		gl2.glVertex2d(right, top);</span>
+<span class="nc" id="L185">		gl2.glVertex2d(gx,gy);</span>
+		
+		// belt from motor to counterweight left
+<span class="nc" id="L188">		gl2.glVertex2d(left-bottleCenter-PULLEY_RADIUS, top-MOTOR_WIDTH/2);</span>
+<span class="nc" id="L189">		gl2.glVertex2d(left-bottleCenter-PULLEY_RADIUS, top-left_b);</span>
+		// belt from motor to counterweight right
+<span class="nc" id="L191">		gl2.glVertex2d(right+bottleCenter+PULLEY_RADIUS, top-MOTOR_WIDTH/2);</span>
+<span class="nc" id="L192">		gl2.glVertex2d(right+bottleCenter+PULLEY_RADIUS, top-right_b);</span>
+<span class="nc" id="L193">		gl2.glEnd();</span>
+		
+		// counterweight left
+<span class="nc" id="L196">		gl2.glBegin(GL2.GL_LINE_LOOP);</span>
+<span class="nc" id="L197">		gl2.glColor3f(0, 0, 1);</span>
+<span class="nc" id="L198">		gl2.glVertex2d(left-PULLEY_RADIUS-bottleCenter-COUNTERWEIGHT_W/2,top-left_b);</span>
+<span class="nc" id="L199">		gl2.glVertex2d(left-PULLEY_RADIUS-bottleCenter+COUNTERWEIGHT_W/2,top-left_b);</span>
+<span class="nc" id="L200">		gl2.glVertex2d(left-PULLEY_RADIUS-bottleCenter+COUNTERWEIGHT_W/2,top-left_b-COUNTERWEIGHT_H);</span>
+<span class="nc" id="L201">		gl2.glVertex2d(left-PULLEY_RADIUS-bottleCenter-COUNTERWEIGHT_W/2,top-left_b-COUNTERWEIGHT_H);</span>
+<span class="nc" id="L202">		gl2.glEnd();</span>
+		
+		// counterweight right
+<span class="nc" id="L205">		gl2.glBegin(GL2.GL_LINE_LOOP);</span>
+<span class="nc" id="L206">		gl2.glColor3f(0, 0, 1);</span>
+<span class="nc" id="L207">		gl2.glVertex2d(right+PULLEY_RADIUS+bottleCenter-COUNTERWEIGHT_W/2,top-right_b);</span>
+<span class="nc" id="L208">		gl2.glVertex2d(right+PULLEY_RADIUS+bottleCenter+COUNTERWEIGHT_W/2,top-right_b);</span>
+<span class="nc" id="L209">		gl2.glVertex2d(right+PULLEY_RADIUS+bottleCenter+COUNTERWEIGHT_W/2,top-right_b-COUNTERWEIGHT_H);</span>
+<span class="nc" id="L210">		gl2.glVertex2d(right+PULLEY_RADIUS+bottleCenter-COUNTERWEIGHT_W/2,top-right_b-COUNTERWEIGHT_H);</span>
+<span class="nc" id="L211">		gl2.glEnd();</span>
+<span class="nc" id="L212">	}</span>
+
+	private void paintPlotter(GL2 gl2, float gx, float gy) {
+		// plotter
+<span class="nc" id="L216">		gl2.glColor3f(0, 0, 1);</span>
+<span class="nc" id="L217">		drawCircle(gl2, gx, gy, PEN_HOLDER_RADIUS_5);</span>
+<span class="nc" id="L218">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

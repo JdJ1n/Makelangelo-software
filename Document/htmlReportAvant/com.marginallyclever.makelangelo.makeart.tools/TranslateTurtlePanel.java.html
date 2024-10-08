@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TranslateTurtlePanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.tools</a> &gt; <span class="el_source">TranslateTurtlePanel.java</span></div><h1>TranslateTurtlePanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.tools;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+import com.marginallyclever.util.PreferencesHelper;
+import org.apache.batik.ext.swing.GridBagConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+
+public class TranslateTurtlePanel extends JPanel {
+<span class="nc" id="L17">	private static final Logger logger = LoggerFactory.getLogger(TranslateTurtlePanel.class);</span>
+
+	private final Turtle turtleToChange;
+	private final Turtle turtleOriginal;
+	private final JSpinner dx;
+	private final JSpinner dy;
+	private final Rectangle2D.Double myOriginalBounds;
+
+	public TranslateTurtlePanel(Turtle t) {
+<span class="nc" id="L26">		super();</span>
+<span class="nc" id="L27">		turtleToChange = t;</span>
+<span class="nc" id="L28">		turtleOriginal = new Turtle(t);  // make a deep copy of the original.  Doubles memory usage!</span>
+
+<span class="nc" id="L30">		myOriginalBounds = turtleToChange.getBounds();</span>
+<span class="nc" id="L31">		dx = new JSpinner(new SpinnerNumberModel(myOriginalBounds.x,null,null,1));</span>
+<span class="nc" id="L32">		dy = new JSpinner(new SpinnerNumberModel(myOriginalBounds.y,null,null,1));</span>
+		
+<span class="nc" id="L34">		setLayout(new GridBagLayout());</span>
+<span class="nc" id="L35">		GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L36">		c.insets=new Insets(10,10,3,10);</span>
+
+<span class="nc" id="L38">		c.gridx=0;</span>
+<span class="nc" id="L39">		c.gridy=0;</span>
+<span class="nc" id="L40">		c.weightx=1;</span>
+<span class="nc" id="L41">		c.anchor=GridBagConstants.NORTHWEST;</span>
+<span class="nc" id="L42">		add(new JLabel(&quot;X&quot;),c);</span>
+		
+<span class="nc" id="L44">		c.gridx=0;</span>
+<span class="nc" id="L45">		c.gridy=1;</span>
+<span class="nc" id="L46">		c.anchor=GridBagConstants.NORTHWEST;</span>
+<span class="nc" id="L47">		add(new JLabel(&quot;Y&quot;),c);</span>
+		
+<span class="nc" id="L49">		c.gridx=1;</span>
+<span class="nc" id="L50">		c.gridy=0;</span>
+<span class="nc" id="L51">		c.anchor=GridBagConstants.NORTHWEST;</span>
+<span class="nc" id="L52">		c.fill=GridBagConstants.HORIZONTAL;</span>
+<span class="nc" id="L53">		add(dx,c);</span>
+
+<span class="nc" id="L55">		c.gridx=1;</span>
+<span class="nc" id="L56">		c.gridy=1;</span>
+<span class="nc" id="L57">		c.anchor=GridBagConstants.NORTHWEST;</span>
+<span class="nc" id="L58">		c.fill=GridBagConstants.HORIZONTAL;</span>
+<span class="nc" id="L59">		add(dy,c);</span>
+		
+<span class="nc" id="L61">		dx.addChangeListener(this::onChange);</span>
+<span class="nc" id="L62">		dy.addChangeListener(this::onChange);</span>
+<span class="nc" id="L63">	}</span>
+
+	private void onChange(ChangeEvent e) {
+<span class="nc" id="L66">		double dx2 = (Double) dx.getValue() - myOriginalBounds.x;</span>
+<span class="nc" id="L67">		double dy2 = (Double) dy.getValue() - myOriginalBounds.y;</span>
+
+<span class="nc" id="L69">		logger.debug(&quot;move {}x{}&quot;, dx2, dy2);</span>
+<span class="nc" id="L70">		revertOriginalTurtle();</span>
+<span class="nc" id="L71">		turtleToChange.translate(dx2, dy2);</span>
+<span class="nc" id="L72">	}</span>
+
+	private void revertOriginalTurtle() {
+		// reset original turtle to original scale.
+<span class="nc" id="L76">		turtleToChange.history.clear();</span>
+		// deep copy
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		for(TurtleMove m : turtleOriginal.history) {</span>
+<span class="nc" id="L79">			turtleToChange.history.add(new TurtleMove(m));</span>
+<span class="nc" id="L80">		}</span>
+<span class="nc" id="L81">	}</span>
+
+	public static void runAsDialog(Window parent,Turtle t) {
+<span class="nc" id="L84">		TranslateTurtlePanel panel = new TranslateTurtlePanel(t);</span>
+
+<span class="nc" id="L86">		JDialog dialog = new JDialog(parent,Translator.get(&quot;Translate&quot;));</span>
+
+<span class="nc" id="L88">		JButton okButton = new JButton(Translator.get(&quot;OK&quot;));</span>
+<span class="nc" id="L89">		JButton cancelButton = new JButton(Translator.get(&quot;Cancel&quot;));</span>
+
+<span class="nc" id="L91">		JPanel outerPanel = new JPanel(new GridBagLayout());</span>
+<span class="nc" id="L92">		GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L93">		c.gridx=0;</span>
+<span class="nc" id="L94">		c.gridy=0;</span>
+<span class="nc" id="L95">		c.gridwidth=3;</span>
+<span class="nc" id="L96">		c.anchor=GridBagConstraints.NORTHWEST;</span>
+<span class="nc" id="L97">		c.fill=GridBagConstraints.BOTH;</span>
+<span class="nc" id="L98">		outerPanel.add(panel,c);</span>
+
+<span class="nc" id="L100">		c.gridx=1;</span>
+<span class="nc" id="L101">		c.gridy=1;</span>
+<span class="nc" id="L102">		c.gridwidth=1;</span>
+<span class="nc" id="L103">		c.weightx=1;</span>
+<span class="nc" id="L104">		outerPanel.add(okButton,c);</span>
+<span class="nc" id="L105">		c.gridx=2;</span>
+<span class="nc" id="L106">		c.gridwidth=1;</span>
+<span class="nc" id="L107">		c.weightx=1;</span>
+<span class="nc" id="L108">		outerPanel.add(cancelButton,c);</span>
+		
+<span class="nc" id="L110">		okButton.addActionListener((e)-&gt; dialog.dispose());</span>
+<span class="nc" id="L111">		cancelButton.addActionListener((e)-&gt; {</span>
+<span class="nc" id="L112">			panel.revertOriginalTurtle();</span>
+<span class="nc" id="L113">			dialog.dispose();</span>
+<span class="nc" id="L114">		});</span>
+		
+<span class="nc" id="L116">		dialog.add(outerPanel);</span>
+<span class="nc" id="L117">		dialog.pack();</span>
+<span class="nc" id="L118">		dialog.setLocationRelativeTo(parent);</span>
+<span class="nc" id="L119">		dialog.setVisible(true);</span>
+<span class="nc" id="L120">	}</span>
+	
+	// TEST
+	
+	public static void main(String[] args) {
+<span class="nc" id="L125">		PreferencesHelper.start();</span>
+<span class="nc" id="L126">		Translator.start();</span>
+
+<span class="nc" id="L128">		JFrame frame = new JFrame(TranslateTurtlePanel.class.getSimpleName());</span>
+<span class="nc" id="L129">		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L130">		frame.pack();</span>
+<span class="nc" id="L131">		frame.setLocationRelativeTo(null);</span>
+<span class="nc" id="L132">		runAsDialog(frame,new Turtle());</span>
+<span class="nc" id="L133">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NetworkSession.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.communications</a> &gt; <span class="el_source">NetworkSession.java</span></div><h1>NetworkSession.java</h1><pre class="source lang-java linenums">package com.marginallyclever.communications;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created on 4/12/15.
+ *
+ * @author Peter Colapietro
+ * @since v7
+ */
+<span class="nc" id="L12">public abstract class NetworkSession {</span>
+
+<span class="nc" id="L14">	private String name = &quot;&quot;;</span>
+		
+	public abstract void closeConnection();
+
+	public abstract void openConnection(String connectionName) throws Exception;
+
+	public abstract boolean isOpen();
+
+	public abstract void sendMessage(String msg) throws Exception;
+		
+	protected void setName(String s) {
+<span class="nc" id="L25">		name=s;</span>
+<span class="nc" id="L26">	}</span>
+	
+	public String getName() {
+<span class="nc" id="L29">		return name;</span>
+	}
+	
+	// OBSERVER PATTERN
+
+<span class="nc" id="L34">	private List&lt;NetworkSessionListener&gt; listeners = new ArrayList&lt;&gt;();</span>
+
+	public void addListener(NetworkSessionListener listener) {
+<span class="nc" id="L37">		listeners.add(listener);</span>
+<span class="nc" id="L38">	}</span>
+	
+	public void removeListener(NetworkSessionListener listener) {
+<span class="nc" id="L41">		listeners.remove(listener);</span>
+<span class="nc" id="L42">	}</span>
+	
+	private void notifyListeners(NetworkSessionEvent evt) {
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		for( NetworkSessionListener a : listeners ) {</span>
+<span class="nc" id="L46">			a.networkSessionEvent(evt);</span>
+<span class="nc" id="L47">		}</span>
+<span class="nc" id="L48">	}</span>
+
+	// OBSERVER CONVENIENCE METHODS
+
+	// tell all listeners data has arrived
+	protected void notifyDataReceived(String line) {
+<span class="nc" id="L54">		notifyListeners(new NetworkSessionEvent(this,NetworkSessionEvent.DATA_RECEIVED,line));</span>
+<span class="nc" id="L55">	}</span>
+
+	// tell all listeners data was sent
+	protected void notifyDataSent(String line) {
+<span class="nc" id="L59">		notifyListeners(new NetworkSessionEvent(this,NetworkSessionEvent.DATA_SENT,line));</span>
+<span class="nc" id="L60">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

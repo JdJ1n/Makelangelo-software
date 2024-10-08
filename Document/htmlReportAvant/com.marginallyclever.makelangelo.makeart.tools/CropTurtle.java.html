@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CropTurtle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.tools</a> &gt; <span class="el_source">CropTurtle.java</span></div><h1>CropTurtle.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.tools;
+
+import com.marginallyclever.convenience.Clipper2D;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.turtle.MovementType;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L15">public class CropTurtle {</span>
+<span class="fc" id="L16">	private static final Logger logger = LoggerFactory.getLogger(CropTurtle.class);</span>
+	
+	public static void run(Turtle turtle,Rectangle2D.Double rectangle) {
+<span class="fc" id="L19">		logger.debug(&quot;crop start @ {}&quot;, turtle.history.size());</span>
+
+<span class="fc" id="L21">		List&lt;TurtleMove&gt; newHistory = new ArrayList&lt;&gt;();</span>
+		// limits we will need for rectangle
+<span class="fc" id="L23">		Point2D rMax = new Point2D(rectangle.getMaxX(),rectangle.getMaxY());</span>
+<span class="fc" id="L24">		Point2D rMin = new Point2D(rectangle.getMinX(),rectangle.getMinY());</span>
+		// working space for clipping
+<span class="fc" id="L26">		Point2D p0 = new Point2D();</span>
+<span class="fc" id="L27">		Point2D p1 = new Point2D();</span>
+<span class="fc" id="L28">		Point2D p0before = new Point2D();</span>
+<span class="fc" id="L29">		Point2D p1before = new Point2D();</span>
+
+<span class="fc" id="L31">		TurtleMove prev=null;</span>
+		
+<span class="fc bfc" id="L33" title="All 2 branches covered.">		for (TurtleMove m : turtle.history ) {</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">			switch (m.type) {</span>
+				case DRAW_LINE, TRAVEL -&gt; {
+<span class="fc bfc" id="L36" title="All 2 branches covered.">					if(prev==null) {</span>
+<span class="fc" id="L37">						newHistory.add(m);</span>
+					} else {
+<span class="fc" id="L39">						p0.set(prev.x, prev.y);</span>
+<span class="fc" id="L40">						p1.set(m.x, m.y);</span>
+<span class="fc" id="L41">						p0before.set(p0);</span>
+<span class="fc" id="L42">						p1before.set(p1);</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">						if (Clipper2D.clipLineToRectangle(p0, p1, rMax, rMin)) {</span>
+							// partial crop.  Which end(s)?
+<span class="fc bfc" id="L45" title="All 2 branches covered.">							boolean startCropped = !p0before.equalsEpsilon(p0, 1e-8);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">							boolean endCropped = !p1before.equalsEpsilon(p1, 1e-8);</span>
+
+<span class="fc bfc" id="L48" title="All 2 branches covered.">							if (startCropped) {</span>
+								// make a jump to the crop start
+<span class="fc" id="L50">								newHistory.add(new TurtleMove(p0.x, p0.y, MovementType.TRAVEL));</span>
+							}
+
+<span class="fc bfc" id="L53" title="All 2 branches covered.">							if(endCropped) {</span>
+								// draw to the crop end
+<span class="fc" id="L55">								newHistory.add(new TurtleMove(p1.x, p1.y, m.type));</span>
+							} else {
+								// draw to the original end
+<span class="fc" id="L58">								newHistory.add(m);</span>
+							}
+						}
+					}
+<span class="fc" id="L62">					prev = m;</span>
+<span class="fc" id="L63">				}</span>
+<span class="fc" id="L64">				default -&gt; newHistory.add(m);</span>
+			}
+<span class="fc" id="L66">		}</span>
+
+<span class="fc" id="L68">		turtle.history.clear();</span>
+<span class="fc" id="L69">		turtle.history.addAll(newHistory);</span>
+		
+		// There may be some dumb travel moves left. (several travels in a row.)
+	
+<span class="fc" id="L73">		logger.debug(&quot;crop end @ {}&quot;, turtle.history.size());</span>
+<span class="fc" id="L74">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

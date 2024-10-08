@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SoundPreferences.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.applicationsettings</a> &gt; <span class="el_source">SoundPreferences.java</span></div><h1>SoundPreferences.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.applicationsettings;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.select.SelectFile;
+import com.marginallyclever.makelangelo.select.SelectPanel;
+import com.marginallyclever.util.PreferencesHelper;
+
+import java.util.prefs.Preferences;
+
+
+/**
+ * Adjust sound preferences
+ */
+<span class="nc" id="L14">public class SoundPreferences {</span>
+	static private SelectPanel panel;
+	static private SelectFile sound_connect;
+	static private SelectFile sound_disconnect;
+	static private SelectFile sound_conversion_finished;
+	static private SelectFile sound_drawing_finished;
+
+	static public SelectPanel buildPanel() {
+<span class="nc" id="L22">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.SOUND);</span>
+
+<span class="nc" id="L24">		panel = new SelectPanel();</span>
+		
+<span class="nc" id="L26">		panel.add(sound_connect = new SelectFile(&quot;connect&quot;,Translator.get(&quot;SoundPreferences.Connect&quot;),prefs.get(&quot;sound_connect&quot;, &quot;&quot;)));</span>
+<span class="nc" id="L27">		panel.add(sound_disconnect = new SelectFile(&quot;disconnect&quot;,Translator.get(&quot;SoundPreferences.Disconnect&quot;),prefs.get(&quot;sound_disconnect&quot;, &quot;&quot;)));</span>
+<span class="nc" id="L28">		panel.add(sound_conversion_finished = new SelectFile(&quot;convert&quot;,Translator.get(&quot;SoundPreferences.FinishConvert&quot;),prefs.get(&quot;sound_conversion_finished&quot;, &quot;&quot;)));</span>
+<span class="nc" id="L29">		panel.add(sound_drawing_finished = new SelectFile(&quot;finish&quot;,Translator.get(&quot;SoundPreferences.FinishDraw&quot;),prefs.get(&quot;sound_drawing_finished&quot;, &quot;&quot;)));</span>
+<span class="nc" id="L30">		return panel;</span>
+	}
+	
+	static public void save() {
+<span class="nc" id="L34">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.SOUND);</span>
+<span class="nc" id="L35">		prefs.put(&quot;sound_connect&quot;, sound_connect.getText());</span>
+<span class="nc" id="L36">		prefs.put(&quot;sound_disconnect&quot;, sound_disconnect.getText());</span>
+<span class="nc" id="L37">		prefs.put(&quot;sound_conversion_finished&quot;, sound_conversion_finished.getText());</span>
+<span class="nc" id="L38">		prefs.put(&quot;sound_drawing_finished&quot;, sound_drawing_finished.getText());</span>
+<span class="nc" id="L39">	}</span>
+
+	static public String getConnectSoundFilename() {
+<span class="nc" id="L42">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.SOUND);</span>
+<span class="nc" id="L43">		return prefs.get(&quot;sound_connect&quot;, &quot;&quot;);</span>
+	}
+	
+	static public String getDisconnectSoundFilename() {
+<span class="nc" id="L47">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.SOUND);</span>
+<span class="nc" id="L48">		return prefs.get(&quot;sound_disconnect&quot;, &quot;&quot;);</span>
+	}
+	
+	static public String getConversionFinishedSoundFilename() {
+<span class="nc" id="L52">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.SOUND);</span>
+<span class="nc" id="L53">		return prefs.get(&quot;sound_conversion_finished&quot;, &quot;&quot;);</span>
+	}
+	
+	static public String getDrawingFinishedSoundFilename() {
+<span class="nc" id="L57">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.SOUND);</span>
+<span class="nc" id="L58">		return prefs.get(&quot;sound_drawing_finished&quot;, &quot;&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

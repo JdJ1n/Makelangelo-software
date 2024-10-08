@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_GosperCurve.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal</a> &gt; <span class="el_source">Generator_GosperCurve.java</span></div><h1>Generator_GosperCurve.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.tools.ResizeTurtleToPaperAction;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+/**
+ * Gosper curve fractal.
+ * @author Dan Royer
+ */
+public class Generator_GosperCurve extends TurtleGenerator {
+<span class="fc" id="L17">	private static int order = 4; // controls complexity of curve</span>
+
+	public Generator_GosperCurve() {
+<span class="fc" id="L20">		super();</span>
+
+		SelectSlider fieldOrder;
+<span class="fc" id="L23">		add(fieldOrder = new SelectSlider(&quot;order&quot;,</span>
+<span class="fc" id="L24">				Translator.get(&quot;HilbertCurveOrder&quot;)// As this is the same concept and translation value but this translation key is confusing as we are in GosperCurve_Panle ...</span>
+<span class="fc" id="L25">				,6,1,Generator_GosperCurve.getOrder()));</span>
+<span class="fc" id="L26">		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href='https://en.wikipedia.org/wiki/Gosper_curve'&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</span>
+
+<span class="fc" id="L28">		fieldOrder.addSelectListener(evt-&gt; {</span>
+<span class="nc" id="L29">			order = Math.max(1, fieldOrder.getValue());</span>
+<span class="nc" id="L30">			generate();</span>
+<span class="nc" id="L31">		});</span>
+<span class="fc" id="L32">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="fc" id="L36">		return Translator.get(&quot;GosperCurveName&quot;);</span>
+	}
+
+	static public int getOrder() {
+<span class="fc" id="L40">		return order;</span>
+	}
+	static public void setOrder(int order) {
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		if(order&lt;1) order=1;</span>
+<span class="nc" id="L44">		Generator_GosperCurve.order = order;</span>
+<span class="nc" id="L45">	}</span>
+
+	@Override
+	public void generate() {
+<span class="nc" id="L49">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L50">		double v = Math.min(rect.getWidth(),rect.getHeight());</span>
+
+<span class="nc" id="L52">		Turtle turtle = new Turtle();</span>
+<span class="nc" id="L53">		turtle.jumpTo(myPaper.getCenterX(),myPaper.getCenterY());</span>
+<span class="nc" id="L54">		gosperA(turtle,order);</span>
+
+		// scale the image to fit on the paper
+<span class="nc" id="L57">		Rectangle2D.Double dims = turtle.getBounds();</span>
+<span class="nc" id="L58">		double tw = dims.getWidth();</span>
+<span class="nc" id="L59">		double th = dims.getHeight();</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if(tw&gt;v) {</span>
+<span class="nc" id="L61">			double s = v/tw;</span>
+<span class="nc" id="L62">			turtle.scale(s,s);</span>
+<span class="nc" id="L63">			th *= s;</span>
+<span class="nc" id="L64">			tw *= s;</span>
+		}
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if(th&gt;v) {</span>
+<span class="nc" id="L67">			double s = v/th;</span>
+<span class="nc" id="L68">			turtle.scale(s,s);</span>
+<span class="nc" id="L69">			th *= s;</span>
+<span class="nc" id="L70">			tw *= s;</span>
+		}
+<span class="nc" id="L72">		double tx = dims.getX();</span>
+<span class="nc" id="L73">		double ty = dims.getY();</span>
+		
+<span class="nc" id="L75">		turtle.translate(-tx-tw/2, -ty-th/2);</span>
+
+		// scale turtle to fit paper
+<span class="nc" id="L78">		ResizeTurtleToPaperAction action = new ResizeTurtleToPaperAction(myPaper,false,null);</span>
+<span class="nc" id="L79">		turtle = action.run(turtle);</span>
+
+<span class="nc" id="L81">		notifyListeners(turtle);</span>
+<span class="nc" id="L82">	}</span>
+
+
+	// Gosper curve A = A-B--B+A++AA+B-
+	private void gosperA(Turtle turtle,int n) {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (n == 0) {</span>
+<span class="nc" id="L88">			gosperForward(turtle);</span>
+<span class="nc" id="L89">			return;</span>
+		}
+<span class="nc" id="L91">		gosperA(turtle,n-1);</span>
+<span class="nc" id="L92">		turtle.turn(-60);</span>
+<span class="nc" id="L93">		gosperB(turtle,n-1);</span>
+<span class="nc" id="L94">		turtle.turn(-60);</span>
+<span class="nc" id="L95">		turtle.turn(-60);</span>
+<span class="nc" id="L96">		gosperB(turtle,n-1);</span>
+<span class="nc" id="L97">		turtle.turn(60);</span>
+<span class="nc" id="L98">		gosperA(turtle,n-1);</span>
+<span class="nc" id="L99">		turtle.turn(60);</span>
+<span class="nc" id="L100">		turtle.turn(60);</span>
+<span class="nc" id="L101">		gosperA(turtle,n-1);</span>
+<span class="nc" id="L102">		gosperA(turtle,n-1);</span>
+<span class="nc" id="L103">		turtle.turn(60);</span>
+<span class="nc" id="L104">		gosperB(turtle,n-1);</span>
+<span class="nc" id="L105">		turtle.turn(-60);</span>
+<span class="nc" id="L106">	}</span>
+
+
+	// Gosper curve B = +A-BB--B-A++A+B
+	public void gosperB(Turtle turtle,int n) {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (n == 0) {</span>
+<span class="nc" id="L112">			gosperForward(turtle);</span>
+<span class="nc" id="L113">			return;</span>
+		}
+<span class="nc" id="L115">		turtle.turn(60);</span>
+<span class="nc" id="L116">		gosperA(turtle,n-1);</span>
+<span class="nc" id="L117">		turtle.turn(-60);</span>
+<span class="nc" id="L118">		gosperB(turtle,n-1);</span>
+<span class="nc" id="L119">		gosperB(turtle,n-1);</span>
+<span class="nc" id="L120">		turtle.turn(-60);</span>
+<span class="nc" id="L121">		turtle.turn(-60);</span>
+<span class="nc" id="L122">		gosperB(turtle,n-1);</span>
+<span class="nc" id="L123">		turtle.turn(-60);</span>
+<span class="nc" id="L124">		gosperA(turtle,n-1);</span>
+<span class="nc" id="L125">		turtle.turn(60);</span>
+<span class="nc" id="L126">		turtle.turn(60);</span>
+<span class="nc" id="L127">		gosperA(turtle,n-1);</span>
+<span class="nc" id="L128">		turtle.turn(60);</span>
+<span class="nc" id="L129">		gosperB(turtle,n-1);</span>
+<span class="nc" id="L130">	}</span>
+
+
+	public void gosperForward(Turtle turtle) {
+<span class="nc" id="L134">		turtle.forward(1.0);</span>
+<span class="nc" id="L135">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Clipper2D.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">Clipper2D.java</span></div><h1>Clipper2D.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+/**
+ * Convenience methods for clipping shapes in 2D
+ * @author Dan Royer
+ *
+ */
+<span class="nc" id="L8">public class Clipper2D {</span>
+	/**
+	 * Clip the line P0-P1 to the rectangle (rMax,rMin).&lt;br&gt;
+	 * See also https://stackoverflow.com/questions/626812/most-elegant-way-to-clip-a-line
+	 * @param P0 start of line.
+	 * @param P1 end of line.
+	 * @param rMax maximum extent of rectangle
+	 * @param rMin minimum extent of rectangle
+	 * @return true if some of the line remains, false if the entire line is cut.
+	 */
+	public static boolean clipLineToRectangle(Point2D P0,Point2D P1,Point2D rMax,Point2D rMin) {
+<span class="fc" id="L19">		double xLeft   = rMin.x;</span>
+<span class="fc" id="L20">		double xRight  = rMax.x;</span>
+<span class="fc" id="L21">		double yBottom = rMin.y;</span>
+<span class="fc" id="L22">		double yTop    = rMax.y;</span>
+		
+		int outCode0,outCode1; 
+		
+		while(true) {
+<span class="fc" id="L27">			outCode0 = outCodes(P0,xLeft,xRight,yTop,yBottom);</span>
+<span class="fc" id="L28">			outCode1 = outCodes(P1,xLeft,xRight,yTop,yBottom);</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">			if( rejectCheck(outCode0,outCode1) ) return false;  // completely out</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">			if( acceptCheck(outCode0,outCode1) ) return true;  // completely in</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">			if(outCode0 == 0) {</span>
+<span class="fc" id="L32">				break;</span>
+			} 
+<span class="fc bfc" id="L34" title="All 2 branches covered.">			if( (outCode0 &amp; 1) != 0 ) { </span>
+<span class="fc" id="L35">				P0.x += (P1.x - P0.x)*(yTop    - P0.y)/(P1.y - P0.y);</span>
+<span class="fc" id="L36">				P0.y = yTop;</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">			} else if( (outCode0 &amp; 2) != 0 ) { </span>
+<span class="fc" id="L38">				P0.x += (P1.x - P0.x)*(yBottom - P0.y)/(P1.y - P0.y);</span>
+<span class="fc" id="L39">				P0.y = yBottom;</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">			} else if( (outCode0 &amp; 4) != 0 ) { </span>
+<span class="fc" id="L41">				P0.y += (P1.y - P0.y)*(xRight  - P0.x)/(P1.x - P0.x);</span>
+<span class="fc" id="L42">				P0.x = xRight;</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">			} else if( (outCode0 &amp; 8) != 0 ) { </span>
+<span class="fc" id="L44">				P0.y += (P1.y - P0.y)*(xLeft   - P0.x)/(P1.x - P0.x);</span>
+<span class="fc" id="L45">				P0.x = xLeft;</span>
+			}
+		} 
+		while(true) {
+<span class="fc" id="L49">			outCode0 = outCodes(P0,xLeft,xRight,yTop,yBottom);</span>
+<span class="fc" id="L50">			outCode1 = outCodes(P1,xLeft,xRight,yTop,yBottom);</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">			if( rejectCheck(outCode0,outCode1) ) return false;  // completely out</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">			if( acceptCheck(outCode0,outCode1) ) return true;  // completely in</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">			if(outCode1 == 0) {</span>
+<span class="nc" id="L54">				break;</span>
+			}
+<span class="fc bfc" id="L56" title="All 2 branches covered.">			if( (outCode1 &amp; 1) != 0 ) { </span>
+<span class="fc" id="L57">				P1.x += (P0.x - P1.x)*(yTop    - P1.y)/(P0.y - P1.y);</span>
+<span class="fc" id="L58">				P1.y = yTop;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">			} else if( (outCode1 &amp; 2) != 0 ) { </span>
+<span class="fc" id="L60">				P1.x += (P0.x - P1.x)*(yBottom - P1.y)/(P0.y - P1.y);</span>
+<span class="fc" id="L61">				P1.y = yBottom;</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">			} else if( (outCode1 &amp; 4) != 0 ) { </span>
+<span class="fc" id="L63">				P1.y += (P0.y - P1.y)*(xRight  - P1.x)/(P0.x - P1.x);</span>
+<span class="fc" id="L64">				P1.x = xRight;</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">			} else if( (outCode1 &amp; 8) != 0 ) { </span>
+<span class="fc" id="L66">				P1.y += (P0.y - P1.y)*(xLeft   - P1.x)/(P0.x - P1.x);</span>
+<span class="fc" id="L67">				P1.x = xLeft;</span>
+			}
+		}
+<span class="nc" id="L70">		return true;  // partially in</span>
+	}
+	
+	private static int outCodes(Point2D P,double xLeft,double xRight,double yTop,double yBottom) {
+<span class="fc" id="L74">		int code = 0;</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">		     if(P.y &gt; yTop   ) code += 1; // code for above</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">		else if(P.y &lt; yBottom) code += 2; // code for below</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">		     if(P.x &gt; xRight ) code += 4; // code for right</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		else if(P.x &lt; xLeft  ) code += 8; // code for left</span>
+		
+<span class="fc" id="L80">		return code;</span>
+	}
+	
+	
+	private static boolean rejectCheck(int outCode1, int outCode2) {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">		return (outCode1 &amp; outCode2) != 0;</span>
+	} 
+
+
+	private static boolean acceptCheck(int outCode1, int outCode2) {
+<span class="fc bfc" id="L90" title="All 4 branches covered.">		return outCode1==0 &amp;&amp; outCode2==0;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_VoronoiZigZag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_VoronoiZigZag.java</span></div><h1>Converter_VoronoiZigZag.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.jogamp.opengl.GL2;
+import com.marginallyclever.convenience.voronoi.VoronoiCell;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectToggleButton;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Dithering using a particle system.
+ * See &lt;a href=&quot;http://en.wikipedia.org/wiki/Fortune%27s_algorithm&quot;&gt;Fortune's algorithm&lt;/a&gt;
+ * and &lt;a href=&quot;http://skynet.ie/~sos/mapviewer/voronoi.php&quot;&gt;Voronoi&lt;/a&gt;
+ * @author Dan
+ * @since 7.0.0?
+ */
+public class Converter_VoronoiZigZag extends Converter_Voronoi {
+<span class="nc" id="L24">	private static final Logger logger = LoggerFactory.getLogger(Converter_VoronoiZigZag.class);</span>
+	private int renderMode;
+	private boolean lowNoise;
+
+	public Converter_VoronoiZigZag() {
+<span class="nc" id="L29">		super();</span>
+
+<span class="nc" id="L31">		SelectToggleButton selectOptimizePath = new SelectToggleButton(&quot;optimizePath&quot;,Translator.get(&quot;VoronoiZigZag.optimizePath&quot;));</span>
+<span class="nc" id="L32">		add(selectOptimizePath);</span>
+<span class="nc" id="L33">		selectOptimizePath.addSelectListener(evt -&gt; {</span>
+<span class="nc" id="L34">			lowNoise = selectOptimizePath.isSelected();</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">			if(lowNoise) {</span>
+<span class="nc" id="L36">				logger.debug(&quot;Running Lin/Kerighan optimization...&quot;);</span>
+<span class="nc" id="L37">				renderMode = 1;</span>
+<span class="nc" id="L38">				sortLowPassToEnd();</span>
+<span class="nc" id="L39">				greedySort();</span>
+			} else {
+<span class="nc" id="L41">				logger.debug(&quot;Evolving...&quot;);</span>
+<span class="nc" id="L42">				renderMode = 0;</span>
+			}
+<span class="nc" id="L44">		});</span>
+<span class="nc" id="L45">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L49">		return Translator.get(&quot;VoronoiZigZagName&quot;);</span>
+	}
+
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L54">		renderMode = 0;</span>
+<span class="nc" id="L55">		lowNoise = false;</span>
+<span class="nc" id="L56">		turtle = new Turtle();</span>
+<span class="nc" id="L57">		super.start(paper, image);</span>
+<span class="nc" id="L58">	}</span>
+
+	@Override
+	public boolean iterate() {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if(!lowNoise) {</span>
+<span class="nc" id="L63">			super.iterate();</span>
+<span class="nc" id="L64">			return true;</span>
+		}
+
+<span class="nc" id="L67">		lock.lock();</span>
+		try {
+<span class="nc" id="L69">			optimizeTour();</span>
+		}
+        finally {
+<span class="nc" id="L72">			lock.unlock();</span>
+		}
+<span class="nc" id="L74">		return true;</span>
+	}
+
+	@Override
+<span class="nc" id="L78">	public void resume() {}</span>
+
+	@Override
+	public void render(GL2 gl2) {
+<span class="nc" id="L82">		super.render(gl2);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if(getThread().getPaused()) return;</span>
+
+<span class="nc" id="L85">		gl2.glPushMatrix();</span>
+<span class="nc" id="L86">		gl2.glTranslated(myPaper.getCenterX(),myPaper.getCenterY(),0);</span>
+
+<span class="nc" id="L88">		lock.lock();</span>
+		try {
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			if (renderMode == 0) renderPoints(gl2);</span>
+<span class="nc bnc" id="L91" title="All 4 branches missed.">			if (renderMode == 1 &amp;&amp; cells != null) drawTour(gl2);</span>
+		}
+		finally {
+<span class="nc" id="L94">			lock.unlock();</span>
+		}
+
+<span class="nc" id="L97">		gl2.glPopMatrix();</span>
+<span class="nc" id="L98">	}</span>
+
+	private void renderPoints(GL2 gl2) {
+<span class="nc" id="L101">		int lpc = getLowpassCutoff();</span>
+
+<span class="nc" id="L103">		lock.lock();</span>
+		try {
+<span class="nc" id="L105">			gl2.glBegin(GL2.GL_POINTS);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			for( VoronoiCell c : cells ) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if(c.weight&lt;lpc) {</span>
+<span class="nc" id="L108">					gl2.glColor3f(1, 0, 0);</span>
+				} else {
+<span class="nc" id="L110">					gl2.glColor3f(0, 0, 0);</span>
+				}
+<span class="nc" id="L112">				gl2.glVertex2d(c.center.x, c.center.y);</span>
+<span class="nc" id="L113">			}</span>
+<span class="nc" id="L114">			gl2.glEnd();</span>
+		}
+		finally {
+<span class="nc" id="L117">			lock.unlock();</span>
+		}
+<span class="nc" id="L119">	}</span>
+
+	private void drawTour(GL2 gl2) {
+<span class="nc" id="L122">		int lpc = getLowpassCutoff();</span>
+
+<span class="nc" id="L124">		lock.lock();</span>
+		try {
+<span class="nc" id="L126">			gl2.glColor3f(0, 0, 0);</span>
+<span class="nc" id="L127">			gl2.glBegin(GL2.GL_LINE_STRIP);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			for (VoronoiCell c : cells) {</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">				if (c.weight &lt; lpc) break;</span>
+<span class="nc" id="L130">				gl2.glVertex2d(c.center.x, c.center.y);</span>
+<span class="nc" id="L131">			}</span>
+<span class="nc" id="L132">			gl2.glEnd();</span>
+		}
+		finally {
+<span class="nc" id="L135">			lock.unlock();</span>
+		}
+<span class="nc" id="L137">	}</span>
+
+	private void optimizeTour() {
+<span class="nc" id="L140">		flipTests();</span>
+<span class="nc" id="L141">	}</span>
+
+	private int ti(int x) {
+<span class="nc" id="L144">		int solutionContains = cells.size();</span>
+<span class="nc" id="L145">		return (x + solutionContains) % solutionContains;</span>
+	}
+
+	/**
+	 * Suppose we have a subset of points in a line [a,b...c,d].
+	 * If distance(a,b)+distance(c,d) &gt; distance(a,c)+distance(b,d) then flip b through c, inclusive.
+	 * BUT only flip the candidate which will have the most effect.
+	 */
+	public void flipTests() {
+<span class="nc" id="L154">		int lpc = getLowpassCutoff();</span>
+<span class="nc" id="L155">		int size = cells.size();</span>
+
+<span class="nc bnc" id="L157" title="All 4 branches missed.">		for (int start = 0; start &lt; size - 2 &amp;&amp; !isThreadCancelled(); ++start) {</span>
+<span class="nc" id="L158">			VoronoiCell a = cells.get(ti(start  ));</span>
+<span class="nc" id="L159">			VoronoiCell b = cells.get(ti(start+1));</span>
+<span class="nc bnc" id="L160" title="All 4 branches missed.">			if(a.weight&lt;lpc || b.weight&lt;lpc) break;</span>
+
+<span class="nc" id="L162">			double dAB = calculateLengthSq(a,b);</span>
+<span class="nc" id="L163">			int bestIndex = -1;</span>
+<span class="nc" id="L164">			double bestDiff = 0;</span>
+
+<span class="nc bnc" id="L166" title="All 4 branches missed.">			for (int end = start + 2; end &lt; size &amp;&amp; !isThreadCancelled(); ++end) {</span>
+<span class="nc" id="L167">				VoronoiCell c = cells.get(ti(end-1));</span>
+<span class="nc" id="L168">				VoronoiCell d = cells.get(ti(end  ));</span>
+<span class="nc bnc" id="L169" title="All 4 branches missed.">				if(c.weight&lt;lpc || d.weight&lt;lpc) break;</span>
+
+<span class="nc" id="L171">				double dOriginal = dAB + calculateLengthSq(c, d);</span>
+<span class="nc" id="L172">				double dAC = calculateLengthSq(a, c);</span>
+<span class="nc" id="L173">				double dBD = calculateLengthSq(b, d);</span>
+<span class="nc" id="L174">				double dFlipped = dAC+dBD;</span>
+
+<span class="nc" id="L176">				double diff = dOriginal - dFlipped;</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">				if (bestDiff &lt; diff) {</span>
+<span class="nc" id="L178">					bestDiff = diff;</span>
+<span class="nc" id="L179">					bestIndex = end;</span>
+				}
+			}
+
+<span class="nc bnc" id="L183" title="All 4 branches missed.">			if (bestIndex != -1 &amp;&amp; !isThreadCancelled()) {</span>
+<span class="nc" id="L184">				flipAllBetween(start+1,bestIndex);</span>
+			}
+		}
+<span class="nc" id="L187">	}</span>
+
+	private void flipAllBetween(int begin, int finish) {
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		if (finish &lt; begin) finish += cells.size();</span>
+<span class="nc" id="L191">		int half = (finish - begin) / 2;</span>
+
+		//logger.debug(&quot;flipping {} {}&quot;,finish,begin);
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		for (int j = 0; j &lt; half; ++j) {</span>
+<span class="nc" id="L195">			int a1 = ti(begin + j);</span>
+<span class="nc" id="L196">			int b1 = ti(finish-1 - j);</span>
+<span class="nc" id="L197">			swapSolution(a1,b1);</span>
+		}
+<span class="nc" id="L199">	}</span>
+
+	private void swapSolution(int a,int b) {
+<span class="nc" id="L202">		VoronoiCell temp = cells.get(a);</span>
+<span class="nc" id="L203">		cells.set(a, cells.get(b));</span>
+<span class="nc" id="L204">		cells.set(b,temp);</span>
+<span class="nc" id="L205">	}</span>
+
+	private double calculateLengthSq(VoronoiCell a, VoronoiCell b) {
+<span class="nc" id="L208">		double x = a.center.x - b.center.x;</span>
+<span class="nc" id="L209">		double y = a.center.y - b.center.y;</span>
+<span class="nc" id="L210">		return x * x + y * y;</span>
+	}
+
+	// find all the values below the cutoff and move them to the end of the list.
+	private void sortLowPassToEnd() {
+<span class="nc" id="L215">		lock.lock();</span>
+		try {
+<span class="nc" id="L217">			int lpc = getLowpassCutoff();</span>
+<span class="nc" id="L218">			List&lt;VoronoiCell&gt; toMove = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">			for( VoronoiCell c : cells) {</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">				if(c.weight&lt;lpc) {</span>
+<span class="nc" id="L221">					toMove.add(c);</span>
+				}
+<span class="nc" id="L223">			}</span>
+<span class="nc" id="L224">			cells.removeAll(toMove);</span>
+<span class="nc" id="L225">			cells.addAll(toMove);</span>
+		}
+			finally {
+<span class="nc" id="L228">			lock.unlock();</span>
+		}
+<span class="nc" id="L230">	}</span>
+
+	/**
+	 * Starting with point 0, find the next nearest point and repeat until all
+	 * points have been &quot;found&quot;.
+	 */
+	private void greedySort() {
+<span class="nc" id="L237">		logger.debug(&quot;greedy tour started...&quot;);</span>
+
+<span class="nc" id="L239">		int lpc = getLowpassCutoff();</span>
+
+<span class="nc" id="L241">		lock.lock();</span>
+		try {
+			// do a greedy sort
+<span class="nc" id="L244">			int size = cells.size();</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">			for (int i = 0; i &lt; size-1; ++i) {</span>
+<span class="nc" id="L246">				VoronoiCell p0 = cells.get(i);</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">				if(p0.weight&lt;lpc) break;</span>
+
+<span class="nc" id="L249">				double bestDistance = Double.MAX_VALUE;</span>
+<span class="nc" id="L250">				int bestIndex = i + 1;</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">				for (int j = i + 1; j &lt; size; ++j) {</span>
+					// Find the nearest point not already in the line.
+<span class="nc" id="L253">					VoronoiCell p1 = cells.get(j);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">					if(p1.weight&lt;lpc) break;</span>
+
+<span class="nc" id="L256">					double d = calculateLengthSq(p0, p1);</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">					if (bestDistance &gt; d) {</span>
+<span class="nc" id="L258">						bestDistance = d;</span>
+<span class="nc" id="L259">						bestIndex = j;</span>
+					}
+				}
+<span class="nc bnc" id="L262" title="All 2 branches missed.">				if (i + 1 != bestIndex) {</span>
+<span class="nc" id="L263">					swapSolution(i + 1, bestIndex);</span>
+				}
+			}
+		}
+		finally {
+<span class="nc" id="L268">			lock.unlock();</span>
+		}
+<span class="nc" id="L270">		logger.debug(&quot;greedy tour done.&quot;);</span>
+<span class="nc" id="L271">	}</span>
+
+	/**
+	 * write cell centers to a {@link Turtle}.
+	 */
+	@Override
+	public void writeOutCells() {
+<span class="nc" id="L278">		int lpc = getLowpassCutoff();</span>
+<span class="nc" id="L279">		turtle = new Turtle();</span>
+
+<span class="nc" id="L281">		double cx = myPaper.getCenterX();</span>
+<span class="nc" id="L282">		double cy = myPaper.getCenterY();</span>
+
+<span class="nc" id="L284">		boolean first=true;</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		for( VoronoiCell c : cells) {</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">			if(c.weight&lt;lpc) continue;</span>
+<span class="nc" id="L287">			double x = cx + c.center.x;</span>
+<span class="nc" id="L288">			double y = cy + c.center.y;</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">			if(first) {</span>
+<span class="nc" id="L290">				turtle.jumpTo(x, y);</span>
+<span class="nc" id="L291">				first=false;</span>
+<span class="nc" id="L292">			} else turtle.moveTo(x, y);</span>
+<span class="nc" id="L293">		}</span>
+<span class="nc" id="L294">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

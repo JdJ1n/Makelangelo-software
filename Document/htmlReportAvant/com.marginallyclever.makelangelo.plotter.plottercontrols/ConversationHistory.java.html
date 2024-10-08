@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConversationHistory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols</a> &gt; <span class="el_source">ConversationHistory.java</span></div><h1>ConversationHistory.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols;
+
+import com.marginallyclever.convenience.ButtonIcon;
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.border.EtchedBorder;
+import javax.swing.event.ListSelectionListener;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.io.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+/**
+ * {@link ConversationHistory} maintains a history of the dialog between two or more parties.
+ * New entries can be added with {@code addElement(senderName,message)}.
+ * {@link ListSelectionListener}s will be notified if the user selects a line entry in the history.
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class ConversationHistory extends JPanel {
+<span class="fc" id="L27">	private static final Logger logger = LoggerFactory.getLogger(ConversationHistory.class);</span>
+<span class="fc" id="L28">	private final DefaultListModel&lt;ConversationEvent&gt; listModel = new DefaultListModel&lt;&gt;();</span>
+<span class="fc" id="L29">	private final JList&lt;ConversationEvent&gt; listView = new JList&lt;&gt;(listModel);</span>
+<span class="fc" id="L30">	private final ConcurrentLinkedQueue&lt;ConversationEvent&gt; inBoundQueue = new ConcurrentLinkedQueue&lt;&gt;();</span>
+<span class="fc" id="L31">	private final JFileChooser chooser = new JFileChooser();</span>
+<span class="fc" id="L32">	private final ButtonIcon bClear = new ButtonIcon(Translator.get(&quot;ConversationHistory.Clear&quot;), &quot;/images/application.png&quot;);</span>
+<span class="fc" id="L33">	private final ButtonIcon bSave = new ButtonIcon(Translator.get(&quot;ConversationHistory.Save&quot;), &quot;/images/disk.png&quot;);</span>
+<span class="fc" id="L34">	private final ButtonIcon bCopy = new ButtonIcon(Translator.get(&quot;ConversationHistory.Copy&quot;), &quot;/images/copy2clipboard.png&quot;);</span>
+
+	
+	public ConversationHistory() {
+<span class="fc" id="L38">		super(new BorderLayout());</span>
+<span class="fc" id="L39">		createCellRenderingSystem();</span>
+
+<span class="fc" id="L41">		JScrollPane scrollPane = new JScrollPane(listView);</span>
+<span class="fc" id="L42">		scrollPane.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));</span>
+		
+<span class="fc" id="L44">		listView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);</span>
+<span class="fc" id="L45">		listView.setPrototypeCellValue(new ConversationEvent(&quot; &quot;,&quot; &quot;));</span>
+<span class="fc" id="L46">		listView.setVisibleRowCount(20);</span>
+
+<span class="fc" id="L48">		this.setBorder(BorderFactory.createTitledBorder(ConversationHistory.class.getSimpleName()));</span>
+<span class="fc" id="L49">		this.add(getToolBar(), BorderLayout.PAGE_START);</span>
+<span class="fc" id="L50">		this.add(scrollPane, BorderLayout.CENTER);</span>
+<span class="fc" id="L51">	}</span>
+	
+	private JToolBar getToolBar() {
+<span class="fc" id="L54">		JToolBar bar = new JToolBar();</span>
+<span class="fc" id="L55">		bar.setFloatable(false);</span>
+
+<span class="fc" id="L57">		bar.add(bCopy);</span>
+<span class="fc" id="L58">		bar.add(bSave);</span>
+<span class="fc" id="L59">		bar.add(bClear);</span>
+
+<span class="pc" id="L61">		bCopy.addActionListener(e -&gt; copyToClipboard());</span>
+<span class="pc" id="L62">		bClear.addActionListener( (e) -&gt; runNewAction() );</span>
+<span class="pc" id="L63">		bSave.addActionListener( (e) -&gt; runSaveAction() );</span>
+		
+<span class="fc" id="L65">		return bar;</span>
+	}
+
+	private void copyToClipboard() {
+<span class="nc" id="L69">		StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc" id="L71">		int size=listModel.getSize();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		for(int i=0;i&lt;size;++i) {</span>
+<span class="nc" id="L73">			String str = listModel.get(i).toString();</span>
+<span class="nc" id="L74">			sb.append(str).append(&quot;\n&quot;);</span>
+		}
+
+<span class="nc" id="L77">		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();</span>
+<span class="nc" id="L78">		clipboard.setContents(new StringSelection(sb.toString()), null);</span>
+<span class="nc" id="L79">	}</span>
+
+	private void createCellRenderingSystem() {
+<span class="fc" id="L82">		listView.setCellRenderer(new ListCellRenderer&lt;ConversationEvent&gt;() {</span>
+<span class="fc" id="L83">			private DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer(); </span>
+			
+			@Override
+			public Component getListCellRendererComponent(JList&lt;? extends ConversationEvent&gt; list,
+					ConversationEvent value, int index, boolean isSelected, boolean cellHasFocus) {
+<span class="fc" id="L88">				Component c = defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);</span>
+				
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">				if(c instanceof JLabel) {</span>
+<span class="fc" id="L91">					JLabel jc = (JLabel)c;</span>
+<span class="fc" id="L92">					jc.setText(value.toString());</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">					if (value.whoSpoke.contentEquals(&quot;Error&quot;)) {</span>
+<span class="nc" id="L94">						jc.setForeground(Color.RED);</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">					} else if (!value.whoSpoke.contentEquals(&quot;You&quot;)) {</span>
+<span class="fc" id="L96">						jc.setForeground(Color.BLUE);</span>
+					}
+				}
+<span class="fc" id="L99">				return c;</span>
+			}
+			
+		});
+<span class="fc" id="L103">	}</span>
+
+	private void runNewAction() {
+<span class="nc" id="L106">		listModel.clear();</span>
+<span class="nc" id="L107">	}</span>
+	
+	private void runSaveAction() {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if(chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {</span>
+			try {
+<span class="nc" id="L112">				saveFile(chooser.getSelectedFile());</span>
+<span class="nc" id="L113">			} catch (IOException e) {</span>
+<span class="nc" id="L114">				logger.error(&quot;Failed to save file&quot;, e);</span>
+<span class="nc" id="L115">				JOptionPane.showMessageDialog(this, e.getLocalizedMessage(),&quot;runSaveAction error&quot;,JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L116">			}</span>
+		}
+<span class="nc" id="L118">	}</span>
+	
+	private void saveFile(File file) throws IOException {
+<span class="nc" id="L121">		BufferedWriter fileWriter = new BufferedWriter(new FileWriter(file));</span>
+<span class="nc" id="L122">		int size=listModel.getSize();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		for(int i=0;i&lt;size;++i) {</span>
+<span class="nc" id="L124">			String str = listModel.get(i).toString();</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if(!str.endsWith(&quot;\n&quot;)) str+=&quot;\n&quot;;</span>
+<span class="nc" id="L126">			fileWriter.write(str);</span>
+		}
+<span class="nc" id="L128">		fileWriter.close();</span>
+<span class="nc" id="L129">	}</span>
+	
+	public void clear() {
+<span class="nc" id="L132">		runNewAction();</span>
+<span class="nc" id="L133">	}</span>
+	
+	public void addListSelectionListener(ListSelectionListener listener) {
+<span class="fc" id="L136">		listView.addListSelectionListener(listener);</span>
+<span class="fc" id="L137">	}</span>
+
+	public int getSelectedIndex() {
+<span class="nc" id="L140">		return listView.getSelectedIndex();</span>
+	}
+
+	public String getSelectedValue() {
+<span class="nc" id="L144">		return listView.getSelectedValue().toString();</span>
+	}
+
+	public void addElement(String src,String str) { 
+<span class="nc" id="L148">		inBoundQueue.add(new ConversationEvent(src, str));</span>
+<span class="nc" id="L149">		repaint();</span>
+<span class="nc" id="L150">	}</span>
+	
+	@Override
+	public void paint(Graphics g) {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		boolean isLast = (listView.getLastVisibleIndex() == listModel.getSize()-1);</span>
+		
+<span class="nc" id="L156">		addQueuedMessages();</span>
+		
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if(isLast) jumpToEnd();</span>
+		
+<span class="nc" id="L160">		super.paint(g);</span>
+<span class="nc" id="L161">	}</span>
+
+	private void addQueuedMessages() {
+<span class="nc" id="L164">		listModel.addAll(inBoundQueue);</span>
+<span class="nc" id="L165">		inBoundQueue.clear();</span>
+<span class="nc" id="L166">	}</span>
+		
+	private void jumpToEnd() {
+<span class="nc" id="L169">		listView.ensureIndexIsVisible(listModel.getSize()-1);</span>
+<span class="nc" id="L170">	}</span>
+	
+	// TEST
+	
+	public static void main(String[] args) {
+<span class="nc" id="L175">		PreferencesHelper.start();</span>
+<span class="nc" id="L176">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L177">		Translator.start();</span>
+
+<span class="nc" id="L179">		JFrame frame = new JFrame(ConversationHistory.class.getSimpleName());</span>
+<span class="nc" id="L180">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L181">		ConversationHistory ch = new ConversationHistory();</span>
+<span class="nc" id="L182">		frame.add(ch);</span>
+<span class="nc" id="L183">		frame.pack();</span>
+<span class="nc" id="L184">		frame.setVisible(true);</span>
+
+<span class="nc" id="L186">		ch.addElement(&quot;You&quot;, &quot;N2 G28 XY*48&quot;);</span>
+<span class="nc" id="L187">		ch.addElement(&quot;/dev/cu.usbserial-1410&quot;, &quot;X:0.00 Y:-186.00 Z:200.00 Count X:72290 Y:72290 Z:32000&quot;);</span>
+<span class="nc" id="L188">		ch.addElement(&quot;/dev/cu.usbserial-1410&quot;, &quot;echo:; Advanced (B&lt;min_segment_time_us&gt; S&lt;min_feedrate&gt; T&lt;min_travel_feedrate&gt; X&lt;max_x_jerk&gt; Y&lt;max_y_jerk&gt; Z&lt;max_z_jerk&gt;):&quot;);</span>
+<span class="nc" id="L189">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

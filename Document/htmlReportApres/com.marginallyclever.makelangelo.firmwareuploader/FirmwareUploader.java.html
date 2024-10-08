@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FirmwareUploader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.firmwareuploader</a> &gt; <span class="el_source">FirmwareUploader.java</span></div><h1>FirmwareUploader.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.firmwareuploader;
+
+import com.marginallyclever.convenience.helpers.OSHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
+
+/**
+ * Common methods for uploading firmware to an AVR microcontroller.
+ */
+public class FirmwareUploader {
+<span class="nc" id="L19">	private static final Logger logger = LoggerFactory.getLogger(FirmwareUploader.class);</span>
+	private static final String CONF = &quot;avrdude.conf&quot;;
+<span class="nc" id="L21">	protected String installPath = &quot;&quot;;</span>
+<span class="nc" id="L22">	protected String avrdudePath = &quot;&quot;;</span>
+<span class="nc" id="L23">	protected String hexPath = &quot;&quot;;</span>
+<span class="nc" id="L24">	protected String confPath = &quot;&quot;;</span>
+
+
+	protected FirmwareUploader() {
+<span class="nc" id="L28">		super();</span>
+<span class="nc" id="L29">	}</span>
+
+	/**
+	 * Search the tree starting at avrdudePath for the given filename.
+	 * @param target the name of the file to find.
+	 * @return the file if found, null otherwise.
+	 */
+	public File findFile(String target) {
+<span class="nc" id="L37">		logger.info(&quot;Searching for &quot;+target+&quot; starting in &quot;+installPath);</span>
+<span class="nc" id="L38">		Path startPath = Paths.get(installPath);</span>
+		try {
+<span class="nc" id="L40">			Optional&lt;Path&gt; filePath = Files.walk(startPath)</span>
+<span class="nc" id="L41">					.filter(path -&gt; path.getFileName().toString().equals(target))</span>
+<span class="nc" id="L42">					.findFirst();</span>
+<span class="nc" id="L43">			return filePath.map(Path::toFile).orElse(null);</span>
+<span class="nc" id="L44">		} catch (IOException e) {</span>
+<span class="nc" id="L45">			logger.error(&quot;An error occurred while searching for the file: &quot;, e);</span>
+<span class="nc" id="L46">			return null;</span>
+		}
+	}
+
+	public boolean findAVRDude() {
+<span class="nc" id="L51">		String path = &quot;avrdude&quot;;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if( OSHelper.isWindows()) path+=&quot;.exe&quot;;</span>
+<span class="nc" id="L53">		File f = findFile(path);</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if(!f.exists()) return false;</span>
+<span class="nc" id="L55">		avrdudePath = f.getAbsolutePath();</span>
+<span class="nc" id="L56">		return true;</span>
+	}
+
+	// find avrdude.conf
+	public boolean findConf() {
+<span class="nc" id="L61">		File f = findFile(CONF);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if(!f.exists()) return false;</span>
+<span class="nc" id="L63">		confPath = f.getAbsolutePath();</span>
+<span class="nc" id="L64">		return true;</span>
+	}
+
+	protected File attemptToFindConf(int i, String filename) {
+<span class="nc" id="L68">		Path p = Path.of(avrdudePath);</span>
+<span class="nc" id="L69">		logger.debug(&quot;Trying {} {}&quot;,i, p.resolve(filename));</span>
+<span class="nc" id="L70">		return p.resolve(filename).toFile();</span>
+	}
+
+	/**
+	 * @param portName
+	 * @return 0 if successful.
+	 * @throws Exception if the process fails.
+	 */
+	public int performUpdate(String portName) throws Exception {
+<span class="nc" id="L79">		logger.debug(&quot;uploading firmware...&quot;);</span>
+
+		// setup avrdude command
+
+<span class="nc" id="L83">		String [] options = new String[] {</span>
+				avrdudePath,
+	    		&quot;-C&quot;+confPath,
+	    		&quot;-v&quot;,&quot;-V&quot;,
+	    		&quot;-patmega2560&quot;,
+	    		&quot;-cwiring&quot;,
+	    		&quot;-P&quot;+portName,
+	    		&quot;-b115200&quot;,
+	    		&quot;-D&quot;,
+				&quot;-Uflash:w:&quot;+hexPath+&quot;:i&quot;
+		    };
+<span class="nc" id="L94">	    int result = runCommand(options);</span>
+<span class="nc" id="L95">		logger.debug(&quot;update finished&quot;);</span>
+<span class="nc" id="L96">		return result;</span>
+	}
+
+	/**
+	 * @param options command line options to pass to the process.
+	 * @return 0 if successful.
+	 * @throws Exception if the process fails.
+	 */
+	protected int runCommand(String[] options) throws Exception {
+<span class="nc" id="L105">		System.out.println(&quot;running command: &quot;+String.join(&quot; &quot;,options));</span>
+<span class="nc" id="L106">		logger.debug(&quot;running command: {}&quot;,String.join(&quot; &quot;,options));</span>
+/*
+		List&lt;String&gt; command = new ArrayList&lt;&gt;();
+		for (String option : options) {
+			command.add(&quot;\&quot;&quot; + option.replace(&quot;\\&quot;, &quot;\\\\&quot;) + &quot;\&quot;&quot;);
+		}*/
+
+<span class="nc" id="L113">		ProcessBuilder builder = new ProcessBuilder(options);</span>
+<span class="nc" id="L114">		builder.redirectErrorStream(true);</span>
+<span class="nc" id="L115">		Process p = builder.start();</span>
+<span class="nc" id="L116">		runBufferedReaders(p);</span>
+<span class="nc" id="L117">		return p.exitValue();</span>
+	}
+
+	protected void runBufferedReaders(Process p) throws IOException {
+<span class="nc" id="L121">		InputStreamReader stdInput = new InputStreamReader(p.getInputStream());</span>
+<span class="nc" id="L122">		InputStreamReader stdError = new InputStreamReader(p.getErrorStream());</span>
+
+<span class="nc" id="L124">		StringBuilder sb1 = new StringBuilder();</span>
+<span class="nc" id="L125">		StringBuilder sb2 = new StringBuilder();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		while (p.isAlive()) {</span>
+<span class="nc" id="L127">			readByte(stdInput,sb1,&quot;output&quot;);</span>
+<span class="nc" id="L128">			readByte(stdError,sb2,&quot;error&quot;);</span>
+		}
+<span class="nc" id="L130">	}</span>
+
+	private void readByte(InputStreamReader isr,StringBuilder sb,String label) throws IOException {
+<span class="nc" id="L133">		int c = isr.read();</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if(c == -1) return;</span>
+<span class="nc" id="L135">		System.out.print((char) c);</span>
+
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		if (c != '\n') {</span>
+<span class="nc" id="L138">			sb.append((char) c);</span>
+		} else {
+<span class="nc" id="L140">			String s = sb.toString();</span>
+<span class="nc" id="L141">			sb.delete(0, sb.length());</span>
+<span class="nc" id="L142">			logger.debug(&quot;{}: {}&quot;, label, s);</span>
+		}
+<span class="nc" id="L144">	}</span>
+
+	public void setHexPath(String s) {
+<span class="nc" id="L147">		hexPath = s;</span>
+<span class="nc" id="L148">	}</span>
+
+    public void setAVRDude(String avrDudePath) {
+<span class="nc" id="L151">		logger.debug(&quot;setting avrdude to {}&quot;,avrDudePath);</span>
+<span class="nc" id="L152">		avrdudePath = avrDudePath;</span>
+<span class="nc" id="L153">    }</span>
+
+	public void setInstallPath(String avrDudePath) {
+<span class="nc" id="L156">		logger.debug(&quot;setting install path to {}&quot;,avrDudePath);</span>
+<span class="nc" id="L157">		installPath = avrDudePath;</span>
+<span class="nc" id="L158">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

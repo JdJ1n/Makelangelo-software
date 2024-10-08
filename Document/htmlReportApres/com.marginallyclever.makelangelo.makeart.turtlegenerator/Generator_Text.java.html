@@ -1,0 +1,583 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_Text.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator</a> &gt; <span class="el_source">Generator_Text.java</span></div><h1>Generator_Text.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.select.SelectInteger;
+import com.marginallyclever.makelangelo.select.SelectOneOfMany;
+import com.marginallyclever.makelangelo.select.SelectTextArea;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Rectangle2D;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+import java.util.StringTokenizer;
+
+/**
+ * Your message here.  understands font families, styles, sizes, and alignment
+ * @author Dan Royer
+ *
+ */
+public class Generator_Text extends TurtleGenerator {
+<span class="fc" id="L30">	private static final Logger logger = LoggerFactory.getLogger(Generator_Text.class);</span>
+	
+	// text properties
+<span class="fc" id="L33">	private static float kerning = 5.0f;</span>
+<span class="fc" id="L34">	private static float letterWidth = 10.0f;</span>
+<span class="fc" id="L35">	private static float letterHeight = 20.0f;</span>
+<span class="fc" id="L36">	private static float lineSpacing = 5.0f;</span>
+<span class="fc" id="L37">	private static float padding = 5.0f;</span>
+	static final String ALPHABET_FOLDER = &quot;ALPHABET/&quot;;
+<span class="fc" id="L39">	private int charsPerLine = 25;</span>
+<span class="fc" id="L40">	private boolean draw_bounding_box = false;</span>
+
+	// text position and alignment
+<span class="fc" id="L43">	public enum VAlign {</span>
+<span class="fc" id="L44">		TOP, MIDDLE, BOTTOM</span>
+	}
+
+<span class="fc" id="L47">	public enum Align {LEFT, CENTER, RIGHT}</span>
+
+<span class="fc" id="L49">	private VAlign align_vertical = VAlign.MIDDLE;</span>
+<span class="fc" id="L50">	private Align align_horizontal = Align.CENTER;</span>
+<span class="fc" id="L51">	private float posx = 0;</span>
+<span class="fc" id="L52">	private float posy = 0;</span>
+
+<span class="fc" id="L54">	private static String lastMessage = &quot;&quot;;</span>
+<span class="fc" id="L55">	private static int lastFont = 0;</span>
+<span class="fc" id="L56">	private static int lastSize = 20;</span>
+	private static String [] fontNames;
+	
+<span class="fc" id="L59">	public Generator_Text() {		</span>
+		// build list of fonts
+<span class="fc" id="L61">		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();</span>
+<span class="fc" id="L62">		Font[] fontList = ge.getAllFonts();</span>
+<span class="fc" id="L63">		fontNames = new String[fontList.length];</span>
+		
+<span class="fc" id="L65">		Locale locale = Locale.getDefault();</span>
+<span class="fc" id="L66">		int i=0;</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">		for(Font f : fontList) {</span>
+<span class="fc" id="L68">			fontNames[i++] = f.getFontName(locale);</span>
+		}
+
+		SelectOneOfMany fontChoices;
+		SelectInteger size;
+		SelectTextArea text;
+
+<span class="fc" id="L75">		add(fontChoices = new SelectOneOfMany(&quot;face&quot;,Translator.get(&quot;FontFace&quot;),getFontNames(),getLastFont()));</span>
+<span class="fc" id="L76">		fontChoices.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L77">			setFont(fontChoices.getSelectedIndex());</span>
+<span class="nc" id="L78">			generate();</span>
+<span class="nc" id="L79">		});</span>
+<span class="fc" id="L80">		add(size = new SelectInteger(&quot;size&quot;,Translator.get(&quot;TextSize&quot;),getLastSize()));</span>
+<span class="fc" id="L81">		size.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L82">			setSize(((Number)size.getValue()).intValue());</span>
+<span class="nc" id="L83">			generate();</span>
+<span class="nc" id="L84">		});</span>
+<span class="fc" id="L85">		add(text = new SelectTextArea(&quot;message&quot;,Translator.get(&quot;TextMessage&quot;),getLastMessage()));</span>
+<span class="fc" id="L86">		text.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L87">			setMessage(text.getText());</span>
+<span class="nc" id="L88">			generate();</span>
+<span class="nc" id="L89">		});</span>
+<span class="fc" id="L90">	}</span>
+	
+	public String [] getFontNames() {
+<span class="fc" id="L93">		return fontNames;</span>
+	}
+	public int getLastFont() {
+<span class="fc" id="L96">		return lastFont;</span>
+	}
+	public void setFont(int arg0) {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if(arg0&lt;0) arg0=0;</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if(arg0&gt;=fontNames.length) arg0 = fontNames.length-1;</span>
+<span class="nc" id="L101">		lastFont = arg0;</span>
+<span class="nc" id="L102">	}</span>
+	
+	
+	public int getLastSize() {
+<span class="fc" id="L106">		return lastSize;</span>
+	}
+	public void setSize(int size) {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if(size&lt;1)size=1;</span>
+<span class="nc" id="L110">		lastSize=size;</span>
+<span class="nc" id="L111">	}</span>
+	
+	public String getLastMessage() {
+<span class="fc" id="L114">		return lastMessage;</span>
+	}
+	public void setMessage(String msg) {
+<span class="nc" id="L117">		lastMessage = msg;</span>
+<span class="nc" id="L118">	}</span>
+
+	@Override
+	public String getName() {
+<span class="fc" id="L122">		return Translator.get(&quot;YourMsgHereName&quot;);</span>
+	}
+
+	protected void setupTransform() {
+<span class="nc" id="L126">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L127">		setupTransform(</span>
+<span class="nc" id="L128">				rect.getHeight(),</span>
+<span class="nc" id="L129">				rect.getWidth()</span>
+		);
+<span class="nc" id="L131">	}</span>
+
+
+	protected void setupTransform(double width, double height) {
+<span class="nc" id="L135">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (width &gt; rect.getWidth()) {</span>
+<span class="nc" id="L137">			float resize = (float) rect.getWidth() / (float) width;</span>
+<span class="nc" id="L138">			height *= resize;</span>
+<span class="nc" id="L139">			width = rect.getWidth();</span>
+		}
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (height &gt; rect.getHeight()) {</span>
+<span class="nc" id="L142">			float resize = (float) rect.getHeight() / (float) height;</span>
+<span class="nc" id="L143">			width *= resize;</span>
+		}
+
+<span class="nc" id="L146">		textFindCharsPerLine(width);</span>
+
+<span class="nc" id="L148">		posx = 0;</span>
+<span class="nc" id="L149">		posy = 0;</span>
+<span class="nc" id="L150">	}</span>
+
+	
+	private Turtle writeBeautifulMessage(String fontName,int fontSize, String message) {
+<span class="nc" id="L154">		Turtle turtle = new Turtle();</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if(message.length()&lt;=0) {</span>
+<span class="nc" id="L156">			return turtle;</span>
+		}
+		
+<span class="nc" id="L159">		String[] messagePieces=message.split(&quot;\n&quot;);</span>
+<span class="nc" id="L160">		logger.debug(&quot;lines of text={}&quot;, messagePieces.length);</span>
+		
+<span class="nc" id="L162">		Font font = new Font(fontName, Font.PLAIN, fontSize);</span>
+<span class="nc" id="L163">		FontRenderContext frc = new FontRenderContext(null,true,true);</span>
+
+<span class="nc" id="L165">		float yTotal=0;</span>
+<span class="nc" id="L166">		float yFirstStep = 0;</span>
+<span class="nc" id="L167">		float xMax=0;</span>
+		int p;
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		for(p=0;p&lt;messagePieces.length;++p) {</span>
+<span class="nc" id="L170">			String piece = messagePieces[p];</span>
+<span class="nc bnc" id="L171" title="All 4 branches missed.">			if(piece==null || piece.length()==0) piece=&quot;\n&quot;;</span>
+<span class="nc" id="L172">			TextLayout textLayout = new TextLayout(piece,font,frc);</span>
+<span class="nc" id="L173">			Shape s = textLayout.getOutline(null);</span>
+<span class="nc" id="L174">			Rectangle bounds = s.getBounds();</span>
+<span class="nc" id="L175">			yTotal += bounds.getHeight();</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if(yFirstStep==0) yFirstStep = (float)bounds.getHeight();</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">			if(xMax &lt; bounds.getWidth()) xMax = (float)bounds.getWidth();</span>
+		}
+/*
+		// display bounding box
+		float dx = xMax/2.0f;
+		float dy = -(yTotal+yFirstStep/2.0f)/2.0f;
+		turtle.jumpTo(-dx, dy);
+		turtle.moveTo( dx, dy);
+		turtle.moveTo( dx,-dy);
+		turtle.moveTo(-dx,-dy);
+		turtle.moveTo(-dx, dy);
+*/
+<span class="nc" id="L189">		float dx = xMax / 2.0f;</span>
+<span class="nc" id="L190">		float dy = -yTotal/2.0f+yFirstStep/2.0f;</span>
+
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		for(p=0;p&lt;messagePieces.length;++p) {</span>
+<span class="nc" id="L193">			String piece = messagePieces[p];</span>
+<span class="nc bnc" id="L194" title="All 4 branches missed.">			if(piece==null || piece.length()==0) piece=&quot;\n&quot;;</span>
+			//TextLayout textLayout = new TextLayout(piece,font,frc);
+			//Shape s = textLayout.getOutline(null);
+			//Rectangle bounds = s.getBounds();
+
+<span class="nc" id="L199">			writeBeautifulString(turtle,font,frc,piece, dx, dy);</span>
+			
+<span class="nc" id="L201">			dy += fontSize;//bounds.getHeight();</span>
+		}
+<span class="nc" id="L203">		return turtle;</span>
+	}
+	
+	private void writeBeautifulString(Turtle turtle,Font font, FontRenderContext frc,String text,float dx, float dy) { 
+<span class="nc" id="L207">		TextLayout textLayout = new TextLayout(text,font,frc);</span>
+<span class="nc" id="L208">		Shape s = textLayout.getOutline(null);		</span>
+<span class="nc" id="L209">		PathIterator pi = s.getPathIterator(null);</span>
+		
+<span class="nc" id="L211">		float [] coords = new float[6];</span>
+<span class="nc" id="L212">		float [] coords2 = new float[6];</span>
+<span class="nc" id="L213">		float [] start = new float[6];</span>
+		float n,i;
+<span class="nc" id="L215">		n = 5;</span>
+		
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		while(!pi.isDone()) {</span>
+<span class="nc" id="L218">			int type = pi.currentSegment(coords);</span>
+<span class="nc bnc" id="L219" title="All 6 branches missed.">			switch (type) {</span>
+				case PathIterator.SEG_CLOSE -&gt; {
+					//logger.debug(&quot;CLOSE&quot;);
+<span class="nc" id="L222">					turtle.moveTo(start[0] - dx, -start[1] - dy);</span>
+<span class="nc" id="L223">					turtle.penUp();</span>
+<span class="nc" id="L224">					coords2[0] = coords[0];</span>
+<span class="nc" id="L225">					coords2[1] = coords[1];</span>
+<span class="nc" id="L226">				}</span>
+				case PathIterator.SEG_LINETO -&gt; {
+					//logger.debug(&quot;DRAW_LINE&quot;);
+<span class="nc" id="L229">					turtle.moveTo(coords[0] - dx, -coords[1] - dy);</span>
+<span class="nc" id="L230">					coords2[0] = coords[0];</span>
+<span class="nc" id="L231">					coords2[1] = coords[1];</span>
+<span class="nc" id="L232">				}</span>
+				case PathIterator.SEG_MOVETO -&gt; {
+					//logger.debug(&quot;MOVE&quot;);
+					// move without drawing
+<span class="nc" id="L236">					start[0] = coords2[0] = coords[0];</span>
+<span class="nc" id="L237">					start[1] = coords2[1] = coords[1];</span>
+<span class="nc" id="L238">					turtle.jumpTo(start[0] - dx, -start[1] - dy);</span>
+<span class="nc" id="L239">				}</span>
+				case PathIterator.SEG_CUBICTO -&gt; {
+					//P(t) = B(3,0)*CP + B(3,1)*P1 + B(3,2)*P2 + B(3,3)*P3
+					//0 &lt;= t &lt;= 1
+					//B(n,m) = mth coefficient of nth degree Bernstein polynomial
+					//   = C(n,m) * t^(m) * (1 - t)^(n-m)
+					//C(n,m) = Combinations of n things, taken m at a time
+					//   = n! / (m! * (n-m)!)
+
+					// B(3,0) = (1 - t)^3
+					// B(3,1) = 3 * t * (1 - t)^2
+					// B(3,2) = 3 * t^2 * (1 - t)
+					// B(3,3) = t^3
+					//logger.debug(&quot;CUBIC&quot;);
+<span class="nc bnc" id="L253" title="All 2 branches missed.">					for (i = 0; i &lt; n; ++i) {</span>
+<span class="nc" id="L254">						float t = i / n;</span>
+<span class="nc" id="L255">						float t1 = (1.0f - t);</span>
+<span class="nc" id="L256">						float a = t1 * t1 * t1;</span>
+<span class="nc" id="L257">						float b = 3 * t * t1 * t1;</span>
+<span class="nc" id="L258">						float c = 3 * t * t * t1;</span>
+<span class="nc" id="L259">						float d = t * t * t;</span>
+<span class="nc" id="L260">						float x = coords2[0] * a + coords[0] * b + coords[2] * c + coords[4] * d;</span>
+<span class="nc" id="L261">						float y = coords2[1] * a + coords[1] * b + coords[3] * c + coords[5] * d;</span>
+<span class="nc" id="L262">						turtle.moveTo(x - dx, -y - dy);</span>
+					}
+<span class="nc" id="L264">					turtle.moveTo(coords[4] - dx, -coords[5] - dy);</span>
+<span class="nc" id="L265">					coords2[0] = coords[4];</span>
+<span class="nc" id="L266">					coords2[1] = coords[5];</span>
+<span class="nc" id="L267">				}</span>
+				case PathIterator.SEG_QUADTO -&gt; {
+					//logger.debug(&quot;QUAD&quot;);
+<span class="nc bnc" id="L270" title="All 2 branches missed.">					for (i = 0; i &lt; n; ++i) {</span>
+<span class="nc" id="L271">						float t = i / n;</span>
+						//(1-t)²*P0 + 2t*(1-t)*P1 + t²*P2
+<span class="nc" id="L273">						float u = (1.0f - t);</span>
+<span class="nc" id="L274">						float tt = u * u;</span>
+<span class="nc" id="L275">						float ttt = 2.0f * t * u;</span>
+<span class="nc" id="L276">						float tttt = t * t;</span>
+<span class="nc" id="L277">						float x = coords2[0] * tt + (coords[0] * ttt) + (coords[2] * tttt);</span>
+<span class="nc" id="L278">						float y = coords2[1] * tt + (coords[1] * ttt) + (coords[3] * tttt);</span>
+<span class="nc" id="L279">						turtle.moveTo(x - dx, -y - dy);</span>
+					}
+<span class="nc" id="L281">					turtle.moveTo(coords[2] - dx, -coords[3] - dy);</span>
+<span class="nc" id="L282">					coords2[0] = coords[2];</span>
+<span class="nc" id="L283">					coords2[1] = coords[3];</span>
+				}
+			}
+<span class="nc" id="L286">			pi.next();</span>
+<span class="nc" id="L287">		}</span>
+<span class="nc" id="L288">	}</span>
+
+	@Override
+	public void generate() {
+<span class="nc" id="L292">		String fontName = fontNames[lastFont];</span>
+
+<span class="nc" id="L294">		posx=0;</span>
+<span class="nc" id="L295">		posy=0;</span>
+<span class="nc" id="L296">		textFindCharsPerLine(myPaper.getPaperWidth()*myPaper.getPaperMargin());</span>
+<span class="nc" id="L297">		textSetAlign(Align.CENTER);</span>
+<span class="nc" id="L298">		textSetVAlign(VAlign.MIDDLE);</span>
+<span class="nc" id="L299">		Turtle turtle = writeBeautifulMessage(fontName,lastSize,lastMessage);</span>
+
+<span class="nc" id="L301">		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</span>
+
+<span class="nc" id="L303">		notifyListeners(turtle);</span>
+<span class="nc" id="L304">	}</span>
+	
+	public void textSetPosition(float x, float y) {
+<span class="nc" id="L307">		posx = x;</span>
+<span class="nc" id="L308">		posy = y;</span>
+<span class="nc" id="L309">	}</span>
+
+	public void textSetAlign(Align x) {
+<span class="nc" id="L312">		align_horizontal = x;</span>
+<span class="nc" id="L313">	}</span>
+
+	public void textSetVAlign(VAlign y) {
+<span class="nc" id="L316">		align_vertical = y;</span>
+<span class="nc" id="L317">	}</span>
+
+
+	public void textSetCharsPerLine(int numChars) {
+<span class="nc" id="L321">		charsPerLine = numChars;</span>
+		//logger.debug(&quot;MAX=&quot;+numChars);
+<span class="nc" id="L323">	}</span>
+
+
+	public void textFindCharsPerLine(double width) {
+<span class="nc" id="L327">		charsPerLine = (int) Math.floor((float) (width * 10.0f - padding * 2.0f) / (float) (letterWidth + kerning));</span>
+		//logger.debug(&quot;MAX=&quot;+chars_per_line);
+<span class="nc" id="L329">	}</span>
+
+
+	/**
+	 * calculate the smallest rectangle that would fit around the string of text
+	 * @param text the message to fit around
+	 * @return a Rectangle2D that describes the minimum fit
+	 */
+	private Rectangle2D textCalculateBounds(String text) {
+<span class="nc" id="L338">		String[] lines = textWrapToLength(text);</span>
+<span class="nc" id="L339">		int len = textLongestLine(lines);</span>
+
+<span class="nc" id="L341">		int num_lines = lines.length;</span>
+<span class="nc" id="L342">		float h = padding * 2 + (letterHeight + lineSpacing) * num_lines;//- line_spacing; removed because of letters that hang below the line</span>
+<span class="nc" id="L343">		float w = padding * 2 + (letterWidth + kerning) * len - kerning;</span>
+<span class="nc" id="L344">		float xmax = 0, xmin = 0, ymax = 0, ymin = 0;</span>
+
+<span class="nc bnc" id="L346" title="All 4 branches missed.">		switch (align_horizontal) {</span>
+			case LEFT -&gt; {
+<span class="nc" id="L348">				xmax = posx + w;</span>
+<span class="nc" id="L349">				xmin = posx;</span>
+<span class="nc" id="L350">			}</span>
+			case CENTER -&gt; {
+<span class="nc" id="L352">				xmax = posx + w / 2;</span>
+<span class="nc" id="L353">				xmin = posx - w / 2;</span>
+<span class="nc" id="L354">			}</span>
+			case RIGHT -&gt; {
+<span class="nc" id="L356">				xmax = posx;</span>
+<span class="nc" id="L357">				xmin = posx - w;</span>
+			}
+		}
+
+<span class="nc bnc" id="L361" title="All 4 branches missed.">		switch (align_vertical) {</span>
+			case BOTTOM -&gt; {
+<span class="nc" id="L363">				ymax = posy + h;</span>
+<span class="nc" id="L364">				ymin = posy;</span>
+<span class="nc" id="L365">			}</span>
+			case MIDDLE -&gt; {
+<span class="nc" id="L367">				ymax = posy + h / 2;</span>
+<span class="nc" id="L368">				ymin = posy - h / 2;</span>
+<span class="nc" id="L369">			}</span>
+			case TOP -&gt; {
+<span class="nc" id="L371">				ymax = posy;</span>
+<span class="nc" id="L372">				ymin = posy - h;</span>
+			}
+		}
+		/*
+	    logger.debug(&quot;{} lines&quot;, num_lines);
+	    logger.debug(&quot;longest {} chars&quot;, len);
+	    logger.debug(&quot;x {} to {}&quot;, xmin, xmax);
+	    logger.debug(&quot;y {} to {}&quot;, ymin, ymax);
+		 */
+<span class="nc" id="L381">		Rectangle2D r = new Rectangle2D.Float();</span>
+<span class="nc" id="L382">		r.setRect(xmin, ymin, xmax - xmin, ymax - ymin);</span>
+
+<span class="nc" id="L384">		return r;</span>
+	}
+
+
+	private void textCreateMessageNow(String text) {
+<span class="nc bnc" id="L389" title="All 2 branches missed.">		if (charsPerLine &lt;= 0) return;</span>
+
+		// find size of text block
+<span class="nc" id="L392">		Rectangle2D r = textCalculateBounds(text);</span>
+
+<span class="nc" id="L394">		Turtle turtle = new Turtle();</span>
+
+<span class="nc bnc" id="L396" title="All 2 branches missed.">		if (draw_bounding_box) {</span>
+			// draw bounding box
+<span class="nc" id="L398">			turtle.moveTo(r.getMinX(),r.getMinY());</span>
+<span class="nc" id="L399">			turtle.penDown();</span>
+<span class="nc" id="L400">			turtle.moveTo(r.getMinX(),r.getMaxY());</span>
+<span class="nc" id="L401">			turtle.moveTo(r.getMaxX(),r.getMaxY());</span>
+<span class="nc" id="L402">			turtle.moveTo(r.getMaxX(),r.getMinY());</span>
+<span class="nc" id="L403">			turtle.moveTo(r.getMinX(),r.getMinY());</span>
+<span class="nc" id="L404">			turtle.penUp();</span>
+		}
+
+		// move to first line height
+		// assumes we are still G90
+<span class="nc" id="L409">		float message_start = (float) r.getMinX() + padding;</span>
+<span class="nc" id="L410">		float firstline = (float) r.getMinY() - (padding + letterHeight);</span>
+<span class="nc" id="L411">		float interline = -(letterHeight + lineSpacing);</span>
+
+<span class="nc" id="L413">		turtle.moveTo(message_start, firstline);</span>
+
+		// draw line of text
+<span class="nc" id="L416">		String[] lines = textWrapToLength(text);</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">		for (int i = 0; i &lt; lines.length; i++) {</span>
+<span class="nc bnc" id="L418" title="All 2 branches missed.">			if (i &gt; 0) {</span>
+				// newline
+<span class="nc" id="L420">				turtle.moveTo(message_start, turtle.getY() + interline);</span>
+			}
+
+<span class="nc" id="L423">			textDrawLine(turtle,lines[i]);</span>
+		}
+		
+<span class="nc" id="L426">		turtle.penUp();</span>
+<span class="nc" id="L427">	}</span>
+
+
+	// break the text into an array of strings.  each string is one line of text made to fit into the chars_per_line limit.
+	private String[] textWrapToLength(String src) {
+<span class="nc" id="L432">		String[] test_lines = src.split(&quot;\n&quot;);</span>
+		int i, j;
+
+<span class="nc" id="L435">		int num_lines = 0;</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">		for (i = 0; i &lt; test_lines.length; ++i) {</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">			if (test_lines[i].length() &gt; charsPerLine) {</span>
+<span class="nc" id="L438">				int x = (int) Math.ceil((double) test_lines[i].length() / (double) charsPerLine);</span>
+<span class="nc" id="L439">				num_lines += x;</span>
+<span class="nc" id="L440">			} else {</span>
+<span class="nc" id="L441">				num_lines++;</span>
+			}
+		}
+
+<span class="nc" id="L445">		String[] lines = new String[num_lines];</span>
+<span class="nc" id="L446">		j = 0;</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">		for (i = 0; i &lt; test_lines.length; ++i) {</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">			if (test_lines[i].length() &lt;= charsPerLine) {</span>
+<span class="nc" id="L449">				lines[j++] = test_lines[i];</span>
+			} else {
+<span class="nc" id="L451">				String[] lineSegments = test_lines[i].split(&quot;(?&lt;=\\G.{&quot; + charsPerLine + &quot;})&quot;);</span>
+<span class="nc bnc" id="L452" title="All 2 branches missed.">				for (String aLine : lineSegments) {</span>
+<span class="nc" id="L453">					lines[j++] = aLine;</span>
+				}
+			}
+		}
+
+<span class="nc" id="L458">		return lines;</span>
+	}
+
+	private int textLongestLine(String[] lines) {
+<span class="nc" id="L462">		int len = 0;</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">		for (String line : lines) {</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">			if (len &lt; line.length()) len = line.length();</span>
+		}
+
+<span class="nc" id="L467">		return len;</span>
+	}
+
+	private void textDrawLine(Turtle turtle,String a1) {
+<span class="nc" id="L471">		logger.debug(&quot;{} ({})&quot;, a1, a1.length());</span>
+		
+<span class="nc" id="L473">		int i = 0;</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">		for (i = 0; i &lt; a1.length(); ++i) {</span>
+<span class="nc" id="L475">			char letter = a1.charAt(i);</span>
+
+<span class="nc bnc" id="L477" title="All 4 branches missed.">			if (letter == '\n' || letter == '\r') continue;</span>
+
+			String name;
+
+			// find the file that goes with this character
+<span class="nc bnc" id="L482" title="All 4 branches missed.">			if ('a' &lt;= letter &amp;&amp; letter &lt;= 'z') {</span>
+<span class="nc" id="L483">				name = &quot;SMALL_&quot; + Character.toUpperCase(letter);</span>
+			} else {
+<span class="nc bnc" id="L485" title="All 35 branches missed.">				name = switch (letter) {</span>
+<span class="nc" id="L486">					case ' ' -&gt; &quot;SPACE&quot;;</span>
+<span class="nc" id="L487">					case '!' -&gt; &quot;EXCLAMATION&quot;;</span>
+<span class="nc" id="L488">					case '&quot;' -&gt; &quot;DOUBLEQ&quot;;</span>
+<span class="nc" id="L489">					case '$' -&gt; &quot;DOLLAR&quot;;</span>
+<span class="nc" id="L490">					case '#' -&gt; &quot;POUND&quot;;</span>
+<span class="nc" id="L491">					case '%' -&gt; &quot;PERCENT&quot;;</span>
+<span class="nc" id="L492">					case '&amp;' -&gt; &quot;AMPERSAND&quot;;</span>
+<span class="nc" id="L493">					case '\'' -&gt; &quot;SINGLEQ&quot;;</span>
+<span class="nc" id="L494">					case '(' -&gt; &quot;B1OPEN&quot;;</span>
+<span class="nc" id="L495">					case ')' -&gt; &quot;B1CLOSE&quot;;</span>
+<span class="nc" id="L496">					case '*' -&gt; &quot;ASTERIX&quot;;</span>
+<span class="nc" id="L497">					case '+' -&gt; &quot;PLUS&quot;;</span>
+<span class="nc" id="L498">					case ',' -&gt; &quot;COMMA&quot;;</span>
+<span class="nc" id="L499">					case '-' -&gt; &quot;HYPHEN&quot;;</span>
+<span class="nc" id="L500">					case '.' -&gt; &quot;PERIOD&quot;;</span>
+<span class="nc" id="L501">					case '/' -&gt; &quot;FSLASH&quot;;</span>
+<span class="nc" id="L502">					case ':' -&gt; &quot;COLON&quot;;</span>
+<span class="nc" id="L503">					case ';' -&gt; &quot;SEMICOLON&quot;;</span>
+<span class="nc" id="L504">					case '&lt;' -&gt; &quot;GREATERTHAN&quot;;</span>
+<span class="nc" id="L505">					case '=' -&gt; &quot;EQUAL&quot;;</span>
+<span class="nc" id="L506">					case '&gt;' -&gt; &quot;LESSTHAN&quot;;</span>
+<span class="nc" id="L507">					case '?' -&gt; &quot;QUESTION&quot;;</span>
+<span class="nc" id="L508">					case '@' -&gt; &quot;AT&quot;;</span>
+<span class="nc" id="L509">					case '[' -&gt; &quot;B2OPEN&quot;;</span>
+<span class="nc" id="L510">					case ']' -&gt; &quot;B2CLOSE&quot;;</span>
+<span class="nc" id="L511">					case '^' -&gt; &quot;CARET&quot;;</span>
+<span class="nc" id="L512">					case '_' -&gt; &quot;UNDERSCORE&quot;;</span>
+<span class="nc" id="L513">					case '`' -&gt; &quot;GRAVE&quot;;</span>
+<span class="nc" id="L514">					case '{' -&gt; &quot;B3OPEN&quot;;</span>
+<span class="nc" id="L515">					case '|' -&gt; &quot;BAR&quot;;</span>
+<span class="nc" id="L516">					case '}' -&gt; &quot;B3CLOSE&quot;;</span>
+<span class="nc" id="L517">					case '~' -&gt; &quot;TILDE&quot;;</span>
+<span class="nc" id="L518">					case '\\' -&gt; &quot;BSLASH&quot;;</span>
+<span class="nc" id="L519">					case '…' -&gt; &quot;SPACE&quot;;</span>
+<span class="nc" id="L520">					default -&gt; Character.toString(letter);</span>
+				};
+			}
+<span class="nc" id="L523">			String fn = ALPHABET_FOLDER + name + &quot;.NGC&quot;;</span>
+<span class="nc" id="L524">			final InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(fn);</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">			if (inputStream != null) {</span>
+<span class="nc bnc" id="L526" title="All 4 branches missed.">				if (i &gt; 0 &amp;&amp; kerning != 0) {</span>
+<span class="nc" id="L527">					turtle.moveTo(turtle.getX()+kerning, turtle.getY());</span>
+				}
+<span class="nc" id="L529">				try (final InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L530">						final BufferedReader in = new BufferedReader(inputStreamReader)) {</span>
+
+					String b;
+<span class="nc bnc" id="L533" title="All 2 branches missed.">					while ((b = in.readLine()) != null) {</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">						if (b.trim().length() == 0)</span>
+<span class="nc" id="L535">							continue;</span>
+<span class="nc bnc" id="L536" title="All 3 branches missed.">						switch (b) {</span>
+<span class="nc" id="L537">							case &quot;UP&quot; -&gt; turtle.penUp();</span>
+<span class="nc" id="L538">							case &quot;DOWN&quot; -&gt; turtle.penDown();</span>
+							default -&gt; {
+<span class="nc" id="L540">								StringTokenizer st = new StringTokenizer(b);</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">								while (st.hasMoreTokens()) {</span>
+<span class="nc" id="L542">									String c = st.nextToken();</span>
+<span class="nc bnc" id="L543" title="All 2 branches missed.">									if (c.startsWith(&quot;X&quot;)) {</span>
+										// translate coordinates
+<span class="nc" id="L545">										final float x = Float.parseFloat(c.substring(1)) * 10; // cm to mm</span>
+<span class="nc" id="L546">										turtle.moveTo(turtle.getX() + x, turtle.getY());</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">									} else if (c.startsWith(&quot;Y&quot;)) {</span>
+										// translate coordinates
+<span class="nc" id="L549">										final float y = Float.parseFloat(c.substring(1)) * 10; // cm to mm</span>
+<span class="nc" id="L550">										turtle.moveTo(turtle.getX(), turtle.getY() + y);</span>
+									}
+<span class="nc" id="L552">								}</span>
+							}
+<span class="nc" id="L554">						}</span>
+					}
+				}
+<span class="nc" id="L557">				catch(IOException e) {</span>
+<span class="nc" id="L558">					logger.error(&quot;Failed to load font&quot;, e);</span>
+<span class="nc" id="L559">				}</span>
+			} else {
+				// file not found
+<span class="nc" id="L562">				logger.debug(&quot;file not found. Making best guess as to where it is. {} NOK&quot;, fn);</span>
+			}
+		}
+<span class="nc" id="L565">	}</span>
+
+	public void signName() {
+<span class="nc" id="L568">		setupTransform();</span>
+
+<span class="nc" id="L570">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L571">		textSetAlign(Align.RIGHT);</span>
+<span class="nc" id="L572">		textSetVAlign(VAlign.BOTTOM);</span>
+<span class="nc" id="L573">		textSetPosition(</span>
+<span class="nc" id="L574">				(float)(rect.getWidth() *10.0f),</span>
+<span class="nc" id="L575">				(float)(rect.getHeight()*10.0f));</span>
+
+<span class="nc" id="L577">		textSetCharsPerLine(25);</span>
+
+<span class="nc" id="L579">		textCreateMessageNow(&quot;Makelangelo robot&quot;);</span>
+		//TextCreateMessageNow(&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890&lt;&gt;,?/\&quot;':;[]!@#$%^&amp;*()_+-=\\|~`{}.&quot;);
+<span class="nc" id="L581">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

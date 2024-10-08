@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChooseConnection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols</a> &gt; <span class="el_source">ChooseConnection.java</span></div><h1>ChooseConnection.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols;
+
+import com.marginallyclever.communications.*;
+import com.marginallyclever.convenience.ButtonIcon;
+import com.marginallyclever.convenience.ToggleButtonIcon;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.plotter.plottercontrols.communications.DummyUI;
+import com.marginallyclever.makelangelo.plotter.plottercontrols.communications.SerialUI;
+import com.marginallyclever.makelangelo.plotter.plottercontrols.communications.TransportLayerUI;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * ChooseConnection provides a human interface to open or close a
+ * connection to a remote device available through a {@link NetworkSession}.
+ *
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class ChooseConnection extends JPanel {
+<span class="fc" id="L28">	private static final Logger logger = LoggerFactory.getLogger(ChooseConnection.class);</span>
+
+<span class="fc" id="L30">	private final ToggleButtonIcon bConnect = new ToggleButtonIcon(</span>
+<span class="fc" id="L31">			new ToggleButtonIcon.Item(Translator.get(&quot;ChooseConnection.ButtonConnect&quot;), &quot;/images/connect.png&quot;, Color.GREEN),</span>
+<span class="fc" id="L32">			new ToggleButtonIcon.Item(Translator.get(&quot;ChooseConnection.ButtonDisconnect&quot;), &quot;/images/disconnect.png&quot;, Color.RED)</span>
+		);
+<span class="fc" id="L34">	private final ButtonIcon refresh = new ButtonIcon(&quot;&quot;, &quot;/images/arrow_refresh.png&quot;);</span>
+<span class="fc" id="L35">	private final JComboBox&lt;ComboItem&gt; connectionComboBox = new JComboBox&lt;&gt;();</span>
+<span class="fc" id="L36">	private final JPanel configurationPanel = new JPanel();</span>
+	private TransportLayerUI previousTransportLayerUI;
+<span class="fc" id="L38">	private final List&lt;TransportLayerUI&gt; availableTransportsUI = new ArrayList&lt;&gt;();</span>
+	private NetworkSession mySession;
+
+<span class="fc" id="L41">	public ChooseConnection() {</span>
+<span class="fc" id="L42">		availableTransportsUI.add(new SerialUI());</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">		if (&quot;true&quot;.equalsIgnoreCase(System.getenv(&quot;DEV&quot;))) {</span>
+<span class="nc" id="L44">			availableTransportsUI.add(new DummyUI());</span>
+		}
+
+<span class="fc" id="L47">		this.add(connectionComboBox);</span>
+<span class="fc" id="L48">		connectionComboBox.addItemListener(this::updateConfigurationPanel);</span>
+<span class="fc" id="L49">		addConnectionsItems(connectionComboBox);</span>
+
+<span class="fc" id="L51">		configurationPanel.setLayout(new BoxLayout(configurationPanel, BoxLayout.LINE_AXIS));</span>
+<span class="fc" id="L52">		this.add(configurationPanel);</span>
+
+<span class="pc" id="L54">		refresh.addActionListener(e -&gt; addConnectionsItems(connectionComboBox));</span>
+<span class="fc" id="L55">		this.add(refresh);</span>
+
+<span class="pc" id="L57">		bConnect.addActionListener(e-&gt; onConnectAction());</span>
+<span class="fc" id="L58">		this.setLayout(new FlowLayout(FlowLayout.LEADING));</span>
+<span class="fc" id="L59">		this.add(bConnect);</span>
+<span class="fc" id="L60">	}</span>
+
+	private void updateConfigurationPanel(ItemEvent itemEvent) {
+<span class="nc" id="L63">		ComboItem comboItem = (ComboItem) itemEvent.getItem();</span>
+<span class="nc" id="L64">		TransportLayerUI transportLayerUI = comboItem.transportLayerUi;</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (previousTransportLayerUI != transportLayerUI) {</span>
+<span class="nc" id="L66">			configurationPanel.removeAll();</span>
+<span class="nc" id="L67">			comboItem.transportLayerUi.addToPanel(configurationPanel);</span>
+<span class="nc" id="L68">			configurationPanel.revalidate();</span>
+		}
+<span class="nc" id="L70">		previousTransportLayerUI = transportLayerUI;</span>
+<span class="nc" id="L71">	}</span>
+
+	private void addConnectionsItems(JComboBox&lt;ComboItem&gt; comboBox) {
+<span class="fc" id="L74">		comboBox.removeAllItems();</span>
+<span class="fc" id="L75">		logger.debug(&quot;Fetching connections&quot;);</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">		for (TransportLayerUI transportLayerUi : availableTransportsUI) {</span>
+<span class="fc" id="L77">			TransportLayer transportLayer = transportLayerUi.getTransportLayer();</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">			for (String connection: transportLayer.listConnections()) {</span>
+<span class="nc" id="L79">				Configuration configuration = new Configuration(transportLayer, connection);</span>
+<span class="nc" id="L80">				comboBox.addItem(new ComboItem(configuration, transportLayerUi));</span>
+<span class="nc" id="L81">			}</span>
+<span class="fc" id="L82">		}</span>
+
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">		bConnect.setEnabled(comboBox.getItemCount() &gt; 0);</span>
+<span class="fc" id="L85">	}</span>
+
+	private void onConnectAction() {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (mySession != null) {</span>
+<span class="nc" id="L89">			onClose();</span>
+		} else {
+<span class="nc" id="L91">			ComboItem comboItem = (ComboItem) connectionComboBox.getSelectedItem();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			if (comboItem==null) return;  // no connections selected, can't happened</span>
+
+<span class="nc" id="L94">			Configuration configuration = comboItem.configuration;</span>
+<span class="nc" id="L95">			comboItem.transportLayerUi.setSelectedValue(configuration);</span>
+<span class="nc" id="L96">			NetworkSession networkSession = configuration.getTransportLayer().openConnection(configuration);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			if (networkSession != null) {</span>
+<span class="nc" id="L98">				onOpen(networkSession);</span>
+<span class="nc" id="L99">				notifyListeners(new NetworkSessionEvent(this, NetworkSessionEvent.CONNECTION_OPENED, networkSession));</span>
+			} else {
+<span class="nc" id="L101">				notifyListeners(new NetworkSessionEvent(this, NetworkSessionEvent.CONNECTION_ERROR, null));</span>
+			}
+		}
+<span class="nc" id="L104">	}</span>
+
+	private void onClose() {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (mySession != null) {</span>
+<span class="nc" id="L108">			mySession.closeConnection();</span>
+<span class="nc" id="L109">			mySession = null;</span>
+<span class="nc" id="L110">			notifyListeners(new NetworkSessionEvent(this, NetworkSessionEvent.CONNECTION_CLOSED, null));</span>
+		}
+
+<span class="nc" id="L113">		connectionComboBox.setEnabled(true);</span>
+<span class="nc" id="L114">		refresh.setEnabled(true);</span>
+<span class="nc" id="L115">		bConnect.updateButton(0);</span>
+<span class="nc" id="L116">		availableTransportsUI.forEach(TransportLayerUI::onClose);</span>
+<span class="nc" id="L117">	}</span>
+
+	private void onOpen(NetworkSession s) {
+<span class="nc" id="L120">		mySession = s;</span>
+<span class="nc" id="L121">		mySession.addListener(e -&gt; {</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			if (e.flag == NetworkSessionEvent.CONNECTION_CLOSED) {</span>
+<span class="nc" id="L123">				onClose();</span>
+			}
+<span class="nc" id="L125">		});</span>
+
+<span class="nc" id="L127">		connectionComboBox.setEnabled(false);</span>
+<span class="nc" id="L128">		refresh.setEnabled(false);</span>
+<span class="nc" id="L129">		bConnect.updateButton(1);</span>
+<span class="nc" id="L130">		availableTransportsUI.forEach(TransportLayerUI::onOpen);</span>
+<span class="nc" id="L131">	}</span>
+
+	public void closeConnection() {
+<span class="nc" id="L134">		onClose();</span>
+<span class="nc" id="L135">	}</span>
+
+	private class ComboItem {
+		private final Configuration configuration;
+		private final TransportLayerUI transportLayerUi;
+
+<span class="nc" id="L141">		private ComboItem(Configuration configuration, TransportLayerUI transportLayerUi) {</span>
+<span class="nc" id="L142">			this.configuration = configuration;</span>
+<span class="nc" id="L143">			this.transportLayerUi = transportLayerUi;</span>
+<span class="nc" id="L144">		}</span>
+
+		public String toString() {
+<span class="nc" id="L147">			return configuration.getConnectionName();</span>
+		}
+	}
+
+	// OBSERVER PATTERN
+
+<span class="fc" id="L153">	private List&lt;NetworkSessionListener&gt; listeners = new ArrayList&lt;&gt;();</span>
+
+	public void addListener(NetworkSessionListener listener) {
+<span class="fc" id="L156">		listeners.add(listener);</span>
+<span class="fc" id="L157">	}</span>
+
+	public void removeListener(NetworkSessionListener listener) {
+<span class="nc" id="L160">		listeners.remove(listener);</span>
+<span class="nc" id="L161">	}</span>
+
+	private void notifyListeners(NetworkSessionEvent evt) {
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		for( NetworkSessionListener a : listeners ) {</span>
+<span class="nc" id="L165">			a.networkSessionEvent(evt);</span>
+<span class="nc" id="L166">		}</span>
+<span class="nc" id="L167">	}</span>
+
+	// TEST
+
+	public static void main(String[] args) {
+<span class="nc" id="L172">		PreferencesHelper.start();</span>
+<span class="nc" id="L173">		Translator.start();</span>
+
+<span class="nc" id="L175">		JFrame frame = new JFrame(ChooseConnection.class.getSimpleName());</span>
+<span class="nc" id="L176">		frame.setMinimumSize(new Dimension(800, 70));</span>
+<span class="nc" id="L177">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L178">		frame.add(new ChooseConnection());</span>
+<span class="nc" id="L179">		frame.pack();</span>
+<span class="nc" id="L180">		frame.setVisible(true);</span>
+<span class="nc" id="L181">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

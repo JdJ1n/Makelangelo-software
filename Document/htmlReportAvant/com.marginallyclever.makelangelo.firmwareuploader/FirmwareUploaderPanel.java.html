@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FirmwareUploaderPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.firmwareuploader</a> &gt; <span class="el_source">FirmwareUploaderPanel.java</span></div><h1>FirmwareUploaderPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.firmwareuploader;
+
+import com.marginallyclever.communications.serial.SerialTransportLayer;
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.select.SelectButton;
+import com.marginallyclever.makelangelo.select.SelectOneOfMany;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+
+/**
+ * A panel for uploading firmware to the robot.
+ *
+ * @since 7.32.0?
+ * @author Dan Royer
+ */
+public class FirmwareUploaderPanel extends JPanel {
+<span class="nc" id="L24">	private static final Logger logger = LoggerFactory.getLogger(FirmwareUploaderPanel.class);</span>
+<span class="nc" id="L25">	private final FirmwareDownloader firmwareDownloader = new FirmwareDownloader();</span>
+<span class="nc" id="L26">	private final FirmwareUploader firmwareUploader = new FirmwareUploader();</span>
+<span class="nc" id="L27">	private final SelectOneOfMany port = new SelectOneOfMany(&quot;port&quot;,Translator.get(&quot;Port&quot;));</span>
+<span class="nc" id="L28">    private final SelectButton startM5 = new SelectButton(&quot;startM5&quot;,Translator.get(&quot;FirmwareUploaderPanel.startM5&quot;));</span>
+<span class="nc" id="L29">	private final SelectButton startHuge = new SelectButton(&quot;startHuge&quot;,Translator.get(&quot;FirmwareUploaderPanel.startHuge&quot;));</span>
+
+
+    public FirmwareUploaderPanel() {
+<span class="nc" id="L33">		super(new GridBagLayout());</span>
+<span class="nc" id="L34">		this.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));</span>
+
+<span class="nc" id="L36">		updateCOMPortList();</span>
+
+<span class="nc" id="L38">		JPanel connectTo = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L39">		connectTo.add(port,BorderLayout.CENTER);</span>
+
+<span class="nc" id="L41">        SelectButton refreshButton = new SelectButton(&quot;refresh&quot;, &quot;⟳&quot;);</span>
+<span class="nc" id="L42">		refreshButton.addActionListener(e -&gt; updateCOMPortList());</span>
+<span class="nc" id="L43">        connectTo.add(refreshButton,BorderLayout.EAST);</span>
+
+<span class="nc" id="L45">		GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L46">		c.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L47">		c.gridx=0;</span>
+<span class="nc" id="L48">		c.gridy=0;</span>
+<span class="nc" id="L49">		c.weightx=1;</span>
+<span class="nc" id="L50">		c.weighty=0;</span>
+
+<span class="nc" id="L52">        SelectReadOnlyText help = new SelectReadOnlyText(&quot;help&quot;, Translator.get(&quot;FirmwareUploader.help&quot;));</span>
+<span class="nc" id="L53">        add(help,c);</span>
+<span class="nc" id="L54">		c.gridy++;</span>
+<span class="nc" id="L55">		c.gridwidth=2;</span>
+<span class="nc" id="L56">		add(connectTo,c);</span>
+<span class="nc" id="L57">		c.gridy++;</span>
+<span class="nc" id="L58">		c.gridwidth=1;</span>
+<span class="nc" id="L59">		c.weightx=1;</span>
+<span class="nc" id="L60">		c.weighty=1;</span>
+<span class="nc" id="L61">		c.anchor = GridBagConstraints.PAGE_END;</span>
+<span class="nc" id="L62">		add(startM5,c);</span>
+<span class="nc" id="L63">		c.gridx++;</span>
+<span class="nc" id="L64">		add(startHuge,c);</span>
+
+<span class="nc" id="L66">		startM5.addActionListener(e -&gt; run(e,&quot;firmware-m5.hex&quot;));</span>
+<span class="nc" id="L67">		startHuge.addActionListener(e -&gt; run(e,&quot;firmware-huge.hex&quot;));</span>
+<span class="nc" id="L68">	}</span>
+
+	private void updateCOMPortList() {
+<span class="nc" id="L71">		String [] list = getListOfCOMPorts();</span>
+<span class="nc" id="L72">		port.setNewList(list);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if(list.length==1) port.setSelectedIndex(0);</span>
+<span class="nc" id="L74">	}</span>
+	
+	private String[] getListOfCOMPorts() {
+<span class="nc" id="L77">		return new SerialTransportLayer().listConnections().toArray(new String[0]);</span>
+	}
+
+	private void run(ActionEvent evt, String name) {
+<span class="nc" id="L81">		String title = Translator.get(&quot;FirmwareUploaderPanel.status&quot;);</span>
+
+<span class="nc" id="L83">		logger.debug(&quot;maybe downloading avrdude...&quot;);</span>
+		try {
+<span class="nc" id="L85">			String AVRDudePath = AVRDudeDownloader.downloadAVRDude();</span>
+<span class="nc" id="L86">			firmwareUploader.setInstallPath(AVRDudePath);</span>
+<span class="nc" id="L87">		} catch(Exception e) {</span>
+<span class="nc" id="L88">			JOptionPane.showMessageDialog(this,Translator.get(&quot;FirmwareUploaderPanel.avrdudeNotDownloaded&quot;),title,JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L89">			return;</span>
+<span class="nc" id="L90">		}</span>
+
+<span class="nc" id="L92">		logger.debug(&quot;maybe downloading firmware...&quot;);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if(!firmwareDownloader.getFirmware(name)) {</span>
+<span class="nc" id="L94">			JOptionPane.showMessageDialog(this,Translator.get(&quot;FirmwareUploaderPanel.downloadFailed&quot;),title,JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L95">			return;</span>
+		}
+
+<span class="nc" id="L98">		logger.debug(&quot;finding avrdude file...&quot;);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if(!firmwareUploader.findAVRDude()) {</span>
+<span class="nc" id="L100">			JOptionPane.showMessageDialog(this,Translator.get(&quot;FirmwareUploaderPanel.notFound&quot;,new String[]{&quot;avrdude&quot;}),title,JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L101">			return;</span>
+		}
+
+<span class="nc" id="L104">		logger.debug(&quot;finding conf file...&quot;);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if(!firmwareUploader.findConf()) {</span>
+<span class="nc" id="L106">			JOptionPane.showMessageDialog(this,Translator.get(&quot;FirmwareUploaderPanel.notFound&quot;,new String []{&quot;avrdude.conf&quot;}),title,JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L107">			return;</span>
+		}
+
+<span class="nc" id="L110">		logger.debug(&quot;setup...&quot;);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if(port.getSelectedIndex()==-1) {</span>
+<span class="nc" id="L112">			JOptionPane.showMessageDialog(this, Translator.get(&quot;FirmwareUploaderPanel.noPortSelected&quot;), title, JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L113">			return;</span>
+		}
+<span class="nc" id="L115">		firmwareUploader.setHexPath(firmwareDownloader.getDownloadPath(name));</span>
+<span class="nc" id="L116">		startM5.setEnabled(false);</span>
+<span class="nc" id="L117">		startHuge.setEnabled(false);</span>
+<span class="nc" id="L118">		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));</span>
+
+<span class="nc" id="L120">		String status = Translator.get(&quot;FirmwareUploaderPanel.finished&quot;);</span>
+<span class="nc" id="L121">		int messageType = JOptionPane.PLAIN_MESSAGE;</span>
+<span class="nc" id="L122">		int result = 1;</span>
+		try {
+<span class="nc" id="L124">			result = firmwareUploader.performUpdate(port.getSelectedItem());</span>
+<span class="nc" id="L125">		} catch (Exception e1) {</span>
+<span class="nc" id="L126">			logger.error(&quot;failed to run avrdude: &quot;,e1);</span>
+<span class="nc" id="L127">			status = e1.getMessage();</span>
+<span class="nc" id="L128">			messageType = JOptionPane.ERROR_MESSAGE;</span>
+<span class="nc" id="L129">		}</span>
+
+<span class="nc" id="L131">		setCursor(Cursor.getDefaultCursor());</span>
+<span class="nc" id="L132">		startM5.setEnabled(true);</span>
+<span class="nc" id="L133">		startHuge.setEnabled(true);</span>
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if(result!=0) {</span>
+<span class="nc" id="L136">			logger.error(&quot;upload failed.&quot;);</span>
+<span class="nc" id="L137">			status = Translator.get(&quot;FirmwareUploaderPanel.failed&quot;);</span>
+<span class="nc" id="L138">			messageType = JOptionPane.ERROR_MESSAGE;</span>
+		}
+
+<span class="nc" id="L141">		JOptionPane.showMessageDialog(this,status,title,messageType);</span>
+<span class="nc" id="L142">	}</span>
+	
+	public static void main(String[] args) throws Exception {
+<span class="nc" id="L145">		PreferencesHelper.start();</span>
+<span class="nc" id="L146">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L147">		Translator.start();</span>
+
+<span class="nc" id="L149">		JFrame frame = new JFrame(FirmwareUploaderPanel.class.getSimpleName());</span>
+<span class="nc" id="L150">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L151">		frame.setContentPane(new FirmwareUploaderPanel());</span>
+<span class="nc" id="L152">		frame.setPreferredSize(new Dimension(250,150));</span>
+<span class="nc" id="L153">		frame.pack();</span>
+<span class="nc" id="L154">		frame.setLocationRelativeTo(null);</span>
+<span class="nc" id="L155">		frame.setVisible(true);</span>
+<span class="nc" id="L156">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

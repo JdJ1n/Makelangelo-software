@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaperSettingsPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.paper</a> &gt; <span class="el_source">PaperSettingsPanel.java</span></div><h1>PaperSettingsPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.paper;
+
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.select.*;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+
+public class PaperSettingsPanel extends SelectPanel {
+<span class="fc" id="L13">	private static final Logger logger = LoggerFactory.getLogger(PaperSettingsPanel.class);</span>
+
+<span class="fc" id="L15">	private static final PaperSize[] commonPaperSizes = {</span>
+		new PaperSize(&quot;4A0&quot;,1682,2378),
+		new PaperSize(&quot;2A0&quot;,1189,1682),
+		new PaperSize(&quot;A0&quot;,841,1189),
+		new PaperSize(&quot;A1&quot;,594,841),
+		new PaperSize(&quot;A2&quot;,420,594),
+		new PaperSize(&quot;A3&quot;,297,420),
+		new PaperSize(&quot;A4&quot;,210,297),
+		new PaperSize(&quot;A5&quot;,148,210),
+		new PaperSize(&quot;A6&quot;,105,148),
+		new PaperSize(&quot;A7&quot;,74,105),
+		new PaperSize(&quot;US Half Letter&quot;,140,216),
+		new PaperSize(&quot;US Letter&quot;,216,279),
+		new PaperSize(&quot;US Legal&quot;,216,356),
+		new PaperSize(&quot;US Junior Legal&quot;,127,203),
+		new PaperSize(&quot;US Ledger / Tabloid&quot;,279,432),
+		new PaperSize(&quot;ANSI A&quot;,216,279),
+		new PaperSize(&quot;ANSI B&quot;,279,432),
+		new PaperSize(&quot;ANSI C&quot;,432,559),
+		new PaperSize(&quot;ANSI D&quot;,559,864),
+		new PaperSize(&quot;ANSI E&quot;,864,1118),
+		new PaperSize(&quot;Arch A&quot;,229,305),
+		new PaperSize(&quot;Arch B&quot;,305,457),
+		new PaperSize(&quot;Arch C&quot;,457,610),
+		new PaperSize(&quot;Arch D&quot;,610,914),
+		new PaperSize(&quot;Arch E&quot;,914,1219),
+		new PaperSize(&quot;Arch E1&quot;,762,1067)
+	};
+
+	private final Paper myPaper;
+	private final SelectOneOfMany paperSizes;
+	private final SelectDouble pw, ph, shiftX, shiftY, ang;
+	private final SelectBoolean isLandscape;
+	private final SelectSlider paperMargin;
+	private final SelectColor paperColor;
+	
+<span class="fc" id="L51">	public PaperSettingsPanel(Paper paper) {</span>
+<span class="fc" id="L52">		this.myPaper = paper;</span>
+<span class="fc" id="L53">		this.setName(PaperSettingsPanel.class.getSimpleName());</span>
+
+		// common paper sizes
+<span class="fc" id="L56">		String[] commonPaperNames = new String[commonPaperSizes.length+1];</span>
+<span class="fc" id="L57">		commonPaperNames[0]=&quot;---&quot;;</span>
+		int i;
+<span class="fc bfc" id="L59" title="All 2 branches covered.">		for(i=0;i&lt;commonPaperSizes.length;++i) {</span>
+<span class="fc" id="L60">			commonPaperNames[i+1] = commonPaperSizes[i].toString();</span>
+		}
+
+<span class="fc" id="L63">		add(paperSizes = new SelectOneOfMany(&quot;size&quot;,Translator.get(&quot;PaperSettings.PaperSize&quot;),commonPaperNames,0));</span>
+<span class="fc" id="L64">		add(pw = new SelectDouble(&quot;width&quot;,Translator.get(&quot;PaperSettings.PaperWidth&quot;),myPaper.getPaperWidth()));</span>
+<span class="fc" id="L65">		add(ph = new SelectDouble(&quot;height&quot;,Translator.get(&quot;PaperSettings.PaperHeight&quot;),myPaper.getPaperHeight()));</span>
+<span class="fc" id="L66">		add(shiftX = new SelectDouble(&quot;shiftx&quot;,Translator.get(&quot;PaperSettings.ShiftX&quot;),myPaper.getCenterX()));</span>
+<span class="fc" id="L67">		add(shiftY = new SelectDouble(&quot;shifty&quot;,Translator.get(&quot;PaperSettings.ShiftY&quot;),myPaper.getCenterY()));</span>
+<span class="fc" id="L68">		ang = new SelectDouble(&quot;rotation&quot;,Translator.get(&quot;PaperSettings.Rotation&quot;),myPaper.getRotation());</span>
+		//add();
+<span class="fc" id="L70">		add(isLandscape = new SelectBoolean(&quot;landscape&quot;,Translator.get(&quot;PaperSettings.Landscape&quot;),false));</span>
+<span class="fc" id="L71">		add(paperMargin = new SelectSlider(&quot;margin&quot;,Translator.get(&quot;PaperSettings.PaperMargin&quot;),50,0,100 - (int) (myPaper.getPaperMargin() * 100)));</span>
+<span class="fc" id="L72">		add(paperColor = new SelectColor(&quot;color&quot;,Translator.get(&quot;PaperSettings.PaperColor&quot;),myPaper.getPaperColor(),this));</span>
+
+<span class="fc" id="L74">		getValuesFromPaper();// As the paper load this value from the pref when instancied.		</span>
+<span class="fc" id="L75">		onPaperWidthOrHeightChange(null);//this set the SelectOneOfMany paperSizes and the landscape checkbox to the correcte values.</span>
+		
+<span class="fc" id="L77">		paperSizes.addSelectListener(this::onPaperSizePresetChange);</span>
+<span class="fc" id="L78">		pw.addSelectListener(this::onPaperWidthOrHeightChange);</span>
+<span class="fc" id="L79">		ph.addSelectListener(this::onPaperWidthOrHeightChange);</span>
+<span class="pc" id="L80">		shiftX.addSelectListener((e)-&gt;setPaperFromPanel());</span>
+<span class="pc" id="L81">		shiftY.addSelectListener((e)-&gt;setPaperFromPanel());</span>
+		//ang.addSelectListener((e)-&gt;setPaperFromPanel());
+<span class="fc" id="L83">		isLandscape.addSelectListener(this::onLandscapeChange);</span>
+<span class="pc" id="L84">		paperMargin.addSelectListener((e)-&gt;setPaperFromPanel());</span>
+<span class="pc" id="L85">		paperColor.addSelectListener((e)-&gt;setPaperFromPanel());</span>
+<span class="fc" id="L86">	}</span>
+
+	/**
+	 * Called when the user changes the paper width or height.
+	 * @param e the event that triggered this call
+	 */
+	private void onPaperWidthOrHeightChange(SelectEvent e) {
+<span class="fc" id="L93">		logger.debug(&quot;onPaperDimensionsChange()&quot;);</span>
+<span class="fc" id="L94">		double w=getPaperWidthFromPanel();</span>
+<span class="fc" id="L95">		double h=getPaperHeightFromPanel();</span>
+
+<span class="fc" id="L97">		int i = getCurrentPaperSizeChoice( h, w );</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">		if(i!=0) {</span>
+<span class="fc" id="L99">			logger.debug(&quot;landscape {} found&quot;, i);</span>
+<span class="fc" id="L100">			isLandscape.setSelected(true);</span>
+		} else {
+<span class="fc" id="L102">			i = getCurrentPaperSizeChoice( w, h );</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">			if(i!=0) {</span>
+<span class="fc" id="L104">				logger.debug(&quot;portrait {} found&quot;, i);</span>
+<span class="fc" id="L105">				isLandscape.setSelected(false);</span>
+			}
+		}
+<span class="fc bfc" id="L108" title="All 2 branches covered.">		if(paperSizes.getSelectedIndex()!=i) paperSizes.setSelectedIndex(i);</span>
+<span class="fc" id="L109">		logger.debug(&quot;onPaperDimensionsChange() done&quot;);</span>
+<span class="fc" id="L110">	}</span>
+
+	private void onLandscapeChange(SelectEvent e) {
+<span class="fc" id="L113">		logger.debug(&quot;onLandscapeChange()&quot;);</span>
+<span class="fc" id="L114">		double w = pw.getValue();</span>
+<span class="fc" id="L115">		double h = ph.getValue();</span>
+<span class="fc" id="L116">		pw.setValue(h);</span>
+<span class="fc" id="L117">		ph.setValue(w);</span>
+<span class="fc" id="L118">		setPaperFromPanel();</span>
+<span class="fc" id="L119">		logger.debug(&quot;onLandscapeChange() done&quot;);</span>
+<span class="fc" id="L120">	}</span>
+
+	/**
+	 * Called when the user selects a paper size from the list.
+	 * @param e the event that triggered this call
+	 */
+	private void onPaperSizePresetChange(SelectEvent e) {
+<span class="fc" id="L127">		logger.debug(&quot;onPaperSizeChange()&quot;);</span>
+<span class="fc" id="L128">		final int selectedIndex = paperSizes.getSelectedIndex();</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		if(selectedIndex != 0) {</span>
+<span class="fc" id="L130">			logger.debug(&quot;found index {}&quot;, selectedIndex);</span>
+<span class="fc" id="L131">			PaperSize s = commonPaperSizes[selectedIndex-1];</span>
+<span class="fc" id="L132">			double w = s.width;</span>
+<span class="fc" id="L133">			double h = s.height;</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">			if(isLandscape.isSelected()) {</span>
+<span class="nc" id="L135">				double temp = w;</span>
+<span class="nc" id="L136">				w = h;</span>
+<span class="nc" id="L137">				h = temp;</span>
+			}
+			
+<span class="fc" id="L140">			boolean isDirty=false;</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">			if(w != getPaperWidthFromPanel()) {</span>
+<span class="fc" id="L142">				pw.setValue(w);</span>
+<span class="fc" id="L143">				isDirty=true;</span>
+			}
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">			if(h != getPaperHeightFromPanel()) {</span>
+<span class="fc" id="L146">				ph.setValue(h);</span>
+<span class="fc" id="L147">				isDirty=true;</span>
+			}
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">			if(isDirty)	setPaperFromPanel();</span>
+		}
+<span class="fc" id="L151">		logger.debug(&quot;onPaperSizeChange() done&quot;);</span>
+<span class="fc" id="L152">	}</span>
+	
+	/**
+	 * @return the value displayed on the panel
+	 */
+	private double getPaperWidthFromPanel() {
+<span class="fc" id="L158">		double w=0;</span>
+		try {
+<span class="fc" id="L160">			w = ((Number)pw.getValue()).doubleValue();</span>
+<span class="nc" id="L161">		} catch(Exception e) {</span>
+<span class="nc" id="L162">			logger.error(&quot;Failed to get paper width&quot;, e);</span>
+<span class="fc" id="L163">		}</span>
+<span class="fc" id="L164">		return w;</span>
+	}
+	
+	/**
+	 * @return the value displayed on the panel
+	 */
+	private double getPaperHeightFromPanel() {
+<span class="fc" id="L171">		double h=0;</span>
+		try {
+<span class="fc" id="L173">			h = ((Number)ph.getValue()).doubleValue();</span>
+<span class="nc" id="L174">		} catch(Exception e) {</span>
+<span class="nc" id="L175">			logger.error(&quot;Failed to get paper height&quot;, e);</span>
+<span class="fc" id="L176">		}</span>
+<span class="fc" id="L177">		return h;</span>
+	}
+	
+	/**
+	 * Apply this panel values to {@code myPaper}
+	 */
+	private void setPaperFromPanel() {
+<span class="fc" id="L184">		double w = ((Number)pw.getValue()).doubleValue();</span>
+<span class="fc" id="L185">		double h = ((Number)ph.getValue()).doubleValue();</span>
+<span class="fc" id="L186">		double sx = ((Number)shiftX.getValue()).doubleValue();</span>
+<span class="fc" id="L187">		double sy = ((Number)shiftY.getValue()).doubleValue();</span>
+		//double rot = ((Number)ang.getValue()).doubleValue();
+<span class="fc" id="L189">		myPaper.setPaperSize(w, h, sx, sy);</span>
+		//myPaper.setRotation(rot);
+<span class="fc" id="L191">		myPaper.setPaperColor(paperColor.getColor());</span>
+<span class="fc" id="L192">		myPaper.setPaperMargin((100 - paperMargin.getValue()) * 0.01);</span>
+<span class="fc" id="L193">	}</span>
+
+	/**
+	 * Load the values from {@code myPaper} into this panel
+	 */
+	private void getValuesFromPaper() {
+<span class="fc" id="L199">		pw.setValue(myPaper.getPaperWidth());</span>
+<span class="fc" id="L200">		ph.setValue(myPaper.getPaperHeight());</span>
+<span class="fc" id="L201">	}</span>
+
+	/**
+	 * Find the index of {@code commonPaperSizes} that matches the desired width and height. 
+	 * @param paperWidth mm
+	 * @param paperHeight mm
+	 * @return the index from the commonPaperSizes list, or 0 if not found.
+	 */
+	public int getCurrentPaperSizeChoice(double paperWidth,double paperHeight) {
+		int i;
+<span class="fc bfc" id="L211" title="All 2 branches covered.">		for(i=0;i&lt;commonPaperSizes.length;++i) {</span>
+<span class="fc bfc" id="L212" title="All 4 branches covered.">			if(paperWidth == commonPaperSizes[i].width &amp;&amp; </span>
+				paperHeight == commonPaperSizes[i].height)
+<span class="fc" id="L214">				return i+1;</span>
+		}
+
+<span class="fc" id="L217">		return 0;</span>
+	}
+	
+	public void save() {
+<span class="nc" id="L221">		double pwf = ((Number)pw.getValue()).doubleValue();</span>
+<span class="nc" id="L222">		double phf = ((Number)ph.getValue()).doubleValue();</span>
+<span class="nc" id="L223">		double shiftxf = ((Number)shiftX.getValue()).doubleValue();</span>
+<span class="nc" id="L224">		double shiftyf = ((Number)shiftY.getValue()).doubleValue();</span>
+		//double rot = ((Number)ang.getValue()).doubleValue();
+		
+<span class="nc" id="L227">		boolean data_is_sane=true;</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		if( pwf&lt;=0 ) data_is_sane=false;</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		if( phf&lt;=0 ) data_is_sane=false;</span>
+
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		if (data_is_sane) {</span>
+<span class="nc" id="L232">			myPaper.setPaperSize(pwf,phf,shiftxf,shiftyf);</span>
+			//myPaper.setRotation(rot);
+<span class="nc" id="L234">			myPaper.setPaperColor(paperColor.getColor());</span>
+
+<span class="nc" id="L236">			double pm = (100 - paperMargin.getValue()) * 0.01;</span>
+<span class="nc" id="L237">			myPaper.setPaperMargin(pm);</span>
+<span class="nc" id="L238">			myPaper.saveConfig();</span>
+		}
+<span class="nc" id="L240">	}</span>
+	
+	// TEST
+	
+	public static void main(String[] args) {
+<span class="nc" id="L245">		PreferencesHelper.start();</span>
+<span class="nc" id="L246">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L247">		Translator.start();</span>
+		
+<span class="nc" id="L249">		JFrame frame = new JFrame(PaperSettingsPanel.class.getSimpleName());</span>
+<span class="nc" id="L250">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L251">		frame.add(new PaperSettingsPanel(new Paper()));</span>
+<span class="nc" id="L252">		frame.pack();</span>
+<span class="nc" id="L253">		frame.setVisible(true);</span>
+<span class="nc" id="L254">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

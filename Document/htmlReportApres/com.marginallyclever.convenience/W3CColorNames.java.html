@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>W3CColorNames.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">W3CColorNames.java</span></div><h1>W3CColorNames.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * W3C web colors, basic and extended.
+ * obtained from many places like https://www.w3.org/TR/css-color-3/, https://www.w3.org/wiki/CSS/Properties/color/keywords
+ * @author Dan Royer
+ * @since 2022-04-25
+ */
+<span class="nc" id="L13">public class W3CColorNames {</span>
+<span class="fc" id="L14">    private static final Map&lt;String, Color&gt; map = new HashMap&lt;&gt;();</span>
+    static {
+<span class="fc" id="L16">        map.put(&quot;aliceblue&quot;,new Color(0xF0,0xF8,0xFF));</span>
+<span class="fc" id="L17">        map.put(&quot;antiquewhite&quot;,new Color(0xFA,0xEB,0xD7));</span>
+<span class="fc" id="L18">        map.put(&quot;aqua&quot;,new Color(0x00,0xFF,0xFF));</span>
+<span class="fc" id="L19">        map.put(&quot;aquamarine&quot;,new Color(0x7F,0xFF,0xD4));</span>
+<span class="fc" id="L20">        map.put(&quot;azure&quot;,new Color(0xF0,0xFF,0xFF));</span>
+<span class="fc" id="L21">        map.put(&quot;beige&quot;,new Color(0xF5,0xF5,0xDC));</span>
+<span class="fc" id="L22">        map.put(&quot;bisque&quot;,new Color(0xFF,0xE4,0xC4));</span>
+<span class="fc" id="L23">        map.put(&quot;black&quot;,new Color(0x00,0x00,0x00));</span>
+<span class="fc" id="L24">        map.put(&quot;blanchedalmond&quot;,new Color(0xFF,0xEB,0xCD));</span>
+<span class="fc" id="L25">        map.put(&quot;blue&quot;,new Color(0x00,0x00,0xFF));</span>
+<span class="fc" id="L26">        map.put(&quot;blueviolet&quot;,new Color(0x8A,0x2B,0xE2));</span>
+<span class="fc" id="L27">        map.put(&quot;brown&quot;,new Color(0xA5,0x2A,0x2A));</span>
+<span class="fc" id="L28">        map.put(&quot;burlywood&quot;,new Color(0xDE,0xB8,0x87));</span>
+<span class="fc" id="L29">        map.put(&quot;cadetblue&quot;,new Color(0x5F,0x9E,0xA0));</span>
+<span class="fc" id="L30">        map.put(&quot;chartreuse&quot;,new Color(0x7F,0xFF,0x00));</span>
+<span class="fc" id="L31">        map.put(&quot;chocolate&quot;,new Color(0xD2,0x69,0x1E));</span>
+<span class="fc" id="L32">        map.put(&quot;coral&quot;,new Color(0xFF,0x7F,0x50));</span>
+<span class="fc" id="L33">        map.put(&quot;cornflowerblue&quot;,new Color(0x64,0x95,0xED));</span>
+<span class="fc" id="L34">        map.put(&quot;cornsilk&quot;,new Color(0xFF,0xF8,0xDC));</span>
+<span class="fc" id="L35">        map.put(&quot;crimson&quot;,new Color(0xDC,0x14,0x3C));</span>
+<span class="fc" id="L36">        map.put(&quot;cyan&quot;,new Color(0x00,0xFF,0xFF));</span>
+<span class="fc" id="L37">        map.put(&quot;darkblue&quot;,new Color(0x00,0x00,0x8B));</span>
+<span class="fc" id="L38">        map.put(&quot;darkcyan&quot;,new Color(0x00,0x8B,0x8B));</span>
+<span class="fc" id="L39">        map.put(&quot;darkgoldenrod&quot;,new Color(0xB8,0x86,0x0B));</span>
+<span class="fc" id="L40">        map.put(&quot;darkgray&quot;,new Color(0xA9,0xA9,0xA9));</span>
+<span class="fc" id="L41">        map.put(&quot;darkgrey&quot;,new Color(0xA9,0xA9,0xA9));</span>
+<span class="fc" id="L42">        map.put(&quot;darkgreen&quot;,new Color(0x00,0x64,0x00));</span>
+<span class="fc" id="L43">        map.put(&quot;darkkhaki&quot;,new Color(0xBD,0xB7,0x6B));</span>
+<span class="fc" id="L44">        map.put(&quot;darkmagenta&quot;,new Color(0x8B,0x00,0x8B));</span>
+<span class="fc" id="L45">        map.put(&quot;darkolivegreen&quot;,new Color(0x55,0x6B,0x2F));</span>
+<span class="fc" id="L46">        map.put(&quot;darkorange&quot;,new Color(0xFF,0x8C,0x00));</span>
+<span class="fc" id="L47">        map.put(&quot;darkorchid&quot;,new Color(0x99,0x32,0xCC));</span>
+<span class="fc" id="L48">        map.put(&quot;darkred&quot;,new Color(0x8B,0x00,0x00));</span>
+<span class="fc" id="L49">        map.put(&quot;darksalmon&quot;,new Color(0xE9,0x96,0x7A));</span>
+<span class="fc" id="L50">        map.put(&quot;darkseagreen&quot;,new Color(0x8F,0xBC,0x8F));</span>
+<span class="fc" id="L51">        map.put(&quot;darkslateblue&quot;,new Color(0x48,0x3D,0x8B));</span>
+<span class="fc" id="L52">        map.put(&quot;darkslategray&quot;,new Color(0x2F,0x4F,0x4F));</span>
+<span class="fc" id="L53">        map.put(&quot;darkslategrey&quot;,new Color(0x2F,0x4F,0x4F));</span>
+<span class="fc" id="L54">        map.put(&quot;darkturquoise&quot;,new Color(0x00,0xCE,0xD1));</span>
+<span class="fc" id="L55">        map.put(&quot;darkviolet&quot;,new Color(0x94,0x00,0xD3));</span>
+<span class="fc" id="L56">        map.put(&quot;deeppink&quot;,new Color(0xFF,0x14,0x93));</span>
+<span class="fc" id="L57">        map.put(&quot;deepskyblue&quot;,new Color(0x00,0xBF,0xFF));</span>
+<span class="fc" id="L58">        map.put(&quot;dimgray&quot;,new Color(0x69,0x69,0x69));</span>
+<span class="fc" id="L59">        map.put(&quot;dimgrey&quot;,new Color(0x69,0x69,0x69));</span>
+<span class="fc" id="L60">        map.put(&quot;dodgerblue&quot;,new Color(0x1E,0x90,0xFF));</span>
+<span class="fc" id="L61">        map.put(&quot;firebrick&quot;,new Color(0xB2,0x22,0x22));</span>
+<span class="fc" id="L62">        map.put(&quot;floralwhite&quot;,new Color(0xFF,0xFA,0xF0));</span>
+<span class="fc" id="L63">        map.put(&quot;forestgreen&quot;,new Color(0x22,0x8B,0x22));</span>
+<span class="fc" id="L64">        map.put(&quot;fuchsia&quot;,new Color(0xFF,0x00,0xFF));</span>
+<span class="fc" id="L65">        map.put(&quot;gainsboro&quot;,new Color(0xDC,0xDC,0xDC));</span>
+<span class="fc" id="L66">        map.put(&quot;ghostwhite&quot;,new Color(0xF8,0xF8,0xFF));</span>
+<span class="fc" id="L67">        map.put(&quot;gold&quot;,new Color(0xFF,0xD7,0x00));</span>
+<span class="fc" id="L68">        map.put(&quot;goldenrod&quot;,new Color(0xDA,0xA5,0x20));</span>
+<span class="fc" id="L69">        map.put(&quot;gray&quot;,new Color(0x80,0x80,0x80));</span>
+<span class="fc" id="L70">        map.put(&quot;grey&quot;,new Color(0x80,0x80,0x80));</span>
+<span class="fc" id="L71">        map.put(&quot;green&quot;,new Color(0x00,0x80,0x00));</span>
+<span class="fc" id="L72">        map.put(&quot;greenyellow&quot;,new Color(0xAD,0xFF,0x2F));</span>
+<span class="fc" id="L73">        map.put(&quot;honeydew&quot;,new Color(0xF0,0xFF,0xF0));</span>
+<span class="fc" id="L74">        map.put(&quot;hotpink&quot;,new Color(0xFF,0x69,0xB4));</span>
+<span class="fc" id="L75">        map.put(&quot;indianred&quot;,new Color(0xCD,0x5C,0x5C));</span>
+<span class="fc" id="L76">        map.put(&quot;indigo&quot;,new Color(0x4B,0x00,0x82));</span>
+<span class="fc" id="L77">        map.put(&quot;ivory&quot;,new Color(0xFF,0xFF,0xF0));</span>
+<span class="fc" id="L78">        map.put(&quot;khaki&quot;,new Color(0xF0,0xE6,0x8C));</span>
+<span class="fc" id="L79">        map.put(&quot;lavender&quot;,new Color(0xE6,0xE6,0xFA));</span>
+<span class="fc" id="L80">        map.put(&quot;lavenderblush&quot;,new Color(0xFF,0xF0,0xF5));</span>
+<span class="fc" id="L81">        map.put(&quot;lawngreen&quot;,new Color(0x7C,0xFC,0x00));</span>
+<span class="fc" id="L82">        map.put(&quot;lemonchiffon&quot;,new Color(0xFF,0xFA,0xCD));</span>
+<span class="fc" id="L83">        map.put(&quot;lightblue&quot;,new Color(0xAD,0xD8,0xE6));</span>
+<span class="fc" id="L84">        map.put(&quot;lightcoral&quot;,new Color(0xF0,0x80,0x80));</span>
+<span class="fc" id="L85">        map.put(&quot;lightcyan&quot;,new Color(0xE0,0xFF,0xFF));</span>
+<span class="fc" id="L86">        map.put(&quot;lightgoldenrodyellow&quot;,new Color(0xFA,0xFA,0xD2));</span>
+<span class="fc" id="L87">        map.put(&quot;lightgray&quot;,new Color(0xD3,0xD3,0xD3));</span>
+<span class="fc" id="L88">        map.put(&quot;lightgrey&quot;,new Color(0xD3,0xD3,0xD3));</span>
+<span class="fc" id="L89">        map.put(&quot;lightgreen&quot;,new Color(0x90,0xEE,0x90));</span>
+<span class="fc" id="L90">        map.put(&quot;lightpink&quot;,new Color(0xFF,0xB6,0xC1));</span>
+<span class="fc" id="L91">        map.put(&quot;lightsalmon&quot;,new Color(0xFF,0xA0,0x7A));</span>
+<span class="fc" id="L92">        map.put(&quot;lightseagreen&quot;,new Color(0x20,0xB2,0xAA));</span>
+<span class="fc" id="L93">        map.put(&quot;lightskyblue&quot;,new Color(0x87,0xCE,0xFA));</span>
+<span class="fc" id="L94">        map.put(&quot;lightslategray&quot;,new Color(0x77,0x88,0x99));</span>
+<span class="fc" id="L95">        map.put(&quot;lightslategrey&quot;,new Color(0x77,0x88,0x99));</span>
+<span class="fc" id="L96">        map.put(&quot;lightsteelblue&quot;,new Color(0xB0,0xC4,0xDE));</span>
+<span class="fc" id="L97">        map.put(&quot;lightyellow&quot;,new Color(0xFF,0xFF,0xE0));</span>
+<span class="fc" id="L98">        map.put(&quot;lime&quot;,new Color(0x00,0xFF,0x00));</span>
+<span class="fc" id="L99">        map.put(&quot;limegreen&quot;,new Color(0x32,0xCD,0x32));</span>
+<span class="fc" id="L100">        map.put(&quot;linen&quot;,new Color(0xFA,0xF0,0xE6));</span>
+<span class="fc" id="L101">        map.put(&quot;magenta&quot;,new Color(0xFF,0x00,0xFF));</span>
+<span class="fc" id="L102">        map.put(&quot;maroon&quot;,new Color(0x80,0x00,0x00));</span>
+<span class="fc" id="L103">        map.put(&quot;mediumaquamarine&quot;,new Color(0x66,0xCD,0xAA));</span>
+<span class="fc" id="L104">        map.put(&quot;mediumblue&quot;,new Color(0x00,0x00,0xCD));</span>
+<span class="fc" id="L105">        map.put(&quot;mediumorchid&quot;,new Color(0xBA,0x55,0xD3));</span>
+<span class="fc" id="L106">        map.put(&quot;mediumpurple&quot;,new Color(0x93,0x70,0xDB));</span>
+<span class="fc" id="L107">        map.put(&quot;mediumseagreen&quot;,new Color(0x3C,0xB3,0x71));</span>
+<span class="fc" id="L108">        map.put(&quot;mediumslateblue&quot;,new Color(0x7B,0x68,0xEE));</span>
+<span class="fc" id="L109">        map.put(&quot;mediumspringgreen&quot;,new Color(0x00,0xFA,0x9A));</span>
+<span class="fc" id="L110">        map.put(&quot;mediumturquoise&quot;,new Color(0x48,0xD1,0xCC));</span>
+<span class="fc" id="L111">        map.put(&quot;mediumvioletred&quot;,new Color(0xC7,0x15,0x85));</span>
+<span class="fc" id="L112">        map.put(&quot;midnightblue&quot;,new Color(0x19,0x19,0x70));</span>
+<span class="fc" id="L113">        map.put(&quot;mintcream&quot;,new Color(0xF5,0xFF,0xFA));</span>
+<span class="fc" id="L114">        map.put(&quot;mistyrose&quot;,new Color(0xFF,0xE4,0xE1));</span>
+<span class="fc" id="L115">        map.put(&quot;moccasin&quot;,new Color(0xFF,0xE4,0xB5));</span>
+<span class="fc" id="L116">        map.put(&quot;navajowhite&quot;,new Color(0xFF,0xDE,0xAD));</span>
+<span class="fc" id="L117">        map.put(&quot;navy&quot;,new Color(0x00,0x00,0x80));</span>
+<span class="fc" id="L118">        map.put(&quot;oldlace&quot;,new Color(0xFD,0xF5,0xE6));</span>
+<span class="fc" id="L119">        map.put(&quot;olive&quot;,new Color(0x80,0x80,0x00));</span>
+<span class="fc" id="L120">        map.put(&quot;olivedrab&quot;,new Color(0x6B,0x8E,0x23));</span>
+<span class="fc" id="L121">        map.put(&quot;orange&quot;,new Color(0xFF,0xA5,0x00));</span>
+<span class="fc" id="L122">        map.put(&quot;orangered&quot;,new Color(0xFF,0x45,0x00));</span>
+<span class="fc" id="L123">        map.put(&quot;orchid&quot;,new Color(0xDA,0x70,0xD6));</span>
+<span class="fc" id="L124">        map.put(&quot;palegoldenrod&quot;,new Color(0xEE,0xE8,0xAA));</span>
+<span class="fc" id="L125">        map.put(&quot;palegreen&quot;,new Color(0x98,0xFB,0x98));</span>
+<span class="fc" id="L126">        map.put(&quot;paleturquoise&quot;,new Color(0xAF,0xEE,0xEE));</span>
+<span class="fc" id="L127">        map.put(&quot;palevioletred&quot;,new Color(0xDB,0x70,0x93));</span>
+<span class="fc" id="L128">        map.put(&quot;papayawhip&quot;,new Color(0xFF,0xEF,0xD5));</span>
+<span class="fc" id="L129">        map.put(&quot;peachpuff&quot;,new Color(0xFF,0xDA,0xB9));</span>
+<span class="fc" id="L130">        map.put(&quot;peru&quot;,new Color(0xCD,0x85,0x3F));</span>
+<span class="fc" id="L131">        map.put(&quot;pink&quot;,new Color(0xFF,0xC0,0xCB));</span>
+<span class="fc" id="L132">        map.put(&quot;plum&quot;,new Color(0xDD,0xA0,0xDD));</span>
+<span class="fc" id="L133">        map.put(&quot;powderblue&quot;,new Color(0xB0,0xE0,0xE6));</span>
+<span class="fc" id="L134">        map.put(&quot;purple&quot;,new Color(0x80,0x00,0x80));</span>
+<span class="fc" id="L135">        map.put(&quot;rebeccapurple&quot;,new Color(0x66,0x33,0x99));</span>
+<span class="fc" id="L136">        map.put(&quot;red&quot;,new Color(0xFF,0x00,0x00));</span>
+<span class="fc" id="L137">        map.put(&quot;rosybrown&quot;,new Color(0xBC,0x8F,0x8F));</span>
+<span class="fc" id="L138">        map.put(&quot;royalblue&quot;,new Color(0x41,0x69,0xE1));</span>
+<span class="fc" id="L139">        map.put(&quot;saddlebrown&quot;,new Color(0x8B,0x45,0x13));</span>
+<span class="fc" id="L140">        map.put(&quot;salmon&quot;,new Color(0xFA,0x80,0x72));</span>
+<span class="fc" id="L141">        map.put(&quot;sandybrown&quot;,new Color(0xF4,0xA4,0x60));</span>
+<span class="fc" id="L142">        map.put(&quot;seagreen&quot;,new Color(0x2E,0x8B,0x57));</span>
+<span class="fc" id="L143">        map.put(&quot;seashell&quot;,new Color(0xFF,0xF5,0xEE));</span>
+<span class="fc" id="L144">        map.put(&quot;sienna&quot;,new Color(0xA0,0x52,0x2D));</span>
+<span class="fc" id="L145">        map.put(&quot;silver&quot;,new Color(0xC0,0xC0,0xC0));</span>
+<span class="fc" id="L146">        map.put(&quot;skyblue&quot;,new Color(0x87,0xCE,0xEB));</span>
+<span class="fc" id="L147">        map.put(&quot;slateblue&quot;,new Color(0x6A,0x5A,0xCD));</span>
+<span class="fc" id="L148">        map.put(&quot;slategray&quot;,new Color(0x70,0x80,0x90));</span>
+<span class="fc" id="L149">        map.put(&quot;slategrey&quot;,new Color(0x70,0x80,0x90));</span>
+<span class="fc" id="L150">        map.put(&quot;snow&quot;,new Color(0xFF,0xFA,0xFA));</span>
+<span class="fc" id="L151">        map.put(&quot;springgreen&quot;,new Color(0x00,0xFF,0x7F));</span>
+<span class="fc" id="L152">        map.put(&quot;steelblue&quot;,new Color(0x46,0x82,0xB4));</span>
+<span class="fc" id="L153">        map.put(&quot;tan&quot;,new Color(0xD2,0xB4,0x8C));</span>
+<span class="fc" id="L154">        map.put(&quot;teal&quot;,new Color(0x00,0x80,0x80));</span>
+<span class="fc" id="L155">        map.put(&quot;thistle&quot;,new Color(0xD8,0xBF,0xD8));</span>
+<span class="fc" id="L156">        map.put(&quot;tomato&quot;,new Color(0xFF,0x63,0x47));</span>
+<span class="fc" id="L157">        map.put(&quot;turquoise&quot;,new Color(0x40,0xE0,0xD0));</span>
+<span class="fc" id="L158">        map.put(&quot;violet&quot;,new Color(0xEE,0x82,0xEE));</span>
+<span class="fc" id="L159">        map.put(&quot;wheat&quot;,new Color(0xF5,0xDE,0xB3));</span>
+<span class="fc" id="L160">        map.put(&quot;white&quot;,new Color(0xFF,0xFF,0xFF));</span>
+<span class="fc" id="L161">        map.put(&quot;whitesmoke&quot;,new Color(0xF5,0xF5,0xF5));</span>
+<span class="fc" id="L162">        map.put(&quot;yellow&quot;,new Color(0xFF,0xFF,0x00));</span>
+<span class="fc" id="L163">        map.put(&quot;yellowgreen&quot;,new Color(0x9A,0xCD,0x32));</span>
+<span class="fc" id="L164">    }</span>
+
+    /**
+     * @param name
+     * @return Color matching name, or null if no match.
+     */
+    public static Color get(String name) {
+<span class="nc" id="L171">        return map.get(name);</span>
+    }
+
+    /**
+     * @param match the color to matcch
+     * @return the name matching the given color, or null if no match.
+     */
+    public static String get(Color match) {
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        for(String key: map.keySet()) {</span>
+<span class="fc" id="L180">            Color c = map.get(key);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">            if(c.equals(match)) return key;</span>
+<span class="fc" id="L182">        }</span>
+<span class="fc" id="L183">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

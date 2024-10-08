@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_GridFit.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.grid</a> &gt; <span class="el_source">Generator_GridFit.java</span></div><h1>Generator_GridFit.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.grid;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.select.SelectDouble;
+import com.marginallyclever.makelangelo.select.SelectInteger;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+/**
+ * Draws a set of squares that fit inside an even margin.
+ * @author Dan Royer
+ * @since 2022-04-21
+ */
+public class Generator_GridFit extends TurtleGenerator {
+	private final SelectInteger cellsWide;
+	private final SelectInteger cellsHigh;
+	private final SelectDouble margin;
+
+<span class="fc" id="L21">	public Generator_GridFit() {</span>
+<span class="fc" id="L22">		add(margin = new SelectDouble(&quot;margin&quot;,Translator.get(&quot;Generator_GridFit.margin&quot;),50));</span>
+<span class="fc" id="L23">		add(cellsWide = new SelectInteger(&quot;cellsWide&quot;,Translator.get(&quot;Generator_GridFit.cellsWide&quot;),1));</span>
+<span class="fc" id="L24">		add(cellsHigh = new SelectInteger(&quot;cellsHigh&quot;,Translator.get(&quot;Generator_GridFit.cellsHigh&quot;),1));</span>
+
+<span class="fc" id="L26">		margin.addSelectListener(evt-&gt;{</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">			if(!checkMargin()) return;</span>
+<span class="nc" id="L28">			generate();</span>
+<span class="nc" id="L29">		});</span>
+
+<span class="fc" id="L31">		cellsWide.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L32">			changeWide();</span>
+<span class="nc" id="L33">			generate();</span>
+<span class="nc" id="L34">		});</span>
+
+<span class="fc" id="L36">		cellsHigh.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L37">			changeHigh();</span>
+<span class="nc" id="L38">			generate();</span>
+<span class="nc" id="L39">		});</span>
+<span class="fc" id="L40">	}</span>
+
+	/**
+	 *
+	 * @return true if the margin is valid.
+	 */
+	private boolean checkMargin() {
+<span class="nc" id="L47">		double width = myPaper.getPaperWidth();</span>
+<span class="nc" id="L48">		double v = margin.getValue();</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if(v &gt; width/2) {</span>
+<span class="nc" id="L50">			margin.setValue(width/2);</span>
+<span class="nc" id="L51">			return false;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		} else if(v&lt;0) {</span>
+<span class="nc" id="L53">			margin.setValue(0);</span>
+<span class="nc" id="L54">			return false;</span>
+		}
+<span class="nc" id="L56">		return true;</span>
+	}
+
+	@Override
+	public String getName() {
+<span class="fc" id="L61">		return Translator.get(&quot;Generator_GridFit.Name&quot;);</span>
+	}
+
+	private void changeWide() {
+<span class="nc" id="L65">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L66">		int w = cellsWide.getValue();</span>
+<span class="nc" id="L67">		int h = (int)Math.floor(w*rect.getHeight()/rect.getWidth());</span>
+<span class="nc" id="L68">		cellsHigh.setValue(h);</span>
+<span class="nc" id="L69">	}</span>
+
+	private void changeHigh() {
+<span class="nc" id="L72">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L73">		int h = cellsHigh.getValue();</span>
+<span class="nc" id="L74">		int w = (int)Math.ceil(h*rect.getWidth()/rect.getHeight());</span>
+<span class="nc" id="L75">		cellsWide.setValue(w);</span>
+<span class="nc" id="L76">	}</span>
+
+	@Override
+	public void generate() {
+<span class="nc" id="L80">		double myMargin = margin.getValue();</span>
+<span class="nc" id="L81">		double xMin = myPaper.getPaperLeft()+myMargin;</span>
+<span class="nc" id="L82">		double xMax = myPaper.getPaperRight()-myMargin;</span>
+
+<span class="nc" id="L84">		Turtle turtle = new Turtle();</span>
+<span class="nc" id="L85">		turtle.penUp();</span>
+
+<span class="nc" id="L87">		int h = cellsHigh.getValue();</span>
+<span class="nc" id="L88">		int w = cellsWide.getValue();</span>
+<span class="nc" id="L89">		double length = (xMax-xMin) / w;</span>
+
+<span class="nc" id="L91">		double halfWidth = (w * length)/2;</span>
+<span class="nc" id="L92">		double halfHeight = (h * length)/2;</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		for(int y=0;y&lt;=h;++y) {</span>
+<span class="nc" id="L95">			double y2 = -halfHeight + y * length;</span>
+<span class="nc" id="L96">			turtle.jumpTo(-halfWidth,y2);</span>
+<span class="nc" id="L97">			turtle.moveTo( halfWidth,y2);</span>
+		}
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		for(int x=0;x&lt;=w;++x) {</span>
+<span class="nc" id="L101">			double x2 = -halfWidth+x*length;</span>
+<span class="nc" id="L102">			turtle.jumpTo(x2,-halfHeight);</span>
+<span class="nc" id="L103">			turtle.moveTo(x2, halfHeight);</span>
+		}
+
+<span class="nc" id="L106">		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</span>
+
+<span class="nc" id="L108">		notifyListeners(turtle);</span>
+<span class="nc" id="L109">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

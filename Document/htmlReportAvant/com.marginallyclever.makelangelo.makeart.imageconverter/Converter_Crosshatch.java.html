@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_Crosshatch.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_Crosshatch.java</span></div><h1>Converter_Crosshatch.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+public class Converter_Crosshatch extends ImageConverter {
+<span class="nc" id="L13">	private static double intensity=2.0f;</span>
+<span class="nc" id="L14">	private static double pass90=16.0f;</span>
+<span class="nc" id="L15">	private static double pass75=32.0f;</span>
+<span class="nc" id="L16">	private static double pass15=64.0f;</span>
+<span class="nc" id="L17">	private static double pass45=192.0f;</span>
+
+	public Converter_Crosshatch() {
+<span class="nc" id="L20">		super();</span>
+<span class="nc" id="L21">		SelectSlider selectIntesity = new SelectSlider(&quot;intensity&quot;, Translator.get(&quot;ConverterIntensity&quot;), 100, 1, (int) (getIntensity() * 10.0));</span>
+<span class="nc" id="L22">		selectIntesity.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L23">			setIntensity((float)((int)evt.getNewValue())/10.0f);</span>
+<span class="nc" id="L24">			fireRestart();</span>
+<span class="nc" id="L25">		});</span>
+<span class="nc" id="L26">		add(selectIntesity);</span>
+
+<span class="nc" id="L28">		SelectSlider selectPass90 = new SelectSlider(&quot;pass90&quot;, Translator.get(&quot;pass90&quot;), 256, 0, (int) getPass90());</span>
+<span class="nc" id="L29">		selectPass90.addSelectListener((evt)-&gt; {</span>
+<span class="nc" id="L30">			setPass90((int)evt.getNewValue());</span>
+<span class="nc" id="L31">			fireRestart();</span>
+<span class="nc" id="L32">		});</span>
+<span class="nc" id="L33">		add(selectPass90);</span>
+
+<span class="nc" id="L35">		SelectSlider selectPass75 = new SelectSlider(&quot;pass75&quot;,Translator.get(&quot;pass75&quot;),256,0,(int)getPass75());</span>
+<span class="nc" id="L36">		selectPass75.addSelectListener((evt)-&gt; {</span>
+<span class="nc" id="L37">			setPass75((int)evt.getNewValue());</span>
+<span class="nc" id="L38">			fireRestart();</span>
+<span class="nc" id="L39">		});</span>
+<span class="nc" id="L40">		add(selectPass75);</span>
+
+<span class="nc" id="L42">		SelectSlider selectPass45 = new SelectSlider(&quot;pass45&quot;,Translator.get(&quot;pass45&quot;),256,0,(int)getPass45());</span>
+<span class="nc" id="L43">		selectPass45.addSelectListener((evt)-&gt; {</span>
+<span class="nc" id="L44">			setPass45((int)evt.getNewValue());</span>
+<span class="nc" id="L45">			fireRestart();</span>
+<span class="nc" id="L46">		});</span>
+<span class="nc" id="L47">		add(selectPass45);</span>
+
+<span class="nc" id="L49">		SelectSlider selectPass15 = new SelectSlider(&quot;pass15&quot;,Translator.get(&quot;pass15&quot;),256,0,(int)getPass15());</span>
+<span class="nc" id="L50">		selectPass15.addSelectListener((evt)-&gt; {</span>
+<span class="nc" id="L51">			setPass15((int)evt.getNewValue());</span>
+<span class="nc" id="L52">			fireRestart();</span>
+<span class="nc" id="L53">		});</span>
+<span class="nc" id="L54">		add(selectPass15);</span>
+<span class="nc" id="L55">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L59">		return Translator.get(&quot;Crosshatch&quot;);</span>
+	}
+
+	public void setIntensity(double arg0) {
+<span class="nc" id="L63">		intensity=arg0;</span>
+<span class="nc" id="L64">	}</span>
+	
+	public double getIntensity() {
+<span class="nc" id="L67">		return intensity;</span>
+	}
+	
+	public double getPass90() {
+<span class="nc" id="L71">		return pass90;</span>
+	}
+
+	public double getPass75() {
+<span class="nc" id="L75">		return pass75;</span>
+	}
+
+	public double getPass15() {
+<span class="nc" id="L79">		return pass15;</span>
+	}
+
+	public double getPass45() {
+<span class="nc" id="L83">		return pass45;</span>
+	} 
+	
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L88">		super.start(paper, image);</span>
+
+<span class="nc" id="L90">		FilterDesaturate bw = new FilterDesaturate(myImage);</span>
+<span class="nc" id="L91">		TransformedImage img = bw.filter();</span>
+		
+<span class="nc" id="L93">		turtle = new Turtle();</span>
+<span class="nc" id="L94">		finishPass(new int[]{(int)pass90},90,img);</span>
+<span class="nc" id="L95">		finishPass(new int[]{(int)pass75},75,img);</span>
+<span class="nc" id="L96">		finishPass(new int[]{(int)pass15},15,img);</span>
+<span class="nc" id="L97">		finishPass(new int[]{(int)pass45},45,img);</span>
+
+<span class="nc" id="L99">		fireConversionFinished();</span>
+<span class="nc" id="L100">	}</span>
+	
+	private void finishPass(int [] passes,double angleDeg,TransformedImage img) {
+<span class="nc" id="L103">		double dx = Math.cos(Math.toRadians(angleDeg));</span>
+<span class="nc" id="L104">		double dy = Math.sin(Math.toRadians(angleDeg));</span>
+
+		// figure out how many lines we're going to have on this image.
+<span class="nc" id="L107">		double stepSize = intensity/2.0;</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (stepSize &lt; 1) stepSize = 1;</span>
+
+		// Color values are from 0...255 inclusive.  255 is white, 0 is black.
+		// Lift the pen any time the color value is &gt; level (128 or more).
+
+		// from top to bottom of the margin area...
+<span class="nc" id="L114">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L115">		double xLeft   = rect.getMinX();</span>
+<span class="nc" id="L116">		double yBottom = rect.getMinY();</span>
+<span class="nc" id="L117">		double xRight  = rect.getMaxX();</span>
+<span class="nc" id="L118">		double yTop    = rect.getMaxY();</span>
+<span class="nc" id="L119">		double height = yTop - yBottom;</span>
+<span class="nc" id="L120">		double width = xRight - xLeft;</span>
+<span class="nc" id="L121">		double maxLen = Math.sqrt(width*width+height*height);</span>
+<span class="nc" id="L122">		double [] error0 = new double[(int)Math.ceil(maxLen)];</span>
+<span class="nc" id="L123">		double [] error1 = new double[(int)Math.ceil(maxLen)];</span>
+<span class="nc" id="L124">		boolean useError=false;</span>
+		
+<span class="nc" id="L126">		int i=0;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		for(double a = -maxLen;a&lt;maxLen;a+=stepSize) {</span>
+<span class="nc" id="L128">			double px = dx * a;</span>
+<span class="nc" id="L129">			double py = dy * a;</span>
+<span class="nc" id="L130">			double x0 = px - dy * maxLen;</span>
+<span class="nc" id="L131">			double y0 = py + dx * maxLen;</span>
+<span class="nc" id="L132">			double x1 = px + dy * maxLen;</span>
+<span class="nc" id="L133">			double y1 = py - dx * maxLen;</span>
+		
+<span class="nc" id="L135">			double l2 = passes[(i % passes.length)];</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if ((i % 2) == 0) {</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">				if(!useError) convertAlongLine(x0, y0, x1, y1, stepSize, l2, img);</span>
+<span class="nc" id="L138">				else convertAlongLineErrorTerms(x0,y0,x1,y1,stepSize,l2,error0,error1,img);</span>
+			} else {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">				if(!useError) convertAlongLine(x1, y1, x0, y0, stepSize, l2, img);</span>
+<span class="nc" id="L141">				else convertAlongLineErrorTerms(x1,y1,x0,y0,stepSize,l2,error0,error1,img);</span>
+			}
+<span class="nc bnc" id="L143" title="All 2 branches missed.">			for(int j=0;j&lt;error0.length;++j) {</span>
+<span class="nc" id="L144">				error0[j]=error1[error0.length-1-j];</span>
+<span class="nc" id="L145">				error1[error0.length-1-j]=0;</span>
+			}
+<span class="nc" id="L147">			++i;</span>
+		}
+<span class="nc" id="L149">	}</span>
+
+	public void setPass90(int newValue) {
+<span class="nc" id="L152">		Converter_Crosshatch.pass90 = newValue;</span>
+<span class="nc" id="L153">	}</span>
+
+	public void setPass75(int newValue) {
+<span class="nc" id="L156">		Converter_Crosshatch.pass75 = newValue;</span>
+<span class="nc" id="L157">	}</span>
+
+	public void setPass15(int newValue) {
+<span class="nc" id="L160">		Converter_Crosshatch.pass15 = newValue;</span>
+<span class="nc" id="L161">	}</span>
+
+	public void setPass45(int newValue) {
+<span class="nc" id="L164">		Converter_Crosshatch.pass45 = newValue;</span>
+<span class="nc" id="L165">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

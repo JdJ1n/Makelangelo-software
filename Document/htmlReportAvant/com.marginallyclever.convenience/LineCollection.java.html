@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LineCollection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">LineCollection.java</span></div><h1>LineCollection.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+import java.util.ArrayList;
+import java.util.Collections;
+
+public class LineCollection extends ArrayList&lt;LineSegment2D&gt; {
+	private boolean[] usePt;
+
+	public LineCollection() {
+<span class="fc" id="L10">		super();</span>
+<span class="fc" id="L11">	}</span>
+	
+	public LineCollection(LineCollection list) {
+<span class="fc" id="L14">		super();</span>
+<span class="fc" id="L15">		addAll(list);</span>
+<span class="fc" id="L16">	}</span>
+	
+	/**
+	 * Splits this collection by color.  Does not affect the original list.  Does not deep copy.
+	 * @return the list of collections separated by color
+	 */
+	public ArrayList&lt;LineCollection&gt; splitByColor() {
+<span class="fc" id="L23">		ArrayList&lt;LineCollection&gt; result = new ArrayList&lt;LineCollection&gt; ();</span>
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">		if(this.size()&gt;0) {</span>
+<span class="fc" id="L25">			LineSegment2D head = get(0);</span>
+			
+<span class="fc" id="L27">			LineCollection c = new LineCollection();</span>
+<span class="fc" id="L28">			result.add(c);</span>
+<span class="fc" id="L29">			c.add(head);</span>
+			
+<span class="fc bfc" id="L31" title="All 2 branches covered.">			for(int i=1;i&lt;size();++i) {</span>
+<span class="fc" id="L32">				LineSegment2D next = get(i);</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">				if(next.color.equals(head.color)) {</span>
+<span class="fc" id="L34">					c.add(next);</span>
+				} else {
+<span class="nc" id="L36">					head = next;</span>
+<span class="nc" id="L37">					c = new LineCollection();</span>
+<span class="nc" id="L38">					result.add(c);</span>
+<span class="nc" id="L39">					c.add(head);</span>
+				}
+			}
+		}
+<span class="fc" id="L43">		return result;</span>
+	}
+
+	/**
+	 * Splits this collection by travel moves.  Does not affect the original list.  Does not deep copy.
+	 * A travel move is any moment in the collection where element (N).b != (N+1).a
+	 * @return the list of collections separated by color
+	 */
+	public ArrayList&lt;LineCollection&gt; splitByTravel() {
+<span class="fc" id="L52">		ArrayList&lt;LineCollection&gt; result = new ArrayList&lt;LineCollection&gt; ();</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">		if(this.size()&gt;0) {</span>
+<span class="fc" id="L54">			LineSegment2D head = get(0);</span>
+			
+<span class="fc" id="L56">			LineCollection c = new LineCollection();</span>
+<span class="fc" id="L57">			result.add(c);</span>
+<span class="fc" id="L58">			c.add(head);</span>
+			
+<span class="fc bfc" id="L60" title="All 2 branches covered.">			for(int i=1;i&lt;size();++i) {</span>
+<span class="fc" id="L61">				LineSegment2D next = get(i);</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">				if(next.end.distanceSquared(head.start)&lt;1e-6) {</span>
+<span class="nc" id="L63">					c.add(next);</span>
+				} else {
+<span class="fc" id="L65">					head = next;</span>
+<span class="fc" id="L66">					c = new LineCollection();</span>
+<span class="fc" id="L67">					result.add(c);</span>
+<span class="fc" id="L68">					c.add(head);</span>
+				}
+			}
+		}
+<span class="fc" id="L72">		return result;</span>
+	}
+
+	public LineCollection simplify(double distanceTolerance) {
+<span class="fc" id="L76">		usePt = new boolean[size()];</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">		for (int i = 0; i &lt; size(); i++) {</span>
+<span class="fc" id="L78">			usePt[i] = true;</span>
+		}
+		
+<span class="fc" id="L81">		simplifySection(0, size() - 1,distanceTolerance);</span>
+		
+<span class="fc" id="L83">		LineCollection result = new LineCollection();</span>
+<span class="fc" id="L84">		Point2D head = get(0).start;</span>
+		
+<span class="fc bfc" id="L86" title="All 2 branches covered.">		for (int i = 0; i &lt; size(); i++) {</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">			if (usePt[i]) {</span>
+<span class="fc" id="L88">				Point2D next = get(i).end;</span>
+<span class="fc" id="L89">				result.add(new LineSegment2D(head,next,get(i).color));</span>
+<span class="fc" id="L90">				head=next;</span>
+			}
+		}
+		
+<span class="fc" id="L94">		return result;</span>
+	}
+
+	private void simplifySection(int i, int j,double distanceTolerance) {
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">		if ((i + 1) == j) return;</span>
+<span class="fc" id="L99">		LineSegment2D seg = new LineSegment2D(</span>
+<span class="fc" id="L100">			get(i).start,</span>
+<span class="fc" id="L101">			get(j).end,</span>
+<span class="fc" id="L102">			get(i).color);</span>
+<span class="fc" id="L103">		double maxDistance = -1.0;</span>
+<span class="fc" id="L104">		int maxIndex = i;</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">		for (int k = i + 1; k &lt; j; k++) {</span>
+<span class="nc" id="L106">			double distance = seg.ptLineDistSq(get(k).end);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			if (distance &gt; maxDistance) {</span>
+<span class="nc" id="L108">				maxDistance = distance;</span>
+<span class="nc" id="L109">				maxIndex = k;</span>
+			}
+		}
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">		if (maxDistance &lt;= distanceTolerance) {</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">			for (int k = i + 1; k &lt; j; k++) {</span>
+<span class="nc" id="L114">				usePt[k] = false;</span>
+			}
+		} else {
+<span class="nc" id="L117">			simplifySection(i, maxIndex,distanceTolerance);</span>
+<span class="nc" id="L118">			simplifySection(maxIndex, j,distanceTolerance);</span>
+		}
+<span class="fc" id="L120">	}</span>
+
+	public Point2D getStart() {
+<span class="fc" id="L123">		return get(0).start;</span>
+	}
+
+	public Point2D getEnd() {
+<span class="fc" id="L127">		return get(size()-1).end;</span>
+	}
+
+	public void flip() {
+<span class="fc" id="L131">		Collections.reverse(this);</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">		for( LineSegment2D line : this ) {</span>
+<span class="fc" id="L133">			line.flip();</span>
+<span class="fc" id="L134">		}</span>
+<span class="fc" id="L135">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TranslatorLanguage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">TranslatorLanguage.java</span></div><h1>TranslatorLanguage.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+
+<span class="fc" id="L18">public class TranslatorLanguage {</span>
+<span class="fc" id="L19">	private static final Logger logger = LoggerFactory.getLogger(TranslatorLanguage.class);</span>
+
+<span class="fc" id="L21">	private String name = &quot;&quot;;</span>
+<span class="fc" id="L22">	private final List&lt;String&gt; authors = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L23">	private final Map&lt;String, String&gt; strings = new HashMap&lt;&gt;();</span>
+
+
+	/**
+	 * @param languageFile
+	 */
+	public void loadFromString(String languageFile) {
+<span class="nc" id="L30">		final DocumentBuilder db = getDocumentBuilder();</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">		if (db == null) {</span>
+<span class="nc" id="L32">			return;</span>
+		}
+<span class="nc" id="L34">		Document dom = null;</span>
+		try {
+			//Using factory get an instance of document builder
+			//parse using builder to get DOM representation of the XML file
+<span class="nc" id="L38">			dom = db.parse(languageFile);</span>
+<span class="nc" id="L39">		} catch (SAXException | IOException e) {</span>
+<span class="nc" id="L40">			logger.error(&quot;Failed to load file {}&quot;, languageFile, e);</span>
+<span class="nc" id="L41">		}</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		if (dom == null) {</span>
+<span class="nc" id="L43">			return;</span>
+		}
+<span class="nc" id="L45">		load(dom);</span>
+<span class="nc" id="L46">	}</span>
+
+	/**
+	 * @param inputStream
+	 */
+	public void loadFromInputStream(InputStream inputStream) {
+<span class="fc" id="L52">		final DocumentBuilder db = getDocumentBuilder();</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">		if (db == null) {</span>
+<span class="nc" id="L54">			return;</span>
+		}
+		try {
+<span class="fc" id="L57">			Document dom = db.parse(inputStream);</span>
+<span class="fc" id="L58">			load(dom);</span>
+<span class="fc" id="L59">		} catch (SAXException | IOException e) {</span>
+<span class="fc" id="L60">			logger.error(&quot;Failed to parse language file&quot;, e);</span>
+<span class="fc" id="L61">		}</span>
+<span class="fc" id="L62">	}</span>
+
+	private void load(Document dom) {
+<span class="fc" id="L65">		final Element docEle = dom.getDocumentElement();</span>
+
+<span class="fc" id="L67">		name = docEle.getElementsByTagName(&quot;name&quot;).item(0).getFirstChild().getNodeValue();</span>
+<span class="fc" id="L68">		readAllAuthors(docEle);</span>
+<span class="fc" id="L69">		readAllStrings(docEle);</span>
+<span class="fc" id="L70">	}</span>
+
+	private void readAllAuthors(Element docEle) {
+<span class="fc" id="L73">		NodeList authors = docEle.getElementsByTagName(&quot;authors&quot;);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">		for (int i = 0; i &lt; authors.getLength(); i++) {</span>
+<span class="fc" id="L75">			Node authorNode = authors.item(i);</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">			if (authorNode.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L77">				Element authorElement = (Element) authorNode;</span>
+<span class="fc" id="L78">				NodeList authorList = authorElement.getElementsByTagName(&quot;author&quot;);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">				for (int j = 0; j &lt; authorList.getLength(); j++) {</span>
+<span class="fc" id="L80">					Node author = authorList.item(j);</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">					if (author.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L82">						Element authorElement2 = (Element) author;</span>
+<span class="fc" id="L83">						this.authors.add(authorElement2.getFirstChild().getNodeValue());</span>
+					}
+				}
+			}
+		}
+<span class="fc" id="L88">	}</span>
+
+	/**
+	 * read all key/value pairs from the xml file.
+	 * @param docEle the root element of the xml file
+	 */
+	private void readAllStrings(Element docEle) {
+<span class="fc" id="L95">		NodeList nl = docEle.getElementsByTagName(&quot;string&quot;);</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">		for (int i = 0; i &lt; nl.getLength(); i++) {</span>
+
+			//get the element
+<span class="fc" id="L99">			Element el = (Element) nl.item(i);</span>
+<span class="fc" id="L100">			String key = getTextValue(el, &quot;key&quot;);</span>
+<span class="fc" id="L101">			String value = getTextValue(el, &quot;value&quot;);</span>
+
+			// store key/value pairs into a map
+			//logger.debug(language_file +&quot;\t&quot;+key+&quot;\t=\t&quot;+value);
+<span class="fc" id="L105">			strings.put(key, value);</span>
+		}
+<span class="fc" id="L107">	}</span>
+
+	private DocumentBuilder getDocumentBuilder() {
+<span class="fc" id="L110">		DocumentBuilder db = null;</span>
+		try {
+<span class="fc" id="L112">			db = buildDocumentBuilder().newDocumentBuilder();</span>
+<span class="nc" id="L113">		} catch (ParserConfigurationException e) {</span>
+<span class="nc" id="L114">			logger.error(&quot;Failed to create a new document&quot;, e);</span>
+<span class="fc" id="L115">		}</span>
+<span class="fc" id="L116">		return db;</span>
+	}
+
+	private DocumentBuilderFactory buildDocumentBuilder() {
+<span class="fc" id="L120">		return DocumentBuilderFactory.newInstance();</span>
+	}
+
+	public String get(String key) {
+<span class="fc" id="L124">		return strings.get(key);</span>
+	}
+
+
+	/**
+	 * &lt;p&gt;
+	 * When a newline character &quot;\n&quot; was being read in from an xml file,
+	 * it was being escaped (&quot;\\n&quot;) and thus not behaving as an actual newline.
+	 * This method replaces any &quot;\\n&quot; with &quot;\n&quot;.
+	 * &lt;/p&gt;
+	 * &lt;p&gt;
+	 * &lt;p&gt;
+	 * I take a xml element and the tag name, look for the tag and get
+	 * the text content
+	 * i.e for &lt;employee&gt;&lt;name&gt;John&lt;/name&gt;&lt;/employee&gt; xml snippet if
+	 * the Element points to employee node and tagName is 'name' I will return John
+	 * &lt;/p&gt;
+	 *
+	 * @param ele     XML element
+	 * @param tagName name of 'tag' or child XML element of ele
+	 * @return text value of tagName
+	 */
+	private String getTextValue(Element ele, String tagName) {
+<span class="fc" id="L147">		String textVal = null;</span>
+<span class="fc" id="L148">		NodeList nl = ele.getElementsByTagName(tagName);</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">		if (nl.getLength() &gt; 0) {</span>
+<span class="fc" id="L150">			Element el = (Element) nl.item(0);</span>
+			// to allow empty value as translation 
+<span class="fc" id="L152">			final Node firstChild = el.getFirstChild();</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">			if ( firstChild != null){</span>
+<span class="fc" id="L154">				textVal = firstChild.getNodeValue();</span>
+			}else{				
+<span class="fc" id="L156">				textVal = &quot;&quot;;</span>
+			}
+		}
+<span class="fc" id="L159">		textVal = textVal.replace(&quot;\\n&quot;, &quot;\n&quot;);</span>
+<span class="fc" id="L160">		return textVal;</span>
+	}
+
+	public String getName() {
+<span class="fc" id="L164">		return name;</span>
+	}
+
+	public List&lt;String&gt; getAuthors() {
+<span class="fc" id="L168">		return authors;</span>
+	}
+
+	public Set&lt;String&gt; getKeys() {
+		// return a copy of strings
+<span class="fc" id="L173">		return strings.keySet();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

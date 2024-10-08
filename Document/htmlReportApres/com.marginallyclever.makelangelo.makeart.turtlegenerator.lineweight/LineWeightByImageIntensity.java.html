@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LineWeightByImageIntensity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.lineweight</a> &gt; <span class="el_source">LineWeightByImageIntensity.java</span></div><h1>LineWeightByImageIntensity.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.lineweight;
+
+import com.marginallyclever.convenience.LineCollection;
+import com.marginallyclever.convenience.LineSegment2D;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.select.SelectDouble;
+import com.marginallyclever.makelangelo.select.SelectFile;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.vecmath.Vector2d;
+import java.awt.geom.Rectangle2D;
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+public class LineWeightByImageIntensity extends TurtleGenerator {
+<span class="fc" id="L25">    private static final Logger logger = LoggerFactory.getLogger(LineWeightByImageIntensity.class);</span>
+
+<span class="fc" id="L27">    private final double EPSILON = 0.001;</span>
+<span class="fc" id="L28">    private final double CORNER_THRESHOLD = Math.cos(Math.toRadians(15));</span>
+
+    /**
+     * must be greater than zero.
+     */
+<span class="fc" id="L33">    private static double stepSize = 5;</span>
+
+    /**
+     * maximum thickness of the new line. must be greater than zero.
+     */
+<span class="fc" id="L38">    private static double thickness = 1.0;</span>
+
+<span class="fc" id="L40">    private static String imageName = null;</span>
+    private TransformedImage sourceImage;
+
+<span class="fc" id="L43">    private static final LinkedList&lt;LineWeightSegment&gt; unsorted = new LinkedList&lt;&gt;();</span>
+
+    // segments sorted for drawing efficiency
+<span class="fc" id="L46">    private static final List&lt;LineWeight&gt; sortedLines = new ArrayList&lt;&gt;();</span>
+
+    public LineWeightByImageIntensity() {
+<span class="fc" id="L49">        super();</span>
+
+<span class="fc" id="L51">        SelectDouble selectThickness = new SelectDouble(&quot;thickness&quot;, Translator.get(&quot;LineWeightByImageIntensity.thickness&quot;),thickness);</span>
+<span class="fc" id="L52">        add(selectThickness);</span>
+<span class="fc" id="L53">        selectThickness.addSelectListener(e-&gt;{</span>
+<span class="nc" id="L54">            thickness = selectThickness.getValue();</span>
+<span class="nc" id="L55">            generate();</span>
+<span class="nc" id="L56">        });</span>
+
+<span class="fc" id="L58">        SelectFile selectFile = new SelectFile(&quot;image&quot;, Translator.get(&quot;LineWeightByImageIntensity.image&quot;),imageName);</span>
+<span class="fc" id="L59">        add(selectFile);</span>
+<span class="fc" id="L60">        selectFile.addSelectListener(e-&gt;{</span>
+<span class="nc" id="L61">            imageName = selectFile.getText();</span>
+<span class="nc" id="L62">            generate();</span>
+<span class="nc" id="L63">        });</span>
+<span class="fc" id="L64">    }</span>
+
+    @Override
+    public String getName() {
+<span class="fc" id="L68">        return Translator.get(&quot;LineWeightByImageIntensity.name&quot;);</span>
+    }
+
+    @Override
+    public void generate() {
+        try {
+<span class="nc" id="L74">            FileInputStream stream = new FileInputStream(imageName);</span>
+<span class="nc" id="L75">            sourceImage = new TransformedImage(ImageIO.read(stream));</span>
+<span class="nc" id="L76">        } catch(Exception e) {</span>
+<span class="nc" id="L77">            logger.error(&quot;generate {}&quot;,e.getMessage(),e);</span>
+<span class="nc" id="L78">            setTurtle(previousTurtle);</span>
+<span class="nc" id="L79">            return;</span>
+<span class="nc" id="L80">        }</span>
+<span class="nc" id="L81">        scaleImage(1);  // fill paper</span>
+
+<span class="nc" id="L83">        Turtle turtle = new Turtle();</span>
+<span class="nc" id="L84">        List&lt;Turtle&gt; colors = previousTurtle.splitByToolChange();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        for( Turtle t2 : colors ) {</span>
+<span class="nc" id="L86">            turtle.add(calculate(t2));</span>
+<span class="nc" id="L87">        }</span>
+
+<span class="nc" id="L89">        sourceImage = null;</span>
+
+<span class="nc" id="L91">        turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</span>
+
+<span class="nc" id="L93">        notifyListeners(turtle);</span>
+<span class="nc" id="L94">    }</span>
+
+    private Turtle calculate(Turtle from) {
+<span class="nc" id="L97">        Turtle turtle = new Turtle();</span>
+<span class="nc" id="L98">        buildSegmentList(from);</span>
+<span class="nc" id="L99">        sortSegmentsIntoLines();</span>
+<span class="nc" id="L100">        generateThickLines(turtle);</span>
+        //generateThinLines(turtle);
+
+        // clean up
+<span class="nc" id="L104">        unsorted.clear();</span>
+<span class="nc" id="L105">        sortedLines.clear();</span>
+<span class="nc" id="L106">        return turtle;</span>
+    }
+
+    /**
+     * Generate thin lines for debugging
+     * @param turtle the turtle to draw with
+     */
+    private void generateThinLines(Turtle turtle) {
+<span class="nc" id="L114">        logger.debug(&quot;generateThinLines {}&quot;,sortedLines.size());</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        for(LineWeight line : sortedLines) {</span>
+<span class="nc" id="L116">            boolean first=true;</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            for(LineWeightSegment w : line.segments) {</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                if (first) {</span>
+<span class="nc" id="L119">                    turtle.jumpTo(w.start.x, w.start.y);</span>
+<span class="nc" id="L120">                    first = false;</span>
+                }
+<span class="nc" id="L122">                turtle.moveTo(w.end.x, w.end.y);</span>
+<span class="nc" id="L123">            }</span>
+<span class="nc" id="L124">        }</span>
+<span class="nc" id="L125">    }</span>
+
+    /**
+     * mode 0 = fill paper
+     * mode 1 = fit paper
+     * @param mode the mode to scale the image
+     */
+    private void scaleImage(int mode) {
+<span class="nc" id="L133">        Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L134">        double width  = rect.getWidth();</span>
+<span class="nc" id="L135">        double height = rect.getHeight();</span>
+
+        boolean test;
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (mode == 0) {</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            test = width &lt; height;  // fill paper</span>
+        } else {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            test = width &gt; height;  // fit paper</span>
+        }
+
+        float f;
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        if( test ) {</span>
+<span class="nc" id="L146">            f = (float)( width / (double)sourceImage.getSourceImage().getWidth() );</span>
+        } else {
+<span class="nc" id="L148">            f = (float)( height / (double)sourceImage.getSourceImage().getHeight() );</span>
+        }
+<span class="nc" id="L150">        sourceImage.setScale(f,-f);</span>
+<span class="nc" id="L151">    }</span>
+
+    private void generateThickLines(Turtle turtle) {
+<span class="nc" id="L154">        logger.debug(&quot;generateThickLines&quot;);</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        for(LineWeight i : sortedLines) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">            if(i.segments.isEmpty()) continue;</span>
+<span class="nc" id="L157">            generateOneThickLine(turtle,i);</span>
+<span class="nc" id="L158">        }</span>
+<span class="nc" id="L159">    }</span>
+
+    private void generateOneThickLine(Turtle turtle, LineWeight line) {
+        // find the thickest part of the line, which tells us how many cycles we'll have to make.
+<span class="nc" id="L163">        double numPasses=0;</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">        for(LineWeightSegment s : line.segments) {</span>
+<span class="nc" id="L165">            numPasses = Math.max(numPasses,s.weight);</span>
+<span class="nc" id="L166">        }</span>
+<span class="nc" id="L167">        numPasses = Math.max(1,Math.ceil(numPasses));</span>
+
+<span class="nc" id="L169">        LineWeightSegment start = line.segments.get(0);</span>
+
+<span class="nc" id="L171">        boolean first=true;</span>
+        // collect all the points, write them at the end.
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        for(int pass=0; pass&lt;=numPasses; ++pass) {</span>
+<span class="nc" id="L174">            double ratio = pass/numPasses;</span>
+<span class="nc" id="L175">            List&lt;Point2D&gt; offsetLine = generateOneThickLinePass(line,start,ratio);</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            if((pass%2)==1) Collections.reverse(offsetLine);</span>
+
+            // draw pass
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            for( Point2D p : offsetLine ) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                if(first) {</span>
+<span class="nc" id="L181">                    turtle.jumpTo(p.x,p.y);</span>
+<span class="nc" id="L182">                    first=false;</span>
+                }
+<span class="nc" id="L184">                turtle.moveTo(p.x,p.y);</span>
+<span class="nc" id="L185">            }</span>
+        }
+<span class="nc" id="L187">    }</span>
+
+    private List&lt;Point2D&gt; generateOneThickLinePass(LineWeight line,LineWeightSegment start,double distance) {
+<span class="nc" id="L190">        List&lt;Point2D&gt; offsetSequence = new ArrayList&lt;&gt;();</span>
+
+        // add first point at start of line
+<span class="nc" id="L193">        double [] s0 = getOffsetLine(start, adjustedOffset(start.weight,distance));</span>
+
+<span class="nc" id="L195">        Vector2d unit = line.segments.get(0).getUnit();</span>
+<span class="nc" id="L196">        unit.scale(distance);</span>
+<span class="nc" id="L197">        offsetSequence.add(new Point2D(s0[0]-unit.x,s0[1]-unit.y));</span>
+
+        // add the middle points of the line
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        for(int i=1;i&lt;line.segments.size();++i) {</span>
+<span class="nc" id="L201">            LineWeightSegment seg = line.segments.get(i);</span>
+<span class="nc" id="L202">            double [] s1 = getOffsetLine(seg, adjustedOffset(seg.weight,distance));</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            if(Math.abs(dotProduct(s0,s1))&lt;Math.cos(Math.toRadians(75))) {</span>
+                // this is a corner.  add a point at the intersection of the two lines.
+<span class="nc" id="L205">                double [] inter = findIntersection(</span>
+                        s0[0],s0[1],s0[2],s0[3],
+                        s1[0],s1[1],s1[2],s1[3]
+                );
+<span class="nc" id="L209">                offsetSequence.add(new Point2D(inter[0],inter[1]));</span>
+                //offsetSequence.add(new Point2D(s1[0],s1[1]));
+<span class="nc" id="L211">            } else {</span>
+<span class="nc" id="L212">                offsetSequence.add(new Point2D(s1[0], s1[1]));</span>
+            }
+<span class="nc" id="L214">            s0=s1;</span>
+        }
+        // add the last point of the line
+<span class="nc" id="L217">        unit = line.segments.get(line.segments.size()-1).getUnit();</span>
+<span class="nc" id="L218">        unit.scale(distance);</span>
+<span class="nc" id="L219">        offsetSequence.add(new Point2D(s0[2]+unit.x,s0[3]+unit.y));</span>
+<span class="nc" id="L220">        return offsetSequence;</span>
+    }
+
+    /**
+     * @param s0 the first line segment
+     * @param s1 the second line
+     * @return the dot product of the two lines
+     */
+    private double dotProduct(double[] s0, double[] s1) {
+<span class="nc" id="L229">        double dx0 = s0[2]-s0[0];</span>
+<span class="nc" id="L230">        double dy0 = s0[3]-s0[1];</span>
+<span class="nc" id="L231">        double dx1 = s1[2]-s1[0];</span>
+<span class="nc" id="L232">        double dy1 = s1[3]-s1[1];</span>
+<span class="nc" id="L233">        return dx0*dx1 + dy0*dy1;</span>
+    }
+
+    private double [] findIntersection(double x1,double y1,double x2,double y2,double x3,double y3,double x4,double y4) {
+<span class="nc" id="L237">        double d = ((x1-x2)*(y3-y4) - (y1-y2)*(x3-x4));</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        if(Math.abs(d)&lt;0.01) {</span>
+            // lines are colinear (infinite solutions) or parallel (no solutions).
+<span class="nc" id="L240">            double ix = (x4+x1)/2;</span>
+<span class="nc" id="L241">            double iy = (y4+y1)/2;</span>
+<span class="nc" id="L242">            return new double [] { ix, iy };</span>
+        }
+
+<span class="nc" id="L245">        double t = ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / d;</span>
+        //double u = ((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / d;
+
+<span class="nc" id="L248">        double ix = x1+t*(x2-x1);</span>
+<span class="nc" id="L249">        double iy = y1+t*(y2-y1);</span>
+<span class="nc" id="L250">        return new double[] { ix, iy };</span>
+    }
+
+    private double adjustedOffset(double weight,double ratio) {
+<span class="nc" id="L254">        return weight*ratio - weight/2.0;</span>
+    }
+
+    double[] getOffsetLine(LineWeightSegment line,double distance) {
+        // get normal of each line, then scale by distance.
+<span class="nc" id="L259">        double nx = line.end.y - line.start.y;</span>
+<span class="nc" id="L260">        double ny = line.start.x - line.end.x;</span>
+<span class="nc" id="L261">        double nd = Math.sqrt(nx*nx + ny*ny);</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">        if(nd==0) nd=1;</span>
+<span class="nc" id="L263">        nx *= distance / nd;</span>
+<span class="nc" id="L264">        ny *= distance / nd;</span>
+
+        // offset from the original line
+<span class="nc" id="L267">        return new double[] {</span>
+                line.start.x+nx, line.start.y+ny,
+                line.end.x  +nx, line.end.y  +ny
+        };
+    }
+
+    /**
+     * Search through all unsorted segments for adjacent segments.  Start from a random segment and then
+     * Find any segment that touches the head or the tail of this segment.  Track the head and tail as we go.
+     */
+    private void sortSegmentsIntoLines() {
+<span class="nc" id="L278">        logger.debug(&quot;sortSegmentsIntoLines&quot;);</span>
+
+<span class="nc bnc" id="L280" title="All 2 branches missed.">        while(!unsorted.isEmpty()) {</span>
+<span class="nc" id="L281">            LineWeight activeLine = new LineWeight();</span>
+<span class="nc" id="L282">            activeLine.segments.add(unsorted.removeFirst());</span>
+<span class="nc" id="L283">            sortedLines.add(activeLine);</span>
+
+<span class="nc" id="L285">            growActiveLine(activeLine);</span>
+<span class="nc" id="L286">        }</span>
+
+<span class="nc" id="L288">        logger.debug(&quot;sortedLines=&quot;+sortedLines.size());</span>
+<span class="nc" id="L289">    }</span>
+
+    private void growActiveLine(LineWeight activeLine) {
+<span class="nc" id="L292">        LineWeightSegment head = activeLine.segments.get(0);</span>
+<span class="nc" id="L293">        LineWeightSegment tail = head;</span>
+
+        boolean found;
+        do {
+<span class="nc" id="L297">            found=false;</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">            for (LineWeightSegment s : unsorted) {</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">                if (closeEnoughToHead(head, s)) {  // try to match with head of line</span>
+<span class="nc" id="L300">                    activeLine.segments.addFirst(s);</span>
+<span class="nc" id="L301">                    head = s;</span>
+<span class="nc" id="L302">                    unsorted.remove(s);</span>
+<span class="nc" id="L303">                    found = true;</span>
+<span class="nc" id="L304">                    break;</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">                } else if (closeEnoughToTail(tail, s)) {  // try to match with tail of line</span>
+<span class="nc" id="L306">                    activeLine.segments.addLast(s);</span>
+<span class="nc" id="L307">                    tail = s;</span>
+<span class="nc" id="L308">                    unsorted.remove(s);</span>
+<span class="nc" id="L309">                    found = true;</span>
+<span class="nc" id="L310">                    break;</span>
+                }
+<span class="nc" id="L312">            }</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">        } while(found);</span>
+<span class="nc" id="L314">    }</span>
+
+    /**
+     * @param head the first line
+     * @param next the second line
+     * @return true if {@link LineWeightSegment} head and next are in sequence.
+     */
+    private boolean closeEnoughToHead(LineWeightSegment head,LineWeightSegment next) {
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        if(next==null) {</span>
+<span class="nc" id="L323">            throw new IllegalArgumentException(&quot;next is null&quot;);</span>
+        }
+        // fast reject if truchet index too far apart
+<span class="nc bnc" id="L326" title="All 4 branches missed.">        if(Math.abs(head.ix-next.ix)&gt;6 || Math.abs(head.iy-next.iy)&gt;6) return false;</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        if(closeEnough(head.start,next.end)) return true;</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">        if(closeEnough(head.start,next.start)) {</span>
+            // next is backwards
+<span class="nc" id="L330">            next.flip();</span>
+<span class="nc" id="L331">            return true;</span>
+        }
+<span class="nc" id="L333">        return false;</span>
+    }
+
+    /**
+     * @param tail the first line
+     * @param next the second line
+     * @return true if {@link LineWeightSegment} tail and next are in sequence.
+     */
+    private boolean closeEnoughToTail(LineWeightSegment tail, LineWeightSegment next) {
+<span class="nc bnc" id="L342" title="All 2 branches missed.">        if(next==null) {</span>
+<span class="nc" id="L343">            throw new IllegalArgumentException(&quot;next is null&quot;);</span>
+        }
+        // fast reject if truchet index too far apart
+<span class="nc bnc" id="L346" title="All 4 branches missed.">        if(Math.abs(tail.ix-next.ix)&gt;2 || Math.abs(tail.iy-next.iy)&gt;2) return false;</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">        if(closeEnough(tail.end,next.start)) return true;</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">        if(closeEnough(tail.end,next.end)) {</span>
+<span class="nc" id="L349">            next.flip();</span>
+<span class="nc" id="L350">            return true;</span>
+        }
+<span class="nc" id="L352">        return false;</span>
+    }
+
+    boolean closeEnough(Point2D p0,Point2D p1) {
+<span class="nc bnc" id="L356" title="All 2 branches missed.">        return p0.distanceSquared(p1)&lt;EPSILON;</span>
+    }
+
+    private void buildSegmentList(Turtle from) {
+<span class="nc" id="L360">        logger.debug(&quot;buildSegmentList before={}&quot;,from.countLoops());</span>
+
+<span class="nc" id="L362">        LineCollection originalLines = from.getAsLineSegments();</span>
+<span class="nc" id="L363">        logger.debug(&quot;originalLines={}&quot;,originalLines.size());</span>
+
+<span class="nc bnc" id="L365" title="All 2 branches missed.">        for(LineSegment2D before : originalLines) {</span>
+<span class="nc" id="L366">            maybeSplitLine(before);</span>
+<span class="nc" id="L367">        }</span>
+
+<span class="nc" id="L369">        logger.debug(&quot;unsorted={}&quot;,unsorted.size());</span>
+<span class="nc" id="L370">    }</span>
+
+    /**
+     * Add a segment to the list of unsorted lines.  Splits long lines into smaller pieces.
+     * @param segment the segment to split
+     */
+    private void maybeSplitLine(LineSegment2D segment) {
+<span class="nc" id="L377">        double beforeLen = Math.sqrt(segment.lengthSquared());</span>
+<span class="nc" id="L378">        int pieces = (int)Math.max(1,Math.ceil(beforeLen / stepSize));</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">        if(pieces==1) {</span>
+<span class="nc" id="L380">            addOneUnsortedSegment(segment.start,segment.end);</span>
+<span class="nc" id="L381">            return;</span>
+        }
+
+<span class="nc" id="L384">        Vector2d diff = new Vector2d(</span>
+            segment.end.x - segment.start.x,
+            segment.end.y - segment.start.y
+        );
+
+<span class="nc" id="L389">        Point2D a = segment.start;</span>
+<span class="nc bnc" id="L390" title="All 2 branches missed.">        for(int i=0;i&lt;pieces-1;++i) {</span>
+<span class="nc" id="L391">            double t1 = (double)(i+1) / (double)pieces;</span>
+<span class="nc" id="L392">            Point2D b = new Point2D(</span>
+                    segment.start.x + diff.x * t1,
+                    segment.start.y + diff.y * t1);
+<span class="nc" id="L395">            addOneUnsortedSegment(a,b);</span>
+<span class="nc" id="L396">            a=b;</span>
+        }
+<span class="nc" id="L398">        addOneUnsortedSegment(a,segment.end);</span>
+<span class="nc" id="L399">    }</span>
+
+    private void addOneUnsortedSegment(Point2D start, Point2D end) {
+<span class="nc" id="L402">        unsorted.add(createLSW(start,end));</span>
+<span class="nc" id="L403">    }</span>
+
+    private LineWeightSegment createLSW(Point2D start, Point2D end) {
+        // sample image intensity here from 0...1
+<span class="nc" id="L407">        double mx = (start.x+end.x)/2.0;</span>
+<span class="nc" id="L408">        double my = (start.y+end.y)/2.0;</span>
+
+<span class="nc" id="L410">        double intensity = 1.0-(sourceImage.sample(mx,my,stepSize/2)/255.0);</span>
+<span class="nc" id="L411">        LineWeightSegment a = new LineWeightSegment(start,end,intensity*thickness);</span>
+        // make a fast search index
+<span class="nc" id="L413">        a.ix = (int)Math.floor(mx / stepSize);</span>
+<span class="nc" id="L414">        a.iy = (int)Math.floor(my / stepSize);</span>
+<span class="nc" id="L415">        return a;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

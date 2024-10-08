@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlotterSettingsPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottersettings</a> &gt; <span class="el_source">PlotterSettingsPanel.java</span></div><h1>PlotterSettingsPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottersettings;
+
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.plotter.plotterrenderer.PlotterRendererFactory;
+import com.marginallyclever.makelangelo.select.*;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * {@link PlotterSettingsPanel} is the user interface to adjust {@link PlotterSettings}.
+ *
+ * @author Dan Rmaybe oyer
+ * @since 7.1.4
+ */
+public class PlotterSettingsPanel extends JPanel {
+<span class="nc" id="L23">	private static final Logger logger = LoggerFactory.getLogger(PlotterSettingsPanel.class);</span>
+	private final PlotterSettings settings;
+	private PlotterSettingsUserGcodePanel userGcodePanel;
+	private SelectOneOfMany visualStyle;
+	private SelectDouble machineWidth, machineHeight;
+	private SelectDouble totalBeltNeeded;
+	private SelectDouble totalServoNeeded;
+	private SelectDouble totalStepperNeeded;
+	private SelectDouble acceleration;
+	private SelectDouble penDiameter;
+	private SelectDouble travelFeedRate;
+	private SelectDouble drawFeedRate;
+	private SelectDouble penUpAngle;
+	private SelectDouble penDownAngle;
+	private SelectDouble penRaiseRate;
+	private SelectDouble penLowerRate;
+	
+	private SelectColor selectPenDownColor;
+	private SelectColor selectPenUpColor;
+
+	private SelectInteger blockBufferSize;
+	private SelectInteger segmentsPerSecond;
+	private SelectDouble minSegmentLength;
+	private SelectInteger minSegTime;
+	private SelectBoolean handleSmallSegments;
+	private SelectDouble minAcceleration;
+	private SelectDouble minPlannerSpeed;
+	private SelectOneOfMany zMotorType;
+
+	private PlotterSettingsListener listener;
+
+	public PlotterSettingsPanel(PlotterSettings settings) {
+<span class="nc" id="L55">		super(new BorderLayout());</span>
+<span class="nc" id="L56">		this.settings = settings;</span>
+<span class="nc" id="L57">		rebuildPanel();</span>
+<span class="nc" id="L58">	}</span>
+
+	private void rebuildPanel() {
+<span class="nc" id="L61">		this.removeAll();</span>
+<span class="nc" id="L62">		userGcodePanel = new PlotterSettingsUserGcodePanel(settings);</span>
+
+<span class="nc" id="L64">		JButton buttonSave = new JButton(Translator.get(&quot;Save&quot;));</span>
+<span class="nc" id="L65">		buttonSave.addActionListener((e)-&gt;save());</span>
+
+<span class="nc" id="L67">		JButton buttonReset = new JButton(Translator.get(&quot;Reset&quot;));</span>
+<span class="nc" id="L68">		buttonReset.addActionListener((e)-&gt;reset());</span>
+
+<span class="nc" id="L70">		JPanel bottom = new JPanel(new FlowLayout());</span>
+
+<span class="nc" id="L72">		SelectPanel interior0 = new SelectPanel();</span>
+<span class="nc" id="L73">		SelectPanel interior1 = new SelectPanel();</span>
+<span class="nc" id="L74">		SelectPanel interior2 = new SelectPanel();</span>
+
+<span class="nc" id="L76">		List&lt;String&gt; machineStyles = getMachineStyleNames();</span>
+<span class="nc" id="L77">		String myStyle = settings.getString(PlotterSettings.STYLE);</span>
+<span class="nc" id="L78">		int index = Math.max(0,machineStyles.indexOf(myStyle));</span>
+
+<span class="nc" id="L80">		addToPanel(interior0,visualStyle         = new SelectOneOfMany(&quot;style&quot;,		 Translator.get(&quot;RobotMenu.RobotStyle&quot;						), machineStyles.toArray(new String[0]), index));</span>
+<span class="nc" id="L81">		addToPanel(interior0,machineWidth 		 = new SelectDouble(&quot;width&quot;,		 Translator.get(&quot;PlotterSettingsPanel.MachineWidth&quot;			),settings.getDouble(PlotterSettings.LIMIT_RIGHT) - settings.getDouble(PlotterSettings.LIMIT_LEFT)));</span>
+<span class="nc" id="L82">		addToPanel(interior0,machineHeight 	     = new SelectDouble(&quot;height&quot;,		 Translator.get(&quot;PlotterSettingsPanel.MachineHeight&quot;		),settings.getDouble(PlotterSettings.LIMIT_TOP) - settings.getDouble(PlotterSettings.LIMIT_BOTTOM)));</span>
+<span class="nc" id="L83">		addToPanel(interior0,totalStepperNeeded  = new SelectDouble(&quot;stepperLength&quot;, Translator.get(&quot;PlotterSettingsPanel.StepperLengthNeeded&quot;	),0));</span>
+<span class="nc" id="L84">		addToPanel(interior0,totalBeltNeeded 	 = new SelectDouble(&quot;beltLength&quot;,	 Translator.get(&quot;PlotterSettingsPanel.BeltLengthNeeded&quot;		),0));</span>
+<span class="nc" id="L85">		addToPanel(interior0,totalServoNeeded 	 = new SelectDouble(&quot;servoLength&quot;,	 Translator.get(&quot;PlotterSettingsPanel.ServoLengthNeeded&quot;	),0));</span>
+
+<span class="nc" id="L87">		addToPanel(interior1,penDiameter 		 = new SelectDouble(&quot;diameter&quot;,		 Translator.get(&quot;PlotterSettingsPanel.penToolDiameter&quot;		),settings.getDouble(PlotterSettings.DIAMETER)));</span>
+<span class="nc" id="L88">	    addToPanel(interior1,travelFeedRate 	 = new SelectDouble(&quot;feedrate&quot;,		 Translator.get(&quot;PlotterSettingsPanel.penToolMaxFeedRate&quot;	),settings.getDouble(PlotterSettings.FEED_RATE_TRAVEL)));</span>
+<span class="nc" id="L89">	    addToPanel(interior1,drawFeedRate 		 = new SelectDouble(&quot;speed&quot;,		 Translator.get(&quot;PlotterSettingsPanel.Speed&quot;				),settings.getDouble(PlotterSettings.FEED_RATE_DRAW)));</span>
+<span class="nc" id="L90">	    addToPanel(interior1,acceleration 		 = new SelectDouble(&quot;acceleration&quot;,	 Translator.get(&quot;PlotterSettingsPanel.AdjustAcceleration&quot;	),settings.getDouble(PlotterSettings.MAX_ACCELERATION)));</span>
+<span class="nc" id="L91">		addToPanel(interior1,penRaiseRate        = new SelectDouble(&quot;liftSpeed&quot;,	 Translator.get(&quot;PlotterSettingsPanel.penToolLiftSpeed&quot;		),settings.getDouble(PlotterSettings.PEN_ANGLE_UP_TIME)));</span>
+<span class="nc" id="L92">		addToPanel(interior1,penLowerRate        = new SelectDouble(&quot;lowerSpeed&quot;,	 Translator.get(&quot;PlotterSettingsPanel.penToolLowerSpeed&quot;	),settings.getDouble(PlotterSettings.PEN_ANGLE_DOWN_TIME)));</span>
+<span class="nc" id="L93">	    addToPanel(interior1,penUpAngle 		 = new SelectDouble(&quot;up&quot;,			 Translator.get(&quot;PlotterSettingsPanel.penToolUp&quot;			),settings.getDouble(PlotterSettings.PEN_ANGLE_UP)));</span>
+<span class="nc" id="L94">	    addToPanel(interior1,penDownAngle 		 = new SelectDouble(&quot;down&quot;,			 Translator.get(&quot;PlotterSettingsPanel.penToolDown&quot;			),settings.getDouble(PlotterSettings.PEN_ANGLE_DOWN)));</span>
+<span class="nc" id="L95">		addToPanel(interior1,selectPenUpColor 	 = new SelectColor(&quot;colorUp&quot;,		 Translator.get(&quot;PlotterSettingsPanel.pen up color&quot;			),settings.getColor(PlotterSettings.PEN_UP_COLOR),this));</span>
+<span class="nc" id="L96">		addToPanel(interior1,selectPenDownColor  = new SelectColor(&quot;colorDown&quot;,		 Translator.get(&quot;PlotterSettingsPanel.pen down color&quot;		),settings.getColor(PlotterSettings.PEN_DOWN_COLOR_DEFAULT),this));</span>
+
+<span class="nc" id="L98">		addToPanel(interior1,zMotorType          = new SelectOneOfMany(&quot;zMotorType&quot;,Translator.get(&quot;PlotterSettings.zMotorType&quot;),new String[]{</span>
+<span class="nc" id="L99">				Translator.get(&quot;PlotterSettings.zMotorType.servo&quot;),  // PlotterSettings.Z_MOTOR_TYPE_SERVO = 1</span>
+<span class="nc" id="L100">				Translator.get(&quot;PlotterSettings.zMotorType.stepper&quot;),  // PlotterSettings.Z_MOTOR_TYPE_STEPPER = 2</span>
+<span class="nc" id="L101">		},settings.getInteger(PlotterSettings.Z_MOTOR_TYPE)-1));</span>
+
+<span class="nc" id="L103">		addToPanel(interior2,blockBufferSize     = new SelectInteger(&quot;blockBufferSize&quot;,     Translator.get(&quot;PlotterSettings.blockBufferSize&quot;     ),settings.getInteger(PlotterSettings.BLOCK_BUFFER_SIZE)));</span>
+<span class="nc" id="L104">		addToPanel(interior2,segmentsPerSecond   = new SelectInteger(&quot;segmentsPerSecond&quot;,   Translator.get(&quot;PlotterSettings.segmentsPerSecond&quot;   ),settings.getInteger(PlotterSettings.SEGMENTS_PER_SECOND)));</span>
+<span class="nc" id="L105">		addToPanel(interior2,minSegmentLength    = new SelectDouble (&quot;minSegmentLength&quot;,    Translator.get(&quot;PlotterSettings.minSegmentLength&quot;    ),settings.getDouble(PlotterSettings.MIN_SEGMENT_LENGTH)));</span>
+<span class="nc" id="L106">		addToPanel(interior2,minSegTime          = new SelectInteger(&quot;minSegTime&quot;,          Translator.get(&quot;PlotterSettings.minSegTime&quot;          ),settings.getInteger(PlotterSettings.MIN_SEG_TIME)));</span>
+<span class="nc" id="L107">		addToPanel(interior2,handleSmallSegments = new SelectBoolean(&quot;handleSmallSegments&quot;, Translator.get(&quot;PlotterSettings.handleSmallSegments&quot; ),settings.getBoolean(PlotterSettings.HANDLE_SMALL_SEGMENTS)));</span>
+<span class="nc" id="L108">		addToPanel(interior2,minAcceleration     = new SelectDouble (&quot;minAcceleration&quot;,     Translator.get(&quot;PlotterSettings.minAcceleration&quot;     ),settings.getDouble(PlotterSettings.MIN_ACCELERATION)));</span>
+<span class="nc" id="L109">		addToPanel(interior2,minPlannerSpeed     = new SelectDouble (&quot;minPlannerSpeed&quot;,     Translator.get(&quot;PlotterSettings.minimumPlannerSpeed&quot; ),settings.getDouble(PlotterSettings.MINIMUM_PLANNER_SPEED)));</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if(!settings.isMostAncestral()) {</span>
+<span class="nc" id="L112">			bottom.add(buttonSave);</span>
+<span class="nc" id="L113">			bottom.add(buttonReset);</span>
+		} else {
+<span class="nc" id="L115">			machineWidth.setReadOnly();</span>
+<span class="nc" id="L116">			machineHeight.setReadOnly();</span>
+		}
+
+<span class="nc" id="L119">		machineWidth.addSelectListener((e)-&gt;updateLengthNeeded());</span>
+<span class="nc" id="L120">		machineHeight.addSelectListener((e)-&gt;updateLengthNeeded());</span>
+
+<span class="nc" id="L122">		totalStepperNeeded.setReadOnly();</span>
+<span class="nc" id="L123">		totalBeltNeeded.setReadOnly();</span>
+<span class="nc" id="L124">		totalServoNeeded.setReadOnly();</span>
+<span class="nc" id="L125">		updateLengthNeeded();</span>
+
+<span class="nc" id="L127">		JTabbedPane tabbedPane = new JTabbedPane();</span>
+<span class="nc" id="L128">		tabbedPane.addTab(Translator.get(&quot;PlotterSettingsPanel.TabEssential&quot;),interior0);</span>
+<span class="nc" id="L129">		tabbedPane.addTab(Translator.get(&quot;PlotterSettingsPanel.TabPen&quot;),interior1);</span>
+<span class="nc" id="L130">		tabbedPane.addTab(Translator.get(&quot;PlotterSettingsPanel.TabSimulation&quot;),interior2);</span>
+<span class="nc" id="L131">		tabbedPane.addTab(Translator.get(&quot;PlotterSettingsUserGcodePanel.Title&quot;),userGcodePanel);</span>
+
+		// now assemble the dialog
+<span class="nc" id="L134">		this.add(tabbedPane,BorderLayout.CENTER);</span>
+<span class="nc" id="L135">		this.add(bottom,BorderLayout.SOUTH);</span>
+<span class="nc" id="L136">		this.repaint();</span>
+
+<span class="nc" id="L138">		visualStyle.addSelectListener(e-&gt;updateSizeEditable());</span>
+<span class="nc" id="L139">	}</span>
+
+	private void updateSizeEditable() {
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		var matches = !visualStyle.getSelectedItem().equals(PlotterRendererFactory.MAKELANGELO_CUSTOM.name());</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		matches |= !settings.isMostAncestral();</span>
+<span class="nc" id="L144">		machineWidth.setReadOnly(matches);</span>
+<span class="nc" id="L145">		machineHeight.setReadOnly(matches);</span>
+<span class="nc" id="L146">	}</span>
+
+	private void addToPanel(SelectPanel interior2, Select minPlannerSpeed) {
+<span class="nc" id="L149">		interior2.add(minPlannerSpeed);</span>
+<span class="nc" id="L150">		minPlannerSpeed.addSelectListener((e)-&gt;{</span>
+<span class="nc" id="L151">			save();</span>
+<span class="nc" id="L152">			fireSettingsChangedEvent();</span>
+<span class="nc" id="L153">		});</span>
+<span class="nc" id="L154">	}</span>
+
+	private void save() {
+<span class="nc" id="L157">		double mwf = machineWidth.getValue();</span>
+<span class="nc" id="L158">		double mhf = machineHeight.getValue();</span>
+<span class="nc" id="L159">		double accel = acceleration.getValue();</span>
+
+<span class="nc bnc" id="L161" title="All 4 branches missed.">		boolean isDataSane = (mwf &gt; 0 &amp;&amp; mhf &gt; 0);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		if(!isDataSane) {</span>
+			// TODO display a notice to the user?
+<span class="nc" id="L164">			return;</span>
+		}
+
+<span class="nc" id="L167">		userGcodePanel.save();</span>
+		
+<span class="nc" id="L169">		settings.setMachineSize(mwf, mhf);</span>
+<span class="nc" id="L170">		settings.setDouble(PlotterSettings.MAX_ACCELERATION,accel);</span>
+	
+<span class="nc" id="L172">		settings.setDouble(PlotterSettings.DIAMETER,penDiameter.getValue());</span>
+<span class="nc" id="L173">		settings.setDouble(PlotterSettings.FEED_RATE_TRAVEL,travelFeedRate.getValue());</span>
+<span class="nc" id="L174">		settings.setDouble(PlotterSettings.FEED_RATE_DRAW,drawFeedRate.getValue());</span>
+<span class="nc" id="L175">		settings.setDouble(PlotterSettings.MAX_ACCELERATION,acceleration.getValue());</span>
+<span class="nc" id="L176">		settings.setDouble(PlotterSettings.PEN_ANGLE_UP_TIME,penRaiseRate.getValue());</span>
+<span class="nc" id="L177">		settings.setDouble(PlotterSettings.PEN_ANGLE_DOWN_TIME,penLowerRate.getValue());</span>
+<span class="nc" id="L178">		settings.setDouble(PlotterSettings.PEN_ANGLE_UP,penUpAngle.getValue());</span>
+<span class="nc" id="L179">		settings.setDouble(PlotterSettings.PEN_ANGLE_DOWN,penDownAngle.getValue());</span>
+
+<span class="nc" id="L181">		settings.setColor(PlotterSettings.PAPER_COLOR,Color.WHITE);</span>
+<span class="nc" id="L182">		settings.setColor(PlotterSettings.PEN_DOWN_COLOR,selectPenDownColor.getColor());</span>
+<span class="nc" id="L183">		settings.setColor(PlotterSettings.PEN_DOWN_COLOR_DEFAULT,selectPenDownColor.getColor());</span>
+<span class="nc" id="L184">		settings.setColor(PlotterSettings.PEN_UP_COLOR,selectPenUpColor.getColor());</span>
+		
+<span class="nc" id="L186">		settings.setInteger(PlotterSettings.BLOCK_BUFFER_SIZE,blockBufferSize.getValue());</span>
+<span class="nc" id="L187">		settings.setInteger(PlotterSettings.SEGMENTS_PER_SECOND,segmentsPerSecond.getValue());</span>
+<span class="nc" id="L188">		settings.setDouble(PlotterSettings.MIN_SEGMENT_LENGTH,minSegmentLength.getValue());</span>
+<span class="nc" id="L189">		settings.setInteger(PlotterSettings.MIN_SEG_TIME,minSegTime.getValue());</span>
+<span class="nc" id="L190">		settings.setBoolean(PlotterSettings.HANDLE_SMALL_SEGMENTS,handleSmallSegments.isSelected());</span>
+<span class="nc" id="L191">		settings.setDouble(PlotterSettings.MIN_ACCELERATION,minAcceleration.getValue());</span>
+<span class="nc" id="L192">		settings.setDouble(PlotterSettings.MINIMUM_PLANNER_SPEED,minPlannerSpeed.getValue());</span>
+<span class="nc" id="L193">		settings.setInteger(PlotterSettings.Z_MOTOR_TYPE,zMotorType.getSelectedIndex()+1);</span>
+
+<span class="nc" id="L195">		List&lt;String&gt; machineStyles = getMachineStyleNames();</span>
+<span class="nc" id="L196">		settings.setString(PlotterSettings.STYLE,machineStyles.get(visualStyle.getSelectedIndex()));</span>
+
+<span class="nc" id="L198">		settings.save();</span>
+<span class="nc" id="L199">	}</span>
+
+	private List&lt;String&gt; getMachineStyleNames() {
+<span class="nc" id="L202">		List&lt;String&gt; machineStyleNames = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">		for(PlotterRendererFactory m : PlotterRendererFactory.values()) {</span>
+<span class="nc" id="L204">			machineStyleNames.add(m.name());</span>
+		}
+<span class="nc" id="L206">		return machineStyleNames;</span>
+	}
+
+	private void reset() {
+<span class="nc" id="L210">		settings.reset();</span>
+<span class="nc" id="L211">		userGcodePanel.reset();</span>
+<span class="nc" id="L212">		rebuildPanel();</span>
+<span class="nc" id="L213">		fireSettingsChangedEvent();</span>
+<span class="nc" id="L214">	}</span>
+
+	/**
+	 * Calculate length of belt and cables needed based on machine dimensions.
+	 */
+	private void updateLengthNeeded() {
+<span class="nc" id="L220">		double w = machineWidth.getValue();</span>
+<span class="nc" id="L221">		double h = machineHeight.getValue();</span>
+<span class="nc" id="L222">		double SAFETY_MARGIN=100;</span>
+
+<span class="nc" id="L224">		double mmBeltNeeded=(Math.sqrt(w*w+h*h)+SAFETY_MARGIN); // 10cm safety margin</span>
+<span class="nc" id="L225">		double beltNeeded = Math.ceil(mmBeltNeeded*0.001);</span>
+<span class="nc" id="L226">		totalBeltNeeded.setValue((float)beltNeeded);</span>
+
+<span class="nc" id="L228">		double mmServoNeeded = (Math.sqrt(w*w+h*h)+SAFETY_MARGIN) + w/2.0; // 10cm safety margin</span>
+<span class="nc" id="L229">		double servoNeeded = Math.ceil(mmServoNeeded*0.001);</span>
+<span class="nc" id="L230">		totalServoNeeded.setValue((float)servoNeeded);</span>
+
+<span class="nc" id="L232">		double mmStepperNeeded = w/2.0+SAFETY_MARGIN; // 10cm safety margin</span>
+<span class="nc" id="L233">		double stepperNeeded = Math.ceil(mmStepperNeeded*0.001);</span>
+<span class="nc" id="L234">		totalStepperNeeded.setValue((float)stepperNeeded);</span>
+<span class="nc" id="L235">	}</span>
+
+	public void addListener(PlotterSettingsListener listener) {
+<span class="nc" id="L238">		this.listener = listener;</span>
+<span class="nc" id="L239">	}</span>
+
+	private void fireSettingsChangedEvent() {
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		if(listener!=null) {</span>
+<span class="nc" id="L243">			listener.settingsChangedEvent(settings);</span>
+		}
+<span class="nc" id="L245">	}</span>
+
+	/**
+	 * Start the PlotterSettingsPanel.
+ 	 * @param args not used
+	 */
+	public static void main(String[] args) {
+<span class="nc" id="L252">		PreferencesHelper.start();</span>
+<span class="nc" id="L253">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L254">		Translator.start();</span>
+
+		try {
+<span class="nc" id="L257">			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());</span>
+<span class="nc" id="L258">		} catch (Exception ex) {</span>
+<span class="nc" id="L259">			logger.warn(&quot;failed to set native look and feel.&quot;, ex);</span>
+<span class="nc" id="L260">		}</span>
+
+<span class="nc" id="L262">		PlotterSettings plotterSettings = new PlotterSettings();</span>
+<span class="nc" id="L263">		JFrame frame = new JFrame(PlotterSettingsPanel.class.getSimpleName());</span>
+<span class="nc" id="L264">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L265">		frame.add(new PlotterSettingsPanel(plotterSettings));</span>
+<span class="nc" id="L266">		frame.pack();</span>
+<span class="nc" id="L267">		frame.setVisible(true);	</span>
+<span class="nc" id="L268">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

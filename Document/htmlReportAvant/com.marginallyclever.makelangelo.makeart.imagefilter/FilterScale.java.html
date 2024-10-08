@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterScale.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imagefilter</a> &gt; <span class="el_source">FilterScale.java</span></div><h1>FilterScale.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imagefilter;
+
+import com.marginallyclever.convenience.ColorRGB;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+
+import java.awt.image.BufferedImage;
+
+/**
+ * Scale every pixel in the image by a value.
+ * @author Dan Royer
+ * @since 7.46.0
+ */
+public class FilterScale extends ImageFilter {
+    private final TransformedImage a;
+    private final double scale;
+
+<span class="nc" id="L17">    public FilterScale(TransformedImage a, double scale) {</span>
+<span class="nc" id="L18">        this.a = a;</span>
+<span class="nc" id="L19">        this.scale = scale;</span>
+<span class="nc" id="L20">    }</span>
+
+    @Override
+    public TransformedImage filter() {
+<span class="nc" id="L24">        TransformedImage result = new TransformedImage(a);</span>
+<span class="nc" id="L25">        BufferedImage aa = a.getSourceImage();</span>
+<span class="nc" id="L26">        int w = aa.getWidth();</span>
+<span class="nc" id="L27">        int h = aa.getHeight();</span>
+
+<span class="nc" id="L29">        BufferedImage rr = result.getSourceImage();</span>
+
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        for (int y = 0; y &lt; h; ++y) {</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">            for (int x = 0; x &lt; w; ++x) {</span>
+<span class="nc" id="L33">                ColorRGB diff = new ColorRGB(aa.getRGB(x, y));</span>
+<span class="nc" id="L34">                diff.red   = (int)Math.max(0,Math.min(255,diff.red * scale));</span>
+<span class="nc" id="L35">                diff.green = (int)Math.max(0,Math.min(255,diff.green * scale));</span>
+<span class="nc" id="L36">                diff.blue  = (int)Math.max(0,Math.min(255,diff.blue * scale));</span>
+<span class="nc" id="L37">                rr.setRGB(x, y, diff.toInt());</span>
+            }
+        }
+
+<span class="nc" id="L41">        return result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

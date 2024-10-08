@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageConverterThread.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">ImageConverterThread.java</span></div><h1>ImageConverterThread.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+
+public class ImageConverterThread extends SwingWorker&lt;Turtle, Void&gt; {
+<span class="nc" id="L10">	private static final Logger logger = LoggerFactory.getLogger(ImageConverterThread.class);</span>
+	private final ImageConverterIterative myConverter;
+	private final String name;
+<span class="nc" id="L13">	private boolean paused=false;</span>
+<span class="nc" id="L14">	private boolean enough=false;</span>
+
+	public ImageConverterThread(ImageConverterIterative converter) {
+<span class="nc" id="L17">		super();</span>
+<span class="nc" id="L18">		this.myConverter = converter;</span>
+<span class="nc" id="L19">		this.name = converter.getName();</span>
+<span class="nc" id="L20">		myConverter.setThread(this);</span>
+<span class="nc" id="L21">		setPaused(false);</span>
+<span class="nc" id="L22">	}</span>
+
+	public void setPaused(boolean paused) {
+<span class="nc bnc" id="L25" title="All 2 branches missed.">		logger.debug(&quot;{} thread {}&quot;, paused ? &quot;pausing&quot; : &quot;resuming&quot;, name);</span>
+<span class="nc" id="L26">		this.paused = paused;</span>
+<span class="nc" id="L27">	}</span>
+
+	public boolean getPaused() {
+<span class="nc" id="L30">		return paused;</span>
+	}
+
+	/**
+	 * Will cause the thread to end gracefully at the start of the next iteration.
+	 */
+	public void endThreadGracefully() {
+<span class="nc" id="L37">		logger.debug(&quot;endThreadGracefully()&quot;);</span>
+<span class="nc" id="L38">		this.enough = true;</span>
+<span class="nc" id="L39">	}</span>
+
+	@Override
+	protected Turtle doInBackground() throws Exception {
+<span class="nc" id="L43">		logger.debug(&quot;doInBackground() start {}&quot;, name);</span>
+		
+<span class="nc" id="L45">		Turtle turtle = new Turtle();</span>
+
+<span class="nc" id="L47">		int iterations = 0;</span>
+<span class="nc" id="L48">		int pauseCount=-1;</span>
+		try {
+<span class="nc bnc" id="L50" title="All 4 branches missed.">			while (!enough &amp;&amp; !isCancelled()) {</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">				if (!paused) {</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">					if (pauseCount == iterations) {</span>
+<span class="nc" id="L53">						myConverter.resume();</span>
+					}
+<span class="nc" id="L55">					myConverter.iterate();</span>
+<span class="nc" id="L56">					iterations++;</span>
+				} else {
+<span class="nc bnc" id="L58" title="All 2 branches missed.">					if (pauseCount != iterations) {</span>
+<span class="nc" id="L59">						pauseCount = iterations;</span>
+<span class="nc" id="L60">						myConverter.generateOutput();</span>
+					}
+				}
+				try {
+<span class="nc" id="L64">					Thread.sleep(5);</span>
+<span class="nc" id="L65">				} catch (Exception ignored) {</span>
+<span class="nc" id="L66">				}</span>
+			}
+<span class="nc" id="L68">		} catch(Exception e) {</span>
+<span class="nc" id="L69">			logger.error(&quot;caught exception&quot;,e);</span>
+<span class="nc" id="L70">		}</span>
+
+<span class="nc" id="L72">		logger.debug(&quot;doInBackground() ending {} after {} loop(s).&quot;, name, iterations);</span>
+		
+<span class="nc" id="L74">		return turtle;</span>
+	}
+	
+	@Override
+	public void done() {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		logger.debug(&quot;{} thread {}&quot;, isCancelled() ? &quot;cancelled&quot; : &quot;finished&quot;, name);</span>
+<span class="nc" id="L80">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

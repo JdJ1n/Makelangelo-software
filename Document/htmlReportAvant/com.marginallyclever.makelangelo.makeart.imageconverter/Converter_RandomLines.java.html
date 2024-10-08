@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_RandomLines.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_RandomLines.java</span></div><h1>Converter_RandomLines.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectInteger;
+import com.marginallyclever.makelangelo.select.SelectRandomSeed;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+import java.util.Random;
+
+
+/**
+ * create random lines across the image.  Raise and lower the pen to darken the appropriate areas
+ * @author Dan Royer
+ */
+public class Converter_RandomLines extends ImageConverter {
+<span class="nc" id="L20">	private static int numLines = 2500;</span>
+<span class="nc" id="L21">	private static int seed = 0;</span>
+<span class="nc" id="L22">	private static final Random random = new Random();</span>
+
+	public Converter_RandomLines() {
+<span class="nc" id="L25">		super();</span>
+<span class="nc" id="L26">		SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;,Translator.get(&quot;Generator.randomSeed&quot;),seed);</span>
+<span class="nc" id="L27">		add(selectRandomSeed);</span>
+<span class="nc" id="L28">		selectRandomSeed.addSelectListener((evt)-&gt;{</span>
+<span class="nc" id="L29">			seed = (int)evt.getNewValue();</span>
+<span class="nc" id="L30">			random.setSeed(seed);</span>
+<span class="nc" id="L31">			fireRestart();</span>
+<span class="nc" id="L32">		});</span>
+
+<span class="nc" id="L34">		SelectInteger selectTotal = new SelectInteger(&quot;total&quot;,Translator.get(&quot;ConverterRandomLinesCount&quot;),getLineCount());</span>
+<span class="nc" id="L35">		add(selectTotal);</span>
+<span class="nc" id="L36">		selectTotal.addSelectListener((evt)-&gt;{</span>
+<span class="nc" id="L37">			setLineCount((int)evt.getNewValue());</span>
+<span class="nc" id="L38">			fireRestart();</span>
+<span class="nc" id="L39">		});</span>
+<span class="nc" id="L40">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L44">		return Translator.get(&quot;ConverterRandomLinesName&quot;);</span>
+	}
+
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L49">		super.start(paper, image);</span>
+
+		// The picture might be in color.  Smash it to 255 shades of grey.
+<span class="nc" id="L52">		FilterDesaturate bw = new FilterDesaturate(myImage);</span>
+<span class="nc" id="L53">		TransformedImage img = bw.filter();</span>
+
+
+<span class="nc" id="L56">		double stepSize = 5;</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (stepSize &lt; 1) stepSize = 1;</span>
+
+		// Color values are from 0...255 inclusive.  255 is white, 0 is black.
+		// Lift the pen any time the color value is &gt; level (128 or more).
+<span class="nc" id="L61">		double level = 255.0 / 4.0;</span>
+
+		// from top to bottom of the margin area...
+<span class="nc" id="L64">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L65">		double yBottom = rect.getMinY();</span>
+<span class="nc" id="L66">		double yTop    = rect.getMaxY();</span>
+<span class="nc" id="L67">		double xLeft   = rect.getMinX();</span>
+<span class="nc" id="L68">		double xRight  = rect.getMaxX();</span>
+<span class="nc" id="L69">		double dy = yTop - yBottom-1;</span>
+<span class="nc" id="L70">		double dx = xRight - xLeft-1;</span>
+
+<span class="nc" id="L72">		turtle = new Turtle();</span>
+<span class="nc" id="L73">		turtle.moveTo(0, yTop);</span>
+
+<span class="nc" id="L75">		double startPX = 0; </span>
+<span class="nc" id="L76">		double startPY = yTop;</span>
+
+		int i;
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		for(i=0;i&lt;numLines;++i) {</span>
+<span class="nc" id="L80">			level = 200.0 * (double)i / (double)numLines;</span>
+<span class="nc" id="L81">			double endPX = xLeft   + (random.nextDouble() * dx)+0.5;</span>
+<span class="nc" id="L82">			double endPY = yBottom + (random.nextDouble() * dy)+0.5;</span>
+
+<span class="nc" id="L84">			convertAlongLine(startPX,startPY,endPX,endPY,stepSize,level,img);</span>
+			
+<span class="nc" id="L86">			startPX = endPX;</span>
+<span class="nc" id="L87">			startPY = endPY;</span>
+		}
+
+<span class="nc" id="L90">		fireConversionFinished();</span>
+<span class="nc" id="L91">	}</span>
+
+	public int getLineCount() {
+<span class="nc" id="L94">		return numLines;</span>
+	}
+	public void setLineCount(int value) {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if(value&lt;1) value=1;</span>
+<span class="nc" id="L98">		numLines = value;</span>
+<span class="nc" id="L99">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

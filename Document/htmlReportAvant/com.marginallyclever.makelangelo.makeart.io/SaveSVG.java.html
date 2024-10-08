@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SaveSVG.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.io</a> &gt; <span class="el_source">SaveSVG.java</span></div><h1>SaveSVG.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.io;
+
+import com.marginallyclever.convenience.ColorPalette;
+import com.marginallyclever.convenience.helpers.StringHelper;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.geom.Rectangle2D;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+
+/**
+ * @author Dan Royer
+ * See &lt;a href=&quot;https://www.w3.org/TR/SVG/paths.html&quot;&gt;...&lt;/a&gt;
+ */
+<span class="fc" id="L20">public class SaveSVG implements TurtleSaver {</span>
+<span class="fc" id="L21">	private static final Logger logger = LoggerFactory.getLogger(SaveSVG.class);</span>
+<span class="fc" id="L22">	private static final FileNameExtensionFilter filter = new FileNameExtensionFilter(&quot;Scaleable Vector Graphics 1.1&quot;, &quot;svg&quot;);</span>
+	
+	@Override
+	public FileNameExtensionFilter getFileNameFilter() {
+<span class="fc" id="L26">		return filter;</span>
+	}
+
+	/**
+     * see &lt;a href=&quot;http://paulbourke.net/dataformats/dxf/min3d.html&quot;&gt;paulbourke.net&lt;/a&gt; for details
+     */
+	@Override
+	public boolean save(OutputStream outputStream, Turtle turtle, PlotterSettings settings) throws Exception {
+<span class="fc" id="L34">		logger.debug(&quot;saving...&quot;);</span>
+
+<span class="fc" id="L36">		Rectangle2D.Double dim= turtle.getBounds();</span>
+		
+<span class="fc" id="L38">		OutputStreamWriter out = new OutputStreamWriter(outputStream);</span>
+<span class="fc" id="L39">		String viewBox = StringHelper.formatDouble(dim.getMinX())+&quot; &quot;</span>
+<span class="fc" id="L40">						+StringHelper.formatDouble(-dim.getMaxY())+&quot; &quot;</span>
+<span class="fc" id="L41">						+StringHelper.formatDouble(dim.getWidth())+&quot; &quot;</span>
+<span class="fc" id="L42">						+StringHelper.formatDouble(dim.getHeight())+&quot;\&quot;&quot;;</span>
+		// header
+<span class="fc" id="L44">		out.write(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot; standalone=\&quot;no\&quot; ?&gt;\n&quot;);</span>
+<span class="fc" id="L45">		out.write(&quot;&lt;!DOCTYPE svg PUBLIC \&quot;-//W3C//DTD SVG 1.1//EN\&quot; \&quot;http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\&quot;&gt;\n&quot;);</span>
+<span class="fc" id="L46">		out.write(&quot;&lt;svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; version=\&quot;1.1\&quot;&gt;\n&quot;); // viewbox would go in svg tag</span>
+
+<span class="fc" id="L48">		boolean isUp=true;</span>
+<span class="fc" id="L49">		double x0 = turtle.history.get(0).x;</span>
+<span class="fc" id="L50">		double y0 = turtle.history.get(0).y;</span>
+<span class="fc" id="L51">		boolean hasStarted=false;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">		for( TurtleMove m : turtle.history ) {</span>
+<span class="pc bpc" id="L53" title="1 of 4 branches missed.">			switch(m.type) {</span>
+			case TRAVEL:
+<span class="fc" id="L55">				isUp=true;</span>
+<span class="fc" id="L56">				x0=m.x;</span>
+<span class="fc" id="L57">				y0=m.y;</span>
+<span class="fc" id="L58">				break;</span>
+			case DRAW_LINE:
+<span class="fc bfc" id="L60" title="All 2 branches covered.">				if(isUp) {</span>
+<span class="fc" id="L61">					isUp=false;</span>
+<span class="fc" id="L62">					out.write(&quot;M &quot;);</span>
+<span class="fc" id="L63">					out.write(StringHelper.formatDouble(x0)+&quot; &quot;);</span>
+<span class="fc" id="L64">					out.write(StringHelper.formatDouble(-y0)+&quot; &quot;);</span>
+<span class="fc" id="L65">					out.write(&quot;L &quot;);</span>
+				}
+<span class="fc" id="L67">				out.write(StringHelper.formatDouble(m.x)+&quot; &quot;);</span>
+<span class="fc" id="L68">				out.write(StringHelper.formatDouble(-m.y)+&quot; &quot;);</span>
+<span class="fc" id="L69">				x0=m.x;</span>
+<span class="fc" id="L70">				y0=m.y;</span>
+				
+<span class="fc" id="L72">				break;</span>
+			case TOOL_CHANGE:
+<span class="fc bfc" id="L74" title="All 2 branches covered.">				if(hasStarted) {</span>
+<span class="fc" id="L75">					out.write(&quot;'/&gt;\n&quot;);</span>
+				}
+<span class="fc" id="L77">				out.write(&quot;  &lt;path fill='none' stroke='&quot;+ ColorPalette.getHexCode(m.getColor())+&quot;' d='&quot;);</span>
+<span class="fc" id="L78">				isUp=true;</span>
+<span class="fc" id="L79">				hasStarted=true;</span>
+				break;
+			}
+<span class="fc" id="L82">		}</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">		if(hasStarted) {</span>
+<span class="fc" id="L84">			out.write(&quot;'/&gt;\n&quot;);</span>
+		}
+
+<span class="fc" id="L87">		out.write(&quot;&lt;/svg&gt;&quot;);</span>
+<span class="fc" id="L88">		out.flush();</span>
+<span class="fc" id="L89">		logger.debug(&quot;done.&quot;);</span>
+<span class="fc" id="L90">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

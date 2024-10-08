@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TextInterfaceToListeners.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols</a> &gt; <span class="el_source">TextInterfaceToListeners.java</span></div><h1>TextInterfaceToListeners.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols;
+
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.Serial;
+import java.util.ArrayList;
+
+/**
+ * {@link TextInterfaceToListeners} provides a command line and a &quot;Send&quot; button.
+ * When enter or the send button is pressed the contents of the command line are
+ * sent to all registered {@link ActionListener}s
+ * 
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class TextInterfaceToListeners extends JPanel {
+<span class="fc" id="L25">	private static final Logger logger = LoggerFactory.getLogger(TextInterfaceToListeners.class);</span>
+<span class="fc" id="L26">	private final JTextField commandLine = new JTextField(60);</span>
+<span class="fc" id="L27">	private final JButton send = new JButton(&quot;Send&quot;);</span>
+
+	public TextInterfaceToListeners() {
+<span class="fc" id="L30">		super();</span>
+
+<span class="pc" id="L32">		commandLine.addActionListener((e) -&gt; sendNow());</span>
+<span class="pc" id="L33">		send.addActionListener((e) -&gt; sendNow());</span>
+
+		// this.setBorder(BorderFactory.createTitledBorder(TextInterfaceToListeners.class.getSimpleName()));
+<span class="fc" id="L36">		setLayout(new GridBagLayout());</span>
+
+<span class="fc" id="L38">		GridBagConstraints c = new GridBagConstraints();</span>
+<span class="fc" id="L39">		c.gridx = 0;</span>
+<span class="fc" id="L40">		c.gridy = 0;</span>
+<span class="fc" id="L41">		c.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="fc" id="L42">		c.weightx = 1;</span>
+<span class="fc" id="L43">		this.add(commandLine, c);</span>
+
+<span class="fc" id="L45">		c.gridx = 1;</span>
+<span class="fc" id="L46">		c.fill = GridBagConstraints.NONE;</span>
+<span class="fc" id="L47">		c.weightx = 0;</span>
+<span class="fc" id="L48">		this.add(send, c);</span>
+<span class="fc" id="L49">	}</span>
+
+	public void sendCommand(String str) {
+<span class="nc" id="L52">		notifyListeners(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, str));</span>
+<span class="nc" id="L53">	}</span>
+
+	public void sendNow() {
+<span class="nc" id="L56">		logger.debug(&quot;User sends '{}' to the robot&quot;, getCommand());</span>
+<span class="nc" id="L57">		sendCommand(getCommand());</span>
+<span class="nc" id="L58">		commandLine.setText(&quot;&quot;);</span>
+<span class="nc" id="L59">	}</span>
+
+	public void setCommand(String msg) {
+<span class="nc" id="L62">		commandLine.setText(msg);</span>
+<span class="nc" id="L63">	}</span>
+
+	public String getCommand() {
+<span class="nc" id="L66">		return commandLine.getText();</span>
+	}
+
+	@Override
+	public void setEnabled(boolean state) {
+<span class="fc" id="L71">		super.setEnabled(state);</span>
+<span class="fc" id="L72">		commandLine.setEnabled(state);</span>
+<span class="fc" id="L73">		send.setEnabled(state);</span>
+<span class="fc" id="L74">	}</span>
+
+	// OBSERVER PATTERN
+
+<span class="fc" id="L78">	private ArrayList&lt;ActionListener&gt; listeners = new ArrayList&lt;ActionListener&gt;();</span>
+
+	public void addActionListener(ActionListener a) {
+<span class="fc" id="L81">		listeners.add(a);</span>
+<span class="fc" id="L82">	}</span>
+
+	public void removeActionListener(ActionListener a) {
+<span class="nc" id="L85">		listeners.remove(a);</span>
+<span class="nc" id="L86">	}</span>
+
+	private void notifyListeners(ActionEvent e) {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for (ActionListener a : listeners) {</span>
+<span class="nc" id="L90">			a.actionPerformed(e);</span>
+<span class="nc" id="L91">		}</span>
+<span class="nc" id="L92">	}</span>
+
+	// TEST
+
+	public static void main(String[] args) {
+<span class="nc" id="L97">		PreferencesHelper.start();</span>
+<span class="nc" id="L98">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L99">		Translator.start();</span>
+
+<span class="nc" id="L101">		JFrame frame = new JFrame(TextInterfaceToListeners.class.getSimpleName());</span>
+<span class="nc" id="L102">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L103">		frame.add(new TextInterfaceToListeners());</span>
+<span class="nc" id="L104">		frame.pack();</span>
+<span class="nc" id="L105">		frame.setVisible(true);</span>
+<span class="nc" id="L106">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

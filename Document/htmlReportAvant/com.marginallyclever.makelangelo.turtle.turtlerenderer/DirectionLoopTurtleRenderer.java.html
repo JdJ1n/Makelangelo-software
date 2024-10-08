@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirectionLoopTurtleRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.turtle.turtlerenderer</a> &gt; <span class="el_source">DirectionLoopTurtleRenderer.java</span></div><h1>DirectionLoopTurtleRenderer.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.turtle.turtlerenderer;
+
+import com.jogamp.opengl.GL2;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.applicationsettings.GFXPreferences;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+
+import java.awt.*;
+import java.util.ArrayList;
+
+/**
+ * Draw {@link com.marginallyclever.makelangelo.turtle.Turtle} such that each time the pen is lowered the color begins
+ * with red and fades to blue as the pen is lifted.  This illustrates each &quot;loop&quot; of the drawing and the direction.
+ * @author Dan Royer
+ * @since 7.48.0
+ */
+<span class="nc" id="L17">public class DirectionLoopTurtleRenderer implements TurtleRenderer {</span>
+	private GL2 gl2;
+<span class="nc" id="L19">	private Color colorTravel = Color.GREEN;</span>
+<span class="nc" id="L20">	private final float[] lineWidthBuf = new float[1];</span>
+<span class="nc" id="L21">	private boolean showPenUp = false;</span>
+<span class="nc" id="L22">	private float penDiameter = 1;</span>
+<span class="nc" id="L23">	private final ArrayList&lt;TurtleMove&gt; points = new ArrayList&lt;&gt;();</span>
+		
+	@Override
+	public void start(GL2 gl2) {
+<span class="nc" id="L27">		this.gl2=gl2;</span>
+<span class="nc" id="L28">		showPenUp = GFXPreferences.getShowPenUp();</span>
+
+<span class="nc" id="L30">		gl2.glGetFloatv(GL2.GL_LINE_WIDTH, lineWidthBuf, 0);</span>
+<span class="nc" id="L31">		gl2.glLineWidth(penDiameter);</span>
+
+<span class="nc" id="L33">		gl2.glBegin(GL2.GL_LINES);</span>
+<span class="nc" id="L34">	}</span>
+
+	@Override
+	public void end() {
+<span class="nc" id="L38">		drawPoints();</span>
+<span class="nc" id="L39">		gl2.glEnd();</span>
+		// restore pen diameter
+<span class="nc" id="L41">		gl2.glLineWidth(lineWidthBuf[0]);</span>
+<span class="nc" id="L42">	}</span>
+	
+	@Override
+	public void draw(TurtleMove p0, TurtleMove p1) {
+<span class="nc" id="L46">		points.add(p0);</span>
+<span class="nc" id="L47">		points.add(p1);</span>
+<span class="nc" id="L48">	}</span>
+
+	private void drawPoints() {
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if(!points.isEmpty()) {</span>
+<span class="nc" id="L52">			int size = points.size();</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">			for(int i=0;i&lt;size;i+=2) {</span>
+<span class="nc" id="L55">				TurtleMove p0 = points.get(i);</span>
+<span class="nc" id="L56">				TurtleMove p1 = points.get(i+1);</span>
+<span class="nc" id="L57">				double r = (double)i/(double)size;</span>
+<span class="nc" id="L58">				double b = 1.0 - r;</span>
+<span class="nc" id="L59">				gl2.glColor3d(r,0,b);</span>
+<span class="nc" id="L60">				gl2.glVertex2d(p0.x, p0.y);</span>
+<span class="nc" id="L61">				gl2.glVertex2d(p1.x, p1.y);</span>
+			}
+<span class="nc" id="L63">			points.clear();</span>
+		}
+<span class="nc" id="L65">	}</span>
+
+	@Override
+	public void travel(TurtleMove p0, TurtleMove p1) {
+<span class="nc" id="L69">		drawPoints();</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if(showPenUp) {		</span>
+<span class="nc" id="L71">			gl2.glColor3d(</span>
+<span class="nc" id="L72">					colorTravel.getRed() / 255.0,</span>
+<span class="nc" id="L73">					colorTravel.getGreen() / 255.0,</span>
+<span class="nc" id="L74">					colorTravel.getBlue() / 255.0);</span>
+<span class="nc" id="L75">			gl2.glVertex2d(p0.x, p0.y);</span>
+<span class="nc" id="L76">			gl2.glVertex2d(p1.x, p1.y);</span>
+		}
+<span class="nc" id="L78">	}</span>
+
+	@Override
+<span class="nc" id="L81">	public void setPenDownColor(Color color) {}</span>
+
+	@Override
+	public void setPenUpColor(Color color) {
+<span class="nc" id="L85">		colorTravel=(color);</span>
+<span class="nc" id="L86">	}</span>
+
+	@Override
+	public void setPenDiameter(double penDiameter) {
+<span class="nc" id="L90">		this.penDiameter =(float)penDiameter;</span>
+<span class="nc" id="L91">	}</span>
+
+    @Override
+    public String getTranslatedName() {
+<span class="nc" id="L95">        return Translator.get(&quot;DirectionLoopTurtleRenderer.name&quot;);</span>
+    }
+
+	/**
+	 * Reset any internal state to defaults.  This makes sure rendering optimizations cleaned
+	 * up when the turtle is changed.
+	 */
+	@Override
+<span class="nc" id="L103">	public void reset() {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

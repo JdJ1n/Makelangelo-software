@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FirmwareDownloader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.firmwareuploader</a> &gt; <span class="el_source">FirmwareDownloader.java</span></div><h1>FirmwareDownloader.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.firmwareuploader;
+
+import com.marginallyclever.convenience.log.Log;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
+
+/**
+ * Common methods for downloading firmware from Github
+ * @since 7.39.3
+ * @author Dan Royer
+ */
+public class FirmwareDownloader {
+<span class="nc" id="L33">    private static final Logger logger = LoggerFactory.getLogger(FirmwareDownloader.class);</span>
+    private static final String GITHUB_API = &quot;https://api.github.com/repos/MarginallyClever/Marlin-polargraph/releases/latest&quot;;
+<span class="nc" id="L35">    private static final String DOWNLOAD_PATH = Log.logDir + File.separator;</span>
+
+    public FirmwareDownloader() {
+<span class="nc" id="L38">        super();</span>
+<span class="nc" id="L39">    }</span>
+
+    /**
+     * Query github.com for the latest release.
+     * @return the latest release as a JSONObject
+     */
+    private JSONObject queryGithub() {
+<span class="nc" id="L46">        try(CloseableHttpClient httpclient = HttpClients.createDefault()) {</span>
+<span class="nc" id="L47">            HttpGet httpGet = new HttpGet(GITHUB_API);</span>
+<span class="nc" id="L48">            try (CloseableHttpResponse response = httpclient.execute(httpGet)) {</span>
+<span class="nc" id="L49">                HttpEntity entity = response.getEntity();</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">                if (entity != null) {</span>
+<span class="nc" id="L51">                    return new JSONObject(EntityUtils.toString(entity));</span>
+                }
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            }</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        }</span>
+<span class="nc" id="L55">        catch (IOException e) {</span>
+<span class="nc" id="L56">            logger.error(&quot;Cannot query Github: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L57">        }</span>
+<span class="nc" id="L58">        return null;</span>
+    }
+
+    /**
+     * Download the hex file from the given URL to the given path.  Set the last modified time to the given timestamp.
+     * @param url the URL to download from
+     * @param outputPath the path to save the file to
+     * @param updatedAt the timestamp to set the last modified time to
+     * @throws IOException if the file cannot be downloaded
+     */
+    private void downloadHexFile(String url, String outputPath, String updatedAt) throws IOException {
+<span class="nc" id="L69">        URL website = new URL(url);</span>
+<span class="nc" id="L70">        try(ReadableByteChannel rbc = Channels.newChannel(website.openStream())) {</span>
+<span class="nc" id="L71">            try (FileOutputStream fos = new FileOutputStream(outputPath)) {</span>
+<span class="nc" id="L72">                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);</span>
+            }
+        }
+
+        // Parse the updated_at timestamp into a FileTime
+<span class="nc" id="L77">        Instant instant = Instant.parse(updatedAt);</span>
+<span class="nc" id="L78">        FileTime fileTime = FileTime.from(instant);</span>
+
+        // Set the last modified time of the local file
+<span class="nc" id="L81">        Path path = Paths.get(outputPath);</span>
+<span class="nc" id="L82">        Files.setLastModifiedTime(path, fileTime);</span>
+<span class="nc" id="L83">    }</span>
+
+    /**
+     * Check if the file exists and has the same last modified time as the given timestamp.
+     * @param filename the name of the file to check
+     * @param updatedAt the timestamp to check against
+     * @return true if the file exists and has the same last modified time as the given timestamp
+     */
+    private boolean fileExistsWithMatchingTimestamp(String filename, String updatedAt) {
+        try {
+            // Get the path to the file
+<span class="nc" id="L94">            Path path = Paths.get( filename );</span>
+
+            // Check if file exists
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            if(Files.exists(path)) {</span>
+                // Parse the updated_at timestamp into a FileTime
+<span class="nc" id="L99">                Instant instant = Instant.parse(updatedAt);</span>
+<span class="nc" id="L100">                FileTime fileTime = FileTime.from(instant);</span>
+                // Get the last modified time of the file
+<span class="nc" id="L102">                FileTime existingFileTime = Files.getLastModifiedTime(path);</span>
+                // Check if the times match
+<span class="nc" id="L104">                return fileTime.equals(existingFileTime);</span>
+            }
+<span class="nc" id="L106">        } catch (Exception e) {</span>
+<span class="nc" id="L107">            logger.error(&quot;Error while checking file timestamp: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L108">        }</span>
+
+<span class="nc" id="L110">        return false;</span>
+    }
+
+    /**
+     * Download the asset information from the latest release on Github.
+     * @param name the name of the asset to download
+     * @return the asset information as a JSONObject or null if the asset is not found
+     */
+    private JSONObject downloadAssetInformation(String name) {
+<span class="nc" id="L119">        JSONObject latestRelease = queryGithub();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if(latestRelease==null) return null;</span>
+
+<span class="nc" id="L122">        String releaseName = latestRelease.getString(&quot;name&quot;);</span>
+<span class="nc" id="L123">        logger.info(&quot;Latest Release: {}&quot;, releaseName);</span>
+
+        // Get the assets array from the release
+<span class="nc" id="L126">        JSONArray assets = latestRelease.getJSONArray(&quot;assets&quot;);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        for(int j = 0; j &lt; assets.length(); j++) {</span>
+<span class="nc" id="L128">            JSONObject asset = assets.getJSONObject(j);</span>
+            // Check if the asset name ends with .hex
+<span class="nc" id="L130">            String assetName = asset.getString(&quot;name&quot;);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            if (name.equals(assetName)) {</span>
+<span class="nc" id="L132">                return asset;</span>
+            }
+        }
+<span class="nc" id="L135">        logger.error(&quot;asset not found: {}&quot;,name);</span>
+<span class="nc" id="L136">        return null;</span>
+    }
+
+    public String getDownloadPath(String name) {
+<span class="nc" id="L140">        return DOWNLOAD_PATH + name;</span>
+    }
+
+    /**
+     * Query github.com for the latest release, then download the firmware file to the DOWNLOAD_PATH.
+     * @param name the name of the firmware file to download
+     */
+    public boolean getFirmware(String name) {
+<span class="nc" id="L148">        JSONObject asset = downloadAssetInformation(name);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if(asset==null) return false;</span>
+
+<span class="nc" id="L151">        String localPath = getDownloadPath(name);</span>
+
+<span class="nc" id="L153">        String updatedAt = asset.getString(&quot;updated_at&quot;);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if(fileExistsWithMatchingTimestamp(localPath, updatedAt)) {</span>
+<span class="nc" id="L155">            logger.info(&quot;file already exists: {}&quot;,name);</span>
+<span class="nc" id="L156">            return true;</span>
+        }
+
+        try {
+<span class="nc" id="L160">            downloadHexFile(asset.getString(&quot;browser_download_url&quot;), localPath, updatedAt);</span>
+<span class="nc" id="L161">        } catch (IOException e) {</span>
+<span class="nc" id="L162">            logger.error(&quot;Download failed: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L163">            return false;</span>
+<span class="nc" id="L164">        }</span>
+
+<span class="nc" id="L166">        logger.info(&quot;file downloaded ok.&quot;);</span>
+<span class="nc" id="L167">        return true;</span>
+    }
+
+    public static void main(String[] args) {
+<span class="nc" id="L171">        FirmwareDownloader fd = new FirmwareDownloader();</span>
+<span class="nc" id="L172">        fd.getFirmware(&quot;firmware-m5.hex&quot;);</span>
+<span class="nc" id="L173">        fd.getFirmware(&quot;firmware-huge.hex&quot;);</span>
+<span class="nc" id="L174">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

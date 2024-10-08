@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NameThatColor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">NameThatColor.java</span></div><h1>NameThatColor.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+/**
+ * @deprecated Use W3CColorNames instead
+ */
+@Deprecated
+public class NameThatColor {
+	private class NamedColor {
+		public String name;
+		public long value;
+
+<span class="nc" id="L16">		public NamedColor(String _name, long _value) {</span>
+<span class="nc" id="L17">			name = _name;</span>
+<span class="nc" id="L18">			value = _value;</span>
+<span class="nc" id="L19">		}</span>
+	};
+
+	private ArrayList&lt;NamedColor&gt; colors;
+
+<span class="nc" id="L24">	public NameThatColor() {</span>
+<span class="nc" id="L25">		colors = new ArrayList&lt;NamedColor&gt;();</span>
+<span class="nc" id="L26">		colors.add(new NamedColor(&quot;alice blue&quot;, 0xF0F8FF));</span>
+<span class="nc" id="L27">		colors.add(new NamedColor(&quot;antique white&quot;, 0xFAEBD7));</span>
+<span class="nc" id="L28">		colors.add(new NamedColor(&quot;aqua marine&quot;, 0x7FFFD4));</span>
+<span class="nc" id="L29">		colors.add(new NamedColor(&quot;aqua&quot;, 0x00FFFF));</span>
+<span class="nc" id="L30">		colors.add(new NamedColor(&quot;azure&quot;, 0xF0FFFF));</span>
+<span class="nc" id="L31">		colors.add(new NamedColor(&quot;beige&quot;, 0xF5F5DC));</span>
+<span class="nc" id="L32">		colors.add(new NamedColor(&quot;bisque&quot;, 0xFFE4C4));</span>
+<span class="nc" id="L33">		colors.add(new NamedColor(&quot;black&quot;, 0x000000));</span>
+<span class="nc" id="L34">		colors.add(new NamedColor(&quot;blanched almond&quot;, 0xFFEBCD));</span>
+<span class="nc" id="L35">		colors.add(new NamedColor(&quot;blue violet&quot;, 0x8A2BE2));</span>
+<span class="nc" id="L36">		colors.add(new NamedColor(&quot;blue&quot;, 0x0000FF));</span>
+<span class="nc" id="L37">		colors.add(new NamedColor(&quot;brown&quot;, 0xA52A2A));</span>
+<span class="nc" id="L38">		colors.add(new NamedColor(&quot;burly wood&quot;, 0xDEB887));</span>
+<span class="nc" id="L39">		colors.add(new NamedColor(&quot;cadet blue&quot;, 0x5F9EA0));</span>
+<span class="nc" id="L40">		colors.add(new NamedColor(&quot;chart reuse&quot;, 0x7FFF00));</span>
+<span class="nc" id="L41">		colors.add(new NamedColor(&quot;chocolate&quot;, 0xD2691E));</span>
+<span class="nc" id="L42">		colors.add(new NamedColor(&quot;coral&quot;, 0xFF7F50));</span>
+<span class="nc" id="L43">		colors.add(new NamedColor(&quot;corn flower blue&quot;, 0x6495ED));</span>
+<span class="nc" id="L44">		colors.add(new NamedColor(&quot;corn silk&quot;, 0xFFF8DC));</span>
+<span class="nc" id="L45">		colors.add(new NamedColor(&quot;crimson&quot;, 0xDC143C));</span>
+<span class="nc" id="L46">		colors.add(new NamedColor(&quot;cyan&quot;, 0x00FFFF));</span>
+<span class="nc" id="L47">		colors.add(new NamedColor(&quot;dark blue&quot;, 0x00008B));</span>
+<span class="nc" id="L48">		colors.add(new NamedColor(&quot;dark cyan&quot;, 0x008B8B));</span>
+<span class="nc" id="L49">		colors.add(new NamedColor(&quot;dark golden rod&quot;, 0xB8860B));</span>
+<span class="nc" id="L50">		colors.add(new NamedColor(&quot;dark gray / dark grey&quot;, 0xA9A9A9));</span>
+<span class="nc" id="L51">		colors.add(new NamedColor(&quot;dark green&quot;, 0x006400));</span>
+<span class="nc" id="L52">		colors.add(new NamedColor(&quot;dark khaki&quot;, 0xBDB76B));</span>
+<span class="nc" id="L53">		colors.add(new NamedColor(&quot;dark magenta&quot;, 0x8B008B));</span>
+<span class="nc" id="L54">		colors.add(new NamedColor(&quot;dark olive green&quot;, 0x556B2F));</span>
+<span class="nc" id="L55">		colors.add(new NamedColor(&quot;dark orange&quot;, 0xFF8C00));</span>
+<span class="nc" id="L56">		colors.add(new NamedColor(&quot;dark orchid&quot;, 0x9932CC));</span>
+<span class="nc" id="L57">		colors.add(new NamedColor(&quot;dark red&quot;, 0x8B0000));</span>
+<span class="nc" id="L58">		colors.add(new NamedColor(&quot;dark salmon&quot;, 0xE9967A));</span>
+<span class="nc" id="L59">		colors.add(new NamedColor(&quot;dark sea green&quot;, 0x8FBC8F));</span>
+<span class="nc" id="L60">		colors.add(new NamedColor(&quot;dark slate blue&quot;, 0x483D8B));</span>
+<span class="nc" id="L61">		colors.add(new NamedColor(&quot;dark slate gray&quot;, 0x2F4F4F));</span>
+<span class="nc" id="L62">		colors.add(new NamedColor(&quot;dark turquoise&quot;, 0x00CED1));</span>
+<span class="nc" id="L63">		colors.add(new NamedColor(&quot;dark violet&quot;, 0x9400D3));</span>
+<span class="nc" id="L64">		colors.add(new NamedColor(&quot;deep pink&quot;, 0xFF1493));</span>
+<span class="nc" id="L65">		colors.add(new NamedColor(&quot;deep sky blue&quot;, 0x00BFFF));</span>
+<span class="nc" id="L66">		colors.add(new NamedColor(&quot;dim gray / dim grey&quot;, 0x696969));</span>
+<span class="nc" id="L67">		colors.add(new NamedColor(&quot;dodger blue&quot;, 0x1E90FF));</span>
+<span class="nc" id="L68">		colors.add(new NamedColor(&quot;firebrick&quot;, 0xB22222));</span>
+<span class="nc" id="L69">		colors.add(new NamedColor(&quot;floral white&quot;, 0xFFFAF0));</span>
+<span class="nc" id="L70">		colors.add(new NamedColor(&quot;forest green&quot;, 0x228B22));</span>
+<span class="nc" id="L71">		colors.add(new NamedColor(&quot;gainsboro&quot;, 0xDCDCDC));</span>
+<span class="nc" id="L72">		colors.add(new NamedColor(&quot;ghost white&quot;, 0xF8F8FF));</span>
+<span class="nc" id="L73">		colors.add(new NamedColor(&quot;gold&quot;, 0xFFD700));</span>
+<span class="nc" id="L74">		colors.add(new NamedColor(&quot;golden rod&quot;, 0xDAA520));</span>
+<span class="nc" id="L75">		colors.add(new NamedColor(&quot;gray / grey&quot;, 0x808080));</span>
+<span class="nc" id="L76">		colors.add(new NamedColor(&quot;green yellow&quot;, 0xADFF2F));</span>
+<span class="nc" id="L77">		colors.add(new NamedColor(&quot;green&quot;, 0x008000));</span>
+<span class="nc" id="L78">		colors.add(new NamedColor(&quot;honeydew&quot;, 0xF0FFF0));</span>
+<span class="nc" id="L79">		colors.add(new NamedColor(&quot;hot pink&quot;, 0xFF69B4));</span>
+<span class="nc" id="L80">		colors.add(new NamedColor(&quot;indian red&quot;, 0xCD5C5C));</span>
+<span class="nc" id="L81">		colors.add(new NamedColor(&quot;indigo&quot;, 0x4B0082));</span>
+<span class="nc" id="L82">		colors.add(new NamedColor(&quot;ivory&quot;, 0xFFFFF0));</span>
+<span class="nc" id="L83">		colors.add(new NamedColor(&quot;khaki&quot;, 0xF0E68C));</span>
+<span class="nc" id="L84">		colors.add(new NamedColor(&quot;lavender blush&quot;, 0xFFF0F5));</span>
+<span class="nc" id="L85">		colors.add(new NamedColor(&quot;lavender&quot;, 0xE6E6FA));</span>
+<span class="nc" id="L86">		colors.add(new NamedColor(&quot;lawn green&quot;, 0x7CFC00));</span>
+<span class="nc" id="L87">		colors.add(new NamedColor(&quot;lemon chiffon&quot;, 0xFFFACD));</span>
+<span class="nc" id="L88">		colors.add(new NamedColor(&quot;light blue&quot;, 0xADD8E6));</span>
+<span class="nc" id="L89">		colors.add(new NamedColor(&quot;light coral&quot;, 0xF08080));</span>
+<span class="nc" id="L90">		colors.add(new NamedColor(&quot;light cyan&quot;, 0xE0FFFF));</span>
+<span class="nc" id="L91">		colors.add(new NamedColor(&quot;light golden rod yellow&quot;, 0xFAFAD2));</span>
+<span class="nc" id="L92">		colors.add(new NamedColor(&quot;light gray / light grey&quot;, 0xD3D3D3));</span>
+<span class="nc" id="L93">		colors.add(new NamedColor(&quot;light green&quot;, 0x90EE90));</span>
+<span class="nc" id="L94">		colors.add(new NamedColor(&quot;light pink&quot;, 0xFFB6C1));</span>
+<span class="nc" id="L95">		colors.add(new NamedColor(&quot;light salmon&quot;, 0xFFA07A));</span>
+<span class="nc" id="L96">		colors.add(new NamedColor(&quot;light sea green&quot;, 0x20B2AA));</span>
+<span class="nc" id="L97">		colors.add(new NamedColor(&quot;light sky blue&quot;, 0x87CEFA));</span>
+<span class="nc" id="L98">		colors.add(new NamedColor(&quot;light slate gray&quot;, 0x778899));</span>
+<span class="nc" id="L99">		colors.add(new NamedColor(&quot;light steel blue&quot;, 0xB0C4DE));</span>
+<span class="nc" id="L100">		colors.add(new NamedColor(&quot;light yellow&quot;, 0xFFFFE0));</span>
+<span class="nc" id="L101">		colors.add(new NamedColor(&quot;lime green&quot;, 0x32CD32));</span>
+<span class="nc" id="L102">		colors.add(new NamedColor(&quot;lime&quot;, 0x00FF00));</span>
+<span class="nc" id="L103">		colors.add(new NamedColor(&quot;linen&quot;, 0xFAF0E6));</span>
+<span class="nc" id="L104">		colors.add(new NamedColor(&quot;magenta / fuchsia&quot;, 0xFF00FF));</span>
+<span class="nc" id="L105">		colors.add(new NamedColor(&quot;maroon&quot;, 0x800000));</span>
+<span class="nc" id="L106">		colors.add(new NamedColor(&quot;medium aqua marine&quot;, 0x66CDAA));</span>
+<span class="nc" id="L107">		colors.add(new NamedColor(&quot;medium blue&quot;, 0x0000CD));</span>
+<span class="nc" id="L108">		colors.add(new NamedColor(&quot;medium orchid&quot;, 0xBA55D3));</span>
+<span class="nc" id="L109">		colors.add(new NamedColor(&quot;medium purple&quot;, 0x9370DB));</span>
+<span class="nc" id="L110">		colors.add(new NamedColor(&quot;medium sea green&quot;, 0x3CB371));</span>
+<span class="nc" id="L111">		colors.add(new NamedColor(&quot;medium slate blue&quot;, 0x7B68EE));</span>
+<span class="nc" id="L112">		colors.add(new NamedColor(&quot;medium spring green&quot;, 0x00FA9A));</span>
+<span class="nc" id="L113">		colors.add(new NamedColor(&quot;medium turquoise&quot;, 0x48D1CC));</span>
+<span class="nc" id="L114">		colors.add(new NamedColor(&quot;medium violet red&quot;, 0xC71585));</span>
+<span class="nc" id="L115">		colors.add(new NamedColor(&quot;midnight blue&quot;, 0x191970));</span>
+<span class="nc" id="L116">		colors.add(new NamedColor(&quot;mint cream&quot;, 0xF5FFFA));</span>
+<span class="nc" id="L117">		colors.add(new NamedColor(&quot;misty rose&quot;, 0xFFE4E1));</span>
+<span class="nc" id="L118">		colors.add(new NamedColor(&quot;moccasin&quot;, 0xFFE4B5));</span>
+<span class="nc" id="L119">		colors.add(new NamedColor(&quot;navajo white&quot;, 0xFFDEAD));</span>
+<span class="nc" id="L120">		colors.add(new NamedColor(&quot;navy&quot;, 0x000080));</span>
+<span class="nc" id="L121">		colors.add(new NamedColor(&quot;old lace&quot;, 0xFDF5E6));</span>
+<span class="nc" id="L122">		colors.add(new NamedColor(&quot;olive drab&quot;, 0x6B8E23));</span>
+<span class="nc" id="L123">		colors.add(new NamedColor(&quot;olive&quot;, 0x808000));</span>
+<span class="nc" id="L124">		colors.add(new NamedColor(&quot;orange red&quot;, 0xFF4500));</span>
+<span class="nc" id="L125">		colors.add(new NamedColor(&quot;orange&quot;, 0xFFA500));</span>
+<span class="nc" id="L126">		colors.add(new NamedColor(&quot;orchid&quot;, 0xDA70D6));</span>
+<span class="nc" id="L127">		colors.add(new NamedColor(&quot;pale golden rod&quot;, 0xEEE8AA));</span>
+<span class="nc" id="L128">		colors.add(new NamedColor(&quot;pale green&quot;, 0x98FB98));</span>
+<span class="nc" id="L129">		colors.add(new NamedColor(&quot;pale turquoise&quot;, 0xAFEEEE));</span>
+<span class="nc" id="L130">		colors.add(new NamedColor(&quot;pale violet red&quot;, 0xDB7093));</span>
+<span class="nc" id="L131">		colors.add(new NamedColor(&quot;papaya whip&quot;, 0xFFEFD5));</span>
+<span class="nc" id="L132">		colors.add(new NamedColor(&quot;peach puff&quot;, 0xFFDAB9));</span>
+<span class="nc" id="L133">		colors.add(new NamedColor(&quot;peru&quot;, 0xCD853F));</span>
+<span class="nc" id="L134">		colors.add(new NamedColor(&quot;pink&quot;, 0xFFC0CB));</span>
+<span class="nc" id="L135">		colors.add(new NamedColor(&quot;plum&quot;, 0xDDA0DD));</span>
+<span class="nc" id="L136">		colors.add(new NamedColor(&quot;powder blue&quot;, 0xB0E0E6));</span>
+<span class="nc" id="L137">		colors.add(new NamedColor(&quot;purple&quot;, 0x800080));</span>
+<span class="nc" id="L138">		colors.add(new NamedColor(&quot;red&quot;, 0xFF0000));</span>
+<span class="nc" id="L139">		colors.add(new NamedColor(&quot;rosy brown&quot;, 0xBC8F8F));</span>
+<span class="nc" id="L140">		colors.add(new NamedColor(&quot;royal blue&quot;, 0x4169E1));</span>
+<span class="nc" id="L141">		colors.add(new NamedColor(&quot;saddle brown&quot;, 0x8B4513));</span>
+<span class="nc" id="L142">		colors.add(new NamedColor(&quot;salmon&quot;, 0xFA8072));</span>
+<span class="nc" id="L143">		colors.add(new NamedColor(&quot;sandy brown&quot;, 0xF4A460));</span>
+<span class="nc" id="L144">		colors.add(new NamedColor(&quot;sea green&quot;, 0x2E8B57));</span>
+<span class="nc" id="L145">		colors.add(new NamedColor(&quot;sea shell&quot;, 0xFFF5EE));</span>
+<span class="nc" id="L146">		colors.add(new NamedColor(&quot;sienna&quot;, 0xA0522D));</span>
+<span class="nc" id="L147">		colors.add(new NamedColor(&quot;silver&quot;, 0xC0C0C0));</span>
+<span class="nc" id="L148">		colors.add(new NamedColor(&quot;sky blue&quot;, 0x87CEEB));</span>
+<span class="nc" id="L149">		colors.add(new NamedColor(&quot;slate blue&quot;, 0x6A5ACD));</span>
+<span class="nc" id="L150">		colors.add(new NamedColor(&quot;slate gray&quot;, 0x708090));</span>
+<span class="nc" id="L151">		colors.add(new NamedColor(&quot;snow&quot;, 0xFFFAFA));</span>
+<span class="nc" id="L152">		colors.add(new NamedColor(&quot;spring green&quot;, 0x00FF7F));</span>
+<span class="nc" id="L153">		colors.add(new NamedColor(&quot;steel blue&quot;, 0x4682B4));</span>
+<span class="nc" id="L154">		colors.add(new NamedColor(&quot;tan&quot;, 0xD2B48C));</span>
+<span class="nc" id="L155">		colors.add(new NamedColor(&quot;teal&quot;, 0x008080));</span>
+<span class="nc" id="L156">		colors.add(new NamedColor(&quot;thistle&quot;, 0xD8BFD8));</span>
+<span class="nc" id="L157">		colors.add(new NamedColor(&quot;tomato&quot;, 0xFF6347));</span>
+<span class="nc" id="L158">		colors.add(new NamedColor(&quot;turquoise&quot;, 0x40E0D0));</span>
+<span class="nc" id="L159">		colors.add(new NamedColor(&quot;violet&quot;, 0xEE82EE));</span>
+<span class="nc" id="L160">		colors.add(new NamedColor(&quot;wheat&quot;, 0xF5DEB3));</span>
+<span class="nc" id="L161">		colors.add(new NamedColor(&quot;white smoke&quot;, 0xF5F5F5));</span>
+<span class="nc" id="L162">		colors.add(new NamedColor(&quot;white&quot;, 0xFFFFFF));</span>
+<span class="nc" id="L163">		colors.add(new NamedColor(&quot;yellow green&quot;, 0x9ACD32));</span>
+<span class="nc" id="L164">		colors.add(new NamedColor(&quot;yellow&quot;, 0xFFFF00));</span>
+<span class="nc" id="L165">	}</span>
+
+<span class="nc" id="L167">	public float red  (long arg0) {	return (arg0 &gt;&gt; 16) &amp; 0xFF;	}</span>
+<span class="nc" id="L168">	public float green(long arg0) {	return (arg0 &gt;&gt;  8) &amp; 0xFF;	}</span>
+<span class="nc" id="L169">	public float blue (long arg0) {	return (arg0      ) &amp; 0xFF;	}</span>
+
+	/**
+	 * finds the name of the nearest known color.
+	 * @param r0 red component, 0...255
+	 * @param g0 green component, 0...255
+	 * @param b0 blue component, 0...255
+	 * @return the name of the nearest color.
+	 */
+	public String find(float r0,float g0,float b0) {
+<span class="nc" id="L179">		NamedColor best = null;</span>
+<span class="nc" id="L180">		float bestDistance = Long.MAX_VALUE;</span>
+
+<span class="nc" id="L182">		Iterator&lt;NamedColor&gt; i = colors.iterator();</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		while (i.hasNext()) {</span>
+<span class="nc" id="L184">			NamedColor c = i.next();</span>
+<span class="nc" id="L185">			float r1 = red(c.value) - r0;</span>
+<span class="nc" id="L186">			float g1 = green(c.value) - g0;</span>
+<span class="nc" id="L187">			float b1 = blue(c.value) - b0;</span>
+<span class="nc" id="L188">			float dSquared = r1 * r1 + g1 * g1 + b1 * b1;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			if (bestDistance &gt; dSquared) {</span>
+<span class="nc" id="L190">				bestDistance = dSquared;</span>
+<span class="nc" id="L191">				best = c;</span>
+			}
+<span class="nc" id="L193">		}</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		if (best != null) {</span>
+<span class="nc" id="L195">			return best.name;</span>
+		}
+<span class="nc" id="L197">		return null;</span>
+	}
+	
+	
+	/**
+	 * finds the name of the nearest known color.
+	 * 
+	 * @param target the hex RGB to match
+	 * @return the name of the nearest color.
+	 */
+	public String find(long target) {
+<span class="nc" id="L208">		float r0 = red(target);</span>
+<span class="nc" id="L209">		float g0 = green(target);</span>
+<span class="nc" id="L210">		float b0 = blue(target);</span>
+
+<span class="nc" id="L212">		return find(r0,g0,b0);</span>
+	}
+	
+	
+	/**
+	 * finds the name of the nearest known color.
+	 * 
+	 * @param target the Color to match
+	 * @return the name of the nearest color.
+	 */
+	public String find(Color target) {
+<span class="nc" id="L223">		float r0 = target.getRed();</span>
+<span class="nc" id="L224">		float g0 = target.getGreen();</span>
+<span class="nc" id="L225">		float b0 = target.getBlue();</span>
+
+<span class="nc" id="L227">		return find(r0,g0,b0);</span>
+	}
+	
+	
+	/**
+	 * finds the name of the nearest known color.
+	 * 
+	 * @param target the Color to match
+	 * @return the name of the nearest color.
+	 */
+	public String find(ColorRGB target) {
+<span class="nc" id="L238">		float r0 = target.red;</span>
+<span class="nc" id="L239">		float g0 = target.green;</span>
+<span class="nc" id="L240">		float b0 = target.blue;</span>
+
+<span class="nc" id="L242">		return find(r0,g0,b0);</span>
+	}
+};
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

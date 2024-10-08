@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PatternOnPath.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.donatelloimpl.nodes</a> &gt; <span class="el_source">PatternOnPath.java</span></div><h1>PatternOnPath.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.donatelloimpl.nodes;
+
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.nodegraphcore.DockReceiving;
+import com.marginallyclever.nodegraphcore.DockShipping;
+import com.marginallyclever.nodegraphcore.Node;
+import com.marginallyclever.nodegraphcore.Packet;
+
+public class PatternOnPath extends Node {
+<span class="fc" id="L11">    private final DockReceiving&lt;Turtle&gt; pattern = new DockReceiving&lt;&gt;(&quot;pattern&quot;, Turtle.class, new Turtle());</span>
+<span class="fc" id="L12">    private final DockReceiving&lt;Turtle&gt; path = new DockReceiving&lt;&gt;(&quot;path&quot;, Turtle.class, new Turtle());</span>
+<span class="fc" id="L13">    private final DockReceiving&lt;Number&gt; count = new DockReceiving&lt;&gt;(&quot;count&quot;, Number.class, 10);</span>
+<span class="fc" id="L14">    private final DockShipping&lt;Turtle&gt; output = new DockShipping&lt;&gt;(&quot;output&quot;, Turtle.class, new Turtle());</span>
+
+    public PatternOnPath() {
+<span class="fc" id="L17">        super(&quot;PatternOnPath&quot;);</span>
+<span class="fc" id="L18">        addVariable(pattern);</span>
+<span class="fc" id="L19">        addVariable(path);</span>
+<span class="fc" id="L20">        addVariable(count);</span>
+<span class="fc" id="L21">        addVariable(output);</span>
+<span class="fc" id="L22">    }</span>
+
+    @Override
+    public void update() {
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        if(pattern.hasPacketWaiting()) pattern.receive();</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        if(path.hasPacketWaiting()) path.receive();</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">        if(count.hasPacketWaiting()) count.receive();</span>
+
+<span class="nc" id="L30">        Turtle sum = new Turtle();</span>
+<span class="nc" id="L31">        Turtle myPattern = pattern.getValue();</span>
+<span class="nc" id="L32">        Turtle myPath = path.getValue();</span>
+<span class="nc" id="L33">        int c = count.getValue().intValue();</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if(c&gt;0) {</span>
+<span class="nc" id="L35">            double pDistance = myPath.getDrawDistance();</span>
+<span class="nc" id="L36">            double step = pDistance/(double)c;</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">            if(pDistance==0) {</span>
+<span class="nc" id="L38">                pDistance=c;</span>
+<span class="nc" id="L39">                step=1;</span>
+            }
+<span class="nc" id="L41">            double n=0;</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">            for(int i=0;i&lt;c;++i) {</span>
+<span class="nc" id="L43">                Point2D p = myPath.interpolate(n);</span>
+<span class="nc" id="L44">                n+=step;</span>
+<span class="nc" id="L45">                Turtle stamp = new Turtle(myPattern);</span>
+<span class="nc" id="L46">                stamp.translate(p.x,p.y);</span>
+<span class="nc" id="L47">                sum.add(stamp);</span>
+            }
+        }
+<span class="nc" id="L50">        output.send(new Packet&lt;&gt;(sum));</span>
+<span class="nc" id="L51">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

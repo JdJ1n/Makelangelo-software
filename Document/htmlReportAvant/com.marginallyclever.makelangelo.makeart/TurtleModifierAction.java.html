@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TurtleModifierAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart</a> &gt; <span class="el_source">TurtleModifierAction.java</span></div><h1>TurtleModifierAction.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart;
+
+import com.marginallyclever.makelangelo.Makelangelo;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import javax.swing.*;
+import javax.swing.event.EventListenerList;
+import java.awt.event.ActionEvent;
+
+/**
+ * {@link TurtleModifierAction} is the base class for all Actions which modify a {@link Turtle}.
+ * Some examples might be scale, flip, rotate, reorder, etc.
+ * @author Dan Royer
+ * @since 7.31.0
+ */
+public abstract class TurtleModifierAction extends AbstractAction {
+<span class="pc" id="L17">	private final EventListenerList listeners = new EventListenerList();</span>
+	private Makelangelo myMakelangelo;
+	
+	public TurtleModifierAction(String string) {
+<span class="fc" id="L21">		super(string);</span>
+<span class="fc" id="L22">	}</span>
+	
+	public TurtleModifierAction(String string,Icon icon) {
+<span class="nc" id="L25">		super(string,icon);</span>
+<span class="nc" id="L26">	}</span>
+
+	public void setSource(Makelangelo m) {
+<span class="nc" id="L29">		myMakelangelo = m;</span>
+<span class="nc" id="L30">	}</span>
+	
+	public void addModifierListener(TurtleModifierListener arg0) {
+<span class="nc" id="L33">		listeners.add(TurtleModifierListener.class,arg0);</span>
+<span class="nc" id="L34">	}</span>
+	
+	public void removeModifierListener(TurtleModifierListener arg0) {
+<span class="nc" id="L37">		listeners.remove(TurtleModifierListener.class,arg0);</span>
+<span class="nc" id="L38">	}</span>
+	
+	protected void fireModificationEvent(Turtle turtle) {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		for(TurtleModifierListener a : listeners.getListeners(TurtleModifierListener.class)) {</span>
+<span class="nc" id="L42">			a.turtleModifiedEvent(turtle);</span>
+		}
+<span class="nc" id="L44">	}</span>
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L48">		fireModificationEvent( run( myMakelangelo.getTurtle() ) );</span>
+<span class="nc" id="L49">	}</span>
+
+	/**
+	 * Execute the modification action.  Do not modify the original {@link Turtle}
+	 * @param turtle the source material to modify.
+	 * @return the results of the modification action.
+	 */
+	public abstract Turtle run(Turtle turtle); 
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

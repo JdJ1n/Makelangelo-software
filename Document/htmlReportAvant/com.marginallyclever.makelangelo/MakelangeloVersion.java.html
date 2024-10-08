@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MakelangeloVersion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">MakelangeloVersion.java</span></div><h1>MakelangeloVersion.java</h1><pre class="source lang-java linenums">/*
+ */
+package com.marginallyclever.makelangelo;
+
+import com.marginallyclever.util.PropertiesFileHelper;
+
+/**
+ * Utility functions to retrieve Makelangelo Version and detail version. 
+ * Should be used only after Translator be initialised.
+ */
+<span class="nc" id="L11">public class MakelangeloVersion {</span>
+
+	/**
+	 * Defined in src/resources/makelangelo.properties and uses Maven's resource filtering to update the
+	 * VERSION based upon pom.xml.  In this way we only define the VERSION once and prevent violating DRY.
+	 */
+<span class="fc" id="L17">	public static final String DETAILED_VERSION = PropertiesFileHelper.getMakelangeloGitVersion();</span>
+	
+<span class="fc" id="L19">	public static final String VERSION = PropertiesFileHelper.getMakelangeloVersion();</span>
+
+	public static String getFullVersionString() {
+<span class="nc" id="L22">		return getLiteVersionString() + &quot; (&quot; + DETAILED_VERSION + &quot;)&quot;;</span>
+	}
+
+	public static String getLiteVersionString() {
+<span class="fc" id="L26">		return Translator.get(&quot;TitlePrefix&quot;) + &quot; &quot; + VERSION;</span>
+	}
+	
+	/**
+	 * 
+	 * @return the FullVersion if System Env variable DEV is set to true, else the LiteVersion.
+	 */
+	public static String getFullOrLiteVersionStringRelativeToSysEnvDevValue(){
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">		if ( &quot;true&quot;.equalsIgnoreCase(System.getenv(&quot;DEV&quot;))){</span>
+<span class="nc" id="L35">			return MakelangeloVersion.getFullVersionString();</span>
+		}else{
+<span class="fc" id="L37">			return MakelangeloVersion.getLiteVersionString();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

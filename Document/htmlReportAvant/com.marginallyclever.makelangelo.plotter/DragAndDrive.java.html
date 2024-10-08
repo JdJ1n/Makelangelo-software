@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DragAndDrive.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter</a> &gt; <span class="el_source">DragAndDrive.java</span></div><h1>DragAndDrive.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter;
+
+import com.marginallyclever.convenience.helpers.StringHelper;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+
+/**
+ * Drag cursor to drive plotter control. 
+ * @author droyer
+ * @since 7.4.5
+ * @deprecated
+ */
+@Deprecated
+public class DragAndDrive extends JPanel {
+	private final Plotter robot;
+	private final JLabel coordinates;
+	private final JPanel dragAndDrive;
+	private boolean mouseInside, mouseOn;
+	private double mouseLastX, mouseLastY;
+	
+	DragAndDrive(Plotter robot) {
+<span class="nc" id="L28">		super(new GridBagLayout());</span>
+
+<span class="nc" id="L30">		this.robot = robot;</span>
+<span class="nc" id="L31">		mouseInside=false;</span>
+<span class="nc" id="L32">		mouseOn=false;</span>
+<span class="nc" id="L33">		mouseLastX=mouseLastY=0;</span>
+
+<span class="nc" id="L35">		GridBagConstraints con1 = new GridBagConstraints();</span>
+<span class="nc" id="L36">		con1.gridx = 0;</span>
+<span class="nc" id="L37">		con1.gridy = 0;</span>
+<span class="nc" id="L38">		con1.weightx = 1;</span>
+<span class="nc" id="L39">		con1.weighty = 0;</span>
+<span class="nc" id="L40">		con1.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L41">		con1.anchor = GridBagConstraints.NORTHWEST;</span>
+		
+
+<span class="nc" id="L44">		dragAndDrive = new JPanel(new GridBagLayout());</span>
+<span class="nc" id="L45">		dragAndDrive.setBorder(BorderFactory.createLineBorder(Color.BLACK));</span>
+
+<span class="nc" id="L47">		coordinates = new JLabel(Translator.get(&quot;ClickAndDrag&quot;));</span>
+<span class="nc" id="L48">		GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L49">		c.anchor = GridBagConstraints.CENTER;</span>
+
+		// TODO dimensioning doesn't work right.  The better way would be a pen tool to drag on the 3d view.  That's a lot of work.
+<span class="nc" id="L52">		Dimension dims = new Dimension();</span>
+<span class="nc" id="L53">		double w = robot.getSettings().getDouble(PlotterSettings.LIMIT_RIGHT)-robot.getSettings().getDouble(PlotterSettings.LIMIT_LEFT);</span>
+<span class="nc" id="L54">		double h = robot.getSettings().getDouble(PlotterSettings.LIMIT_TOP)-robot.getSettings().getDouble(PlotterSettings.LIMIT_BOTTOM);</span>
+<span class="nc" id="L55">		dims.setSize( 150, 150 * w / h);</span>
+<span class="nc" id="L56">		dragAndDrive.setPreferredSize(dims);</span>
+<span class="nc" id="L57">		dragAndDrive.add(coordinates,c);</span>
+		
+
+<span class="nc" id="L60">		dragAndDrive.addMouseListener(new MouseListener() {</span>
+			@Override
+<span class="nc" id="L62">			public void mouseClicked(MouseEvent e) {}</span>
+			@Override
+			public void mousePressed(MouseEvent e) {
+<span class="nc" id="L65">				mouseOn=true;</span>
+<span class="nc" id="L66">				mouseAction(e);</span>
+<span class="nc" id="L67">			}</span>
+			@Override
+			public void mouseReleased(MouseEvent e) {
+<span class="nc" id="L70">				mouseOn=false;</span>
+<span class="nc" id="L71">			}</span>
+			@Override
+			public void mouseEntered(MouseEvent e) {
+<span class="nc" id="L74">				mouseInside=true;</span>
+<span class="nc" id="L75">			}</span>
+			@Override
+			public void mouseExited(MouseEvent e) {
+<span class="nc" id="L78">				mouseInside=false;</span>
+<span class="nc" id="L79">				mouseOn=false;</span>
+<span class="nc" id="L80">			}			</span>
+		});
+<span class="nc" id="L82">		dragAndDrive.addMouseMotionListener(new MouseMotionListener() {</span>
+			@Override
+			public void mouseDragged(MouseEvent e) {
+<span class="nc" id="L85">				mouseAction(e);</span>
+<span class="nc" id="L86">			}</span>
+			@Override
+			public void mouseMoved(MouseEvent e) {
+<span class="nc" id="L89">				mouseAction(e);</span>
+<span class="nc" id="L90">			}</span>
+		});
+<span class="nc" id="L92">	}</span>
+	
+	private void mouseAction(MouseEvent e) {
+<span class="nc bnc" id="L95" title="All 4 branches missed.">		if(mouseInside &amp;&amp; mouseOn) {</span>
+<span class="nc" id="L96">			double x = (double)e.getX();</span>
+<span class="nc" id="L97">			double y = (double)e.getY();</span>
+<span class="nc" id="L98">			Dimension d = dragAndDrive.getSize();</span>
+<span class="nc" id="L99">			double w = d.getWidth();</span>
+<span class="nc" id="L100">			double h = d.getHeight();</span>
+<span class="nc" id="L101">			double cx = w/2.0;</span>
+<span class="nc" id="L102">			double cy = h/2.0;</span>
+<span class="nc" id="L103">			x = x - cx;</span>
+<span class="nc" id="L104">			y = cy - y;</span>
+<span class="nc" id="L105">			double w2 = robot.getSettings().getDouble(PlotterSettings.LIMIT_RIGHT)-robot.getSettings().getDouble(PlotterSettings.LIMIT_LEFT);</span>
+<span class="nc" id="L106">			double h2 = robot.getSettings().getDouble(PlotterSettings.LIMIT_TOP)-robot.getSettings().getDouble(PlotterSettings.LIMIT_BOTTOM);</span>
+<span class="nc" id="L107">			x *= 10 * w2 / w;</span>
+<span class="nc" id="L108">			y *= 10 * h2 / h;</span>
+<span class="nc" id="L109">			double dx = x-mouseLastX;</span>
+<span class="nc" id="L110">			double dy = y-mouseLastY;</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			if(Math.sqrt(dx*dx+dy*dy)&gt;=1) {</span>
+<span class="nc" id="L112">				mouseLastX=x;</span>
+<span class="nc" id="L113">				mouseLastY=y;</span>
+				
+<span class="nc" id="L115">				robot.setPos(x,y);</span>
+<span class="nc" id="L116">				coordinates.setText(&quot;X&quot;+StringHelper.formatDouble(x)+&quot; Y&quot;+StringHelper.formatDouble(y));</span>
+			} else {
+<span class="nc" id="L118">				coordinates.setText(&quot;&quot;);</span>
+			}
+		}
+<span class="nc" id="L121">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

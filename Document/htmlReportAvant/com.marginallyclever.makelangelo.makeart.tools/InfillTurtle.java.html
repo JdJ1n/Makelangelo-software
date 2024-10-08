@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InfillTurtle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.tools</a> &gt; <span class="el_source">InfillTurtle.java</span></div><h1>InfillTurtle.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.tools;
+
+import com.marginallyclever.convenience.LineCollection;
+import com.marginallyclever.convenience.LineSegment2D;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import javax.vecmath.Vector2d;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+/**
+ * Take an existing drawing, scan across it horizontally.  Add new lines between every pair of lines found.
+ * It may sometimes make mistakes if it hits the very end of a line.
+ * @author Dan Royer
+ * @since 7.31.0
+ */
+public class InfillTurtle {
+	public static final double MINIMUM_PEN_DIAMETER = 0.1;
+
+<span class="nc" id="L24">	private double penDiameter = 0.8;</span>
+
+	/**
+	 * Direction of lines to draw. 0 is horizontal. 90 is vertical.
+	 */
+<span class="nc" id="L29">	private double angle = 90.0;</span>
+
+<span class="nc" id="L31">	public InfillTurtle() {}</span>
+
+	public Turtle run(Turtle input) throws Exception {
+		// confirmTurtleIsClosedLoop(input);
+
+<span class="nc" id="L36">		Turtle result = new Turtle();</span>
+<span class="nc" id="L37">		result.history.clear();</span>
+
+<span class="nc" id="L39">		List&lt;Turtle&gt; list = input.splitByToolChange();</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		for(Turtle t : list) {</span>
+<span class="nc" id="L41">			LineCollection segments = infillFromTurtle(t);</span>
+<span class="nc" id="L42">			result.addLineSegments(segments);</span>
+<span class="nc" id="L43">		}</span>
+
+<span class="nc" id="L45">		return result;</span>
+	}
+
+	@SuppressWarnings(&quot;unused&quot;)
+	private void confirmTurtleIsClosedLoop(Turtle input) throws Exception {
+<span class="nc" id="L50">		throw new Exception(&quot;I cannot confirm this Turtle path is a closed loop.&quot;);</span>
+	}
+
+	private LineCollection infillFromTurtle(Turtle input) {
+		// make sure line segments don't start on another line, leading to an odd number
+		// of intersections.
+<span class="nc" id="L56">		Rectangle2D.Double bounds = addPaddingToBounds(input.getBounds(), 2.0);</span>
+
+<span class="nc" id="L58">		LineCollection results = new LineCollection();</span>
+
+		// do this once here instead of once per line.
+<span class="nc" id="L61">		LineCollection convertedPath = input.getAsLineSegments();</span>
+
+		// working variable
+<span class="nc" id="L64">		LineSegment2D line = new LineSegment2D(new Point2D(), new Point2D(), input.getColor());</span>
+
+<span class="nc" id="L66">		double size = Math.max(bounds.getHeight(), bounds.getWidth());</span>
+<span class="nc" id="L67">		Vector2d majorDir = new Vector2d(Math.cos(Math.toRadians(angle   )), Math.sin(Math.toRadians(angle   )));</span>
+<span class="nc" id="L68">		Vector2d minorDir = new Vector2d(Math.cos(Math.toRadians(angle+90)), Math.sin(Math.toRadians(angle+90)));</span>
+<span class="nc" id="L69">		Vector2d minorStart = new Vector2d(bounds.getCenterX(),bounds.getCenterY());</span>
+<span class="nc" id="L70">		minorStart.scaleAdd(-size,minorDir,minorStart);</span>
+<span class="nc" id="L71">		Vector2d majorStart = new Vector2d();</span>
+<span class="nc" id="L72">		Vector2d majorEnd = new Vector2d();</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		for(double i=0;i&lt;size*2;i+=penDiameter) {</span>
+<span class="nc" id="L75">			majorStart.scaleAdd(-size,majorDir,minorStart);</span>
+<span class="nc" id="L76">			majorEnd.scaleAdd(size,majorDir,minorStart);</span>
+<span class="nc" id="L77">			line.start.set(majorStart.x,majorStart.y);</span>
+<span class="nc" id="L78">			line.end.set(majorEnd.x,majorEnd.y);</span>
+<span class="nc" id="L79">			results.addAll(trimLineToPath(line, convertedPath));</span>
+<span class="nc" id="L80">			minorStart.scaleAdd(penDiameter,minorDir,minorStart);</span>
+		}
+
+<span class="nc" id="L83">		return results;</span>
+	}
+
+	/**
+	 * Add padding to a {@link Rectangle2D.Double} bounding rectangle.
+	 * 
+	 * @param before the original rectangle
+	 * @param percent the added percentage.
+	 * @return the larger bounds
+	 */
+	private Rectangle2D.Double addPaddingToBounds(Rectangle2D.Double before, double percent) {
+<span class="nc" id="L94">		percent*=0.01;</span>
+<span class="nc" id="L95">		Rectangle2D.Double after = new Rectangle2D.Double();</span>
+<span class="nc" id="L96">		after.x = before.x - before.width * percent/2.0;</span>
+<span class="nc" id="L97">		after.y = before.y - before.height * percent/2.0;</span>
+<span class="nc" id="L98">		after.height = before.height * (1.0 + percent);</span>
+<span class="nc" id="L99">		after.width = before.width * (1.0 + percent);</span>
+<span class="nc" id="L100">		return after;</span>
+	}
+
+	/**
+	 * Trim a {@link LineSegment2D} against a path and return a list
+	 * of remaining line segments.
+	 * &lt;p&gt;
+	 * If the polygon is convex, there will be two intersection points. These two
+	 * points are the end points of the trimmed version of the line.
+	 * &lt;/p&gt;
+	 * &lt;p&gt;
+	 * If the polygon is not convex, there will be an even number of intersection
+	 * points ≥2. Sort these intersection points (by increasing x value, for
+	 * example). Then, taken in pairs, they give you the end points of the segments
+	 * of the line that lie inside the polygon.
+	 * &lt;/p&gt;
+	 * 
+	 * @param line  A {@link LineSegment2D} to clip
+	 * @param convertedPath The boundary line, which must be a closed loop
+	 * @return a list of remaining {@link LineSegment2D}.
+	 */
+	private LineCollection trimLineToPath(LineSegment2D line, LineCollection convertedPath) {
+<span class="nc" id="L122">		List&lt;Point2D&gt; intersections = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		for (LineSegment2D s : convertedPath) {</span>
+<span class="nc" id="L125">			Point2D p = getIntersection(line, s);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (p != null) intersections.add(p);</span>
+<span class="nc" id="L127">		}</span>
+
+<span class="nc" id="L129">		LineCollection results = new LineCollection();</span>
+<span class="nc" id="L130">		int size = intersections.size();</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if(size%2==0) {</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if (size == 2) {</span>
+<span class="nc" id="L133">				results.add(new LineSegment2D(intersections.get(0), intersections.get(1), line.color));</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			} else if (size &gt; 2) {</span>
+<span class="nc" id="L135">				results.addAll(sortIntersectionsIntoSegments(intersections, line.color));</span>
+			}
+		}
+
+<span class="nc" id="L139">		return results;</span>
+	}
+
+	/**
+	 * @param intersections A list of intersections. guaranteed to be 2 or more even
+	 *                      number of intersections.
+	 * @param color         Color to assign to line
+	 * @return return Intersections sorted by ascending x value. If x values match,
+	 *         sort by ascending y value.
+	 */
+	private LineCollection sortIntersectionsIntoSegments(List&lt;Point2D&gt; intersections, Color color) {
+<span class="nc" id="L150">		Point2D first = intersections.get(0);</span>
+<span class="nc" id="L151">		Point2D second = intersections.get(1);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (Double.compare(first.x, second.x) == 0) {</span>
+<span class="nc" id="L153">			intersections.sort(new ComparePointsByY());</span>
+		} else {
+<span class="nc" id="L155">			intersections.sort(new ComparePointsByX());</span>
+		}
+
+<span class="nc" id="L158">		LineCollection results = new LineCollection();</span>
+<span class="nc" id="L159">		int i = 0;</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		while (i &lt; intersections.size()-1) {</span>
+<span class="nc" id="L161">			results.add(new LineSegment2D(intersections.get(i), intersections.get(i + 1), color));</span>
+<span class="nc" id="L162">			i += 2;</span>
+		}
+
+<span class="nc" id="L165">		return results;</span>
+	}
+
+<span class="nc" id="L168">	static class ComparePointsByY implements Comparator&lt;Point2D&gt; {</span>
+		@Override
+		public int compare(Point2D o1, Point2D o2) {
+<span class="nc" id="L171">			return Double.compare(o1.y, o2.y);</span>
+		}
+	}
+
+<span class="nc" id="L175">	static class ComparePointsByX implements Comparator&lt;Point2D&gt; {</span>
+		@Override
+		public int compare(Point2D o1, Point2D o2) {
+<span class="nc" id="L178">			return Double.compare(o1.x, o2.x);</span>
+		}
+	}
+
+	/**
+	 * It is based on an algorithm in Andre LaMothe's &quot;Tricks of the Windows Game Programming Gurus&quot;. See
+	 * &lt;a href=&quot;https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect&quot;&gt;Stackoverflow&lt;/a&gt;
+	 * TODO move this to com.marginallyclever.convenience.LineHelper?
+	 * @param alpha first line segment
+	 * @param beta second line segment
+	 * @return intersection {@link Point2D} or null
+	 */
+	private Point2D getIntersection(LineSegment2D alpha, LineSegment2D beta) {
+<span class="nc" id="L191">		double s1_x = alpha.end.x - alpha.start.x;</span>
+<span class="nc" id="L192">		double s1_y = alpha.end.y - alpha.start.y;</span>
+<span class="nc" id="L193">		double s2_x = beta.end.x - beta.start.x;</span>
+<span class="nc" id="L194">		double s2_y = beta.end.y - beta.start.y;</span>
+
+<span class="nc" id="L196">		double denominator = (-s2_x * s1_y + s1_x * s2_y);</span>
+<span class="nc" id="L197">		double s = (-s1_y * (alpha.start.x - beta.start.x) + s1_x * (alpha.start.y - beta.start.y)) / denominator;</span>
+<span class="nc" id="L198">		double t = ( s2_x * (alpha.start.y - beta.start.y) - s2_y * (alpha.start.x - beta.start.x)) / denominator;</span>
+
+<span class="nc bnc" id="L200" title="All 8 branches missed.">		if (s &gt;= 0 &amp;&amp; s &lt;= 1 &amp;&amp; t &gt;= 0 &amp;&amp; t &lt;= 1) {</span>
+			// hit!
+<span class="nc" id="L202">			return new Point2D(alpha.start.x + (t * s1_x), alpha.start.y + (t * s1_y));</span>
+		}
+<span class="nc" id="L204">		return null;</span>
+	}
+
+	public double getPenDiameter() {
+<span class="nc" id="L208">		return penDiameter;</span>
+	}
+
+	public void setPenDiameter(double penDiameter) {
+<span class="nc" id="L212">		this.penDiameter = Math.max(penDiameter, MINIMUM_PEN_DIAMETER);</span>
+<span class="nc" id="L213">	}</span>
+
+	public double getAngle() {
+<span class="nc" id="L216">		return angle;</span>
+	}
+
+	/**
+	 * Direction of lines to draw. 0 is horizontal. 90 is vertical.
+	 */
+	public void setAngle(double angle) {
+<span class="nc" id="L223">		this.angle = angle;</span>
+<span class="nc" id="L224">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Translator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">Translator.java</span></div><h1>Translator.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo;
+
+import com.marginallyclever.convenience.FileAccess;
+import com.marginallyclever.util.MarginallyCleverTranslationXmlFileHelper;
+import com.marginallyclever.util.PreferencesHelper;
+import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.*;
+import java.util.*;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
+import java.util.stream.Stream;
+
+/**
+ * &lt;p&gt;&lt;/p&gt;MultilingualSupport is the translation engine.  You ask for a string it finds the matching string in the currently selected language.
+ * See &lt;a href=&quot;http://www.java-samples.com/showtutorial.php?tutorialid=152&quot;&gt;XML and Java - Parsing XML using Java Tutorial&lt;/a&gt;&lt;/p&gt;
+ * &lt;p&gt;TODO: This system loads all language files even though it only displays one at a time.  It could load a single language and save memory.&lt;/p&gt;
+ * @author Dan Royer
+ * @author Peter Colapietro
+ */
+<span class="nc" id="L29">public final class Translator {</span>
+<span class="fc" id="L30">	private static final Logger logger = LoggerFactory.getLogger(Translator.class);</span>
+
+	public static final String MISSING = &quot;Missing:&quot;;
+	// Working directory. This represents the directory where the java executable launched the jar from.
+	public static final String WORKING_DIRECTORY = /*File.separator + */&quot;languages&quot;/*+File.separator*/;
+	// The name of the preferences node containing the user's choice.
+	private static final String LANGUAGE_KEY = &quot;language&quot;;
+	// TODO get a better way to store user preference.
+<span class="fc" id="L38">	private static final Preferences languagePreferenceNode = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LANGUAGE);</span>
+	// The default choice when nothing has been selected.
+<span class="fc" id="L40">	private static String defaultLanguage = &quot;English&quot;;</span>
+	// The current choice
+	private static String currentLanguage;
+	// a list of all languages and their translations strings
+<span class="fc" id="L44">	private static final Map&lt;String, TranslatorLanguage&gt; languages = new HashMap&lt;&gt;();</span>
+	private static TranslatorLanguage currentLanguageContainer;
+
+	public static void start() {
+<span class="fc" id="L48">		logger.info(&quot;starting translator...&quot;);</span>
+		
+<span class="fc" id="L50">		Locale locale = Locale.getDefault();</span>
+<span class="fc" id="L51">		defaultLanguage = locale.getDisplayLanguage(Locale.ENGLISH);</span>
+<span class="fc" id="L52">		logger.info(&quot;Default language = {}&quot;, defaultLanguage);</span>
+		
+<span class="fc" id="L54">		loadLanguages();</span>
+<span class="fc" id="L55">		loadConfig();</span>
+<span class="fc" id="L56">	}</span>
+	
+
+	/**
+	 * @return true if this is the first time loading language files (probably on install)
+	 */
+	public static boolean isThisTheFirstTimeLoadingLanguageFiles() {
+		// Did the language file disappear?  Offer the language dialog.
+		try {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">			if (doesLanguagePreferenceExist()) {</span>
+				// does the list of languages contain the preferred choice?
+<span class="nc" id="L67">				String languageNameFromPref = languagePreferenceNode.get(LANGUAGE_KEY, defaultLanguage);</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">				if (!languages.containsKey(languageNameFromPref)) {</span>
+<span class="nc" id="L69">					logger.error(&quot;Language '{}' not available ...&quot;, languageNameFromPref);</span>
+
+					// To avoid some null issues in Translator.get(String key),
+					// lets say it's the first run (to ask the user to select a valid language name)
+<span class="nc" id="L73">					return true;</span>
+				}
+<span class="nc" id="L75">				return false;</span>
+			}
+<span class="nc" id="L77">		} catch (BackingStoreException e) {</span>
+<span class="nc" id="L78">			logger.error(&quot;Failed to load language&quot;, e);</span>
+<span class="nc" id="L79">		}</span>
+<span class="nc" id="L80">		return true;</span>
+	}
+
+	/**
+	 * @return true if a preferences node exists
+	 * @throws BackingStoreException
+	 */
+	static private boolean doesLanguagePreferenceExist() throws BackingStoreException {
+<span class="nc" id="L88">		return Arrays.asList(languagePreferenceNode.keys()).contains(LANGUAGE_KEY);</span>
+	}
+
+	/**
+	 * save the user's current language choice
+	 */
+	public static void saveConfig() {
+<span class="fc" id="L95">		logger.debug(&quot;saveConfig()&quot;);</span>
+<span class="fc" id="L96">		languagePreferenceNode.put(LANGUAGE_KEY, currentLanguage);</span>
+<span class="fc" id="L97">	}</span>
+
+	/**
+	 * load the user's language choice
+	 */
+	public static void loadConfig() {
+<span class="fc" id="L103">		logger.debug(&quot;loadConfig: {}={}&quot;, languagePreferenceNode.toString(), defaultLanguage);</span>
+<span class="fc" id="L104">		setCurrentLanguage(languagePreferenceNode.get(LANGUAGE_KEY, defaultLanguage));</span>
+<span class="fc" id="L105">	}</span>
+
+	/**
+	 * Scan folder for language files.
+	 * See http://stackoverflow.com/questions/1429172/how-do-i-list-the-files-inside-a-jar-file
+	 * @throws IllegalStateException No language files found
+	 */
+	public static void loadLanguages() {
+<span class="fc" id="L113">		languages.clear();</span>
+		
+		try {
+<span class="fc" id="L116">			int found=0;</span>
+<span class="fc" id="L117">			Stream&lt;Path&gt; walk = getLanguagePaths();</span>
+<span class="fc" id="L118">			Iterator&lt;Path&gt; it = walk.iterator();</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">			while (it.hasNext()) {</span>
+<span class="fc" id="L120">				Path p = it.next();</span>
+<span class="fc" id="L121">				String name = p.toString();</span>
+				//if( f.isDirectory() || f.isHidden() ) continue;
+<span class="fc bfc" id="L123" title="All 2 branches covered.">				if (FilenameUtils.getExtension(name).equalsIgnoreCase(&quot;xml&quot;) ) {</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">					if (name.endsWith(&quot;pom.xml&quot;)) {</span>
+<span class="fc" id="L125">						continue;</span>
+					}
+					
+					// found an XML file in the /languages folder.  Good sign!
+<span class="fc bfc" id="L129" title="All 2 branches covered.">					if (attemptToLoadLanguageXML(name)) found++;</span>
+				}
+<span class="fc" id="L131">			}</span>
+<span class="fc" id="L132">			walk.close();</span>
+			
+			//logger.debug(&quot;total found: &quot;+found);
+	
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">			if(found==0) {</span>
+<span class="nc" id="L137">				throw new IllegalStateException(&quot;No translations found.&quot;);</span>
+			}
+		}
+<span class="nc" id="L140">		catch(Exception e) {</span>
+<span class="nc" id="L141">			logger.error(&quot;{}. Defaulting to {}. Language folder expected to be located at {}&quot;, e.getMessage(), defaultLanguage, WORKING_DIRECTORY);</span>
+<span class="nc" id="L142">			final TranslatorLanguage languageContainer  = new TranslatorLanguage();</span>
+<span class="nc" id="L143">			String path = MarginallyCleverTranslationXmlFileHelper.getDefaultLanguageFilePath();</span>
+<span class="nc" id="L144">			logger.debug(&quot;default path requested: {}&quot;, path);</span>
+<span class="nc" id="L145">			URL pathFound = Translator.class.getClassLoader().getResource(path);</span>
+<span class="nc" id="L146">			logger.debug(&quot;path found: {}&quot;, pathFound);</span>
+<span class="nc" id="L147">			try (InputStream s = pathFound.openStream()) {</span>
+<span class="nc" id="L148">				languageContainer.loadFromInputStream(s);</span>
+<span class="nc" id="L149">			} catch (IOException ie) {</span>
+<span class="nc" id="L150">				logger.error(ie.getMessage());</span>
+<span class="nc" id="L151">			}</span>
+<span class="nc" id="L152">			languages.put(languageContainer.getName(), languageContainer);</span>
+<span class="fc" id="L153">		}</span>
+<span class="fc" id="L154">	}</span>
+
+	private static Stream&lt;Path&gt; getLanguagePaths() throws Exception {
+<span class="fc" id="L157">		URI uri = Translator.class.getClassLoader().getResource(WORKING_DIRECTORY).toURI();</span>
+<span class="fc" id="L158">		logger.trace(&quot;Looking for translations in {}&quot;, uri.toString());</span>
+		
+		Path myPath;
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">		if (uri.getScheme().equals(&quot;jar&quot;)) {</span>
+<span class="nc" id="L162">			FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());</span>
+<span class="nc" id="L163">			myPath = fileSystem.getPath(WORKING_DIRECTORY);</span>
+<span class="nc" id="L164">		} else {</span>
+<span class="fc" id="L165">			myPath = Paths.get(uri);</span>
+		}
+
+<span class="fc" id="L168">		Path rootPath = FileSystems.getDefault().getPath(FileAccess.getWorkingDirectory());</span>
+<span class="fc" id="L169">		logger.trace(&quot;rootDir={}&quot;, rootPath);</span>
+
+		// we'll look inside the JAR file first, then look in the working directory.
+		// this way new translation files in the working directory will replace the old JAR files.
+<span class="fc" id="L173">		Stream&lt;Path&gt; walk = Stream.concat(</span>
+<span class="fc" id="L174">				Files.walk(myPath, 1),	// check inside the JAR file.</span>
+<span class="fc" id="L175">				Files.walk(rootPath,1)	// then check the working directory</span>
+				);
+
+<span class="fc" id="L178">		return walk;</span>
+	}
+
+
+	private static boolean attemptToLoadLanguageXML(String name) throws Exception {
+		InputStream stream;
+		String actualFilename;
+
+<span class="fc" id="L186">		File externalFile = new File(name);</span>
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">		if(externalFile.exists()) {</span>
+<span class="fc" id="L188">			stream = new FileInputStream(name);</span>
+<span class="fc" id="L189">			actualFilename = name;</span>
+		} else {
+<span class="nc" id="L191">			String nameInsideJar = WORKING_DIRECTORY+&quot;/&quot;+FilenameUtils.getName(name);</span>
+<span class="nc" id="L192">			stream = Translator.class.getClassLoader().getResourceAsStream(nameInsideJar);</span>
+<span class="nc" id="L193">			actualFilename = &quot;Jar:&quot;+nameInsideJar;</span>
+		}
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">		if( stream == null ) return false;</span>
+
+<span class="fc" id="L197">		logger.trace(&quot;Found {}&quot;, actualFilename);</span>
+<span class="fc" id="L198">		TranslatorLanguage lang = new TranslatorLanguage();</span>
+		try {
+<span class="fc" id="L200">			lang.loadFromInputStream(stream);</span>
+<span class="nc" id="L201">		} catch(Exception e) {</span>
+<span class="nc" id="L202">			logger.error(&quot;Failed to load {}&quot;, actualFilename, e);</span>
+			// if the xml file is invalid then an exception can occur.
+			// make sure lang is empty in case of a partial-load failure.
+<span class="nc" id="L205">			lang = new TranslatorLanguage();</span>
+<span class="fc" id="L206">		}</span>
+
+<span class="fc" id="L208">		stream.close();</span>
+
+<span class="fc bfc" id="L210" title="All 2 branches covered.">		if( !lang.getName().isEmpty() &amp;&amp;</span>
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">			!lang.getAuthors().isEmpty()) {</span>
+			// we loaded a language file that seems pretty legit.
+<span class="fc" id="L213">			languages.put(lang.getName(), lang);</span>
+<span class="fc" id="L214">			return true;</span>
+		}
+
+<span class="fc" id="L217">		return false;</span>
+	}
+
+	/**
+	 * @param key name of key to find in translation list.  &lt;b&gt;Keys must be Strings, not variables&lt;/b&gt;.
+	 *            If you use a variable then the tests for missing and duplicate translations will not
+	 *            work in the distant future.
+	 * @return the translated value for key, or &quot;missing:key&quot;.
+	 */
+	public static String get(String key) {
+<span class="fc" id="L227">		String translation = currentLanguageContainer.get(key);</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">		if (translation == null) {</span>
+<span class="fc" id="L229">			logger.warn(&quot;Missing translation '{}' in language '{}'&quot;, key, currentLanguage);</span>
+<span class="fc" id="L230">			return MISSING +key;</span>
+		}
+<span class="fc" id="L232">		return translation;</span>
+	}
+
+	/**
+	 * Translates a string and fills in some details.  String contains the special character sequence &quot;%N&quot;, where N is the n-th parameter passed to get()
+	 * A %1 is replaced with the first parameter, %2 with the second, and so on.  There is no escape character.
+	 * @param key name of key to find in translation list
+	 * @param params 
+	 * @return the translated value for key, or &quot;missing:key&quot;.
+	 */
+	public static String get(String key,String [] params) {
+<span class="fc" id="L243">		String modified = get(key);</span>
+<span class="fc" id="L244">		int n=1;</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">		for(String p : params) {</span>
+<span class="fc" id="L246">			modified = modified.replaceAll(&quot;%&quot;+n, p);</span>
+<span class="fc" id="L247">			++n;</span>
+		}
+<span class="fc" id="L249">		return modified;</span>
+	}
+
+	/**
+	 * @return the list of language names
+	 */
+	public static String[] getLanguageList() {
+<span class="fc" id="L256">		final String[] choices = new String[languages.keySet().size()];</span>
+<span class="fc" id="L257">		final Object[] lang_keys = languages.keySet().toArray();</span>
+
+<span class="fc bfc" id="L259" title="All 2 branches covered.">		for (int i = 0; i &lt; lang_keys.length; ++i) {</span>
+<span class="fc" id="L260">			choices[i] = (String) lang_keys[i];</span>
+		}
+
+<span class="fc" id="L263">		return choices;</span>
+	}
+
+	/**
+	 * @param language the name of the language to make active.
+	 */
+	public static void setCurrentLanguage(String language) {
+<span class="fc" id="L270">		currentLanguage = language;</span>
+<span class="fc" id="L271">		currentLanguageContainer = languages.get(language);</span>
+<span class="fc" id="L272">	}</span>
+
+	/**
+	 * @return the index of the current language
+	 */
+	public static int getCurrentLanguageIndex() {
+<span class="fc" id="L278">		String [] set = getLanguageList();</span>
+		// find the current language
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">		for( int i=0;i&lt;set.length; ++i) {</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">			if( set[i].equals(Translator.currentLanguage)) return i;</span>
+		}
+		// now try the default
+<span class="nc bnc" id="L284" title="All 2 branches missed.">		for( int i=0;i&lt;set.length; ++i) {</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">			if( set[i].equals(Translator.defaultLanguage)) return i;</span>
+		}
+		// failed both, return 0 for the first option.
+<span class="nc" id="L288">		return 0;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

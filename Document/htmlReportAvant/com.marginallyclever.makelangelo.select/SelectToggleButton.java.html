@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectToggleButton.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.select</a> &gt; <span class="el_source">SelectToggleButton.java</span></div><h1>SelectToggleButton.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.select;
+
+import javax.swing.*;
+import java.awt.*;
+
+/**
+ * A toggle button that does nothing until you attach an observer.
+ * @author Dan Royer
+ * @since 7.24.0
+ */
+public class SelectToggleButton extends Select {
+	private final JToggleButton button;
+
+	public SelectToggleButton(String internalName, AbstractAction action) {
+<span class="nc" id="L15">		super(internalName);</span>
+<span class="nc" id="L16">		button = new JToggleButton(action);</span>
+<span class="nc" id="L17">	}</span>
+
+	public SelectToggleButton(String internalName, String labelText) {
+<span class="nc" id="L20">		super(internalName);</span>
+		
+<span class="nc" id="L22">		button = new JToggleButton(labelText);</span>
+
+<span class="nc" id="L24">		button.addActionListener((e) -&gt; {</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">			fireSelectEvent(!button.isSelected(),button.isSelected());</span>
+<span class="nc" id="L26">		});</span>
+
+<span class="nc" id="L28">		this.add(button,BorderLayout.CENTER);</span>
+<span class="nc" id="L29">	}</span>
+	
+	public void doClick() {
+<span class="nc bnc" id="L32" title="All 2 branches missed.">		if(button!=null) button.doClick();</span>
+<span class="nc" id="L33">	}</span>
+	
+	public void setText(String label) {
+<span class="nc bnc" id="L36" title="All 2 branches missed.">		if(button!=null) button.setText(label);</span>
+<span class="nc" id="L37">	}</span>
+	
+	public void setEnabled(boolean b) {
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		if(button!=null) button.setEnabled(b);</span>
+<span class="nc" id="L41">	}</span>
+
+	public void setForeground(Color fg) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if(button!=null) button.setForeground(fg);</span>
+<span class="nc" id="L45">	}</span>
+
+	public boolean isSelected() {
+<span class="nc" id="L48">		return button.isSelected();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

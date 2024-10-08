@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Turtle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.turtle</a> &gt; <span class="el_source">Turtle.java</span></div><h1>Turtle.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.turtle;
+
+import com.marginallyclever.convenience.LineCollection;
+import com.marginallyclever.convenience.LineSegment2D;
+import com.marginallyclever.convenience.Point2D;
+
+import javax.vecmath.Vector2d;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.security.InvalidParameterException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
+
+
+/**
+ * A {@link Turtle} is a collection of instructions which, combined, form a drawing on a 2D surface.
+ * The name is based on the Commodore 64 turtle from the LOGO programming language, and movement is very similar.
+ * Commands include:
+ * &lt;ul&gt;
+ *     &lt;li&gt;lifting and lowering the turtle's tail&lt;/li&gt;
+ *     &lt;li&gt;turning relative or absolute amounts&lt;/li&gt;
+ *     &lt;li&gt;moving forward or backward relative amounts&lt;/li&gt;
+ *     &lt;li&gt;moving relative or absolute amounts regardless of direction&lt;/li&gt;
+ *     &lt;li&gt;changing the tool (color and diameter)&lt;/li&gt;
+ * &lt;/ul&gt;
+ * The turtle's starting angle is 0 degrees, which is to the right.  The turtle starts with the tail down.
+ *
+ * @author Dan Royer
+ * @since 7.0?
+ */
+public class Turtle implements Cloneable {
+<span class="fc" id="L34">	public final List&lt;TurtleMove&gt; history = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L35">	private final transient ReentrantLock lock = new ReentrantLock();</span>
+
+	// current state
+	private double px, py;
+	private double nx, ny;  // normal of angle. aka sin() and cos() of angle.
+	private double angle;
+	private boolean isUp;
+	private Color color;
+<span class="fc" id="L43">	private double diameter=1;</span>
+
+	public Turtle() {
+<span class="fc" id="L46">		super();</span>
+<span class="fc" id="L47">		reset(Color.BLACK);</span>
+<span class="fc" id="L48">	}</span>
+	
+	public Turtle(Turtle t) {
+<span class="nc" id="L51">		this();</span>
+<span class="nc" id="L52">		this.px = t.px;</span>
+<span class="nc" id="L53">		this.py = t.py;</span>
+<span class="nc" id="L54">		this.nx = t.nx;</span>
+<span class="nc" id="L55">		this.ny = t.ny;</span>
+<span class="nc" id="L56">		this.angle = t.angle;</span>
+<span class="nc" id="L57">		this.isUp = t.isUp;</span>
+<span class="nc" id="L58">		this.color=t.color;</span>
+<span class="nc" id="L59">		this.diameter = t.diameter; </span>
+		// deep copy
+<span class="nc" id="L61">		history.clear();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		for( TurtleMove m : t.history ) {</span>
+<span class="nc" id="L63">			this.history.add(new TurtleMove(m));</span>
+<span class="nc" id="L64">		}</span>
+<span class="nc" id="L65">	}</span>
+	
+	public Turtle(Color firstColor) {
+<span class="fc" id="L68">		super();</span>
+<span class="fc" id="L69">		reset(firstColor);</span>
+<span class="fc" id="L70">	}</span>
+
+	@Override
+	protected Object clone() throws CloneNotSupportedException {
+<span class="nc" id="L74">		Turtle t = (Turtle)super.clone();</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		for( TurtleMove m : history ) {</span>
+<span class="nc" id="L76">			t.history.add(new TurtleMove(m));</span>
+<span class="nc" id="L77">		}</span>
+<span class="nc" id="L78">		return t;</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="fc" id="L83">		return &quot;Turtle{&quot; +</span>
+<span class="fc" id="L84">				&quot;history=&quot; + history.size() +</span>
+				&quot;, px=&quot; + px +
+				&quot;, py=&quot; + py +
+				&quot;, nx=&quot; + nx +
+				&quot;, ny=&quot; + ny +
+				&quot;, angle=&quot; + angle +
+				&quot;, isUp=&quot; + isUp +
+				&quot;, color=&quot; + color +
+				&quot;, diameter=&quot; + diameter +
+				'}';
+	}
+
+	/**
+	 * Returns this {@link Turtle} to mint condition.  Erases history and resets all parameters.  Called by constructor.
+	 * @param c The starting color for this {@link Turtle}.
+	 */
+	private void reset(Color c) {
+<span class="fc" id="L101">		px = 0;</span>
+<span class="fc" id="L102">		py = 0;</span>
+<span class="fc" id="L103">		setAngle(0);</span>
+<span class="fc" id="L104">		penUp();</span>
+<span class="fc" id="L105">		history.clear();</span>
+<span class="fc" id="L106">		setColor(c);</span>
+<span class="fc" id="L107">	}</span>
+	
+	// multithreading lock safety
+	public boolean isLocked() {
+<span class="nc" id="L111">		return lock.isLocked();</span>
+	}
+	
+	// multithreading lock safety
+	public void lock() {
+<span class="nc" id="L116">		lock.lock();</span>
+<span class="nc" id="L117">	}</span>
+	
+	// multithreading lock safety
+	public void unlock() {
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if(lock.isLocked()) {  // prevents &quot;illegal state exception - not locked&quot;</span>
+<span class="nc" id="L122">			lock.unlock();</span>
+		}
+<span class="nc" id="L124">	}</span>
+
+	public void setColor(Color c) {
+<span class="fc bfc" id="L127" title="All 2 branches covered.">		if(color!=null) {</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">			if(color.getRed()==c.getRed() &amp;&amp;</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">				color.getGreen()==c.getGreen() &amp;&amp;</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">				color.getBlue()==c.getBlue()) return;</span>
+		}
+<span class="fc" id="L132">		color = c;</span>
+<span class="fc" id="L133">		history.add( new TurtleMove(color.hashCode(),diameter,MovementType.TOOL_CHANGE) );</span>
+<span class="fc" id="L134">	}</span>
+	
+	public Color getColor() {
+<span class="fc" id="L137">		return color;</span>
+	}
+	
+	public void setDiameter(double d) {
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">		if(diameter==d) return;</span>
+<span class="fc" id="L142">		diameter=d;</span>
+<span class="fc" id="L143">		history.add( new TurtleMove(color.hashCode(),diameter,MovementType.TOOL_CHANGE) );</span>
+<span class="fc" id="L144">	}</span>
+	
+	public double getDiameter() {
+<span class="nc" id="L147">		return diameter;</span>
+	}
+	
+	/**
+	 * Absolute position change. Raise the pen before move and lower pen after move.
+	 * @param x absolute x position
+	 * @param y absolute y position
+	 */
+	public void jumpTo(double x,double y) {
+<span class="fc" id="L156">		penUp();</span>
+<span class="fc" id="L157">		moveTo(x,y);</span>
+<span class="fc" id="L158">		penDown();</span>
+<span class="fc" id="L159">	}</span>
+	
+	/**
+	 * Absolute position change, do not change current pen status
+	 * @param x relative x position
+	 * @param y relative y position
+	 */
+	public void moveTo(double x,double y) {
+<span class="fc" id="L167">		px=x;</span>
+<span class="fc" id="L168">		py=y;</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">		history.add( new TurtleMove(x, y, isUp ? MovementType.TRAVEL : MovementType.DRAW_LINE) );</span>
+<span class="fc" id="L170">	}</span>
+		
+	/**
+	 * Absolute position
+	 * @param arg0 x axis
+	 */
+	public void setX(double arg0) {
+<span class="nc" id="L177">		moveTo(arg0,py);</span>
+<span class="nc" id="L178">	}</span>
+	
+	/**
+	 * Absolute position
+	 * @param arg0 y axis
+	 */
+	public void setY(double arg0) {
+<span class="nc" id="L185">		moveTo(px,arg0);</span>
+<span class="nc" id="L186">	}</span>
+	
+	public double getX() {
+<span class="fc" id="L189">		return px;</span>
+	}
+	
+	public double getY() {
+<span class="fc" id="L193">		return py;</span>
+	}
+	
+	public void penUp() {
+<span class="fc" id="L197">		isUp=true;</span>
+<span class="fc" id="L198">	}</span>
+	
+	public void penDown() {
+<span class="fc" id="L201">		isUp=false;</span>
+<span class="fc" id="L202">	}</span>
+	
+	/**
+	 * Returns true if pen is up.
+	 * @return true if pen is up
+	 */
+	public boolean isUp() {
+<span class="fc" id="L209">		return isUp;</span>
+	}
+
+	/**
+	 * Relative turn in degrees.
+	 * @param degreesCCW relative change in degrees.  Positive is counter clockwise.
+	 */
+	public void turn(double degreesCCW) {
+<span class="fc" id="L217">		setAngle(angle+degreesCCW);</span>
+<span class="fc" id="L218">	}</span>
+
+	// Get absolute angle degrees
+	public double getAngle() {
+<span class="fc" id="L222">		return angle;</span>
+	}
+	
+	/**
+	 * Set absolute angle in degrees.
+	 * @param degrees absolute degrees.
+	 */
+	public void setAngle(double degrees) {
+<span class="fc" id="L230">		angle=degrees;</span>
+<span class="fc" id="L231">		double radians=Math.toRadians(angle);</span>
+<span class="fc" id="L232">		nx = Math.cos(radians);</span>
+<span class="fc" id="L233">		ny = Math.sin(radians);</span>
+<span class="fc" id="L234">	}</span>
+
+	/**
+	 * Relative move forward/back
+	 * @param distance how far to travel
+	 */
+	public void forward(double distance) {
+<span class="fc" id="L241">		moveTo(</span>
+			px + nx * distance,
+			py + ny * distance
+		);
+<span class="fc" id="L245">	}</span>
+
+	/**
+	 * Calculate the limits of drawing lines in this turtle history
+	 **/
+	public Rectangle2D.Double getBounds() {
+<span class="fc" id="L251">		Point2D top = new Point2D();</span>
+<span class="fc" id="L252">		Point2D bottom = new Point2D();</span>
+<span class="fc" id="L253">		getBounds(top,bottom);</span>
+		
+<span class="fc" id="L255">		Rectangle2D.Double r = new Rectangle.Double();</span>
+<span class="fc" id="L256">		r.x=bottom.x;</span>
+<span class="fc" id="L257">		r.y=bottom.y;</span>
+<span class="fc" id="L258">		r.width=top.x-bottom.x;</span>
+<span class="fc" id="L259">		r.height=top.y-bottom.y;</span>
+		
+<span class="fc" id="L261">		return r;</span>
+	}
+        
+	/**
+	 * Calculate the limits of drawing lines in this turtle history
+	 * @param top maximum limits
+	 * @param bottom minimum limits
+	 */
+	private void getBounds(Point2D top,Point2D bottom) {
+<span class="fc" id="L270">		bottom.x=Float.MAX_VALUE;</span>
+<span class="fc" id="L271">		bottom.y=Float.MAX_VALUE;</span>
+<span class="fc" id="L272">		top.x=-Float.MAX_VALUE;</span>
+<span class="fc" id="L273">		top.y=-Float.MAX_VALUE;</span>
+<span class="fc" id="L274">		TurtleMove lastTravelMove=null;</span>
+		
+<span class="fc" id="L276">		int hits=0;</span>
+
+<span class="fc bfc" id="L278" title="All 2 branches covered.">		for( TurtleMove m : history ) {</span>
+<span class="fc bfc" id="L279" title="All 3 branches covered.">			switch(m.type) {</span>
+				case TRAVEL -&gt; {
+<span class="fc" id="L281">					lastTravelMove = m;</span>
+<span class="fc" id="L282">				}</span>
+				case DRAW_LINE -&gt; {
+<span class="fc bfc" id="L284" title="All 2 branches covered.">					if (lastTravelMove != null) {</span>
+<span class="fc" id="L285">						hits++;</span>
+<span class="fc" id="L286">						getBoundsInternal(top,bottom,lastTravelMove);</span>
+<span class="fc" id="L287">						lastTravelMove = null;</span>
+					}
+<span class="fc" id="L289">					hits++;</span>
+<span class="fc" id="L290">					getBoundsInternal(top,bottom,m);</span>
+				}
+			}
+<span class="fc" id="L293">		}</span>
+		
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">		if(hits==0) {</span>
+<span class="nc" id="L296">			bottom.set(0,0);</span>
+<span class="nc" id="L297">			top.set(0,0);</span>
+		}
+<span class="fc" id="L299">	}</span>
+
+	private void getBoundsInternal(Point2D top,Point2D bottom,TurtleMove m) {
+<span class="fc bfc" id="L302" title="All 2 branches covered.">		if (top.x &lt; m.x) top.x = m.x;</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">		if (top.y &lt; m.y) top.y = m.y;</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">		if (bottom.x &gt; m.x) bottom.x = m.x;</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">		if (bottom.y &gt; m.y) bottom.y = m.y;</span>
+<span class="fc" id="L306">	}</span>
+
+	/**
+	 * Scale all draw and move segments by the given amounts
+	 * @param sx the x axis scale factor.
+	 * @param sy the y axis scale factor.
+	 */
+	public void scale(double sx, double sy) {
+<span class="fc bfc" id="L314" title="All 2 branches covered.">		for( TurtleMove m : history ) {</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">			switch (m.type) {</span>
+				case DRAW_LINE, TRAVEL -&gt; {
+<span class="fc" id="L317">					m.x *= sx;</span>
+<span class="fc" id="L318">					m.y *= sy;</span>
+<span class="fc" id="L319">				}</span>
+				default -&gt; {
+				}
+			}
+<span class="fc" id="L323">		}</span>
+<span class="fc" id="L324">	}</span>
+
+	/**
+	 * Translate all draw and move segments by parameters
+	 * @param dx relative move x
+	 * @param dy relative move y
+	 */
+	public void translate(double dx, double dy) {
+<span class="fc bfc" id="L332" title="All 2 branches covered.">		for( TurtleMove m : history ) {</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">			switch (m.type) {</span>
+				case DRAW_LINE, TRAVEL -&gt; {
+<span class="fc" id="L335">					m.x += dx;</span>
+<span class="fc" id="L336">					m.y += dy;</span>
+<span class="fc" id="L337">				}</span>
+				default -&gt; {}
+			}
+<span class="fc" id="L340">		}</span>
+<span class="fc" id="L341">	}</span>
+
+	/**
+	 * Translate all draw and move segments by degrees
+	 * @param degrees relative ccw rotation
+	 */
+	public void rotate(double degrees) {
+<span class="nc" id="L348">		double r = Math.toRadians(degrees);</span>
+<span class="nc" id="L349">		double c = Math.cos(r);</span>
+<span class="nc" id="L350">		double s = Math.sin(r);</span>
+
+<span class="nc bnc" id="L352" title="All 2 branches missed.">		for( TurtleMove m : history ) {</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">			switch (m.type) {</span>
+				case DRAW_LINE, TRAVEL -&gt; {
+<span class="nc" id="L355">					double ox=m.x;</span>
+<span class="nc" id="L356">					double oy=m.y;</span>
+<span class="nc" id="L357">					m.x = ox * c + oy * -s;</span>
+<span class="nc" id="L358">					m.y = ox * s + oy *  c;</span>
+<span class="nc" id="L359">				}</span>
+				default -&gt; {}
+			}
+<span class="nc" id="L362">		}</span>
+<span class="nc" id="L363">	}</span>
+
+	/**
+	 * Draw an arc.
+	 * @param cx absolute center of arc
+	 * @param cy absolute center of arc
+	 * @param radius of arc
+	 * @param a1 start angle, in radians
+	 * @param a2 end angle, in radians
+	 * @param steps must be greater than zero.
+	 */
+	public void drawArc(double cx, double cy, double radius, double a1, double a2,int steps) {
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">		if(steps&lt;=0) throw new InvalidParameterException(&quot;steps must be greater than zero.&quot;);</span>
+
+<span class="fc" id="L377">		double delta = (a2 - a1) / (double) steps;</span>
+
+<span class="fc bfc" id="L379" title="All 2 branches covered.">		for (int i = 0; i &lt;= steps; i++) {</span>
+<span class="fc" id="L380">			double f = a1 + delta * i;</span>
+<span class="fc" id="L381">			double x2 = cx + Math.cos(f) * radius;</span>
+<span class="fc" id="L382">			double y2 = cy + Math.sin(f) * radius;</span>
+<span class="fc bfc" id="L383" title="All 2 branches covered.">			if(i==0) this.jumpTo(x2, y2);</span>
+<span class="fc" id="L384">			else     this.moveTo(x2, y2);</span>
+		}
+<span class="fc" id="L386">	}</span>
+
+	/**
+	 * @return a list of all the pen-down lines while remembering their color.
+ 	 */
+	public LineCollection getAsLineSegments() {
+<span class="fc" id="L392">		LineCollection lines = new LineCollection();</span>
+<span class="fc" id="L393">		TurtleMove previousMovement=null;</span>
+<span class="fc" id="L394">		Color color = Color.BLACK;</span>
+
+		//logger.debug(&quot;  Found {} instructions.&quot;, history.size());
+		
+<span class="fc bfc" id="L398" title="All 2 branches covered.">		for( TurtleMove m : history ) {</span>
+<span class="pc bpc" id="L399" title="1 of 4 branches missed.">			switch (m.type) {</span>
+				case DRAW_LINE -&gt; {
+<span class="pc bpc" id="L401" title="1 of 2 branches missed.">					if (previousMovement != null) {</span>
+<span class="fc" id="L402">						LineSegment2D line = new LineSegment2D(</span>
+								new Point2D(previousMovement.x, previousMovement.y),
+								new Point2D(m.x, m.y),
+								color);
+<span class="fc bfc" id="L406" title="All 2 branches covered.">						if (line.lengthSquared() &gt; 0) {</span>
+<span class="fc" id="L407">							lines.add(line);</span>
+						}
+					}
+<span class="fc" id="L410">					previousMovement = m;</span>
+<span class="fc" id="L411">				}</span>
+<span class="fc" id="L412">				case TRAVEL -&gt; previousMovement = m;</span>
+<span class="fc" id="L413">				case TOOL_CHANGE -&gt; color = m.getColor();</span>
+			}
+<span class="fc" id="L415">		}</span>
+
+<span class="fc" id="L417">		return lines;</span>
+	}
+
+	/**
+	 * Calls {@code addLineSegments} with a default minimum jump size.
+	 * @param segments the list of line segments to add.
+	 */
+	public void addLineSegments(LineCollection segments) {
+<span class="fc" id="L425">		addLineSegments(segments,1e-6,1e-6);</span>
+<span class="fc" id="L426">	}</span>
+
+	/**
+	 * Appends the list of segments to this {@link Turtle}.
+	 * @param segments the ordered list of segments to add.
+	 * @param minimumJumpSize For any {@link LineSegment2D} N being added, the Turtle will jump if N.b and (N+1).a are more than minimumJumpSize apart.
+	 * @param minDrawDistance For any {@link LineSegment2D} N being added, the Turtle will not draw line where N.b-N.a is less than minDrawDistance.
+	 */
+	public void addLineSegments(LineCollection segments, double minimumJumpSize, double minDrawDistance) {
+<span class="pc bpc" id="L435" title="1 of 2 branches missed.">		if(segments.isEmpty()) return;</span>
+		
+<span class="fc" id="L437">		LineSegment2D first = segments.get(0);</span>
+<span class="fc" id="L438">		jumpTo(first.start.x,first.start.y);</span>
+<span class="fc" id="L439">		moveTo(first.end.x,first.end.y);</span>
+		
+<span class="fc" id="L441">		double minJumpSquared = minimumJumpSize*minimumJumpSize;</span>
+<span class="fc" id="L442">		double minDrawSquared = minDrawDistance*minDrawDistance;</span>
+		
+<span class="fc bfc" id="L444" title="All 2 branches covered.">		for( LineSegment2D line : segments ) {</span>
+			// change color if needed
+<span class="pc bpc" id="L446" title="1 of 2 branches missed.">			if(line.color !=getColor()) {</span>
+<span class="fc" id="L447">				setColor(line.color);</span>
+			}
+
+<span class="fc" id="L450">			double d = distanceSquared(line.start);</span>
+<span class="fc bfc" id="L451" title="All 2 branches covered.">			if(d &gt; minJumpSquared) {</span>
+				// The previous line ends too far from the start point of this line,
+				// need to make a travel with the pen up to the start point of this line.
+<span class="fc" id="L454">				jumpTo(line.start.x,line.start.y);</span>
+<span class="pc bpc" id="L455" title="1 of 2 branches missed.">			} else if(d&gt;minDrawSquared) {</span>
+<span class="nc" id="L456">				moveTo(line.start.x,line.start.y);</span>
+			}
+			// Make a pen down move to the end of this line
+<span class="fc" id="L459">			moveTo(line.end.x,line.end.y);</span>
+<span class="fc" id="L460">		}</span>
+<span class="fc" id="L461">	}</span>
+
+	private double distanceSquared(Point2D b) {
+<span class="fc" id="L464">		double dx = px-b.x;</span>
+<span class="fc" id="L465">		double dy = py-b.y;</span>
+<span class="fc" id="L466">		return dx*dx + dy*dy; </span>
+	}
+	
+	public List&lt;Turtle&gt; splitByToolChange() {
+<span class="fc" id="L470">		List&lt;Turtle&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L471">		Turtle t = new Turtle();</span>
+<span class="fc" id="L472">		list.add(t);</span>
+<span class="fc" id="L473">		TurtleMove lastToolChange = null;</span>
+		
+<span class="fc bfc" id="L475" title="All 2 branches covered.">		for( TurtleMove m : history) {</span>
+<span class="fc bfc" id="L476" title="All 2 branches covered.">			if(m.type==MovementType.TOOL_CHANGE) {</span>
+<span class="fc bfc" id="L477" title="All 2 branches covered.">				if(lastToolChange==null</span>
+<span class="fc bfc" id="L478" title="All 2 branches covered.">						|| !lastToolChange.getColor().equals(m.getColor())</span>
+<span class="pc bpc" id="L479" title="1 of 2 branches missed.">						|| lastToolChange.getDiameter() != m.getDiameter() ) {</span>
+<span class="fc" id="L480">					t = new Turtle();</span>
+<span class="fc" id="L481">					t.history.clear();</span>
+<span class="fc" id="L482">					list.add(t);</span>
+<span class="fc" id="L483">					lastToolChange = m;</span>
+				}
+			}
+<span class="fc" id="L486">			t.history.add(m);</span>
+<span class="fc" id="L487">		}</span>
+		//logger.debug(&quot;Turtle.splitByToolChange() into {} sections.&quot;, list.size());
+
+<span class="fc" id="L490">		List&lt;Turtle&gt; notEmptyList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L491" title="All 2 branches covered.">		for( Turtle t2 : list ) {</span>
+<span class="fc bfc" id="L492" title="All 2 branches covered.">			if(t2.getHasAnyDrawingMoves()) {</span>
+<span class="fc" id="L493">				notEmptyList.add(t2);</span>
+			}
+<span class="fc" id="L495">		}</span>
+		//logger.debug(&quot;Turtle.splitByToolChange() {} not-empty sections.&quot;, notEmptyList.size());
+		
+<span class="fc" id="L498">		return notEmptyList;</span>
+	}
+	
+	public boolean getHasAnyDrawingMoves() {
+<span class="fc bfc" id="L502" title="All 2 branches covered.">		for( TurtleMove m : history) {</span>
+<span class="fc bfc" id="L503" title="All 2 branches covered.">			if(m.type==MovementType.DRAW_LINE) return true;</span>
+<span class="fc" id="L504">		}</span>
+<span class="fc" id="L505">		return false;</span>
+	}
+
+	public void add(Turtle t) {
+<span class="fc" id="L509">		this.history.addAll(t.history);</span>
+<span class="fc" id="L510">	}</span>
+
+	public Color getFirstColor() {
+<span class="pc bpc" id="L513" title="1 of 2 branches missed.">		for( TurtleMove m : history) {</span>
+<span class="pc bpc" id="L514" title="1 of 2 branches missed.">			if(m.type==MovementType.TOOL_CHANGE)</span>
+<span class="fc" id="L515">				return m.getColor();</span>
+<span class="nc" id="L516">		}</span>
+		
+<span class="nc" id="L518">		return Color.BLACK;</span>
+	}
+
+	/**
+	 * Returns the total distance of all pen-down moves within this {@link Turtle}.
+	 * @return the total distance of all pen-down moves within this {@link Turtle}.
+	 */
+    public double getDrawDistance() {
+<span class="fc" id="L526">		double d=0;</span>
+<span class="fc" id="L527">		TurtleMove prev = new TurtleMove(0,0,MovementType.TRAVEL);</span>
+<span class="fc bfc" id="L528" title="All 2 branches covered.">		for( TurtleMove m : history) {</span>
+<span class="fc bfc" id="L529" title="All 2 branches covered.">			if(m.type == MovementType.DRAW_LINE) {</span>
+<span class="fc" id="L530">				double dx = m.x-prev.x;</span>
+<span class="fc" id="L531">				double dy = m.y-prev.y;</span>
+<span class="fc" id="L532">				d += Math.sqrt(dx*dx+dy*dy);</span>
+<span class="fc" id="L533">				prev = m;</span>
+<span class="fc bfc" id="L534" title="All 2 branches covered.">			} else if(m.type == MovementType.TRAVEL) {</span>
+<span class="fc" id="L535">				prev = m;</span>
+			}
+<span class="fc" id="L537">		}</span>
+<span class="fc" id="L538">		return d;</span>
+    }
+
+	/**
+	 * Returns a point along the drawn lines of this {@link Turtle}
+	 * @param t a value from 0...{@link Turtle#getDrawDistance()}, inclusive.
+	 * @return a point along the drawn lines of this {@link Turtle}
+	 */
+	public Point2D interpolate(double t) {
+<span class="fc" id="L547">		double d=0;</span>
+<span class="fc" id="L548">		TurtleMove prev = new TurtleMove(0,0,MovementType.TRAVEL);</span>
+<span class="pc bpc" id="L549" title="1 of 2 branches missed.">		for( TurtleMove m : history) {</span>
+<span class="fc bfc" id="L550" title="All 2 branches covered.">			if(m.type == MovementType.DRAW_LINE) {</span>
+<span class="fc" id="L551">				double dx = m.x-prev.x;</span>
+<span class="fc" id="L552">				double dy = m.y-prev.y;</span>
+<span class="fc" id="L553">				double change = Math.sqrt(dx*dx+dy*dy);</span>
+<span class="pc bpc" id="L554" title="1 of 2 branches missed.">				if(d+change&gt;=t) {  // d &lt; t &lt; d+change</span>
+<span class="fc bfc" id="L555" title="All 2 branches covered.">					double v = (t-d==0)? 0 : (t-d) / change;</span>
+<span class="fc" id="L556">					v = Math.max(Math.min(v,1),0);</span>
+<span class="fc" id="L557">					return new Point2D(</span>
+							prev.x + dx * v,
+							prev.y + dy * v);
+				}
+<span class="nc" id="L561">				d += change;</span>
+<span class="nc" id="L562">				prev = m;</span>
+<span class="pc bpc" id="L563" title="1 of 2 branches missed.">			} else if(m.type == MovementType.TRAVEL) {</span>
+<span class="nc" id="L564">				prev = m;</span>
+			}
+<span class="fc" id="L566">		}</span>
+<span class="nc" id="L567">		return new Point2D(prev.x,prev.y);</span>
+	}
+
+	@Override
+	public boolean equals(Object o) {
+<span class="pc bpc" id="L572" title="1 of 2 branches missed.">		if (this == o) return true;</span>
+<span class="pc bpc" id="L573" title="2 of 4 branches missed.">		if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L574">		Turtle turtle = (Turtle) o;</span>
+<span class="pc bpc" id="L575" title="1 of 2 branches missed.">		return Double.compare(turtle.px, px) == 0 &amp;&amp;</span>
+<span class="pc bpc" id="L576" title="1 of 2 branches missed.">				Double.compare(turtle.py, py) == 0 &amp;&amp;</span>
+<span class="pc bpc" id="L577" title="1 of 2 branches missed.">				Double.compare(turtle.nx, nx) == 0 &amp;&amp;</span>
+<span class="pc bpc" id="L578" title="1 of 2 branches missed.">				Double.compare(turtle.ny, ny) == 0 &amp;&amp;</span>
+<span class="pc bpc" id="L579" title="2 of 4 branches missed.">				Double.compare(turtle.angle, angle) == 0 &amp;&amp;</span>
+				isUp == turtle.isUp &amp;&amp;
+<span class="pc bpc" id="L581" title="1 of 2 branches missed.">				Double.compare(turtle.diameter, diameter) == 0 &amp;&amp;</span>
+<span class="fc bfc" id="L582" title="All 2 branches covered.">				history.equals(turtle.history) &amp;&amp;</span>
+<span class="pc bpc" id="L583" title="1 of 2 branches missed.">				Objects.equals(color, turtle.color);</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="nc" id="L588">		return Objects.hash(history, px, py, nx, ny, angle, isUp, color, diameter);</span>
+	}
+
+	public Vector2d getHeading() {
+<span class="nc" id="L592">		return new Vector2d(nx,ny);</span>
+	}
+
+	public Vector2d getPosition() {
+<span class="nc" id="L596">		return new Vector2d(px,py);</span>
+	}
+
+
+	/**
+	 * @return the number of times the pen is lowered to draw a line.
+	 */
+	public int countLoops() {
+<span class="nc" id="L604">		int sum=0;</span>
+<span class="nc" id="L605">		MovementType before = MovementType.TRAVEL;</span>
+
+<span class="nc bnc" id="L607" title="All 2 branches missed.">		for( TurtleMove m : history) {</span>
+<span class="nc bnc" id="L608" title="All 2 branches missed.">			if(m.type==before) continue;</span>
+<span class="nc bnc" id="L609" title="All 4 branches missed.">			if(m.type==MovementType.DRAW_LINE &amp;&amp; before==MovementType.TRAVEL) {</span>
+<span class="nc" id="L610">				sum++;</span>
+			}
+<span class="nc" id="L612">			before = m.type;</span>
+<span class="nc" id="L613">		}</span>
+<span class="nc" id="L614">		return sum;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

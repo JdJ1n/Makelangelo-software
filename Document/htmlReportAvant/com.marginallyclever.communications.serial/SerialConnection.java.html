@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SerialConnection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.communications.serial</a> &gt; <span class="el_source">SerialConnection.java</span></div><h1>SerialConnection.java</h1><pre class="source lang-java linenums">package com.marginallyclever.communications.serial;
+
+import com.marginallyclever.communications.NetworkSession;
+import jssc.SerialPort;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+/**
+ * Encapsulate all serial receive/transmit implementation
+ *
+ * @author Peter Colapietro
+ * @since v7 (4/12/15)
+ */
+public final class SerialConnection extends NetworkSession implements SerialPortEventListener {
+	public static final int BAUD_RATE = 250000;
+<span class="nc" id="L20">	private static final Logger logger = LoggerFactory.getLogger(SerialConnection.class);</span>
+
+	private SerialPort serialPort;
+<span class="nc" id="L23">	private boolean portOpened = false;</span>
+<span class="nc" id="L24">	private String inputBuffer = &quot;&quot;;</span>
+
+<span class="nc" id="L26">	public SerialConnection() {}</span>
+
+	@Override
+	public void closeConnection() {
+<span class="nc bnc" id="L30" title="All 2 branches missed.">		if (portOpened) {</span>
+<span class="nc" id="L31">			logger.debug(&quot;closed {}&quot;, getName());</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">			if (serialPort != null) {</span>
+				try {
+<span class="nc" id="L34">					serialPort.removeEventListener();</span>
+<span class="nc" id="L35">					serialPort.closePort();</span>
+<span class="nc" id="L36">				} catch (SerialPortException e) {</span>
+<span class="nc" id="L37">					logger.error(&quot;Close failed&quot;, e);</span>
+<span class="nc" id="L38">				}</span>
+			}
+<span class="nc" id="L40">			portOpened = false;</span>
+		}
+<span class="nc" id="L42">	}</span>
+
+	@Override
+	public void openConnection(String portName) throws Exception {
+<span class="nc" id="L46">		openConnection(portName, BAUD_RATE);</span>
+<span class="nc" id="L47">	}</span>
+
+	// open a serial connection to a device.  We won't know it's the robot until
+	public void openConnection(String portName, int baud) throws Exception {
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if (portOpened) return;</span>
+
+<span class="nc" id="L53">		closeConnection();</span>
+
+<span class="nc" id="L55">		logger.debug(&quot;open {} @ {}&quot;, portName, baud);</span>
+
+		// open the port
+<span class="nc" id="L58">		serialPort = new SerialPort(portName);</span>
+<span class="nc" id="L59">		serialPort.openPort(); // Open serial port</span>
+<span class="nc" id="L60">		serialPort.setParams(baud, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);</span>
+<span class="nc" id="L61">		serialPort.setDTR(false);</span>
+<span class="nc" id="L62">		serialPort.addEventListener(this);</span>
+
+<span class="nc" id="L64">		setName(portName);</span>
+<span class="nc" id="L65">		portOpened = true;</span>
+<span class="nc" id="L66">	}</span>
+
+
+	// Deal with something robot has sent.
+	@Override
+	public void serialEvent(SerialPortEvent events) {
+		String rawInput, oneLine;
+		int x;
+
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if(!events.isRXCHAR()) return;</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if(!portOpened) return;</span>
+<span class="nc" id="L77">		int len =0 ;</span>
+		byte [] buffer;
+		try {
+<span class="nc" id="L80">			len = events.getEventValue();</span>
+<span class="nc" id="L81">			buffer = serialPort.readBytes(len);</span>
+<span class="nc" id="L82">		} catch (SerialPortException e) {</span>
+			// uh oh
+<span class="nc" id="L84">			return;</span>
+<span class="nc" id="L85">		}</span>
+		
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if( len&lt;=0 ) return;</span>
+<span class="nc" id="L88">		rawInput = new String(buffer,0,len);</span>
+<span class="nc" id="L89">		inputBuffer+=rawInput;</span>
+		// each line ends with a \n.
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		for( x=inputBuffer.indexOf(&quot;\n&quot;); x!=-1; x=inputBuffer.indexOf(&quot;\n&quot;) ) {</span>
+<span class="nc" id="L92">			x=x+1;</span>
+<span class="nc" id="L93">			oneLine = inputBuffer.substring(0,x);</span>
+<span class="nc" id="L94">			inputBuffer = inputBuffer.substring(x);</span>
+<span class="nc" id="L95">			notifyDataReceived(oneLine);</span>
+		}
+<span class="nc" id="L97">	}</span>
+
+	@Override
+	public void sendMessage(String msg) throws Exception {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if(!portOpened) return;</span>
+<span class="nc bnc" id="L102" title="All 4 branches missed.">		if(msg==null || msg.length()==0) return;</span>
+		
+<span class="nc" id="L104">		serialPort.writeBytes(msg.getBytes());</span>
+<span class="nc" id="L105">		notifyDataSent(msg);</span>
+<span class="nc" id="L106">	}</span>
+
+	/**
+	 * @return the port open for this serial connection.
+	 */
+	@Override
+	public boolean isOpen() {
+<span class="nc" id="L113">		return portOpened;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_MazeRectangle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.maze</a> &gt; <span class="el_source">Generator_MazeRectangle.java</span></div><h1>Generator_MazeRectangle.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.maze;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+/**
+ * Makes a &quot;well formed&quot; maze.
+ * See also &lt;a href=&quot;https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_backtracker&quot;&gt;wikipedia&lt;/a&gt;
+ * @author Dan Royer
+ */
+public class Generator_MazeRectangle extends Generator_Maze {
+<span class="fc" id="L15">	private static int rows = 5, columns = 5;</span>
+
+	public Generator_MazeRectangle() {
+<span class="fc" id="L18">		super();</span>
+
+		SelectSlider field_rows;
+		SelectSlider field_columns;
+
+<span class="fc" id="L23">		add(field_rows = new SelectSlider(&quot;rows&quot;,Translator.get(&quot;Generator_MazeRectangle.rows&quot;),100,1,getRows()));</span>
+<span class="fc" id="L24">		field_rows.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L25">			setRows(field_rows.getValue());</span>
+<span class="nc" id="L26">			generate();</span>
+<span class="nc" id="L27">		});</span>
+<span class="fc" id="L28">		add(field_columns = new SelectSlider(&quot;columns&quot;,Translator.get(&quot;Generator_MazeRectangle.columns&quot;),100,1,getCols()));</span>
+<span class="fc" id="L29">		field_columns.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L30">			setCols(field_columns.getValue());</span>
+<span class="nc" id="L31">			generate();</span>
+<span class="nc" id="L32">		});</span>
+<span class="fc" id="L33">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="fc" id="L37">		return Translator.get(&quot;Generator_MazeRectangle.name&quot;);</span>
+	}
+
+	public int getRows() {
+<span class="fc" id="L41">		return rows;</span>
+	}
+	public void setRows(int arg0) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if(arg0&lt;1) arg0=1;</span>
+<span class="nc" id="L45">		rows=arg0;</span>
+<span class="nc" id="L46">	}</span>
+	public int getCols() {
+<span class="fc" id="L48">		return columns;</span>
+	}
+	public void setCols(int arg0) {
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if(arg0&lt;1) arg0=1;</span>
+<span class="nc" id="L52">		columns=arg0;</span>
+<span class="nc" id="L53">	}</span>
+
+	/**
+	 * build a list of walls in the maze, cells in the maze, and how they connect to each other.
+	 */
+	@Override
+	public void buildCells() {
+<span class="nc" id="L60">		cells.clear();</span>
+
+		int x, y;
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		for (y = 0; y &lt; rows; ++y) {</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			for (x = 0; x &lt; columns; ++x) {</span>
+<span class="nc" id="L65">				cells.add(new MazeCell(x,y));</span>
+			}
+		}
+<span class="nc" id="L68">	}</span>
+
+	@Override
+	public void buildWalls() {
+<span class="nc" id="L72">		walls.clear();</span>
+		MazeWall w;
+		int x, y;
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		for (y = 0; y &lt; rows; ++y) {</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			for (x = 0; x &lt; columns; ++x) {</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">				if (x &lt; columns - 1) {</span>
+					// vertical wall between horizontal cells
+<span class="nc" id="L79">					w = new MazeWall(</span>
+							y * columns + x,
+							y * columns + x + 1);
+<span class="nc" id="L82">					walls.add(w);</span>
+<span class="nc" id="L83">					cells.get(w.cellA).walls.add(w);</span>
+<span class="nc" id="L84">					cells.get(w.cellB).walls.add(w);</span>
+				}
+<span class="nc bnc" id="L86" title="All 2 branches missed.">				if (y &lt; rows - 1) {</span>
+					// horizontal wall between vertical cells
+<span class="nc" id="L88">					w = new MazeWall(</span>
+						(y  ) * columns + x,
+						(y+1) * columns + x);
+<span class="nc" id="L91">					walls.add(w);</span>
+<span class="nc" id="L92">					cells.get(w.cellA).walls.add(w);</span>
+<span class="nc" id="L93">					cells.get(w.cellB).walls.add(w);</span>
+				}
+			}
+		}
+<span class="nc" id="L97">	}</span>
+
+	@Override
+	public Turtle drawMaze() {
+<span class="nc" id="L101">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L102">		double yMin = rect.getMinY();</span>
+<span class="nc" id="L103">		double yMax = rect.getMaxY();</span>
+<span class="nc" id="L104">		double xMin = rect.getMinX();</span>
+<span class="nc" id="L105">		double xMax = rect.getMaxX();</span>
+
+<span class="nc" id="L107">		double w = (xMax - xMin) / columns;</span>
+<span class="nc" id="L108">		double h = (yMax - yMin) / rows;</span>
+
+<span class="nc" id="L110">		Turtle turtle = new Turtle();</span>
+		
+		// Draw outside edge
+<span class="nc" id="L113">		turtle.jumpTo(xMin, yMax);</span>
+<span class="nc" id="L114">		turtle.moveTo(xMax, yMax);</span>
+<span class="nc" id="L115">		turtle.moveTo(xMax, yMin + h);</span>
+		// bottom right gap for exit is here
+<span class="nc" id="L117">		turtle.jumpTo(xMax, yMin);</span>
+<span class="nc" id="L118">		turtle.moveTo(xMin, yMin);</span>
+		// top-left gap for entrance is left here
+<span class="nc" id="L120">		turtle.moveTo(xMin, yMax - h);</span>
+
+		int i;
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		for (i = 0; i &lt; walls.size(); ++i) {</span>
+<span class="nc" id="L124">			MazeWall wall = walls.get(i);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (wall.removed)</span>
+<span class="nc" id="L126">				continue;</span>
+<span class="nc" id="L127">			int a = wall.cellA;</span>
+<span class="nc" id="L128">			int b = wall.cellB;</span>
+<span class="nc" id="L129">			int ax = cells.get(a).x;</span>
+<span class="nc" id="L130">			int ay = cells.get(a).y;</span>
+<span class="nc" id="L131">			int bx = cells.get(b).x;</span>
+<span class="nc" id="L132">			int by = cells.get(b).y;</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			if (ay == by) {</span>
+				// vertical wall
+<span class="nc" id="L135">				double x = xMin + (ax + 1) * w;</span>
+<span class="nc" id="L136">				double y0 = yMin + (ay + 0) * h;</span>
+<span class="nc" id="L137">				double y1 = yMin + (ay + 1) * h;</span>
+<span class="nc" id="L138">				turtle.jumpTo(x, y0);</span>
+<span class="nc" id="L139">				turtle.moveTo(x, y1);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			} else if (ax == bx) {</span>
+				// horizontal wall
+<span class="nc" id="L142">				double x0 = xMin + (ax + 0) * w;</span>
+<span class="nc" id="L143">				double x1 = xMin + (ax + 1) * w;</span>
+<span class="nc" id="L144">				double y = yMin + (ay + 1) * h;</span>
+<span class="nc" id="L145">				turtle.jumpTo(x0, y);</span>
+<span class="nc" id="L146">				turtle.moveTo(x1, y);</span>
+			}
+		}
+<span class="nc" id="L149">		return turtle;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

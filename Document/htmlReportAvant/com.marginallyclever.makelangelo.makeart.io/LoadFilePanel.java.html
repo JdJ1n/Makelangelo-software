@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoadFilePanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.io</a> &gt; <span class="el_source">LoadFilePanel.java</span></div><h1>LoadFilePanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.io;
+
+import com.jogamp.opengl.GL2;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imageconverter.SelectImageConverterPanel;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.preview.PreviewListener;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.event.EventListenerList;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.io.FileInputStream;
+
+public class LoadFilePanel extends JPanel implements PreviewListener {
+<span class="nc" id="L23">	private static final Logger logger = LoggerFactory.getLogger(LoadFilePanel.class);</span>
+	public static final String COMMAND_TURTLE = &quot;turtle&quot;;
+	private final Paper myPaper;
+<span class="nc" id="L26">	private final JButton bChoose = new JButton(Translator.get(&quot;Open&quot;));</span>
+<span class="nc" id="L27">	private final OpenFileChooser openFileChooser = new OpenFileChooser(this);</span>
+<span class="nc" id="L28">	private final JLabel selectedFilename = new JLabel();</span>
+	private SelectImageConverterPanel myConvertImage;
+	private PreviewListener mySubPreviewListener;
+	private JDialog parent;
+
+	public LoadFilePanel(Paper paper,String filename) {
+<span class="nc" id="L34">		super(new BorderLayout());</span>
+<span class="nc" id="L35">		setBorder(BorderFactory.createEmptyBorder(5,5,5,5));</span>
+
+<span class="nc" id="L37">		myPaper = paper;</span>
+<span class="nc" id="L38">		add(getFileSelectionPanel(filename),BorderLayout.NORTH);</span>
+<span class="nc" id="L39">		selectedFilename.setBorder(BorderFactory.createEmptyBorder(0,5,0,0));</span>
+
+<span class="nc" id="L41">		openFileChooser.setOpenListener(this::onNewFilenameChosen);</span>
+<span class="nc" id="L42">	}</span>
+	
+	private JPanel getFileSelectionPanel(String previousFile) {
+<span class="nc" id="L45">		JPanel panel = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L46">		panel.add(bChoose,BorderLayout.WEST);</span>
+<span class="nc" id="L47">		panel.add(selectedFilename,BorderLayout.CENTER);</span>
+		
+<span class="nc" id="L49">		selectedFilename.setText(previousFile);</span>
+		
+<span class="nc" id="L51">		bChoose.addActionListener((e)-&gt; openFileChooser.chooseFile());</span>
+		
+<span class="nc" id="L53">		return panel;</span>
+	}
+
+	private void stopExistingImageConverter() {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if(myConvertImage!=null) {</span>
+<span class="nc" id="L58">			myConvertImage.loadingFinished();</span>
+<span class="nc" id="L59">			remove(myConvertImage);</span>
+		}
+<span class="nc" id="L61">	}</span>
+
+	public boolean onNewFilenameChosen(String filename) {
+<span class="nc" id="L64">		stopExistingImageConverter();</span>
+<span class="nc" id="L65">		selectedFilename.setText(filename);</span>
+
+		try {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			if (SelectImageConverterPanel.isFilenameForAnImage(filename)) {</span>
+<span class="nc" id="L69">				TransformedImage image = new TransformedImage( ImageIO.read(new FileInputStream(filename)) );</span>
+<span class="nc" id="L70">				myConvertImage = new SelectImageConverterPanel(myPaper, image);</span>
+<span class="nc" id="L71">				myConvertImage.addActionListener(this::notifyListeners);</span>
+
+<span class="nc" id="L73">				add(myConvertImage,BorderLayout.CENTER);</span>
+
+<span class="nc" id="L75">				myConvertImage.run();</span>
+<span class="nc" id="L76">				mySubPreviewListener = myConvertImage;</span>
+<span class="nc" id="L77">				return true;</span>
+			} else {
+<span class="nc" id="L79">				Turtle t = TurtleFactory.load(filename);</span>
+<span class="nc" id="L80">				notifyListeners(new ActionEvent(t,0, COMMAND_TURTLE));</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">				if (parent != null) {</span>
+<span class="nc" id="L82">					parent.dispatchEvent(new WindowEvent(parent, WindowEvent.WINDOW_CLOSING));</span>
+				}
+			}
+<span class="nc" id="L85">		} catch(Exception e) {</span>
+<span class="nc" id="L86">			logger.error(&quot;Failed to load {}&quot;, filename, e);</span>
+<span class="nc" id="L87">			JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), Translator.get(&quot;ErrorTitle&quot;), JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L88">		}</span>
+<span class="nc" id="L89">		return false;</span>
+	}
+
+	@Override
+	public void render(GL2 gl2) {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if(mySubPreviewListener!=null) mySubPreviewListener.render(gl2);</span>
+<span class="nc" id="L95">	}</span>
+
+	public void setParent(JDialog parent) {
+<span class="nc" id="L98">		this.parent = parent;</span>
+<span class="nc" id="L99">	}</span>
+
+	public void loadingFinished() {
+<span class="nc" id="L102">		logger.debug(&quot;loadingFinished()&quot;);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if(myConvertImage!=null) {</span>
+<span class="nc" id="L104">			myConvertImage.loadingFinished();</span>
+		}
+<span class="nc" id="L106">	}</span>
+
+	// OBSERVER PATTERN
+
+<span class="nc" id="L110">	private final EventListenerList listeners = new EventListenerList();</span>
+
+	public void addActionListener(ActionListener a) {
+<span class="nc" id="L113">		listeners.add(ActionListener.class,a);</span>
+<span class="nc" id="L114">	}</span>
+	
+	public void removeActionListener(ActionListener a) {
+<span class="nc" id="L117">		listeners.remove(ActionListener.class,a);</span>
+<span class="nc" id="L118">	}</span>
+	
+	private void notifyListeners(ActionEvent e) {
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		for( ActionListener a : listeners.getListeners(ActionListener.class) ) {</span>
+<span class="nc" id="L122">			a.actionPerformed(e);</span>
+		}
+<span class="nc" id="L124">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

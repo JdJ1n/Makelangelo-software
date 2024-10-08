@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileAccess.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">FileAccess.java</span></div><h1>FileAccess.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.nio.file.Paths;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+
+/**
+ * Methods to make loading files from disk or jar resource easier.
+ * 
+ * @author Dan Royer
+ */
+<span class="nc" id="L17">public class FileAccess {</span>
+
+<span class="fc" id="L19">	private static final Logger logger = LoggerFactory.getLogger(FileAccess.class);</span>
+	/**
+	 * Open a file.  open() looks in three places:&lt;br&gt;
+	 *  - The file may be contained inside a zip, as indicated by the filename &quot;zipname:filename&quot;.&lt;br&gt;
+	 *  - The file may be a resource inside a jar file.
+	 *  - The file may be on disk.
+	 *     
+	 * @param filename The file to open
+	 * @return BufferedInputStream to the file contents
+	 * @throws IOException file open failure
+	 */
+	public static BufferedInputStream open(String filename) throws IOException {
+<span class="fc" id="L31">		int index = filename.lastIndexOf(&quot;:&quot;);</span>
+<span class="fc" id="L32">		int index2 = filename.lastIndexOf(&quot;:\\&quot;);  // hack for windows file system</span>
+<span class="pc bpc" id="L33" title="1 of 4 branches missed.">		if(index!=-1 &amp;&amp; index!=index2) {</span>
+<span class="fc" id="L34">			return loadFromZip(filename.substring(0, index), filename.substring(index+1));</span>
+		} else {
+<span class="fc" id="L36">			return new BufferedInputStream(getInputStream(filename));</span>
+		}
+	}
+		
+	private static InputStream getInputStream(String fname) throws IOException {
+<span class="fc" id="L41">		InputStream s = FileAccess.class.getResourceAsStream(fname);</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">		if( s==null ) {</span>
+<span class="fc" id="L43">			s = new FileInputStream(fname);</span>
+		}
+<span class="fc" id="L45">		return s;</span>
+	}
+		
+	private static BufferedInputStream loadFromZip(String zipName,String fname) throws IOException {
+<span class="fc" id="L49">		try (ZipInputStream zipFile = new ZipInputStream(getInputStream(zipName))) {</span>
+
+<span class="fc" id="L51">			String fnameSuffix = fname.substring(fname.lastIndexOf(&quot;.&quot;) + 1);</span>
+<span class="fc" id="L52">			String fnameNoSuffix = fname.substring(0, fname.length() - (fnameSuffix.length() + 1));</span>
+
+			ZipEntry entry;
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">			while ((entry = zipFile.getNextEntry()) != null) {</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">				if (entry.getName().equals(fname)) {</span>
+<span class="fc" id="L57">					File f = createTempFile(fnameNoSuffix, fnameSuffix);</span>
+<span class="fc" id="L58">					readZipFileIntoTempFile(zipFile, f);</span>
+					// return temp file as input stream
+<span class="fc" id="L60">					return new BufferedInputStream(new FileInputStream(f));</span>
+				}
+			}
+<span class="fc" id="L63">		}</span>
+
+<span class="nc" id="L65">	    throw new IOException(&quot;file not found in zip.&quot;);</span>
+	}
+
+	private static File createTempFile(String fnameNoSuffix, String fnameSuffix) throws IOException {
+<span class="fc" id="L69">        File f = File.createTempFile(fnameNoSuffix, fnameSuffix);</span>
+<span class="fc" id="L70">        f.setReadable(true);</span>
+<span class="fc" id="L71">        f.setWritable(true);</span>
+<span class="fc" id="L72">        f.deleteOnExit();</span>
+<span class="fc" id="L73">		return f;</span>
+	}
+
+	private static void readZipFileIntoTempFile(ZipInputStream zipFile, File f) throws IOException {
+<span class="fc" id="L77">        try (FileOutputStream fos = new FileOutputStream(f)) {</span>
+<span class="fc" id="L78">			byte[] buffer = new byte[2048];</span>
+			int len;
+<span class="fc bfc" id="L80" title="All 2 branches covered.">			while ((len = zipFile.read(buffer)) &gt; 0) {</span>
+<span class="fc" id="L81">				fos.write(buffer, 0, len);</span>
+			}
+		}
+<span class="fc" id="L84">	}</span>
+
+	/**
+	 * Return the current directory from where the app has been launched
+	 * @return the current directory
+	 */
+	public static String getWorkingDirectory() {
+<span class="fc" id="L91">		return System.getProperty(&quot;user.dir&quot;);</span>
+	}
+
+	/**
+	 * Return the user home directory
+	 * @return the user home directory
+	 */
+	public static String getHomeDirectory() {
+<span class="nc" id="L99">		return System.getProperty(&quot;user.home&quot;);</span>
+	}
+
+	/**
+	 * https://stackoverflow.com/a/7322581
+	 * @param file file to read
+	 * @return the last line in the file
+	 */
+	public static String tail( File file ) {
+<span class="nc" id="L108">		try (RandomAccessFile fileHandler = new RandomAccessFile( file, &quot;r&quot; )) {</span>
+<span class="nc" id="L109">			long fileLength = fileHandler.length() - 1;</span>
+<span class="nc" id="L110">			StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			for(long filePointer = fileLength; filePointer != -1; filePointer--) {</span>
+<span class="nc" id="L113">				fileHandler.seek( filePointer );</span>
+<span class="nc" id="L114">				int readByte = fileHandler.readByte();</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				if( readByte == 0xA ) {  // 10, line feed, '\n'</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">					if( filePointer == fileLength ) {</span>
+<span class="nc" id="L118">						continue;</span>
+					}
+					break;
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				} else if( readByte == 0xD ) {  // 13, carriage-return '\r'</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">					if( filePointer == fileLength - 1 ) {</span>
+<span class="nc" id="L123">						continue;</span>
+					}
+					break;
+				}
+
+<span class="nc" id="L128">				sb.append( ( char ) readByte );</span>
+			}
+
+<span class="nc" id="L131">			return sb.reverse().toString();</span>
+<span class="nc" id="L132">		} catch(IOException e ) {</span>
+<span class="nc" id="L133">			logger.warn(&quot;Failed to read the last lines of the file {}&quot;, file, e);</span>
+<span class="nc" id="L134">			return &quot;&quot;;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

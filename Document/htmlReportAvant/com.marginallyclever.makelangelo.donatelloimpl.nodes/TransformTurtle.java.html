@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransformTurtle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.donatelloimpl.nodes</a> &gt; <span class="el_source">TransformTurtle.java</span></div><h1>TransformTurtle.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.donatelloimpl.nodes;
+
+import com.marginallyclever.nodegraphcore.DockReceiving;
+import com.marginallyclever.nodegraphcore.DockShipping;
+import com.marginallyclever.nodegraphcore.Node;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.nodegraphcore.Packet;
+
+public class TransformTurtle extends Node {
+<span class="fc" id="L10">    private final DockReceiving&lt;Turtle&gt; turtle = new DockReceiving&lt;&gt;(&quot;turtle&quot;, Turtle.class,new Turtle());</span>
+<span class="fc" id="L11">    private final DockReceiving&lt;Number&gt; sx = new DockReceiving&lt;&gt;(&quot;scale x&quot;,Number.class,1);</span>
+<span class="fc" id="L12">    private final DockReceiving&lt;Number&gt; sy = new DockReceiving&lt;&gt;(&quot;scale y&quot;,Number.class,1);</span>
+<span class="fc" id="L13">    private final DockReceiving&lt;Number&gt; rotate = new DockReceiving&lt;&gt;(&quot;rotate degrees&quot;,Number.class,0);</span>
+<span class="fc" id="L14">    private final DockReceiving&lt;Number&gt; tx = new DockReceiving&lt;&gt;(&quot;translate x&quot;,Number.class,0);</span>
+<span class="fc" id="L15">    private final DockReceiving&lt;Number&gt; ty = new DockReceiving&lt;&gt;(&quot;translate y&quot;,Number.class,0);</span>
+<span class="fc" id="L16">    private final DockShipping&lt;Turtle&gt; output = new DockShipping&lt;&gt;(&quot;output&quot;, Turtle.class,new Turtle());</span>
+
+    public TransformTurtle() {
+<span class="fc" id="L19">        super(&quot;TransformTurtle&quot;);</span>
+<span class="fc" id="L20">        addVariable(turtle);</span>
+<span class="fc" id="L21">        addVariable(sx);</span>
+<span class="fc" id="L22">        addVariable(sy);</span>
+<span class="fc" id="L23">        addVariable(rotate);</span>
+<span class="fc" id="L24">        addVariable(tx);</span>
+<span class="fc" id="L25">        addVariable(ty);</span>
+<span class="fc" id="L26">        addVariable(output);</span>
+<span class="fc" id="L27">    }</span>
+
+    @Override
+    public void update() {
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        if(turtle.hasPacketWaiting()) turtle.receive();</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        if(sx.hasPacketWaiting()) sx.receive();</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        if(sy.hasPacketWaiting()) sy.receive();</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if(rotate.hasPacketWaiting()) rotate.receive();</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        if(tx.hasPacketWaiting()) tx.receive();</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if(ty.hasPacketWaiting()) ty.receive();</span>
+
+<span class="nc" id="L38">        Turtle input = turtle.getValue();</span>
+<span class="nc" id="L39">        Turtle moved = new Turtle(input);</span>
+<span class="nc" id="L40">        moved.scale(sx.getValue().doubleValue(),sy.getValue().doubleValue());</span>
+<span class="nc" id="L41">        moved.rotate(rotate.getValue().doubleValue());</span>
+<span class="nc" id="L42">        moved.translate(tx.getValue().doubleValue(),ty.getValue().doubleValue());</span>
+<span class="nc" id="L43">        output.send(new Packet&lt;&gt;(moved));</span>
+<span class="nc" id="L44">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,747 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoadScratch2.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.io</a> &gt; <span class="el_source">LoadScratch2.java</span></div><h1>LoadScratch2.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.io;
+
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+/**
+ * LoadAndSaveSB2 loads limited set of Scratch commands into memory. 
+ * @author Admin
+ */
+<span class="nc" id="L24">public class LoadScratch2 implements TurtleLoader {</span>
+<span class="nc" id="L25">	private static final Logger logger = LoggerFactory.getLogger(LoadScratch2.class);</span>
+	
+<span class="nc" id="L27">	private final String PROJECT_JSON = &quot;project.json&quot;;</span>
+	
+	private static class Scratch2Variable {
+		public String name;
+		public double value;
+
+<span class="nc" id="L33">		public Scratch2Variable(String arg0,float arg1) {</span>
+<span class="nc" id="L34">			name=arg0;</span>
+<span class="nc" id="L35">			value=arg1;</span>
+<span class="nc" id="L36">		}</span>
+	};
+	
+	private static class Scratch2List {
+		public String name;
+		public ArrayList&lt;Double&gt; contents;
+
+<span class="nc" id="L43">		public Scratch2List(String _name) {</span>
+<span class="nc" id="L44">			name=_name;</span>
+<span class="nc" id="L45">			contents=new ArrayList&lt;Double&gt;();</span>
+<span class="nc" id="L46">		}</span>
+	};
+	
+<span class="nc" id="L49">	private FileNameExtensionFilter filter = new FileNameExtensionFilter(&quot;Scratch 2&quot;,&quot;SB2&quot;);</span>
+	private Turtle turtle;
+	private LinkedList&lt;Scratch2Variable&gt; scratchVariables;
+	private LinkedList&lt;Scratch2List&gt; scratchLists;
+<span class="nc" id="L53">	private Map&lt;String,JSONArray&gt; subRoutines = new HashMap&lt;String,JSONArray&gt;();</span>
+	private int indent;
+	
+	@Override
+	public FileNameExtensionFilter getFileNameFilter() {
+<span class="nc" id="L58">		return filter;</span>
+	}
+
+	@Override
+	public boolean canLoad(String filename) {
+<span class="nc" id="L63">		String filenameExtension = filename.substring(filename.lastIndexOf('.')).toUpperCase();;</span>
+<span class="nc" id="L64">		return filenameExtension.equalsIgnoreCase(&quot;.SB2&quot;);</span>
+	}
+	
+	@Override
+	public Turtle load(InputStream in) throws Exception {
+<span class="nc" id="L69">		logger.debug(&quot;Loading...&quot;);</span>
+
+<span class="nc" id="L71">		turtle = new Turtle();</span>
+<span class="nc" id="L72">		indent=0;</span>
+		
+<span class="nc" id="L74">		JSONObject tree = getTreeFromInputStream(in);</span>
+<span class="nc" id="L75">		readScratchVariables(tree);</span>
+<span class="nc" id="L76">		readScratchLists(tree);</span>
+
+		// read the sketch(es)
+		// look for the first child with a script
+<span class="nc" id="L80">		JSONArray scripts = getScripts(tree);</span>
+<span class="nc" id="L81">		logger.debug(&quot;found {} top level event scripts&quot;, scripts.length());</span>
+
+<span class="nc" id="L83">		readAllSubroutines(scripts);</span>
+<span class="nc" id="L84">		findAndRunFromGreenFlag(scripts);</span>
+		
+<span class="nc" id="L86">		logger.debug(&quot;finished scripts&quot;);</span>
+
+<span class="nc" id="L88">		return turtle;</span>
+	}
+
+	private void findAndRunFromGreenFlag(JSONArray scripts) throws Exception {
+		// extract known elements and convert them to turtle commands.
+<span class="nc" id="L93">		Iterator&lt;?&gt; scriptIter = scripts.iterator();</span>
+		// find the first script with a green flag.
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		while( scriptIter.hasNext() ) {</span>
+<span class="nc" id="L96">			JSONArray scripts0 = (JSONArray)scriptIter.next();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			if( scripts0==null ) continue;</span>
+<span class="nc" id="L98">			JSONArray scripts02 = (JSONArray)scripts0.get(2);</span>
+<span class="nc bnc" id="L99" title="All 4 branches missed.">			if( scripts02==null || scripts02.length()==0 ) continue;</span>
+			// look inside the script at the first block, which gives the type.
+<span class="nc" id="L101">			Object scriptContents = scripts02.get(0);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			if( ( scriptContents instanceof JSONArray ) ) {</span>
+<span class="nc" id="L103">				Object scriptHead = ((JSONArray)scriptContents).get(0);</span>
+				
+<span class="nc" id="L105">    			String firstType = (String)scriptHead;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				if(firstType.equals(&quot;whenGreenFlag&quot;)) {</span>
+<span class="nc" id="L107">					logger.debug(&quot;Found green flag script&quot;);</span>
+<span class="nc" id="L108">					parseScratchCode(scripts02);</span>
+				}
+			}
+<span class="nc" id="L111">		}</span>
+<span class="nc" id="L112">	}</span>
+
+	private void readAllSubroutines(JSONArray scripts) {
+		// extract known elements and convert them to turtle commands.
+<span class="nc" id="L116">		Iterator&lt;?&gt; scriptIter = scripts.iterator();</span>
+		
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		while( scriptIter.hasNext() ) {</span>
+<span class="nc" id="L119">			JSONArray scripts0 = (JSONArray)scriptIter.next();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if( scripts0==null ) continue;</span>
+<span class="nc" id="L121">			JSONArray scripts02 = (JSONArray)scripts0.get(2);</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">			if( scripts02==null || scripts02.length()==0 ) continue;</span>
+			// look inside the script at the first block, which gives the type.
+<span class="nc" id="L124">			Object scriptContents = scripts02.get(0);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if( ( scriptContents instanceof JSONArray ) ) {</span>
+<span class="nc" id="L126">				String firstType = ((JSONArray)scriptContents).getString(0);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">				if(firstType.equals(&quot;whenIReceive&quot;)) {</span>
+<span class="nc" id="L128">	    			String firstName = (String)((JSONArray)scriptContents).get(1);</span>
+<span class="nc" id="L129">					logger.debug(&quot;Found subroutine {}&quot;, firstName);</span>
+<span class="nc" id="L130">	    			subRoutines.put(firstName, ((JSONArray)scriptContents));</span>
+				}
+			}
+<span class="nc" id="L133">		}</span>
+<span class="nc" id="L134">	}</span>
+
+	private JSONArray getScripts(JSONObject tree) throws Exception {
+<span class="nc" id="L137">		Iterator&lt;?&gt; childIter = tree.getJSONArray(&quot;children&quot;).iterator();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		while( childIter.hasNext() ) {</span>
+<span class="nc" id="L139">			JSONObject child = (JSONObject)childIter.next();</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			if(child.has(&quot;scripts&quot;)) {</span>
+<span class="nc" id="L141">				return (JSONArray)child.get(&quot;scripts&quot;);</span>
+			}
+<span class="nc" id="L143">		}</span>
+<span class="nc" id="L144">		throw new Exception(&quot;JSON node 'scripts' missing.&quot;);</span>
+	}
+
+	private JSONObject getTreeFromInputStream(InputStream in) throws FileNotFoundException, IOException {
+<span class="nc" id="L148">		File tempZipFile = extractProjectJSON(in);</span>
+		
+<span class="nc" id="L150">        logger.debug(&quot;Parsing JSON file...&quot;);</span>
+<span class="nc" id="L151">        JSONTokener tokener = new JSONTokener(tempZipFile.toURI().toURL().openStream());</span>
+<span class="nc" id="L152">        JSONObject tree = new JSONObject(tokener);</span>
+
+<span class="nc" id="L154">		tempZipFile.delete();</span>
+		
+<span class="nc" id="L156">		return tree;</span>
+	}
+
+	private File extractProjectJSON(InputStream in) throws FileNotFoundException, IOException {
+<span class="nc" id="L160">		logger.debug(&quot;Searching for project.json...&quot;);</span>
+<span class="nc" id="L161">		try (ZipInputStream zipInputStream = new ZipInputStream(in)) {</span>
+			ZipEntry entry;
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			while ((entry = zipInputStream.getNextEntry()) != null) {</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">				if (entry.getName().equals(PROJECT_JSON)) {</span>
+<span class="nc" id="L165">					logger.debug(&quot;Found.&quot;);</span>
+
+					// read buffered stream into temp file.
+<span class="nc" id="L168">					File tempZipFile = File.createTempFile(&quot;project&quot;, &quot;json&quot;);</span>
+<span class="nc" id="L169">					tempZipFile.setReadable(true);</span>
+<span class="nc" id="L170">					tempZipFile.setWritable(true);</span>
+<span class="nc" id="L171">					tempZipFile.deleteOnExit();</span>
+<span class="nc" id="L172">					try (FileOutputStream fos = new FileOutputStream(tempZipFile)) {</span>
+<span class="nc" id="L173">						byte[] buffer = new byte[2048];</span>
+						int len;
+<span class="nc bnc" id="L175" title="All 2 branches missed.">						while ((len = zipInputStream.read(buffer)) &gt; 0) {</span>
+<span class="nc" id="L176">							fos.write(buffer, 0, len);</span>
+						}
+<span class="nc" id="L178">						return tempZipFile;</span>
+					}
+				}
+			}
+<span class="nc" id="L182">		}</span>
+<span class="nc" id="L183">		throw new FileNotFoundException(&quot;SB2 missing project.json&quot;);</span>
+	}
+
+	/**
+	 * read the list of Scratch variables
+	 * @param tree the JSONObject tree read from the project.json/zip file.
+	 * @throws Exception
+	 */
+	private void readScratchVariables(JSONObject tree) throws Exception {
+<span class="nc" id="L192">		scratchVariables = new LinkedList&lt;Scratch2Variable&gt;();</span>
+<span class="nc" id="L193">		JSONArray variables = (JSONArray)tree.get(&quot;variables&quot;);</span>
+		// A scratch file without variables would crash before this test
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		if (variables != null) {</span>
+<span class="nc" id="L196">			Iterator&lt;?&gt; varIter = variables.iterator();</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			while( varIter.hasNext() ) {</span>
+				//logger.debug(&quot;var:&quot;+elem.toString());
+<span class="nc" id="L199">				JSONObject elem = (JSONObject)varIter.next();</span>
+<span class="nc" id="L200">				String varName = elem.getString(&quot;name&quot;);</span>
+<span class="nc" id="L201">				Object varValue = elem.get(&quot;value&quot;);</span>
+				float value;
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				if(varValue instanceof Number) {</span>
+<span class="nc" id="L204">					Number num = (Number)varValue;</span>
+<span class="nc" id="L205">					value = (float)num.doubleValue();</span>
+<span class="nc" id="L206">					scratchVariables.add(new Scratch2Variable(varName, value));</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">				} else if(varValue instanceof String) {</span>
+					try {
+<span class="nc" id="L209">						value = Float.parseFloat((String)varValue);</span>
+<span class="nc" id="L210">	    				scratchVariables.add(new Scratch2Variable(varName, value));</span>
+<span class="nc" id="L211">					} catch (Exception e) {</span>
+<span class="nc" id="L212">						throw new Exception(&quot;Variables must be numbers.&quot;, e);</span>
+<span class="nc" id="L213">					}</span>
+<span class="nc" id="L214">				} else throw new Exception(&quot;Variable &quot;+varName+&quot; is &quot;+varValue.toString());</span>
+<span class="nc" id="L215">			}</span>
+		}
+<span class="nc" id="L217">	}</span>
+
+	/**
+	 * read the list of Scratch lists
+	 * @param tree the JSONObject tree read from the project.json/zip file.
+	 * @throws Exception
+	 */
+	private void readScratchLists(JSONObject tree) throws Exception {
+<span class="nc" id="L225">		scratchLists = new LinkedList&lt;Scratch2List&gt;();</span>
+<span class="nc" id="L226">		JSONArray listOfLists = (JSONArray)tree.get(&quot;lists&quot;);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if(listOfLists == null) return;</span>
+<span class="nc" id="L228">		logger.debug(&quot;Found {} lists.&quot;, listOfLists.length());</span>
+<span class="nc" id="L229">		Iterator&lt;?&gt; listIter = listOfLists.iterator();</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		while( listIter.hasNext() ) {</span>
+			//logger.debug(&quot;var:&quot;+elem.toString());
+<span class="nc" id="L232">			JSONObject elem = (JSONObject)listIter.next();</span>
+<span class="nc" id="L233">			String listName = (String)elem.get(&quot;listName&quot;);</span>
+<span class="nc" id="L234">			logger.debug(&quot;  Found list {}&quot;, listName);</span>
+<span class="nc" id="L235">			Object contents = elem.get(&quot;contents&quot;);</span>
+<span class="nc" id="L236">			Scratch2List list = new Scratch2List(listName);</span>
+			// fill the list with any given contents
+<span class="nc bnc" id="L238" title="All 4 branches missed.">			if( contents != null &amp;&amp; contents instanceof JSONArray ) {</span>
+<span class="nc" id="L239">				JSONArray arr = (JSONArray)contents;</span>
+
+<span class="nc" id="L241">				Iterator&lt;?&gt; scriptIter = arr.iterator();</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">				while(scriptIter.hasNext()) {</span>
+<span class="nc" id="L243">					Object varValue = scriptIter.next();</span>
+					double value;
+<span class="nc bnc" id="L245" title="All 2 branches missed.">					if(varValue instanceof Number) {</span>
+<span class="nc" id="L246">						Number num = (Number)varValue;</span>
+<span class="nc" id="L247">						value = num.doubleValue();</span>
+<span class="nc" id="L248">						list.contents.add(value);</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">					} else if(varValue instanceof String) {</span>
+						try {
+<span class="nc" id="L251">							value = Float.parseFloat((String)varValue);</span>
+<span class="nc" id="L252">							list.contents.add(value);</span>
+<span class="nc" id="L253">						} catch (Exception e) {</span>
+<span class="nc" id="L254">							throw new Exception(&quot;List variables must be numbers.&quot;, e);</span>
+<span class="nc" id="L255">						}</span>
+<span class="nc" id="L256">					} else throw new Exception(&quot;List variable &quot;+listName+&quot;(&quot;+list.contents.size()+&quot;) is &quot;+varValue.toString());</span>
+<span class="nc" id="L257">				}</span>
+			}
+			// add the list to the list-of-lists.
+<span class="nc" id="L260">			scratchLists.add(list);</span>
+<span class="nc" id="L261">		}</span>
+<span class="nc" id="L262">	}</span>
+	
+	private int getListByID(Object obj) throws Exception {
+<span class="nc bnc" id="L265" title="All 2 branches missed.">		if(!(obj instanceof String)) throw new Exception(&quot;List name not a string.&quot;);</span>
+<span class="nc" id="L266">		String listName = obj.toString();</span>
+<span class="nc" id="L267">		ListIterator&lt;Scratch2List&gt; iter = scratchLists.listIterator();</span>
+<span class="nc" id="L268">		int index=0;</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		while(iter.hasNext()) {</span>
+<span class="nc" id="L270">			Scratch2List i = iter.next();</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			if(i.name.equals(listName)) return index;</span>
+<span class="nc" id="L272">			++index;</span>
+<span class="nc" id="L273">		}</span>
+<span class="nc" id="L274">		throw new Exception(&quot;List '&quot;+listName+&quot;' not found.&quot;);</span>
+	}
+	
+	private String getIndent() {
+<span class="nc" id="L278">		String str=&quot;&quot;;</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">		for(int j=0;j&lt;indent;++j) str+=&quot;  &quot;;</span>
+<span class="nc" id="L280">		return str;</span>
+	}
+	
+	/**
+	 * read the elements of a JSON array describing Scratch code and parse it into turtle commands.
+	 * @param script valid JSONArray of Scratch commands.
+	 * @throws Exception
+	 */
+	private void parseScratchCode(JSONArray script) throws Exception {
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		if(script==null) return;</span>
+		
+		//logger.debug(getIndent()+&quot;{&quot;);  //&quot;[size=&quot;+script.size()+&quot;]&quot;
+<span class="nc" id="L292">		indent++;</span>
+		
+<span class="nc" id="L294">		Iterator&lt;?&gt; scriptIter = script.iterator();</span>
+		// Find the script with the green flag.  Assumes only one green flag per script.
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		while( scriptIter.hasNext() ) {</span>
+<span class="nc" id="L297">			Object o = scriptIter.next();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">			if( o instanceof JSONArray ) {</span>
+<span class="nc" id="L299">				JSONArray arr = (JSONArray)o;</span>
+<span class="nc" id="L300">				parseScratchCode(arr);</span>
+<span class="nc" id="L301">				continue;</span>
+			}
+<span class="nc" id="L303">			String name = o.toString();</span>
+			//logger.debug(getIndent()+name);
+<span class="nc bnc" id="L305" title="All 25 branches missed.">			switch(name) {</span>
+<span class="nc" id="L306">			case &quot;whenIReceive&quot;-&gt;		scriptIter.next();</span>
+<span class="nc" id="L307">			case &quot;doBroadcastAndWait&quot;-&gt; doBroadcastAndWait(scriptIter);</span>
+<span class="nc" id="L308">			case &quot;doRepeat&quot;-&gt; 			doRepeat(scriptIter);</span>
+<span class="nc" id="L309">			case &quot;doUntil&quot;-&gt; 			doUntil(scriptIter);</span>
+<span class="nc" id="L310">			case &quot;doIf&quot;-&gt; 				doIf(scriptIter);</span>
+<span class="nc" id="L311">			case &quot;doIfElse&quot;-&gt; 			doIfElse(scriptIter);</span>
+<span class="nc" id="L312">			case &quot;append:toList:&quot;-&gt; 	doAppend(scriptIter);</span>
+<span class="nc" id="L313">			case &quot;deleteLine:ofList:&quot;-&gt; doDeleteLine(scriptIter);</span>
+<span class="nc" id="L314">			case &quot;insert:at:ofList:&quot;-&gt; 	doInsertLine(scriptIter);</span>
+<span class="nc" id="L315">			case &quot;setLine:ofList:to:&quot;-&gt; doSetLine(scriptIter);</span>
+<span class="nc" id="L316">			case &quot;wait:elapsed:from:&quot;-&gt; doWait(scriptIter);</span>
+<span class="nc" id="L317">			case &quot;putPenUp&quot;-&gt; 			turtle.penUp();</span>
+<span class="nc" id="L318">			case &quot;putPenDown&quot;-&gt; 		turtle.penDown();</span>
+<span class="nc" id="L319">			case &quot;gotoX:y:&quot;-&gt;			doGotoXY(scriptIter);</span>
+<span class="nc" id="L320">			case &quot;changeXposBy:&quot;-&gt; 		doChangeX(scriptIter);</span>
+<span class="nc" id="L321">			case &quot;changeYposBy:&quot;-&gt; 		doChangeY(scriptIter);</span>
+<span class="nc" id="L322">			case &quot;forward:&quot;-&gt; 			doForward(scriptIter);</span>
+<span class="nc" id="L323">			case &quot;turnRight:&quot;-&gt; 		doTurnRight(scriptIter);</span>
+<span class="nc" id="L324">			case &quot;turnLeft:&quot;-&gt; 			doTurnLeft(scriptIter);</span>
+<span class="nc" id="L325">			case &quot;xpos:&quot;-&gt; 				doSetX(scriptIter);</span>
+<span class="nc" id="L326">			case &quot;ypos:&quot;-&gt; 				doSetY(scriptIter);</span>
+<span class="nc" id="L327">			case &quot;heading:&quot;-&gt; 			doSetHeading(scriptIter);</span>
+<span class="nc" id="L328">			case &quot;setVar:to:&quot;-&gt; 		doSetVar(scriptIter);</span>
+<span class="nc" id="L329">			case &quot;changeVar:by:&quot;-&gt; 		doChangeVar(scriptIter);</span>
+<span class="nc" id="L330">			default-&gt;					logger.debug(&quot;Ignored Scratch block &quot;+name);</span>
+			}
+<span class="nc" id="L332">		}</span>
+<span class="nc" id="L333">		indent--;</span>
+		//logger.debug(getIndent()+&quot;}&quot;);
+<span class="nc" id="L335">	}</span>
+
+	// relative change
+	private void doChangeVar(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L339">		String varName = (String)scriptIter.next();</span>
+<span class="nc" id="L340">		float v = (float)resolveValue(scriptIter.next());</span>
+
+<span class="nc bnc" id="L342" title="All 2 branches missed.">		for(Scratch2Variable sv : scratchVariables) {</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">			if(sv.name.equals(varName)) {</span>
+<span class="nc" id="L344">				sv.value += v;</span>
+				//logger.debug(getIndent()+&quot;Change &quot;+varName+&quot; by &quot;+v+&quot; to &quot;+sv.value);
+			}
+<span class="nc" id="L347">		}</span>
+<span class="nc" id="L348">		throw new Exception(&quot;Variable '&quot;+varName+&quot;' not found.&quot;);</span>
+	}
+
+	// absolute change
+	private void doSetVar(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L353">		String varName = (String)scriptIter.next();</span>
+<span class="nc" id="L354">		float v = (float)resolveValue(scriptIter.next());</span>
+
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		for(Scratch2Variable sv : scratchVariables) {</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			if(sv.name.equals(varName)) {</span>
+<span class="nc" id="L358">				sv.value = v;</span>
+				//logger.debug(getIndent()+&quot;Set &quot;+varName+&quot; to &quot;+v);
+<span class="nc" id="L360">				return;</span>
+			}
+<span class="nc" id="L362">		}</span>
+<span class="nc" id="L363">		throw new Exception(&quot;Variable '&quot;+varName+&quot;' not found.&quot;);</span>
+	}
+
+	private void doSetHeading(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L367">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L368">		double degrees = resolveValue(o2);</span>
+<span class="nc" id="L369">		turtle.setAngle(degrees);</span>
+		//logger.debug(getIndent()+&quot;Turn to &quot;+degrees);
+<span class="nc" id="L371">	}</span>
+
+	private void doSetY(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L374">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L375">		double v = resolveValue(o2);</span>
+<span class="nc" id="L376">		turtle.moveTo(turtle.getX(),v);</span>
+<span class="nc" id="L377">		logger.debug(&quot;{} Move to ({},{})&quot;, getIndent(), turtle.getX(), turtle.getY());</span>
+<span class="nc" id="L378">	}</span>
+
+	private void doSetX(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L381">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L382">		double v = resolveValue(o2);</span>
+<span class="nc" id="L383">		turtle.moveTo(v,turtle.getY());</span>
+<span class="nc" id="L384">		logger.debug(&quot;{} Move to ({},{})&quot;, getIndent(), turtle.getX(), turtle.getY());</span>
+<span class="nc" id="L385">	}</span>
+
+	private void doTurnLeft(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L388">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L389">		double degrees = resolveValue(o2);</span>
+<span class="nc" id="L390">		turtle.turn(degrees);</span>
+<span class="nc" id="L391">		logger.debug(&quot;{} Left {} degrees.&quot;, getIndent(), degrees);</span>
+<span class="nc" id="L392">	}</span>
+
+	private void doTurnRight(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L395">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L396">		double degrees = resolveValue(o2);</span>
+<span class="nc" id="L397">		turtle.turn(-degrees);</span>
+<span class="nc" id="L398">		logger.debug(&quot;{} Right {} degrees.&quot;, getIndent(), degrees);</span>
+<span class="nc" id="L399">	}</span>
+
+	private void doForward(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L402">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L403">		double v = resolveValue(o2);</span>
+<span class="nc" id="L404">		turtle.forward(v);</span>
+<span class="nc" id="L405">		logger.debug(&quot;{} Move forward {} mm&quot;, getIndent(), v);</span>
+<span class="nc" id="L406">	}</span>
+
+	private void doChangeX(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L409">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L410">		double v = resolveValue(o2);</span>
+<span class="nc" id="L411">		turtle.moveTo(turtle.getX()+v,turtle.getY());</span>
+		//logger.debug(getIndent()+&quot;Move to (&quot;+turtle.getX()+&quot;,&quot;+turtle.getY()+&quot;)&quot;);		
+<span class="nc" id="L413">	}</span>
+
+	private void doChangeY(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L416">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L417">		double v = resolveValue(o2);</span>
+<span class="nc" id="L418">		turtle.moveTo(turtle.getX(),turtle.getY()+v);</span>
+		//logger.debug(getIndent()+&quot;Move to (&quot;+turtle.getX()+&quot;,&quot;+turtle.getY()+&quot;)&quot;);		
+<span class="nc" id="L420">	}</span>
+
+	private void doGotoXY(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L423">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L424">		double x = resolveValue(o2);</span>
+<span class="nc" id="L425">		Object o3 = scriptIter.next();</span>
+<span class="nc" id="L426">		double y = resolveValue(o3);</span>
+<span class="nc" id="L427">		turtle.moveTo(x,y);</span>
+<span class="nc" id="L428">		logger.debug(&quot;{}Move to ({},{})&quot;, getIndent(), turtle.getX(), turtle.getY());</span>
+<span class="nc" id="L429">	}</span>
+
+	private void doWait(Iterator&lt;?&gt; scriptIter) throws Exception {
+		// dwell - does nothing.
+<span class="nc" id="L433">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L434">		double seconds = resolveValue(o2);</span>
+<span class="nc" id="L435">		logger.debug(&quot;{} dwell {} seconds.&quot;, getIndent(), seconds);</span>
+<span class="nc" id="L436">	}</span>
+
+	private void doSetLine(Iterator&lt;?&gt; scriptIter) throws Exception {
+		// &quot;setLine:ofList:to:&quot;, index, list name, new value
+<span class="nc" id="L440">		Object o4 = scriptIter.next();</span>
+<span class="nc" id="L441">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L442">		Object o3 = scriptIter.next();</span>
+<span class="nc" id="L443">		double newValue = resolveValue(o4);</span>
+<span class="nc" id="L444">		int listIndex = (int)resolveListIndex(o2,o3);</span>
+<span class="nc" id="L445">		scratchLists.get(getListByID(o3)).contents.set(listIndex,newValue);</span>
+<span class="nc" id="L446">	}</span>
+
+	private void doInsertLine(Iterator&lt;?&gt; scriptIter) throws Exception {
+		// &quot;insert:at:ofList:&quot;, new value, index, list name 
+<span class="nc" id="L450">		Object o4 = scriptIter.next();</span>
+<span class="nc" id="L451">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L452">		Object o3 = scriptIter.next();</span>
+<span class="nc" id="L453">		double newValue = resolveValue(o4);</span>
+<span class="nc" id="L454">		int listIndex = (int)resolveListIndex(o2,o3);</span>
+<span class="nc" id="L455">		scratchLists.get(getListByID(o3)).contents.add(listIndex,newValue);</span>
+<span class="nc" id="L456">	}</span>
+
+	private void doDeleteLine(Iterator&lt;?&gt; scriptIter) throws Exception {
+		// &quot;deleteLine:ofList:&quot;, index, list name 
+<span class="nc" id="L460">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L461">		Object o3 = scriptIter.next();</span>
+<span class="nc" id="L462">		int listIndex = (int)resolveListIndex(o2,o3);</span>
+<span class="nc" id="L463">		scratchLists.get(getListByID(o3)).contents.remove(listIndex);</span>
+<span class="nc" id="L464">	}</span>
+
+	private void doAppend(Iterator&lt;?&gt; scriptIter) throws Exception {
+		// &quot;append:toList:&quot;, new value, list name 
+<span class="nc" id="L468">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L469">		Object o3 = scriptIter.next();</span>
+<span class="nc" id="L470">		double value = resolveValue(o2);</span>
+<span class="nc" id="L471">		scratchLists.get(getListByID(o3)).contents.add(value);</span>
+<span class="nc" id="L472">	}</span>
+
+	private void doIfElse(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L475">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L476">		Object o3 = scriptIter.next();</span>
+<span class="nc" id="L477">		Object o4 = scriptIter.next();</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">		if(resolveBoolean((JSONArray)o2)) {</span>
+			//logger.debug(getIndent()+&quot;if(true)&quot;);
+<span class="nc" id="L480">			parseScratchCode((JSONArray)o3);</span>
+		} else {
+			//logger.debug(getIndent()+&quot;if(false)&quot;);
+<span class="nc" id="L483">			parseScratchCode((JSONArray)o4);</span>
+		}		
+<span class="nc" id="L485">	}</span>
+
+	private void doIf(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L488">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L489">		Object o3 = scriptIter.next();</span>
+<span class="nc bnc" id="L490" title="All 2 branches missed.">		if(resolveBoolean((JSONArray)o2)) {</span>
+			//logger.debug(getIndent()+&quot;if(true)&quot;);
+<span class="nc" id="L492">			parseScratchCode((JSONArray)o3);</span>
+		}		
+<span class="nc" id="L494">	}</span>
+
+	private void doUntil(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L497">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L498">		Object o3 = scriptIter.next();</span>
+		//logger.debug(getIndent()+&quot;Do Until&quot;);
+<span class="nc bnc" id="L500" title="All 2 branches missed.">		while(!resolveBoolean((JSONArray)o2)) {</span>
+<span class="nc" id="L501">			parseScratchCode((JSONArray)o3);</span>
+		}
+<span class="nc" id="L503">	}</span>
+
+	private void doRepeat(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L506">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L507">		Object o3 = scriptIter.next();</span>
+<span class="nc" id="L508">		int count = (int)resolveValue(o2);</span>
+		//logger.debug(getIndent()+&quot;Repeat &quot;+count+&quot; times:&quot;);
+<span class="nc bnc" id="L510" title="All 2 branches missed.">		for(int i=0;i&lt;count;++i) {</span>
+<span class="nc" id="L511">			parseScratchCode((JSONArray)o3);</span>
+		}		
+<span class="nc" id="L513">	}</span>
+
+	private void doBroadcastAndWait(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L516">		Object o2 = scriptIter.next();</span>
+		//logger.debug(getIndent()+&quot;broadcast &quot;+(String)o2);
+<span class="nc" id="L518">		JSONArray arr = subRoutines.get(o2);</span>
+<span class="nc" id="L519">		parseScratchCode(arr);</span>
+<span class="nc" id="L520">	}</span>
+
+	/**
+	 * Scratch block contains a boolean or boolean operator
+	 * @param obj a String, Number, or JSONArray of elements to be calculated. 
+	 * @return the calculated final value.
+	 * @throws Exception
+	 */
+	private boolean resolveBoolean(Object obj) throws Exception {
+<span class="nc bnc" id="L529" title="All 2 branches missed.">		if(!(obj instanceof JSONArray)) {</span>
+<span class="nc" id="L530">			throw new Exception(&quot;Parse error (resolveBoolean not array)&quot;);</span>
+		}
+<span class="nc" id="L532">		JSONArray arr=(JSONArray)obj;</span>
+<span class="nc" id="L533">		Iterator&lt;?&gt; scriptIter = arr.iterator();</span>
+<span class="nc" id="L534">		Object first = scriptIter.next();</span>
+<span class="nc" id="L535">		String name = first.toString();</span>
+<span class="nc bnc" id="L536" title="All 2 branches missed.">		if(name.equals(&quot;&gt;&quot;)) {</span>
+<span class="nc" id="L537">			Object o2 = scriptIter.next();</span>
+<span class="nc" id="L538">			Object o3 = scriptIter.next();</span>
+<span class="nc" id="L539">			double a = resolveValue(o2);</span>
+<span class="nc" id="L540">			double b = resolveValue(o3);</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">			return a &gt; b;</span>
+		}
+<span class="nc bnc" id="L543" title="All 2 branches missed.">		if(name.equals(&quot;&lt;&quot;)) {</span>
+<span class="nc" id="L544">			Object o2 = scriptIter.next();</span>
+<span class="nc" id="L545">			Object o3 = scriptIter.next();</span>
+<span class="nc" id="L546">			double a = resolveValue(o2);</span>
+<span class="nc" id="L547">			double b = resolveValue(o3);</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">			return a &lt; b;</span>
+		}
+<span class="nc bnc" id="L550" title="All 2 branches missed.">		if(name.equals(&quot;=&quot;)) {</span>
+<span class="nc" id="L551">			Object o2 = scriptIter.next();</span>
+<span class="nc" id="L552">			Object o3 = scriptIter.next();</span>
+<span class="nc" id="L553">			double a = resolveValue(o2);</span>
+<span class="nc" id="L554">			double b = resolveValue(o3);</span>
+<span class="nc bnc" id="L555" title="All 2 branches missed.">			return a == b; </span>
+		}
+<span class="nc bnc" id="L557" title="All 2 branches missed.">		if(name.equals(&quot;not&quot;)) {</span>
+<span class="nc" id="L558">			Object o2 = scriptIter.next();</span>
+<span class="nc bnc" id="L559" title="All 2 branches missed.">			return !resolveBoolean(o2);</span>
+		}
+<span class="nc bnc" id="L561" title="All 2 branches missed.">		if(name.equals(&quot;&amp;&quot;)) {</span>
+<span class="nc" id="L562">			Object o2 = scriptIter.next();</span>
+<span class="nc" id="L563">			Object o3 = scriptIter.next();</span>
+<span class="nc bnc" id="L564" title="All 4 branches missed.">			return resolveBoolean(o2) &amp;&amp; resolveBoolean(o3);</span>
+		}
+<span class="nc bnc" id="L566" title="All 2 branches missed.">		if(name.equals(&quot;|&quot;)) {</span>
+<span class="nc" id="L567">			Object o2 = scriptIter.next();</span>
+<span class="nc" id="L568">			Object o3 = scriptIter.next();</span>
+<span class="nc bnc" id="L569" title="All 4 branches missed.">			return resolveBoolean(o2) || resolveBoolean(o3);</span>
+		}
+		
+<span class="nc" id="L572">		throw new Exception(&quot;Parse error (resolveBoolean unsupported)&quot;);</span>
+	}
+	
+	/**
+	 * Scratch block contains an Operator (variable, constant, or math combination of the two). 
+	 * @param obj a String, Number, or JSONArray of elements to be calculated.
+	 * @return the calculated final value.
+	 * @throws Exception
+	 */
+	private double resolveValue(Object obj) throws Exception {
+<span class="nc bnc" id="L582" title="All 2 branches missed.">		if(obj instanceof String) {</span>
+			// probably a variable
+<span class="nc" id="L584">			String firstName = obj.toString();</span>
+<span class="nc bnc" id="L585" title="All 2 branches missed.">			if(firstName.equals(&quot;xpos&quot;)) return turtle.getX();</span>
+<span class="nc bnc" id="L586" title="All 2 branches missed.">			if(firstName.equals(&quot;ypos&quot;)) return turtle.getY();</span>
+<span class="nc bnc" id="L587" title="All 2 branches missed.">			if(firstName.equals(&quot;heading&quot;)) return turtle.getAngle();</span>
+
+			try {
+<span class="nc" id="L590">				float v = Float.parseFloat(firstName);</span>
+<span class="nc" id="L591">				return v;</span>
+<span class="nc" id="L592">			} catch (Exception e) {</span>
+<span class="nc" id="L593">				throw new Exception(&quot;Unresolved string value '&quot;+obj.toString()+&quot;'&quot;, e);</span>
+			}
+		}
+		
+<span class="nc bnc" id="L597" title="All 2 branches missed.">		if(obj instanceof Number) {</span>
+<span class="nc" id="L598">			Number num = (Number)obj;</span>
+<span class="nc" id="L599">			return (double)num.doubleValue();</span>
+		}
+		
+<span class="nc bnc" id="L602" title="All 2 branches missed.">		if(obj instanceof JSONArray) {</span>
+<span class="nc" id="L603">			JSONArray arr=(JSONArray)obj;</span>
+<span class="nc" id="L604">			Iterator&lt;?&gt; scriptIter = arr.iterator();</span>
+<span class="nc" id="L605">			Object first = scriptIter.next();</span>
+<span class="nc bnc" id="L606" title="All 2 branches missed.">			if(!(first instanceof String)) {</span>
+<span class="nc" id="L607">				throw new Exception(&quot;Parse error (resolveValue array)&quot;);</span>
+			}
+<span class="nc" id="L609">			String firstName = first.toString();</span>
+<span class="nc bnc" id="L610" title="All 11 branches missed.">			switch(firstName) {</span>
+<span class="nc" id="L611">			case &quot;/&quot; : 						return doDivide(scriptIter);</span>
+<span class="nc" id="L612">			case &quot;*&quot; : 						return doMultiply(scriptIter);</span>
+<span class="nc" id="L613">			case &quot;+&quot; : 						return doAdd(scriptIter);</span>
+<span class="nc" id="L614">			case &quot;-&quot; : 						return doSubtract(scriptIter);</span>
+<span class="nc" id="L615">			case &quot;%&quot; : 						return doModulus(scriptIter);</span>
+<span class="nc" id="L616">			case &quot;randomFrom:to:&quot; : 		return doRandom(scriptIter);</span>
+<span class="nc" id="L617">			case &quot;readVariable&quot; : 			return doReadVariable(scriptIter);</span>
+<span class="nc" id="L618">			case &quot;computeFunction:of:&quot; : 	return doCompute(scriptIter);</span>
+<span class="nc" id="L619">			case &quot;lineCountOfList:&quot; : 		return doCountList(scriptIter);</span>
+<span class="nc" id="L620">			case &quot;getLine:ofList:&quot; : 		return doGetFromList(scriptIter);</span>
+<span class="nc" id="L621">			default :						logger.debug(&quot;unknown operation &quot;+firstName);</span>
+			}
+			
+<span class="nc" id="L624">			return resolveValue(first);</span>
+		}
+
+<span class="nc" id="L627">		throw new Exception(&quot;Parse error (resolveValue)&quot;);</span>
+	}
+
+	private double doGetFromList(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L631">		Object o2 = scriptIter.next();</span>
+<span class="nc" id="L632">		Object o3 = scriptIter.next();</span>
+<span class="nc" id="L633">		int listIndex = resolveListIndex(o2,o3);</span>
+<span class="nc" id="L634">		String listName = (String)o3;</span>
+<span class="nc" id="L635">		Scratch2List list = scratchLists.get(getListByID(listName)); </span>
+
+<span class="nc" id="L637">		return list.contents.get(listIndex);</span>
+	}
+
+	private double doCountList(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L641">		String listName = (String)scriptIter.next();</span>
+<span class="nc" id="L642">		return scratchLists.get(getListByID(listName)).contents.size();</span>
+	}
+
+	private double doCompute(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L646">		String functionName = (String)scriptIter.next();</span>
+<span class="nc" id="L647">		double a = (float)resolveValue(scriptIter.next());</span>
+
+<span class="nc bnc" id="L649" title="All 15 branches missed.">		switch(functionName) {</span>
+<span class="nc" id="L650">		case &quot;abs&quot; :		return Math.abs(a);</span>
+<span class="nc" id="L651">		case &quot;floor&quot; :		return Math.floor(a);</span>
+<span class="nc" id="L652">		case &quot;ceiling&quot; :	return Math.ceil(a);</span>
+<span class="nc" id="L653">		case &quot;sqrt&quot; :		return Math.sqrt(a);</span>
+<span class="nc" id="L654">		case &quot;sin&quot; :		return Math.sin(Math.toRadians(a));</span>
+<span class="nc" id="L655">		case &quot;cos&quot; :		return Math.cos(Math.toRadians(a));</span>
+<span class="nc" id="L656">		case &quot;tan&quot; :		return Math.tan(Math.toRadians(a));</span>
+<span class="nc" id="L657">		case &quot;asin&quot; :		return Math.asin(Math.toRadians(a));</span>
+<span class="nc" id="L658">		case &quot;acos&quot; :		return Math.acos(Math.toRadians(a));</span>
+<span class="nc" id="L659">		case &quot;atan&quot; :		return Math.atan(Math.toRadians(a));</span>
+<span class="nc" id="L660">		case &quot;ln&quot; :			return Math.log(a);</span>
+<span class="nc" id="L661">		case &quot;log&quot; :		return Math.log10(a);</span>
+<span class="nc" id="L662">		case &quot;e ^&quot; :		return Math.pow(Math.E,a);</span>
+<span class="nc" id="L663">		case &quot;10 ^&quot; :		return Math.pow(10,a);</span>
+<span class="nc" id="L664">		default : 			throw new Exception(&quot;doCompute unknown operation &quot;+functionName);</span>
+		}
+	}
+
+	private double doReadVariable(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L669">		String varName = (String)scriptIter.next();</span>
+
+<span class="nc bnc" id="L671" title="All 2 branches missed.">		for(Scratch2Variable sv : scratchVariables) {</span>
+<span class="nc bnc" id="L672" title="All 2 branches missed.">			if(sv.name.equals(varName)) return sv.value;</span>
+<span class="nc" id="L673">		}</span>
+<span class="nc" id="L674">		throw new Exception(&quot;Failed to find variable &quot;+varName);</span>
+	}
+
+	private double doRandom(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L678">		int a = (int)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L679">		int b = (int)resolveValue(scriptIter.next());</span>
+<span class="nc bnc" id="L680" title="All 2 branches missed.">		if(a&gt;b) {</span>
+<span class="nc" id="L681">			int c = b;</span>
+<span class="nc" id="L682">			b=a;</span>
+<span class="nc" id="L683">			a=c;</span>
+		}
+<span class="nc" id="L685">		Random r = new Random();</span>
+<span class="nc" id="L686">		return r.nextInt(b-a)+a;</span>
+	}
+	
+	private double doModulus(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L690">		double a = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L691">		double b = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L692">		return a%b;</span>
+	}
+
+	private double doDivide(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L696">		double a = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L697">		double b = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L698">		return a/b;</span>
+	}
+	
+	private double doMultiply(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L702">		double a = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L703">		double b = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L704">		return a*b;</span>
+	}
+	
+	private double doAdd(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L708">		double a = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L709">		double b = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L710">		return a+b;</span>
+	}
+	
+	private double doSubtract(Iterator&lt;?&gt; scriptIter) throws Exception {
+<span class="nc" id="L714">		double a = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L715">		double b = (double)resolveValue(scriptIter.next());</span>
+<span class="nc" id="L716">		return a-b;</span>
+	}
+
+	/**
+	 * Find the requested index in a list.
+	 * @param o2 the index value.  could be &quot;random&quot;, &quot;last&quot;, or an index number
+	 * @param o3 the list name.
+	 * @return the resolved value as an integer.
+	 * @throws Exception
+	 */
+	private int resolveListIndex(Object o2,Object o3) throws Exception {
+		int listIndex;
+		
+<span class="nc bnc" id="L729" title="All 2 branches missed.">		if(o2 instanceof String) {</span>
+<span class="nc" id="L730">			String index = (String)o2;</span>
+<span class="nc" id="L731">			String listName = (String)o3;</span>
+<span class="nc" id="L732">			Scratch2List list = scratchLists.get(getListByID(listName));</span>
+<span class="nc bnc" id="L733" title="All 2 branches missed.">			if(index.equals(&quot;last&quot;)) {</span>
+<span class="nc" id="L734">				listIndex = list.contents.size()-1;</span>
+<span class="nc bnc" id="L735" title="All 2 branches missed.">			} else if(index.equals(&quot;random&quot;)) {</span>
+<span class="nc" id="L736">				listIndex = (int) (Math.random() * list.contents.size());</span>
+			} else {
+<span class="nc" id="L738">				listIndex = Integer.parseInt(index);</span>
+			}
+<span class="nc" id="L740">		} else {</span>
+<span class="nc" id="L741">			listIndex = (int)resolveValue(o2);</span>
+		}
+
+<span class="nc" id="L744">		return listIndex;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

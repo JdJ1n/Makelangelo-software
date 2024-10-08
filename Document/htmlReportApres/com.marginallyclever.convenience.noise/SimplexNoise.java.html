@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimplexNoise.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience.noise</a> &gt; <span class="el_source">SimplexNoise.java</span></div><h1>SimplexNoise.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience.noise;
+
+/*
+ * A speed-improved simplex noise algorithm for 2D, 3D and 4D in Java.
+ *
+ * Based on example code by Stefan Gustavson (stegu@itn.liu.se).
+ * Optimisations by Peter Eastman (peastman@drizzle.stanford.edu).
+ * Better rank ordering method by Stefan Gustavson in 2012.
+ *
+ * This could be sped up even further, but it's useful as it is.
+ *
+ * Version 2012-03-09
+ *
+ * This code was placed in the public domain by its original author,
+ * Stefan Gustavson. You may use it as you see fit, but
+ * attribution is appreciated.
+ *
+ */
+
+public class SimplexNoise implements Noise {  // Simplex noise in 2D, 3D and 4D
+    // Inner class to speed upp gradient computations (array access is a lot slower than member access)
+    private static class Grad {
+        double x, y, z, w;
+
+<span class="nc" id="L25">        Grad(double x, double y, double z) {</span>
+<span class="nc" id="L26">            this.x = x;</span>
+<span class="nc" id="L27">            this.y = y;</span>
+<span class="nc" id="L28">            this.z = z;</span>
+<span class="nc" id="L29">        }</span>
+
+<span class="nc" id="L31">        Grad(double x, double y, double z, double w) {</span>
+<span class="nc" id="L32">            this.x = x;</span>
+<span class="nc" id="L33">            this.y = y;</span>
+<span class="nc" id="L34">            this.z = z;</span>
+<span class="nc" id="L35">            this.w = w;</span>
+<span class="nc" id="L36">        }</span>
+    }
+
+<span class="nc" id="L39">    private final Grad[] grad3 = {new Grad(1, 1, 0), new Grad(-1, 1, 0), new Grad(1, -1, 0), new Grad(-1, -1, 0),</span>
+            new Grad(1, 0, 1), new Grad(-1, 0, 1), new Grad(1, 0, -1), new Grad(-1, 0, -1),
+            new Grad(0, 1, 1), new Grad(0, -1, 1), new Grad(0, 1, -1), new Grad(0, -1, -1)};
+
+<span class="nc" id="L43">    private final Grad[] grad4 = {new Grad(0, 1, 1, 1), new Grad(0, 1, 1, -1), new Grad(0, 1, -1, 1), new Grad(0, 1, -1, -1),</span>
+            new Grad(0, -1, 1, 1), new Grad(0, -1, 1, -1), new Grad(0, -1, -1, 1), new Grad(0, -1, -1, -1),
+            new Grad(1, 0, 1, 1), new Grad(1, 0, 1, -1), new Grad(1, 0, -1, 1), new Grad(1, 0, -1, -1),
+            new Grad(-1, 0, 1, 1), new Grad(-1, 0, 1, -1), new Grad(-1, 0, -1, 1), new Grad(-1, 0, -1, -1),
+            new Grad(1, 1, 0, 1), new Grad(1, 1, 0, -1), new Grad(1, -1, 0, 1), new Grad(1, -1, 0, -1),
+            new Grad(-1, 1, 0, 1), new Grad(-1, 1, 0, -1), new Grad(-1, -1, 0, 1), new Grad(-1, -1, 0, -1),
+            new Grad(1, 1, 1, 0), new Grad(1, 1, -1, 0), new Grad(1, -1, 1, 0), new Grad(1, -1, -1, 0),
+            new Grad(-1, 1, 1, 0), new Grad(-1, 1, -1, 0), new Grad(-1, -1, 1, 0), new Grad(-1, -1, -1, 0)};
+
+<span class="nc" id="L52">    private final short [] p = {151,160,137,91,90,15,</span>
+            131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+            190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+            88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+            77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+            102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+            135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+            5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+            223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+            129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+            251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+            49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+            138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180};
+    // To remove the need for index wrapping, double the permutation table length
+<span class="nc" id="L66">    private final short [] perm = new short[512];</span>
+<span class="nc" id="L67">    private final short [] permMod12 = new short[512];</span>
+
+    // Skewing and unskewing factors for 2, 3, and 4 dimensions
+<span class="nc" id="L70">    private final double F2 = 0.5*(Math.sqrt(3.0)-1.0);</span>
+<span class="nc" id="L71">    private final double G2 = (3.0-Math.sqrt(3.0))/6.0;</span>
+<span class="nc" id="L72">    private final double F3 = 1.0/3.0;</span>
+<span class="nc" id="L73">    private final double G3 = 1.0/6.0;</span>
+<span class="nc" id="L74">    private final double F4 = (Math.sqrt(5.0)-1.0)/4.0;</span>
+<span class="nc" id="L75">    private final double G4 = (5.0-Math.sqrt(5.0))/20.0;</span>
+
+<span class="nc" id="L77">    public SimplexNoise() {</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        for(int i=0; i&lt;512; i++) {</span>
+<span class="nc" id="L79">            perm[i]=p[i &amp; 255];</span>
+<span class="nc" id="L80">            permMod12[i] = (short)(perm[i] % 12);</span>
+        }
+<span class="nc" id="L82">    }</span>
+
+    // This method is a *lot* faster than using (int)Math.floor(x)
+    private int fastFloor(double x) {
+<span class="nc" id="L86">        int xi = (int)x;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        return x&lt;xi ? xi-1 : xi;</span>
+    }
+
+    private double dot(Grad g, double x, double y) {
+<span class="nc" id="L91">        return g.x*x + g.y*y;</span>
+    }
+
+    private double dot(Grad g, double x, double y, double z) {
+<span class="nc" id="L95">        return g.x*x + g.y*y + g.z*z;</span>
+    }
+
+    private double dot(Grad g, double x, double y, double z, double w) {
+<span class="nc" id="L99">        return g.x*x + g.y*y + g.z*z + g.w*w;</span>
+    }
+
+    // 1D simplex noise
+    @Override
+    public double noise(double xin) {
+<span class="nc" id="L105">        return noise(xin,0);</span>
+    }
+
+    // 2D simplex noise
+    @Override
+    public double noise(double xin, double yin) {
+        double n0, n1, n2; // Noise contributions from the three corners
+        // Skew the input space to determine which simplex cell we're in
+<span class="nc" id="L113">        double s = (xin+yin)*F2; // Hairy factor for 2D</span>
+<span class="nc" id="L114">        int i = fastFloor(xin+s);</span>
+<span class="nc" id="L115">        int j = fastFloor(yin+s);</span>
+<span class="nc" id="L116">        double t = (i+j)*G2;</span>
+<span class="nc" id="L117">        double X0 = i-t; // Unskew the cell origin back to (x,y) space</span>
+<span class="nc" id="L118">        double Y0 = j-t;</span>
+<span class="nc" id="L119">        double x0 = xin-X0; // The x,y distances from the cell origin</span>
+<span class="nc" id="L120">        double y0 = yin-Y0;</span>
+        // For the 2D case, the simplex shape is an equilateral triangle.
+        // Determine which simplex we are in.
+        int i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if(x0&gt;y0) {i1=1; j1=0;} // lower triangle, XY order: (0,0)-&gt;(1,0)-&gt;(1,1)</span>
+<span class="nc" id="L125">        else {i1=0; j1=1;}      // upper triangle, YX order: (0,0)-&gt;(0,1)-&gt;(1,1)</span>
+        // A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
+        // a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
+        // c = (3-sqrt(3))/6
+<span class="nc" id="L129">        double x1 = x0 - i1 + G2; // Offsets for middle corner in (x,y) unskewed coords</span>
+<span class="nc" id="L130">        double y1 = y0 - j1 + G2;</span>
+<span class="nc" id="L131">        double x2 = x0 - 1.0 + 2.0 * G2; // Offsets for last corner in (x,y) unskewed coords</span>
+<span class="nc" id="L132">        double y2 = y0 - 1.0 + 2.0 * G2;</span>
+        // Work out the hashed gradient indices of the three simplex corners
+<span class="nc" id="L134">        int ii = i &amp; 255;</span>
+<span class="nc" id="L135">        int jj = j &amp; 255;</span>
+<span class="nc" id="L136">        int gi0 = permMod12[ii+perm[jj]];</span>
+<span class="nc" id="L137">        int gi1 = permMod12[ii+i1+perm[jj+j1]];</span>
+<span class="nc" id="L138">        int gi2 = permMod12[ii+1+perm[jj+1]];</span>
+        // Calculate the contribution from the three corners
+<span class="nc" id="L140">        double t0 = 0.5 - x0*x0-y0*y0;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        if(t0&lt;0) n0 = 0.0;</span>
+        else {
+<span class="nc" id="L143">            t0 *= t0;</span>
+<span class="nc" id="L144">            n0 = t0 * t0 * dot(grad3[gi0], x0, y0);  // (x,y) of grad3 used for 2D gradient</span>
+        }
+<span class="nc" id="L146">        double t1 = 0.5 - x1*x1-y1*y1;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        if(t1&lt;0) n1 = 0.0;</span>
+        else {
+<span class="nc" id="L149">            t1 *= t1;</span>
+<span class="nc" id="L150">            n1 = t1 * t1 * dot(grad3[gi1], x1, y1);</span>
+        }
+<span class="nc" id="L152">        double t2 = 0.5 - x2*x2-y2*y2;</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        if(t2&lt;0) n2 = 0.0;</span>
+        else {
+<span class="nc" id="L155">            t2 *= t2;</span>
+<span class="nc" id="L156">            n2 = t2 * t2 * dot(grad3[gi2], x2, y2);</span>
+        }
+        // Add contributions from each corner to get the final noise value.
+        // The result is scaled to return values in the interval [-1,1].
+<span class="nc" id="L160">        return 70.0 * (n0 + n1 + n2);</span>
+    }
+
+
+    // 3D simplex noise
+    @Override
+    public double noise(double xin, double yin, double zin) {
+        double n0, n1, n2, n3; // Noise contributions from the four corners
+        // Skew the input space to determine which simplex cell we're in
+<span class="nc" id="L169">        double s = (xin+yin+zin)*F3; // Very nice and simple skew factor for 3D</span>
+<span class="nc" id="L170">        int i = fastFloor(xin+s);</span>
+<span class="nc" id="L171">        int j = fastFloor(yin+s);</span>
+<span class="nc" id="L172">        int k = fastFloor(zin+s);</span>
+<span class="nc" id="L173">        double t = (i+j+k)*G3;</span>
+<span class="nc" id="L174">        double X0 = i-t; // Unskew the cell origin back to (x,y,z) space</span>
+<span class="nc" id="L175">        double Y0 = j-t;</span>
+<span class="nc" id="L176">        double Z0 = k-t;</span>
+<span class="nc" id="L177">        double x0 = xin-X0; // The x,y,z distances from the cell origin</span>
+<span class="nc" id="L178">        double y0 = yin-Y0;</span>
+<span class="nc" id="L179">        double z0 = zin-Z0;</span>
+        // For the 3D case, the simplex shape is a slightly irregular tetrahedron.
+        // Determine which simplex we are in.
+        int i1, j1, k1; // Offsets for second corner of simplex in (i,j,k) coords
+        int i2, j2, k2; // Offsets for third corner of simplex in (i,j,k) coords
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        if(x0&gt;=y0) {</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            if(y0&gt;=z0)</span>
+<span class="nc" id="L186">            { i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; } // X Y Z order</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            else if(x0&gt;=z0) { i1=1; j1=0; k1=0; i2=1; j2=0; k2=1; } // X Z Y order</span>
+<span class="nc" id="L188">            else { i1=0; j1=0; k1=1; i2=1; j2=0; k2=1; } // Z X Y order</span>
+        } else { // x0&lt;y0
+<span class="nc bnc" id="L190" title="All 2 branches missed.">            if(y0&lt;z0) { i1=0; j1=0; k1=1; i2=0; j2=1; k2=1; } // Z Y X order</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">            else if(x0&lt;z0) { i1=0; j1=1; k1=0; i2=0; j2=1; k2=1; } // Y Z X order</span>
+<span class="nc" id="L192">            else { i1=0; j1=1; k1=0; i2=1; j2=1; k2=0; } // Y X Z order</span>
+        }
+        // A step of (1,0,0) in (i,j,k) means a step of (1-c,-c,-c) in (x,y,z),
+        // a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
+        // a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
+        // c = 1/6.
+<span class="nc" id="L198">        double x1 = x0 - i1 + G3; // Offsets for second corner in (x,y,z) coords</span>
+<span class="nc" id="L199">        double y1 = y0 - j1 + G3;</span>
+<span class="nc" id="L200">        double z1 = z0 - k1 + G3;</span>
+<span class="nc" id="L201">        double x2 = x0 - i2 + 2.0*G3; // Offsets for third corner in (x,y,z) coords</span>
+<span class="nc" id="L202">        double y2 = y0 - j2 + 2.0*G3;</span>
+<span class="nc" id="L203">        double z2 = z0 - k2 + 2.0*G3;</span>
+<span class="nc" id="L204">        double x3 = x0 - 1.0 + 3.0*G3; // Offsets for last corner in (x,y,z) coords</span>
+<span class="nc" id="L205">        double y3 = y0 - 1.0 + 3.0*G3;</span>
+<span class="nc" id="L206">        double z3 = z0 - 1.0 + 3.0*G3;</span>
+        // Work out the hashed gradient indices of the four simplex corners
+<span class="nc" id="L208">        int ii = i &amp; 255;</span>
+<span class="nc" id="L209">        int jj = j &amp; 255;</span>
+<span class="nc" id="L210">        int kk = k &amp; 255;</span>
+<span class="nc" id="L211">        int gi0 = permMod12[ii+perm[jj+perm[kk]]];</span>
+<span class="nc" id="L212">        int gi1 = permMod12[ii+i1+perm[jj+j1+perm[kk+k1]]];</span>
+<span class="nc" id="L213">        int gi2 = permMod12[ii+i2+perm[jj+j2+perm[kk+k2]]];</span>
+<span class="nc" id="L214">        int gi3 = permMod12[ii+1+perm[jj+1+perm[kk+1]]];</span>
+        // Calculate the contribution from the four corners
+<span class="nc" id="L216">        double t0 = 0.6 - x0*x0 - y0*y0 - z0*z0;</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        if(t0&lt;0) n0 = 0.0;</span>
+        else {
+<span class="nc" id="L219">            t0 *= t0;</span>
+<span class="nc" id="L220">            n0 = t0 * t0 * dot(grad3[gi0], x0, y0, z0);</span>
+        }
+<span class="nc" id="L222">        double t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">        if(t1&lt;0) n1 = 0.0;</span>
+        else {
+<span class="nc" id="L225">            t1 *= t1;</span>
+<span class="nc" id="L226">            n1 = t1 * t1 * dot(grad3[gi1], x1, y1, z1);</span>
+        }
+<span class="nc" id="L228">        double t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        if(t2&lt;0) n2 = 0.0;</span>
+        else {
+<span class="nc" id="L231">            t2 *= t2;</span>
+<span class="nc" id="L232">            n2 = t2 * t2 * dot(grad3[gi2], x2, y2, z2);</span>
+        }
+<span class="nc" id="L234">        double t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">        if(t3&lt;0) n3 = 0.0;</span>
+        else {
+<span class="nc" id="L237">            t3 *= t3;</span>
+<span class="nc" id="L238">            n3 = t3 * t3 * dot(grad3[gi3], x3, y3, z3);</span>
+        }
+        // Add contributions from each corner to get the final noise value.
+        // The result is scaled to stay just inside [-1,1]
+<span class="nc" id="L242">        return 32.0*(n0 + n1 + n2 + n3);</span>
+    }
+
+
+    // 4D simplex noise, better simplex rank ordering method 2012-03-09
+    public double noise(double x, double y, double z, double w) {
+
+        double n0, n1, n2, n3, n4; // Noise contributions from the five corners
+        // Skew the (x,y,z,w) space to determine which cell of 24 simplices we're in
+<span class="nc" id="L251">        double s = (x + y + z + w) * F4; // Factor for 4D skewing</span>
+<span class="nc" id="L252">        int i = fastFloor(x + s);</span>
+<span class="nc" id="L253">        int j = fastFloor(y + s);</span>
+<span class="nc" id="L254">        int k = fastFloor(z + s);</span>
+<span class="nc" id="L255">        int l = fastFloor(w + s);</span>
+<span class="nc" id="L256">        double t = (i + j + k + l) * G4; // Factor for 4D unskewing</span>
+<span class="nc" id="L257">        double X0 = i - t; // Unskew the cell origin back to (x,y,z,w) space</span>
+<span class="nc" id="L258">        double Y0 = j - t;</span>
+<span class="nc" id="L259">        double Z0 = k - t;</span>
+<span class="nc" id="L260">        double W0 = l - t;</span>
+<span class="nc" id="L261">        double x0 = x - X0;  // The x,y,z,w distances from the cell origin</span>
+<span class="nc" id="L262">        double y0 = y - Y0;</span>
+<span class="nc" id="L263">        double z0 = z - Z0;</span>
+<span class="nc" id="L264">        double w0 = w - W0;</span>
+        // For the 4D case, the simplex is a 4D shape I won't even try to describe.
+        // To find out which of the 24 possible simplices we're in, we need to
+        // determine the magnitude ordering of x0, y0, z0 and w0.
+        // Six pair-wise comparisons are performed between each possible pair
+        // of the four coordinates, and the results are used to rank the numbers.
+<span class="nc" id="L270">        int rankx = 0;</span>
+<span class="nc" id="L271">        int ranky = 0;</span>
+<span class="nc" id="L272">        int rankz = 0;</span>
+<span class="nc" id="L273">        int rankw = 0;</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">        if(x0 &gt; y0) rankx++; else ranky++;</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">        if(x0 &gt; z0) rankx++; else rankz++;</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        if(x0 &gt; w0) rankx++; else rankw++;</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        if(y0 &gt; z0) ranky++; else rankz++;</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">        if(y0 &gt; w0) ranky++; else rankw++;</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        if(z0 &gt; w0) rankz++; else rankw++;</span>
+        int i1, j1, k1, l1; // The integer offsets for the second simplex corner
+        int i2, j2, k2, l2; // The integer offsets for the third simplex corner
+        int i3, j3, k3, l3; // The integer offsets for the fourth simplex corner
+        // simplex[c] is a 4-vector with the numbers 0, 1, 2 and 3 in some order.
+        // Many values of c will never occur, since e.g. x&gt;y&gt;z&gt;w makes x&lt;z, y&lt;w and x&lt;w
+        // impossible. Only the 24 indices which have non-zero entries make any sense.
+        // We use a thresholding to set the coordinates in turn from the largest magnitude.
+        // Rank 3 denotes the largest coordinate.
+<span class="nc bnc" id="L288" title="All 2 branches missed.">        i1 = rankx &gt;= 3 ? 1 : 0;</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        j1 = ranky &gt;= 3 ? 1 : 0;</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        k1 = rankz &gt;= 3 ? 1 : 0;</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        l1 = rankw &gt;= 3 ? 1 : 0;</span>
+        // Rank 2 denotes the second largest coordinate.
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        i2 = rankx &gt;= 2 ? 1 : 0;</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">        j2 = ranky &gt;= 2 ? 1 : 0;</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        k2 = rankz &gt;= 2 ? 1 : 0;</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">        l2 = rankw &gt;= 2 ? 1 : 0;</span>
+        // Rank 1 denotes the second smallest coordinate.
+<span class="nc bnc" id="L298" title="All 2 branches missed.">        i3 = rankx &gt;= 1 ? 1 : 0;</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">        j3 = ranky &gt;= 1 ? 1 : 0;</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">        k3 = rankz &gt;= 1 ? 1 : 0;</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">        l3 = rankw &gt;= 1 ? 1 : 0;</span>
+        // The fifth corner has all coordinate offsets = 1, so no need to compute that.
+<span class="nc" id="L303">        double x1 = x0 - i1 + G4; // Offsets for second corner in (x,y,z,w) coords</span>
+<span class="nc" id="L304">        double y1 = y0 - j1 + G4;</span>
+<span class="nc" id="L305">        double z1 = z0 - k1 + G4;</span>
+<span class="nc" id="L306">        double w1 = w0 - l1 + G4;</span>
+<span class="nc" id="L307">        double x2 = x0 - i2 + 2.0*G4; // Offsets for third corner in (x,y,z,w) coords</span>
+<span class="nc" id="L308">        double y2 = y0 - j2 + 2.0*G4;</span>
+<span class="nc" id="L309">        double z2 = z0 - k2 + 2.0*G4;</span>
+<span class="nc" id="L310">        double w2 = w0 - l2 + 2.0*G4;</span>
+<span class="nc" id="L311">        double x3 = x0 - i3 + 3.0*G4; // Offsets for fourth corner in (x,y,z,w) coords</span>
+<span class="nc" id="L312">        double y3 = y0 - j3 + 3.0*G4;</span>
+<span class="nc" id="L313">        double z3 = z0 - k3 + 3.0*G4;</span>
+<span class="nc" id="L314">        double w3 = w0 - l3 + 3.0*G4;</span>
+<span class="nc" id="L315">        double x4 = x0 - 1.0 + 4.0*G4; // Offsets for last corner in (x,y,z,w) coords</span>
+<span class="nc" id="L316">        double y4 = y0 - 1.0 + 4.0*G4;</span>
+<span class="nc" id="L317">        double z4 = z0 - 1.0 + 4.0*G4;</span>
+<span class="nc" id="L318">        double w4 = w0 - 1.0 + 4.0*G4;</span>
+        // Work out the hashed gradient indices of the five simplex corners
+<span class="nc" id="L320">        int ii = i &amp; 255;</span>
+<span class="nc" id="L321">        int jj = j &amp; 255;</span>
+<span class="nc" id="L322">        int kk = k &amp; 255;</span>
+<span class="nc" id="L323">        int ll = l &amp; 255;</span>
+<span class="nc" id="L324">        int gi0 = perm[ii+perm[jj+perm[kk+perm[ll]]]] % 32;</span>
+<span class="nc" id="L325">        int gi1 = perm[ii+i1+perm[jj+j1+perm[kk+k1+perm[ll+l1]]]] % 32;</span>
+<span class="nc" id="L326">        int gi2 = perm[ii+i2+perm[jj+j2+perm[kk+k2+perm[ll+l2]]]] % 32;</span>
+<span class="nc" id="L327">        int gi3 = perm[ii+i3+perm[jj+j3+perm[kk+k3+perm[ll+l3]]]] % 32;</span>
+<span class="nc" id="L328">        int gi4 = perm[ii+1+perm[jj+1+perm[kk+1+perm[ll+1]]]] % 32;</span>
+        // Calculate the contribution from the five corners
+<span class="nc" id="L330">        double t0 = 0.6 - x0*x0 - y0*y0 - z0*z0 - w0*w0;</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">        if(t0&lt;0) n0 = 0.0;</span>
+        else {
+<span class="nc" id="L333">            t0 *= t0;</span>
+<span class="nc" id="L334">            n0 = t0 * t0 * dot(grad4[gi0], x0, y0, z0, w0);</span>
+        }
+<span class="nc" id="L336">        double t1 = 0.6 - x1*x1 - y1*y1 - z1*z1 - w1*w1;</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">        if(t1&lt;0) n1 = 0.0;</span>
+        else {
+<span class="nc" id="L339">            t1 *= t1;</span>
+<span class="nc" id="L340">            n1 = t1 * t1 * dot(grad4[gi1], x1, y1, z1, w1);</span>
+        }
+<span class="nc" id="L342">        double t2 = 0.6 - x2*x2 - y2*y2 - z2*z2 - w2*w2;</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">        if(t2&lt;0) n2 = 0.0;</span>
+        else {
+<span class="nc" id="L345">            t2 *= t2;</span>
+<span class="nc" id="L346">            n2 = t2 * t2 * dot(grad4[gi2], x2, y2, z2, w2);</span>
+        }
+<span class="nc" id="L348">        double t3 = 0.6 - x3*x3 - y3*y3 - z3*z3 - w3*w3;</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">        if(t3&lt;0) n3 = 0.0;</span>
+        else {
+<span class="nc" id="L351">            t3 *= t3;</span>
+<span class="nc" id="L352">            n3 = t3 * t3 * dot(grad4[gi3], x3, y3, z3, w3);</span>
+        }
+<span class="nc" id="L354">        double t4 = 0.6 - x4*x4 - y4*y4 - z4*z4 - w4*w4;</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">        if(t4&lt;0) n4 = 0.0;</span>
+        else {
+<span class="nc" id="L357">            t4 *= t4;</span>
+<span class="nc" id="L358">            n4 = t4 * t4 * dot(grad4[gi4], x4, y4, z4, w4);</span>
+        }
+        // Sum up and scale the result to cover the range [-1,1]
+<span class="nc" id="L361">        return 27.0 * (n0 + n1 + n2 + n3 + n4);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

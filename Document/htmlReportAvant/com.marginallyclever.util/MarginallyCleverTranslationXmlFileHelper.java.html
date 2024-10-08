@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MarginallyCleverTranslationXmlFileHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.util</a> &gt; <span class="el_source">MarginallyCleverTranslationXmlFileHelper.java</span></div><h1>MarginallyCleverTranslationXmlFileHelper.java</h1><pre class="source lang-java linenums">package com.marginallyclever.util;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import static com.marginallyclever.makelangelo.Translator.WORKING_DIRECTORY;
+
+/**
+ * Helper utility class to aid in loading of language files.
+ * @author Peter Colapietro
+ * @since v7.1.4
+ */
+public final class MarginallyCleverTranslationXmlFileHelper {
+
+<span class="nc" id="L30">  private static final Logger logger = LoggerFactory.getLogger(MarginallyCleverTranslationXmlFileHelper.class);</span>
+
+  /**
+   * NOOP Constructor
+   * @throws IllegalStateException
+   */
+<span class="nc" id="L36">  private MarginallyCleverTranslationXmlFileHelper() throws IllegalStateException {</span>
+<span class="nc" id="L37">    throw new IllegalStateException();</span>
+  }
+
+  /**
+   * Languages folder location relative to the user's working directory.
+   */
+  private static final String LANGUAGES_FOLDER_LOCATION = /*File.separator +*/ &quot;languages&quot;;
+
+  /**
+   * The default language file.
+   */
+  private static final String DEFAULT_LANGUAGE_XML_FILE = &quot;english.xml&quot;;
+
+  @SuppressWarnings(&quot;unused&quot;)
+  private static final boolean LOG_MISSING_KEYS = true;
+
+  private static final boolean DO_NOT_LOG_MISSING_KEYS = false;
+
+  private static final boolean CHECK_ALL_LANGUAGE_FILES = true;
+
+  @SuppressWarnings(&quot;unused&quot;)
+  private static final boolean DO_NOT_CHECK_ALL_LANGUAGE_FILES = false;
+
+  /**
+   * Used when writing a set to disk.
+   * See #writeSetObjectToFile
+   */
+  private static final String SET_OBJECT_FILE_NAME = &quot;keys.txt&quot;;
+
+  /**
+   * @param args command line arguments.
+   * See &lt;a href=&quot;http://stackoverflow.com/a/14026865&quot;&gt;Comparing key and values of two java maps&lt;/a&gt;
+   */
+  public static void main(String[] args) {
+<span class="nc" id="L71">    areLanguageFilesMissingKeys(DO_NOT_LOG_MISSING_KEYS, CHECK_ALL_LANGUAGE_FILES);</span>
+<span class="nc" id="L72">  }</span>
+
+  /**
+   * Check to see if language translation keys are missing. It can check and log all language files, or fail fast
+   * on the first missing key.
+   * @param logMissingKeys log missing keys
+   * @param checkAllLanguageFiles check all files, if set to false the methods stops on the first missing key
+   * @return if any language translation keys are missing
+   */
+  public static boolean areLanguageFilesMissingKeys(boolean logMissingKeys, boolean checkAllLanguageFiles) {
+<span class="nc" id="L82">    final URL languagesFolderUrl = getLanguagesFolderUrl();</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">    if (languagesFolderUrl != null) {</span>
+      try {
+<span class="nc" id="L85">        final File[] languageFiles = getLanguageFiles(languagesFolderUrl);</span>
+<span class="nc" id="L86">        final File defaultLanguageFile = searchForDefaultLanguageInLanguagesFolder(languagesFolderUrl, languageFiles);</span>
+
+<span class="nc" id="L88">        final DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();</span>
+<span class="nc" id="L89">        final DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();</span>
+
+<span class="nc" id="L91">        final Set&lt;String&gt; defaultLanguageFilesKeys = getKeySet(docBuilder.parse(defaultLanguageFile).getDocumentElement());</span>
+<span class="nc" id="L92">        Boolean doAllLanguageFilesContainAllTheDefaultKeys = null;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        for (final File languageFile : languageFiles) {</span>
+<span class="nc" id="L94">          final String languageFileName = languageFile.getName();</span>
+<span class="nc" id="L95">          final boolean isDefaultLanguageFile = languageFileName.equals(DEFAULT_LANGUAGE_XML_FILE);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">          if (!isDefaultLanguageFile) {</span>
+<span class="nc" id="L97">            logger.debug(languageFile.getAbsolutePath());</span>
+<span class="nc" id="L98">            final Document parseXmlLanguageDocument = docBuilder.parse(languageFile);</span>
+<span class="nc" id="L99">            final Set&lt;String&gt; thisLanguageFilesKeys = getKeySet(parseXmlLanguageDocument.getDocumentElement());</span>
+
+<span class="nc" id="L101">            final boolean doesThisLanguageFileContainAllTheDefaultKeys = doesThisLanguageFileContainAllTheDefaultKeys(defaultLanguageFilesKeys, thisLanguageFilesKeys, languageFileName);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            if (!doesThisLanguageFileContainAllTheDefaultKeys) {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">              if (logMissingKeys) {</span>
+<span class="nc" id="L104">                logMissingKeys(defaultLanguageFilesKeys, thisLanguageFilesKeys);</span>
+              }
+<span class="nc" id="L106">              doAllLanguageFilesContainAllTheDefaultKeys = false;</span>
+            }
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            if (!checkAllLanguageFiles) {</span>
+<span class="nc" id="L109">              break;</span>
+            }
+          }
+        }
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (doAllLanguageFilesContainAllTheDefaultKeys != null) {</span>
+<span class="nc" id="L114">          return true;</span>
+        }
+<span class="nc" id="L116">      } catch (SAXException | IOException | URISyntaxException | ParserConfigurationException e) {</span>
+<span class="nc" id="L117">        logger.error(&quot;A language key is missing&quot;, e);</span>
+<span class="nc" id="L118">      }</span>
+    }
+<span class="nc" id="L120">    return false;</span>
+  }
+
+  /**
+   * Logs missing keys.
+   * @param expected set of expected keys
+   * @param actual set of actual keys
+   */
+  private static void logMissingKeys(Set&lt;String&gt; expected, Set&lt;String&gt; actual) {
+<span class="nc" id="L129">    final Set&lt;String&gt; inANotB = getMissingKeys(expected, actual);</span>
+<span class="nc" id="L130">    logger.error(&quot;Missing Keys: {}&quot;, inANotB.toString());</span>
+<span class="nc" id="L131">  }</span>
+
+  /**
+   * Get any missing keys in the actual set from the expected set.
+   * @param expected set of expected keys
+   * @param actual set of actual keys
+   * @return
+   * See &lt;a href=&quot;http://stackoverflow.com/a/14026865&quot;&gt;Comparing key and values of two java maps&lt;/a&gt;
+   */
+  private static Set&lt;String&gt; getMissingKeys(Set&lt;String&gt; expected, Set&lt;String&gt; actual) {
+<span class="nc" id="L141">    final Set&lt;String&gt; keysInA = new HashSet&lt;String&gt;(expected);</span>
+<span class="nc" id="L142">    final Set&lt;String&gt; keysInB = new HashSet&lt;String&gt;(actual);</span>
+
+    // Keys in A and not in B
+<span class="nc" id="L145">    final Set&lt;String&gt; inANotB = new HashSet&lt;String&gt;(keysInA);</span>
+<span class="nc" id="L146">    inANotB.removeAll(keysInB);</span>
+
+    // Keys common to both maps
+<span class="nc" id="L149">    final Set&lt;String&gt; commonKeys = new HashSet&lt;String&gt;(keysInA);</span>
+<span class="nc" id="L150">    commonKeys.retainAll(keysInB);</span>
+<span class="nc" id="L151">    return inANotB;</span>
+  }
+
+  /**
+   * Write a set object to disk.
+   * @param set Set you want written to disk.
+   * @throws IOException
+   * See #SET_OBJECT_FILE_NAME
+   */
+  @SuppressWarnings(&quot;unused&quot;)
+  private static void writeSetObjectToFile(Set&lt;String&gt; set) throws IOException {
+<span class="nc" id="L162">    try (final OutputStream fos = new FileOutputStream(SET_OBJECT_FILE_NAME);</span>
+<span class="nc" id="L163">         final ObjectOutputStream oos = new ObjectOutputStream(fos)) {</span>
+<span class="nc" id="L164">      oos.writeObject(set);</span>
+    }
+<span class="nc" id="L166">  }</span>
+
+  /**
+   * Search the languages folder for the default language file.
+   * @param languagesFolderUrl language folder.
+   * @param languageFiles list of all language files to check for existence of the default
+   * @return file object representing the default language file.
+   * See #DEFAULT_LANGUAGE_XML_FILE
+   * @throws AssertionError
+   */
+  private static File searchForDefaultLanguageInLanguagesFolder(URL languagesFolderUrl, File[] languageFiles) throws AssertionError {
+<span class="nc" id="L177">    final String defaultLanguagePathName = buildDefaultLanguageFilePathName(languagesFolderUrl);</span>
+<span class="nc" id="L178">    final int indexOfDefaultLanguageFile = Arrays.binarySearch(languageFiles, new File(defaultLanguagePathName));</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">    if (indexOfDefaultLanguageFile &lt; 0) {</span>
+<span class="nc" id="L180">      throw new AssertionError();</span>
+    }
+<span class="nc" id="L182">    return languageFiles[indexOfDefaultLanguageFile];</span>
+  }
+
+  /**
+   * @return url object representing the languages folder
+   * See #getLanguagesFolderUrlRelativeToClasspath()
+   * See #getLanguagesFolderUrlFromUserDirectory()
+   */
+  private static URL getLanguagesFolderUrl() {
+<span class="nc" id="L191">    URL languagesFolderUrl = getLanguagesFolderUrlRelativeToClasspath();</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">    if( languagesFolderUrl!=null ) {</span>
+<span class="nc" id="L193">    	logger.debug(&quot;languages relative to classpath: {}&quot;, languagesFolderUrl.toString());</span>
+    }
+<span class="nc" id="L195">    URL languageFolderUsingUserDirectory = getLanguagesFolderUrlFromUserDirectory();</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">    if( languageFolderUsingUserDirectory!=null ) {</span>
+<span class="nc" id="L197">    	logger.debug(&quot;languages via user directory: {}&quot;, languageFolderUsingUserDirectory.toString());</span>
+    }
+<span class="nc bnc" id="L199" title="All 2 branches missed.">    if (languagesFolderUrl == null) {</span>
+<span class="nc" id="L200">      languagesFolderUrl = languageFolderUsingUserDirectory;</span>
+    }
+<span class="nc" id="L202">    return languagesFolderUrl;</span>
+  }
+
+  /**
+   * @return url object representing the language folder in the user's working directory.
+   * See com.marginallyclever.makelangelo.Translator#WORKING_DIRECTORY
+   */
+  private static URL getLanguagesFolderUrlFromUserDirectory() {
+<span class="nc" id="L210">    URL languageFolderUsingUserDirectoryUrl = null;</span>
+    try {
+<span class="nc" id="L212">      File f = new File(WORKING_DIRECTORY);</span>
+<span class="nc" id="L213">      languageFolderUsingUserDirectoryUrl = f.toURI().toURL();</span>
+<span class="nc" id="L214">    } catch (MalformedURLException e) {</span>
+<span class="nc" id="L215">      logger.error(&quot;url malformed {}&quot;, WORKING_DIRECTORY, e );</span>
+<span class="nc" id="L216">    }</span>
+<span class="nc" id="L217">    return languageFolderUsingUserDirectoryUrl;</span>
+  }
+
+  /**
+   * @return url object representing languages folder relative to classpath.
+   * See #LANGUAGES_FOLDER_LOCATION
+   * See java.lang.ClassLoader#getResource(String)
+   */
+  public static URL getLanguagesFolderUrlRelativeToClasspath() {
+<span class="nc" id="L226">    final ClassLoader thisClassesClassLoader = MarginallyCleverTranslationXmlFileHelper.class.getClassLoader();</span>
+<span class="nc" id="L227">    return thisClassesClassLoader.getResource(LANGUAGES_FOLDER_LOCATION);</span>
+  }
+
+  /**
+   * recursively logs the names and values of a given xml node
+   * @param node xml node to recursively log
+   * See &lt;a href=&quot;http://stackoverflow.com/a/5511298&quot;&gt;Java: Most efficient method to iterate over all elements in a org.w3c.dom.Document?&lt;/a&gt;
+   * See #logAllNodesNamesAndValues(org.w3c.dom.Node)
+   */
+  @SuppressWarnings(&quot;unused&quot;)
+  private static void logAllNodesNamesAndValues(Node node) {
+<span class="nc" id="L238">    logNodeNameAndValue(node);</span>
+<span class="nc" id="L239">    final NodeList nodeList = node.getChildNodes();</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">    for (int i = 0; i &lt; nodeList.getLength(); i++) {</span>
+<span class="nc" id="L241">      final Node currentNode = nodeList.item(i);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">      if (currentNode.getNodeType() == Node.ELEMENT_NODE) {</span>
+        //calls this method for all the children which is Element
+<span class="nc" id="L244">        logAllNodesNamesAndValues(currentNode);</span>
+      }
+    }
+<span class="nc" id="L247">  }</span>
+
+  /**
+   * logs the name and value of a given xml node
+   * @param node xml node to log
+   */
+  private static void logNodeNameAndValue(Node node) {
+<span class="nc" id="L254">    final String nodeName = node.getNodeName();</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">    if (nodeName.equals(&quot;key&quot;)) {</span>
+<span class="nc" id="L256">      logger.debug(&quot;node name: {}, node value: {}&quot;, nodeName, node.getTextContent());</span>
+    }
+<span class="nc" id="L258">  }</span>
+
+  /**
+   * gets a key set from a given xml node
+   * @param node node to get all elements with the name {@code &quot;key&quot;}
+   * See &lt;a href=&quot;http://stackoverflow.com/a/5511298&quot;&gt;Java: Most efficient method to iterate over all elements in a org.w3c.dom.Document?&lt;/a&gt;
+   */
+  private static Set&lt;String&gt; getKeySet(Node node) {
+<span class="nc" id="L266">    final Set&lt;String&gt; keySet = new HashSet&lt;String&gt;();</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">    if (node.getNodeName().equals(&quot;key&quot;)) {</span>
+<span class="nc" id="L268">      keySet.add(node.getTextContent());</span>
+    }
+<span class="nc" id="L270">    final NodeList nodeList = node.getChildNodes();</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">    for (int i = 0; i &lt; nodeList.getLength(); i++) {</span>
+<span class="nc" id="L272">      final Node currentNode = nodeList.item(i);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">      if (currentNode.getNodeType() == Node.ELEMENT_NODE) {</span>
+        // calls this method for all the children which is Element
+<span class="nc" id="L275">        keySet.addAll(getKeySet(currentNode));</span>
+      }
+    }
+<span class="nc" id="L278">    return keySet;</span>
+  }
+
+  /**
+   * @param languagesFolderUrl - url object representing the language files folder
+   * @return an array of file objects in the language folder.
+   * @throws URISyntaxException if the url object parameter is not correct
+   */
+  private static File[] getLanguageFiles(URL languagesFolderUrl) throws URISyntaxException {
+<span class="nc" id="L287">    final File languagesFolder = new File(languagesFolderUrl.toURI());</span>
+<span class="nc" id="L288">    return languagesFolder.listFiles();</span>
+  }
+
+  /**
+   * @param defaultLanguageFilesKeys default language file's keys
+   * @param thisLanguageFilesKeys this language files keys
+   * @param thisLanguageFilesName this language files name
+   * @return does this language file contain all the default keys
+   */
+  private static boolean doesThisLanguageFileContainAllTheDefaultKeys(Set&lt;String&gt; defaultLanguageFilesKeys, Set&lt;String&gt; thisLanguageFilesKeys, String thisLanguageFilesName) {
+<span class="nc" id="L298">    final boolean doesThisLanguageFileContainAllTheDefaultKeys = thisLanguageFilesKeys.containsAll(defaultLanguageFilesKeys);</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">    if (!doesThisLanguageFileContainAllTheDefaultKeys) {</span>
+<span class="nc" id="L300">      logger.error(&quot;{} does not contain all the default translation keys.&quot;, thisLanguageFilesName);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">      for (String s : defaultLanguageFilesKeys) {</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        if (!thisLanguageFilesKeys.contains(s)) {</span>
+<span class="nc" id="L303">          logger.error(&quot;missing {}&quot;, s);</span>
+        }
+<span class="nc" id="L305">      }</span>
+    } else {
+<span class="nc" id="L307">      logger.debug(&quot;{} contains all the default translation keys.&quot;, thisLanguageFilesName);</span>
+    }
+<span class="nc" id="L309">    return doesThisLanguageFileContainAllTheDefaultKeys;</span>
+  }
+
+  @SuppressWarnings(&quot;unused&quot;)
+  private static File getDefaultLanguageFileFromClasspath() {
+<span class="nc" id="L314">    return getDefaultLanguageFile(getLanguagesFolderUrlRelativeToClasspath());</span>
+  }
+
+  public static String getDefaultLanguageFilePathNameFromClassPath() {
+<span class="nc" id="L318">    return buildDefaultLanguageFilePathName(getLanguagesFolderUrlRelativeToClasspath());</span>
+  }
+
+  private static File getDefaultLanguageFile(URL languagesFolderUrl) {
+<span class="nc" id="L322">    return new File(buildDefaultLanguageFilePathName(languagesFolderUrl));</span>
+  }
+
+  public static String buildDefaultLanguageFilePathName(URL languagesFolderUrl) {
+<span class="nc" id="L326">    return languagesFolderUrl.getPath() + '/' + DEFAULT_LANGUAGE_XML_FILE;</span>
+  }
+
+  public static String getDefaultLanguageFilePath() {
+<span class="nc" id="L330">    return LANGUAGES_FOLDER_LOCATION + File.separator + DEFAULT_LANGUAGE_XML_FILE;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

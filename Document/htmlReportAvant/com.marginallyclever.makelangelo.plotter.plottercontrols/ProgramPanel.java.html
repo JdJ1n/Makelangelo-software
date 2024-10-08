@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProgramPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols</a> &gt; <span class="el_source">ProgramPanel.java</span></div><h1>ProgramPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols;
+
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.plotter.Plotter;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+import com.marginallyclever.util.PreferencesHelper;
+
+import javax.swing.*;
+import javax.swing.border.EtchedBorder;
+import java.awt.*;
+
+/**
+ * {@link ProgramPanel} maintains a buffer of commands to be sent to a
+ * {@link Plotter}. The currently selected element in the {@link JList} is the
+ * &quot;play head&quot; of the recording.
+ * 
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class ProgramPanel extends JPanel {
+	private final Plotter myPlotter;
+	private final Turtle myTurtle;
+<span class="nc" id="L25">	private final DefaultListModel&lt;TurtleMove&gt; listModel = new DefaultListModel&lt;&gt;();</span>
+<span class="nc" id="L26">	private final JList&lt;TurtleMove&gt; listView = new JList&lt;&gt;(listModel);</span>
+
+	public ProgramPanel(Plotter plotter, Turtle turtle) {
+<span class="nc" id="L29">		super(new BorderLayout());</span>
+<span class="nc" id="L30">		myPlotter = plotter;</span>
+<span class="nc" id="L31">		myTurtle = turtle;</span>
+
+<span class="nc" id="L33">		createCellRenderingSystem();</span>
+
+<span class="nc" id="L35">		JScrollPane scrollPane = new JScrollPane(listView);</span>
+<span class="nc" id="L36">		scrollPane.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));</span>
+
+<span class="nc" id="L38">		listView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);</span>
+<span class="nc" id="L39">		listView.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));</span>
+
+		// this.add(getToolBar(), BorderLayout.PAGE_START);
+<span class="nc" id="L42">		this.add(scrollPane, BorderLayout.CENTER);</span>
+
+<span class="nc" id="L44">		addTurtleToList(turtle);</span>
+<span class="nc" id="L45">	}</span>
+
+	private void addTurtleToList(Turtle turtle) {
+<span class="nc" id="L48">		listModel.addAll(turtle.history);</span>
+<span class="nc" id="L49">	}</span>
+
+	private void createCellRenderingSystem() {
+<span class="nc" id="L52">		listView.setCellRenderer(new ListCellRenderer&lt;&gt;() {</span>
+<span class="nc" id="L53">			private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();</span>
+
+			@Override
+			public Component getListCellRendererComponent(JList&lt;? extends TurtleMove&gt; list, TurtleMove value, int index,
+					boolean isSelected, boolean cellHasFocus) {
+<span class="nc" id="L58">				Component c = defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);</span>
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">				if (c instanceof JLabel jc) {</span>
+<span class="nc" id="L61">					jc.setText(value.toString());</span>
+				}
+<span class="nc" id="L63">				return c;</span>
+			}
+
+		});
+<span class="nc" id="L67">	}</span>
+
+	/**
+	 * Move the play head to the lineNumber-th instruction.  
+	 * Does not tell the {@link Plotter} to do anything.
+	 */
+	public void setLineNumber(int lineNumber) {
+<span class="nc" id="L74">		listView.setSelectedIndex(lineNumber);</span>
+<span class="nc" id="L75">	}</span>
+
+	/**
+	 * @return the currently selected instruction.
+	 */
+	public int getLineNumber() {
+<span class="nc" id="L81">		return listView.getSelectedIndex();</span>
+	}
+
+	/**
+	 * @return the total number of instructions in the buffer.
+	 */
+	public int getMoveCount() {
+<span class="nc" id="L88">		return myTurtle.history.size();</span>
+	}
+
+	/**
+	 * Move the play head to the first item in the list.  
+	 * Does not tell the {@link Plotter} to do anything.
+	 */
+	public void rewind() {
+<span class="nc" id="L96">		setLineNumber(0);</span>
+<span class="nc" id="L97">	}</span>
+
+	/**
+	 * Tell the {@link Plotter} to move to the currently selected instruction and
+	 * advance the selected instruction by one. If there are no further instructions
+	 * the selection is nullified.
+	 */
+	public void step() {
+<span class="nc" id="L105">		int now = listView.getSelectedIndex();</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (now == -1)</span>
+<span class="nc" id="L107">			return;</span>
+
+		// Increment the line as soon as possible so that step() does not get called
+		// twice on the same line.
+<span class="nc" id="L111">		listView.setSelectedIndex(now + 1);</span>
+
+<span class="nc" id="L113">		TurtleMove move = listModel.get(now);</span>
+		// Log.message(&quot;Step to (&quot;+now+&quot;):&quot;+move.toString());
+<span class="nc" id="L115">		myPlotter.turtleMove(move);</span>
+
+<span class="nc" id="L117">		int selected = listView.getSelectedIndex();</span>
+<span class="nc" id="L118">		listView.ensureIndexIsVisible(selected);</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (selected == now) {</span>
+			// could not advance. reached the end.
+<span class="nc" id="L121">			listView.clearSelection();</span>
+<span class="nc" id="L122">			myPlotter.raisePen();</span>
+		}
+<span class="nc" id="L124">	}</span>
+
+	// TEST
+
+	public static void main(String[] args) {
+<span class="nc" id="L129">		PreferencesHelper.start();</span>
+<span class="nc" id="L130">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L131">		Translator.start();</span>
+
+<span class="nc" id="L133">		JFrame frame = new JFrame(ProgramPanel.class.getSimpleName());</span>
+<span class="nc" id="L134">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L135">		frame.add(new ProgramPanel(new Plotter(), new Turtle()));</span>
+<span class="nc" id="L136">		frame.pack();</span>
+<span class="nc" id="L137">		frame.setVisible(true);</span>
+<span class="nc" id="L138">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

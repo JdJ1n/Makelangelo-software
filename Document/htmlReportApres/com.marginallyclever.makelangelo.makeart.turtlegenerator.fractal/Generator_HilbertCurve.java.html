@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_HilbertCurve.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal</a> &gt; <span class="el_source">Generator_HilbertCurve.java</span></div><h1>Generator_HilbertCurve.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.tools.ResizeTurtleToPaperAction;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+/**
+ * Hilbert Curve fractal.
+ * @author Dan Royer
+ */
+public class Generator_HilbertCurve extends TurtleGenerator {
+<span class="fc" id="L17">	private float turtleStep = 10.0f;</span>
+<span class="fc" id="L18">	private static int order = 4; // controls complexity of curve</span>
+
+	public Generator_HilbertCurve() {
+<span class="fc" id="L21">		super();</span>
+
+		SelectSlider fieldOrder;
+<span class="fc" id="L24">		add(fieldOrder = new SelectSlider(&quot;order&quot;,Translator.get(&quot;HilbertCurveOrder&quot;),8,1,Generator_HilbertCurve.getOrder()));</span>
+<span class="fc" id="L25">		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href='https://en.wikipedia.org/wiki/Hilbert_curve'&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</span>
+<span class="fc" id="L26">		fieldOrder.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L27">			Generator_HilbertCurve.setOrder(Math.max(1,fieldOrder.getValue()));</span>
+<span class="nc" id="L28">			generate();</span>
+<span class="nc" id="L29">		});</span>
+<span class="fc" id="L30">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="fc" id="L34">		return Translator.get(&quot;HilbertCurveName&quot;);</span>
+	}
+
+	static public int getOrder() {
+<span class="fc" id="L38">		return order;</span>
+	}
+	static public void setOrder(int order) {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if(order&lt;1) order=1;</span>
+<span class="nc" id="L42">		Generator_HilbertCurve.order = order;</span>
+<span class="nc" id="L43">	}</span>
+
+	@Override
+	public void generate() {
+<span class="nc" id="L47">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L48">		double v = Math.min(rect.getWidth(),rect.getHeight());</span>
+<span class="nc" id="L49">		double xMin = -v;</span>
+
+<span class="nc" id="L51">		Turtle turtle = new Turtle();</span>
+<span class="nc" id="L52">		turtleStep = (float) ((v - xMin) / (Math.pow(2, order)));</span>
+
+		// move to starting position
+<span class="nc" id="L55">		turtle.jumpTo(</span>
+				-v + turtleStep / 2,
+				-v + turtleStep / 2);
+<span class="nc" id="L58">		turtle.penDown();</span>
+<span class="nc" id="L59">		hilbert(turtle,order);</span>
+
+		// scale turtle to fit paper
+<span class="nc" id="L62">		ResizeTurtleToPaperAction action = new ResizeTurtleToPaperAction(myPaper,false,null);</span>
+<span class="nc" id="L63">		turtle = action.run(turtle);</span>
+
+<span class="nc" id="L65">		notifyListeners(turtle);</span>
+<span class="nc" id="L66">	}</span>
+
+
+	// Hilbert curve
+	private void hilbert(Turtle turtle,int n) {
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (n == 0) return;</span>
+<span class="nc" id="L72">		turtle.turn(90);</span>
+<span class="nc" id="L73">		treblih(turtle, n - 1);</span>
+<span class="nc" id="L74">		turtle.forward(turtleStep);</span>
+<span class="nc" id="L75">		turtle.turn(-90);</span>
+<span class="nc" id="L76">		hilbert(turtle, n - 1);</span>
+<span class="nc" id="L77">		turtle.forward(turtleStep);</span>
+<span class="nc" id="L78">		hilbert(turtle, n - 1);</span>
+<span class="nc" id="L79">		turtle.turn(-90);</span>
+<span class="nc" id="L80">		turtle.forward(turtleStep);</span>
+<span class="nc" id="L81">		treblih(turtle, n - 1);</span>
+<span class="nc" id="L82">		turtle.turn(90);</span>
+<span class="nc" id="L83">	}</span>
+
+
+	// evruc trebliH
+	public void treblih(Turtle turtle,int n) {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (n == 0) return;</span>
+<span class="nc" id="L89">		turtle.turn(-90);</span>
+<span class="nc" id="L90">		hilbert(turtle, n - 1);</span>
+<span class="nc" id="L91">		turtle.forward(turtleStep);</span>
+<span class="nc" id="L92">		turtle.turn(90);</span>
+<span class="nc" id="L93">		treblih(turtle, n - 1);</span>
+<span class="nc" id="L94">		turtle.forward(turtleStep);</span>
+<span class="nc" id="L95">		treblih(turtle, n - 1);</span>
+<span class="nc" id="L96">		turtle.turn(90);</span>
+<span class="nc" id="L97">		turtle.forward(turtleStep);</span>
+<span class="nc" id="L98">		hilbert(turtle, n - 1);</span>
+<span class="nc" id="L99">		turtle.turn(-90);</span>
+<span class="nc" id="L100">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

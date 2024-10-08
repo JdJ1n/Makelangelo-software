@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_KochCurve.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal</a> &gt; <span class="el_source">Generator_KochCurve.java</span></div><h1>Generator_KochCurve.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.tools.ResizeTurtleToPaperAction;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+/**
+ * Koch Curve fractal
+ * @author Dan Royer
+ */
+public class Generator_KochCurve extends TurtleGenerator {
+<span class="fc" id="L17">	private static int order = 4; // controls complexity of curve</span>
+
+	public Generator_KochCurve() {
+<span class="fc" id="L20">		super();</span>
+
+		SelectSlider fieldOrder;
+
+<span class="fc" id="L24">		add(fieldOrder = new SelectSlider(&quot;order&quot;,Translator.get(&quot;HilbertCurveOrder&quot;),7,1,Generator_HilbertCurve.getOrder()));</span>
+<span class="fc" id="L25">		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href='https://en.wikipedia.org/wiki/Koch_curve'&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</span>
+
+<span class="fc" id="L27">		fieldOrder.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L28">			setOrder(fieldOrder.getValue());</span>
+<span class="nc" id="L29">			generate();</span>
+<span class="nc" id="L30">		});</span>
+<span class="fc" id="L31">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="fc" id="L35">		return Translator.get(&quot;KochTreeName&quot;);</span>
+	}
+
+	static public int getOrder() {
+<span class="nc" id="L39">		return order;</span>
+	}
+	static public void setOrder(int order) {
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		if(order&lt;1) order=1;</span>
+<span class="nc" id="L43">		Generator_KochCurve.order = order;</span>
+<span class="nc" id="L44">	}</span>
+
+	@Override
+	public void generate() {
+<span class="nc" id="L48">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L49">		double v = Math.min(rect.getWidth(),rect.getHeight());</span>
+<span class="nc" id="L50">		double xMin = -v;</span>
+<span class="nc" id="L51">		double yMin = -v;</span>
+
+<span class="nc" id="L53">		Turtle turtle = new Turtle();</span>
+		
+<span class="nc" id="L55">		double xx = v - xMin;</span>
+<span class="nc" id="L56">		double yy = v - yMin;</span>
+<span class="nc" id="L57">		double maxSize = Math.max(xx, yy);</span>
+		
+		// move to starting position
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if(myPaper.getPaperWidth() &gt; myPaper.getPaperHeight()) {</span>
+<span class="nc" id="L61">			turtle.moveTo(-v,0);</span>
+		} else {
+<span class="nc" id="L63">			turtle.moveTo(0,-v);</span>
+<span class="nc" id="L64">			turtle.turn(90);</span>
+		}
+		
+<span class="nc" id="L67">		turtle.penDown();</span>
+<span class="nc" id="L68">		drawTriangle(turtle,order, maxSize);</span>
+
+		// scale turtle to fit paper
+<span class="nc" id="L71">		ResizeTurtleToPaperAction action = new ResizeTurtleToPaperAction(myPaper,false,null);</span>
+<span class="nc" id="L72">		turtle = action.run(turtle);</span>
+
+<span class="nc" id="L74">		notifyListeners(turtle);</span>
+<span class="nc" id="L75">	}</span>
+
+
+	// L System tree
+	private void drawTriangle(Turtle turtle,int n, double distance) {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (n == 0) {</span>
+<span class="nc" id="L81">			turtle.forward(distance);</span>
+<span class="nc" id="L82">			return;</span>
+		}
+<span class="nc" id="L84">		drawTriangle(turtle,n-1,distance/3.0f);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if(n&gt;1) {</span>
+<span class="nc" id="L86">			turtle.turn(-60);</span>
+<span class="nc" id="L87">			drawTriangle(turtle,n-1,distance/3.0f);</span>
+<span class="nc" id="L88">			turtle.turn(120);</span>
+<span class="nc" id="L89">			drawTriangle(turtle,n-1,distance/3.0f);</span>
+<span class="nc" id="L90">			turtle.turn(-60);</span>
+		} else {
+<span class="nc" id="L92">			turtle.forward(distance/3.0f);</span>
+		}
+<span class="nc" id="L94">		drawTriangle(turtle,n-1,distance/3.0f);</span>
+<span class="nc" id="L95">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

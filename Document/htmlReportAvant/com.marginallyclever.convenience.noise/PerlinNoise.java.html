@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerlinNoise.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience.noise</a> &gt; <span class="el_source">PerlinNoise.java</span></div><h1>PerlinNoise.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience.noise;
+
+import com.marginallyclever.convenience.helpers.MathHelper;
+
+/**
+ * JAVA REFERENCE IMPLEMENTATION OF IMPROVED NOISE - COPYRIGHT 2002 KEN PERLIN.
+ * @author ken perlin
+ * @since 2002
+ */
+public class PerlinNoise implements Noise {
+<span class="fc" id="L11">    final int [] p = new int[512];</span>
+<span class="fc" id="L12">    final int [] permutation = {</span>
+            151,160,137, 91, 90, 15,131, 13,201, 95, 96, 53,194,233,  7,225,
+            140, 36,103, 30, 69,142,  8, 99, 37,240, 21, 10, 23,190,  6,148,
+            247,120,234, 75,  0, 26,197, 62, 94,252,219,203,117, 35, 11, 32,
+            57,177, 33, 88,237,149, 56, 87,174, 20,125,136,171,168, 68,175,
+            74,165, 71,134,139, 48, 27,166, 77,146,158,231, 83,111,229,122,
+            60,211,133,230,220,105, 92, 41, 55, 46,245, 40,244,102,143, 54,
+            65, 25, 63,161,  1,216, 80, 73,209, 76,132,187,208, 89, 18,169,
+            200,196,135,130,116,188,159, 86,164,100,109,198,173,186,  3, 64,
+            52,217,226,250,124,123,  5,202, 38,147,118,126,255, 82, 85,212,
+            207,206, 59,227, 47, 16, 58, 17,182,189, 28, 42,223,183,170,213,
+            119,248,152,  2, 44,154,163, 70,221,153,101,155,167, 43,172,  9,
+            129, 22, 39,253, 19, 98,108,110, 79,113,224,232,178,185,112,104,
+            218,246, 97,228,251, 34,242,193,238,210,144, 12,191,179,162,241,
+            81, 51,145,235,249, 14,239,107, 49,192,214, 31,181,199,106,157,
+            184, 84,204,176,115,121, 50, 45,127,  4,150,254,138,236,205, 93,
+            222,114, 67, 29, 24, 72,243,141,128,195, 78, 66,215, 61,156,180
+    };
+
+<span class="fc" id="L31">    public PerlinNoise() {</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        for (int i=0; i &lt; 256 ; i++) {</span>
+<span class="fc" id="L33">            p[256+i] = p[i] = permutation[i];</span>
+        }
+<span class="fc" id="L35">    }</span>
+
+    @Override
+    public double noise(double x) {
+<span class="nc" id="L39">        return noise(x,0,0);</span>
+    }
+
+    @Override
+    public double noise(double x, double y) {
+<span class="nc" id="L44">        return noise(x,y,0);</span>
+    }
+
+    /**
+     * 2D Perlin noise. Returns value from -1 to 1.
+     * @param x
+     * @param y
+     * @param z
+     * @return value from -1 to 1.
+     */
+    @Override
+    public double noise(double x, double y, double z) {
+<span class="nc" id="L56">        int X = (int)Math.floor(x) &amp; 255,  // FIND UNIT CUBE THAT CONTAINS POINT.</span>
+<span class="nc" id="L57">                Y = (int)Math.floor(y) &amp; 255,</span>
+<span class="nc" id="L58">                Z = (int)Math.floor(z) &amp; 255;</span>
+<span class="nc" id="L59">        x -= Math.floor(x);  // FIND RELATIVE X,Y,Z OF POINT IN CUBE.</span>
+<span class="nc" id="L60">        y -= Math.floor(y);</span>
+<span class="nc" id="L61">        z -= Math.floor(z);</span>
+<span class="nc" id="L62">        double u = fade(x),  // COMPUTE FADE CURVES FOR EACH OF X,Y,Z.</span>
+<span class="nc" id="L63">               v = fade(y),</span>
+<span class="nc" id="L64">               w = fade(z);</span>
+        // HASH COORDINATES OF THE 8 CUBE CORNERS,
+<span class="nc" id="L66">        int A = p[X  ]+Y, AA = p[A]+Z, AB = p[A+1]+Z,</span>
+<span class="nc" id="L67">            B = p[X+1]+Y, BA = p[B]+Z, BB = p[B+1]+Z;</span>
+
+        // AND ADD BLENDED RESULTS FROM  8 CORNERS OF CUBE
+<span class="nc" id="L70">        return MathHelper.lerp(w,</span>
+<span class="nc" id="L71">                MathHelper.lerp(v,</span>
+<span class="nc" id="L72">                        MathHelper.lerp(u, grad(p[AA  ], x  , y  , z   ),</span>
+<span class="nc" id="L73">                                           grad(p[BA  ], x-1, y  , z   )),</span>
+<span class="nc" id="L74">                        MathHelper.lerp(u, grad(p[AB  ], x  , y-1, z   ),</span>
+<span class="nc" id="L75">                                           grad(p[BB  ], x-1, y-1, z   ))),</span>
+<span class="nc" id="L76">                MathHelper.lerp(v,</span>
+<span class="nc" id="L77">                        MathHelper.lerp(u, grad(p[AA+1], x  , y  , z-1 ),</span>
+<span class="nc" id="L78">                                           grad(p[BA+1], x-1, y  , z-1 )),</span>
+<span class="nc" id="L79">                        MathHelper.lerp(u, grad(p[AB+1], x  , y-1, z-1 ),</span>
+<span class="nc" id="L80">                                           grad(p[BB+1], x-1, y-1, z-1 ))));</span>
+    }
+
+    private double fade(double t) {
+<span class="nc" id="L84">        return t * t * t * (t * (t * 6 - 15) + 10);</span>
+    }
+
+    private double grad(int hash, double x, double y, double z) {
+<span class="nc" id="L88">        int h = hash &amp; 15;  // CONVERT LO 4 BITS OF HASH CODE INTO 12 GRADIENT DIRECTIONS.</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        double u = h&lt;8 ? x : y,</span>
+<span class="nc bnc" id="L90" title="All 6 branches missed.">               v = h&lt;4 ? y : h==12||h==14 ? x : z;</span>
+<span class="nc bnc" id="L91" title="All 4 branches missed.">        return ((h&amp;1) == 0 ? u : -u) + ((h&amp;2) == 0 ? v : -v);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

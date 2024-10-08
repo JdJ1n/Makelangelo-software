@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MetricsPreferences.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.applicationsettings</a> &gt; <span class="el_source">MetricsPreferences.java</span></div><h1>MetricsPreferences.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.applicationsettings;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.select.SelectBoolean;
+import com.marginallyclever.makelangelo.select.SelectPanel;
+import com.marginallyclever.util.PreferencesHelper;
+
+import java.util.prefs.Preferences;
+
+<span class="nc" id="L10">public class MetricsPreferences {</span>
+	static private final String COLLECT_ANONYMOUS_METRICS_LABEL = &quot;Collect Anonymous Metrics&quot;;
+
+	static private SelectPanel panel;
+	static private SelectBoolean collectAnonymousMetricsCheckbox;
+
+	static public SelectPanel buildPanel() {
+<span class="nc" id="L17">		panel = new SelectPanel();</span>
+<span class="nc" id="L18">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.METRICS);</span>
+<span class="nc" id="L19">		collectAnonymousMetricsCheckbox = new SelectBoolean(&quot;collect&quot;,</span>
+<span class="nc" id="L20">				Translator.get(&quot;MetricsPreferences.collectAnonymousMetrics&quot;),</span>
+<span class="nc" id="L21">				prefs.getBoolean(COLLECT_ANONYMOUS_METRICS_LABEL, false));</span>
+
+<span class="nc" id="L23">		panel.add(collectAnonymousMetricsCheckbox);</span>
+
+<span class="nc" id="L25">		return panel;</span>
+	}
+	
+	static public void save() {
+<span class="nc" id="L29">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.METRICS);</span>
+<span class="nc" id="L30">		prefs.putBoolean(COLLECT_ANONYMOUS_METRICS_LABEL, collectAnonymousMetricsCheckbox.isSelected());</span>
+<span class="nc" id="L31">	}</span>
+
+	static public boolean areAllowedToShare() {
+<span class="nc bnc" id="L34" title="All 2 branches missed.">		if(collectAnonymousMetricsCheckbox != null) return collectAnonymousMetricsCheckbox.isSelected();</span>
+		
+<span class="nc" id="L36">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.METRICS);</span>
+<span class="nc" id="L37">		return prefs.getBoolean(COLLECT_ANONYMOUS_METRICS_LABEL,false);</span>
+	}
+	
+	static public void setAllowedToShare(boolean newState) {
+<span class="nc" id="L41">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.METRICS);</span>
+<span class="nc" id="L42">		prefs.putBoolean(COLLECT_ANONYMOUS_METRICS_LABEL, newState);</span>
+<span class="nc" id="L43">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

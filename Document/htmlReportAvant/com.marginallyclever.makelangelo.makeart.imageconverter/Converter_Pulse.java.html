@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_Pulse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_Pulse.java</span></div><h1>Converter_Pulse.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectDouble;
+import com.marginallyclever.makelangelo.select.SelectOneOfMany;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+
+/**
+ * straight lines pulsing like a heartbeat.  height and density of pulse vary with image intensity.
+ * @author Dan Royer
+ */
+public class Converter_Pulse extends ImageConverter {
+<span class="nc" id="L21">	private static double blockScale = 6.0f;</span>
+<span class="nc" id="L22">	private static int direction = 0;</span>
+<span class="nc" id="L23">	private final String[] directionChoices = new String[]{Translator.get(&quot;horizontal&quot;), Translator.get(&quot;vertical&quot;) };</span>
+<span class="nc" id="L24">	private int cutOff = 16;</span>
+
+	public Converter_Pulse() {
+<span class="nc" id="L27">		super();</span>
+
+<span class="nc" id="L29">		SelectDouble    selectSize = new SelectDouble(&quot;size&quot;,Translator.get(&quot;HilbertCurveSize&quot;),getScale());</span>
+<span class="nc" id="L30">		SelectOneOfMany selectDirection = new SelectOneOfMany(&quot;direction&quot;,Translator.get(&quot;Direction&quot;),getDirections(),getDirectionIndex());</span>
+<span class="nc" id="L31">		SelectSlider    selectCutoff = new SelectSlider(&quot;cutoff&quot;,Translator.get(&quot;Converter_VoronoiStippling.Cutoff&quot;),255,0,getCutoff());</span>
+
+<span class="nc" id="L33">		add(selectSize);</span>
+<span class="nc" id="L34">		add(selectDirection);</span>
+<span class="nc" id="L35">		add(selectCutoff);</span>
+
+<span class="nc" id="L37">		selectSize.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L38">			setScale((double) evt.getNewValue());</span>
+<span class="nc" id="L39">			fireRestart();</span>
+<span class="nc" id="L40">		});</span>
+<span class="nc" id="L41">		selectDirection.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L42">			setDirectionIndex((int) evt.getNewValue());</span>
+<span class="nc" id="L43">			fireRestart();</span>
+<span class="nc" id="L44">		});</span>
+<span class="nc" id="L45">		selectCutoff.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L46">			setCutoff((int) evt.getNewValue());</span>
+<span class="nc" id="L47">			fireRestart();</span>
+<span class="nc" id="L48">		});</span>
+<span class="nc" id="L49">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L53">		return Translator.get(&quot;PulseLineName&quot;);</span>
+	}
+
+	public double getScale() {
+<span class="nc" id="L57">		return blockScale;</span>
+	}
+	public void setScale(double value) {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if(value&lt;1) value=1;</span>
+<span class="nc" id="L61">		blockScale = value;</span>
+<span class="nc" id="L62">	}</span>
+	public String[] getDirections() {
+<span class="nc" id="L64">		return directionChoices;</span>
+	}
+	public int getDirectionIndex() {
+<span class="nc" id="L67">		return direction;</span>
+	}
+	public void setDirectionIndex(int value) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if(value&lt;0) value=0;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if(value&gt;=directionChoices.length) value=directionChoices.length-1;</span>
+<span class="nc" id="L72">		direction = value;</span>
+<span class="nc" id="L73">	}</span>
+	
+	protected void convertLine(TransformedImage img, double zigZagSpacing, double halfStep, Point2D a, Point2D b) {
+<span class="nc" id="L76">		Point2D dir = new Point2D(b.x-a.x,b.y-a.y);</span>
+<span class="nc" id="L77">		double len = dir.length();</span>
+<span class="nc" id="L78">		dir.scale(1.0/len);</span>
+<span class="nc" id="L79">		Point2D ortho = new Point2D(-dir.y,dir.x);</span>
+
+<span class="nc" id="L81">		double cx = myPaper.getCenterX();</span>
+<span class="nc" id="L82">		double cy = myPaper.getCenterY();</span>
+<span class="nc" id="L83">		turtle.jumpTo(</span>
+				cx+a.x + ortho.x*halfStep,
+				cy+a.y + ortho.y*halfStep
+		);
+
+<span class="nc" id="L88">		int n=1;</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for (double p = 0; p &lt;= len; p += zigZagSpacing) {</span>
+<span class="nc" id="L90">			double x = a.x + dir.x * p; </span>
+<span class="nc" id="L91">			double y = a.y + dir.y * p; </span>
+			// read a block of the image and find the average intensity in this block
+<span class="nc" id="L93">			double z = 255.0f - img.sample( x - zigZagSpacing, y - halfStep, x + zigZagSpacing, y + halfStep);</span>
+			// scale the intensity value
+<span class="nc" id="L95">			double scale_z = (z) / 255.0f;</span>
+			//scale_z *= scale_z;  // quadratic curve
+<span class="nc" id="L97">			double pulseSize = halfStep * scale_z;</span>
+
+<span class="nc" id="L99">			double px=x + ortho.x * pulseSize * n;</span>
+<span class="nc" id="L100">			double py=y + ortho.y * pulseSize * n;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			if(z&gt;cutOff) turtle.moveTo(cx+px,cy+py);</span>
+<span class="nc" id="L102">			else turtle.jumpTo(cx+px,cy+py);</span>
+<span class="nc" id="L103">			n = -n;</span>
+		}
+<span class="nc" id="L105">	}</span>
+
+	/**
+	 * Converts images into zigzags in paper space instead of image space
+	 */
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L112">		super.start(paper, image);</span>
+
+<span class="nc" id="L114">		FilterDesaturate bw = new FilterDesaturate(myImage);</span>
+<span class="nc" id="L115">		TransformedImage img = bw.filter();</span>
+
+<span class="nc" id="L117">		convertOneLayer(img);</span>
+
+<span class="nc" id="L119">		fireConversionFinished();</span>
+<span class="nc" id="L120">	}</span>
+
+	protected void convertOneLayer(TransformedImage img) {
+<span class="nc" id="L123">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L124">		double xLeft   = rect.getMinX();</span>
+<span class="nc" id="L125">		double yBottom = rect.getMinY();</span>
+<span class="nc" id="L126">		double xRight  = rect.getMaxX();</span>
+<span class="nc" id="L127">		double yTop    = rect.getMaxY();</span>
+		
+		// figure out how many lines we're going to have on this image.
+<span class="nc" id="L130">		double stepSize = blockScale;</span>
+<span class="nc" id="L131">		double halfStep = stepSize / 2.0f;</span>
+<span class="nc" id="L132">		double zigZagSpacing = 1;</span>
+
+		// from top to bottom of the image...
+<span class="nc" id="L135">		double x, y = 0;</span>
+<span class="nc" id="L136">		int i=0;</span>
+
+<span class="nc" id="L138">		Point2D a = new Point2D();</span>
+<span class="nc" id="L139">		Point2D b = new Point2D();</span>
+		
+<span class="nc" id="L141">		turtle = new Turtle();</span>
+		
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (direction == 0) {</span>
+			// horizontal
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			for (y = yBottom; y &lt; yTop; y += stepSize) {</span>
+<span class="nc" id="L146">				++i;</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				if ((i % 2) == 0) {</span>
+<span class="nc" id="L149">					a.set(xLeft,y);</span>
+<span class="nc" id="L150">					b.set(xRight,y);</span>
+<span class="nc" id="L151">					convertLine(img,zigZagSpacing,halfStep,a,b);</span>
+				} else {
+<span class="nc" id="L153">					a.set(xRight,y);</span>
+<span class="nc" id="L154">					b.set(xLeft,y);</span>
+<span class="nc" id="L155">					convertLine(img,zigZagSpacing,halfStep,a,b);</span>
+				}
+			}
+		} else {
+			// vertical
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			for (x = xLeft; x &lt; xRight; x += stepSize) {</span>
+<span class="nc" id="L161">				++i;</span>
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">				if ((i % 2) == 0) {</span>
+<span class="nc" id="L164">					a.set(x,yBottom);</span>
+<span class="nc" id="L165">					b.set(x,yTop);</span>
+<span class="nc" id="L166">					convertLine(img,zigZagSpacing,halfStep,a,b);</span>
+				} else {
+<span class="nc" id="L168">					a.set(x,yTop);</span>
+<span class="nc" id="L169">					b.set(x,yBottom);</span>
+<span class="nc" id="L170">					convertLine(img,zigZagSpacing,halfStep,a,b);</span>
+				}
+			}
+		}
+<span class="nc" id="L174">	}</span>
+
+    public int getCutoff() {
+<span class="nc" id="L177">		return cutOff;</span>
+    }
+
+	public void setCutoff(int value) {
+<span class="nc" id="L181">		cutOff=value;</span>
+<span class="nc" id="L182">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

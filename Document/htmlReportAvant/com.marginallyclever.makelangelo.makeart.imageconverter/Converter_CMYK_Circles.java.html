@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_CMYK_Circles.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_CMYK_Circles.java</span></div><h1>Converter_CMYK_Circles.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.convenience.Clipper2D;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterCMYK;
+import com.marginallyclever.makelangelo.makeart.tools.InfillTurtle;
+import com.marginallyclever.makelangelo.makeart.tools.RemoveExtraColorChangesFromTurtle;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+
+/**
+ * See also &lt;a href=&quot;http://the-print-guide.blogspot.ca/2009/05/halftone-screen-angles.html&quot;&gt;...&lt;/a&gt;
+ * @author Dan Royer
+ */
+public class Converter_CMYK_Circles extends ImageConverter {
+<span class="nc" id="L25">	private static final Logger logger = LoggerFactory.getLogger(Converter_CMYK_Circles.class);</span>
+<span class="nc" id="L26">	static protected int maxCircleRadius =5;</span>
+
+	public Converter_CMYK_Circles() {
+<span class="nc" id="L29">		super();</span>
+
+<span class="nc" id="L31">		SelectSlider maxCircleSize = new SelectSlider(&quot;maxCircleSize&quot;, Translator.get(&quot;Converter_CMYK_Circles.maxCircleSize&quot;), 10, 1, getMaxCircleSize());</span>
+<span class="nc" id="L32">		maxCircleSize.addSelectListener((evt)-&gt;{</span>
+<span class="nc" id="L33">			setMaxCircleSize((int)evt.getNewValue());</span>
+<span class="nc" id="L34">			fireRestart();</span>
+<span class="nc" id="L35">		});</span>
+<span class="nc" id="L36">		add(maxCircleSize);</span>
+
+<span class="nc" id="L38">		add(new SelectReadOnlyText(&quot;note&quot;,Translator.get(&quot;Converter_CMYK_Crosshatch.Note&quot;)));</span>
+<span class="nc" id="L39">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L43">		return Translator.get(&quot;Converter_CMYK_Circles.name&quot;);</span>
+	}
+
+	public int getMaxCircleSize() {
+<span class="nc" id="L47">		return maxCircleRadius;</span>
+	}
+	
+	/**
+	 * @param value Must be &gt;=1.
+	 */
+	public void setMaxCircleSize(int value) {
+<span class="nc" id="L54">		maxCircleRadius = Math.max(1, value);</span>
+<span class="nc" id="L55">	}</span>
+	
+	/**
+	 * create horizontal lines across the image.  Raise and lower the pen to darken the appropriate areas
+	 */
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L62">		super.start(paper, image);</span>
+
+<span class="nc" id="L64">		FilterCMYK cmyk = new FilterCMYK(myImage);</span>
+<span class="nc" id="L65">		cmyk.filter();</span>
+		
+<span class="nc" id="L67">		turtle = new Turtle();</span>
+		// remove extra change color at the start of the turtle
+<span class="nc" id="L69">		turtle.history.clear();</span>
+		
+<span class="nc" id="L71">		logger.debug(&quot;Yellow...&quot;);		outputChannel(cmyk.getY(),0 ,Color.YELLOW);</span>
+<span class="nc" id="L72">		logger.debug(&quot;Cyan...&quot;);		outputChannel(cmyk.getC(),15,Color.CYAN);</span>
+<span class="nc" id="L73">		logger.debug(&quot;Magenta...&quot;);		outputChannel(cmyk.getM(),75,Color.MAGENTA);</span>
+<span class="nc" id="L74">		logger.debug(&quot;Black...&quot;);		outputChannel(cmyk.getK(),45,Color.BLACK);</span>
+
+<span class="nc" id="L76">		RemoveExtraColorChangesFromTurtle.run(turtle);</span>
+<span class="nc" id="L77">		fireConversionFinished();</span>
+<span class="nc" id="L78">	}</span>
+
+	/**
+	 * Remove any color changes that are not needed.
+	 * TODO could be used on every Turtle generated.
+	 * @param turtle the turtle to clean up
+	 */
+	private void removeRedundantColorChanges(Turtle turtle) {
+<span class="nc" id="L86">	}</span>
+	
+	protected void outputChannel(TransformedImage img, float angle, Color newColor) {
+<span class="nc" id="L89">		double dx = Math.cos(Math.toRadians(angle));</span>
+<span class="nc" id="L90">		double dy = Math.sin(Math.toRadians(angle));</span>
+		
+<span class="nc" id="L92">		turtle.setColor(newColor);</span>
+
+		// from top to bottom of the margin area...
+<span class="nc" id="L95">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L96">		double height  = rect.getHeight();</span>
+<span class="nc" id="L97">		double width   = rect.getWidth();</span>
+<span class="nc" id="L98">		double maxLen  = Math.sqrt(width*width+height*height);</span>
+
+<span class="nc" id="L100">		int i=0;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		for(double a = -maxLen;a&lt;maxLen;a+= maxCircleRadius*2) {</span>
+<span class="nc" id="L102">			double px = dx * a;</span>
+<span class="nc" id="L103">			double py = dy * a;</span>
+			// p0-p1 is at a right angle to dx/dy
+<span class="nc" id="L105">			double x0 = px - dy * -maxLen;</span>
+<span class="nc" id="L106">			double y0 = py + dx * -maxLen;</span>
+<span class="nc" id="L107">			double x1 = px - dy * maxLen;</span>
+<span class="nc" id="L108">			double y1 = py + dx * maxLen;</span>
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if(i%2==0) {</span>
+<span class="nc" id="L111">				circlesAlongLine(x0, y0, x1, y1, img);</span>
+			} else {
+<span class="nc" id="L113">				circlesAlongLine(x1, y1, x0, y0, img);</span>
+			}
+<span class="nc" id="L115">			++i;</span>
+		}
+<span class="nc" id="L117">	}</span>
+
+	private void circlesAlongLine(double x1, double y1, double x0, double y0, TransformedImage img) {
+<span class="nc" id="L120">		Point2D P0 = new Point2D(x0,y0);</span>
+<span class="nc" id="L121">		Point2D P1 = new Point2D(x1,y1);</span>
+
+<span class="nc" id="L123">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L124">		Point2D rMax = new Point2D(rect.getMaxX(),rect.getMaxY());</span>
+<span class="nc" id="L125">		Point2D rMin = new Point2D(rect.getMinX(),rect.getMinY());</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if(!Clipper2D.clipLineToRectangle(P0, P1, rMax, rMin)) {</span>
+			// entire line clipped
+<span class="nc" id="L128">			return;</span>
+		}
+
+<span class="nc" id="L131">		double cx = myPaper.getCenterX();</span>
+<span class="nc" id="L132">		double cy = myPaper.getCenterY();</span>
+<span class="nc" id="L133">		double dx=P1.x-P0.x;</span>
+<span class="nc" id="L134">		double dy=P1.y-P0.y;</span>
+<span class="nc" id="L135">		double halfStep = maxCircleRadius;</span>
+<span class="nc" id="L136">		double distance = Math.sqrt(dx*dx+dy*dy);</span>
+
+		double n,x,y,v;
+		double b;
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		for( b = 0; b &lt;= distance; b+= maxCircleRadius*2) {</span>
+<span class="nc" id="L141">			n = b / distance;</span>
+<span class="nc" id="L142">			x = dx * n + P0.x;</span>
+<span class="nc" id="L143">			y = dy * n + P0.y;</span>
+
+<span class="nc" id="L145">			v = img.sample( x - halfStep, y - halfStep, x + halfStep, y + halfStep);</span>
+
+<span class="nc" id="L147">			drawCircle(cx + x, cy + y, maxCircleRadius * ((255.0-v)/255.0));</span>
+		}
+<span class="nc" id="L149">	}</span>
+
+	private void drawCircle(double x,double y,double r) {
+<span class="nc" id="L152">		double circumference = Math.ceil(Math.PI*r*2.0);</span>
+<span class="nc" id="L153">		Turtle t = new Turtle();</span>
+<span class="nc" id="L154">		t.history.clear();</span>
+<span class="nc" id="L155">		t.setColor(turtle.getColor());</span>
+<span class="nc" id="L156">		t.jumpTo(x+r,y+0);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		for(int i=0;i&lt;circumference;++i) {</span>
+<span class="nc" id="L158">			double v = 2.0*Math.PI * (double)i/circumference;</span>
+<span class="nc" id="L159">			t.moveTo(</span>
+<span class="nc" id="L160">					x+Math.cos(v)*r,</span>
+<span class="nc" id="L161">					y+Math.sin(v)*r);</span>
+		}
+<span class="nc" id="L163">		t.moveTo(x+r,y+0);</span>
+
+		try {
+<span class="nc" id="L166">			InfillTurtle filler = new InfillTurtle();</span>
+<span class="nc" id="L167">			filler.setPenDiameter(t.getDiameter());</span>
+<span class="nc" id="L168">			Turtle t2 = filler.run(t);</span>
+<span class="nc" id="L169">			turtle.add(t2);</span>
+<span class="nc" id="L170">		} catch(Exception e) {</span>
+			// shape was not closed, do nothing.
+<span class="nc" id="L172">		}</span>
+
+<span class="nc" id="L174">		turtle.add(t);</span>
+<span class="nc" id="L175">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Makelangelo3.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plotterrenderer</a> &gt; <span class="el_source">Makelangelo3.java</span></div><h1>Makelangelo3.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plotterrenderer;
+
+import com.jogamp.opengl.GL2;
+import com.marginallyclever.makelangelo.plotter.Plotter;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+
+/**
+ * Deprecated because it cannot find home.
+ * @author Dan Royer
+ */
+@Deprecated
+<span class="nc" id="L12">public class Makelangelo3 implements PlotterRenderer {</span>
+
+	@Override
+	public void render(GL2 gl2,Plotter robot) {
+<span class="nc" id="L16">		paintControlBox(gl2,robot);</span>
+<span class="nc" id="L17">		Polargraph.paintMotors(gl2,robot);</span>
+<span class="nc bnc" id="L18" title="All 2 branches missed.">		if(robot.getDidFindHome()) </span>
+<span class="nc" id="L19">			Polargraph.paintPenHolderToCounterweights(gl2,robot);		</span>
+<span class="nc" id="L20">	}</span>
+
+	/**
+	 * paint the controller and the LCD panel
+	 * @param gl2
+	 * @param plotter
+	 */
+	private void paintControlBox(GL2 gl2,Plotter plotter) {
+<span class="nc" id="L28">		double cy = plotter.getSettings().getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L29">		double left = plotter.getSettings().getDouble(PlotterSettings.LIMIT_LEFT);</span>
+<span class="nc" id="L30">		double right = plotter.getSettings().getDouble(PlotterSettings.LIMIT_RIGHT);</span>
+<span class="nc" id="L31">		double cx = 0;</span>
+
+<span class="nc" id="L33">		gl2.glPushMatrix();</span>
+<span class="nc" id="L34">		gl2.glTranslated(cx, cy, 0);</span>
+		
+		// mounting plate for PCB
+<span class="nc" id="L37">		gl2.glColor3f(1,0.8f,0.5f);</span>
+<span class="nc" id="L38">		float w =80;</span>
+<span class="nc" id="L39">		float h = 50;</span>
+<span class="nc" id="L40">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L41">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L42">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L43">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L44">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L45">		gl2.glEnd();</span>
+
+		// wires to each motor
+<span class="nc" id="L48">		gl2.glBegin(GL2.GL_LINES);</span>
+<span class="nc" id="L49">		float SPACING=2f;</span>
+<span class="nc" id="L50">		float y=SPACING*-1.5f;</span>
+<span class="nc" id="L51">		gl2.glColor3f(1, 0, 0);		gl2.glVertex2d(0, y);	gl2.glVertex2d(left, y);  y+=SPACING;</span>
+<span class="nc" id="L52">		gl2.glColor3f(0, 1, 0);		gl2.glVertex2d(0, y);	gl2.glVertex2d(left, y);  y+=SPACING;</span>
+<span class="nc" id="L53">		gl2.glColor3f(0, 0, 1);		gl2.glVertex2d(0, y);	gl2.glVertex2d(left, y);  y+=SPACING;</span>
+<span class="nc" id="L54">		gl2.glColor3f(1, 1, 0);		gl2.glVertex2d(0, y);	gl2.glVertex2d(left, y);  y+=SPACING;</span>
+
+<span class="nc" id="L56">		y=SPACING*-1.5f;</span>
+<span class="nc" id="L57">		gl2.glColor3f(1, 0, 0);		gl2.glVertex2d(0, y);	gl2.glVertex2d(right, y);  y+=SPACING;</span>
+<span class="nc" id="L58">		gl2.glColor3f(0, 1, 0);		gl2.glVertex2d(0, y);	gl2.glVertex2d(right, y);  y+=SPACING;</span>
+<span class="nc" id="L59">		gl2.glColor3f(0, 0, 1);		gl2.glVertex2d(0, y);	gl2.glVertex2d(right, y);  y+=SPACING;</span>
+<span class="nc" id="L60">		gl2.glColor3f(1, 1, 0);		gl2.glVertex2d(0, y);	gl2.glVertex2d(right, y);  y+=SPACING;</span>
+<span class="nc" id="L61">		gl2.glEnd();</span>
+		
+		// RUMBA in v3 (135mm*75mm)
+<span class="nc" id="L64">		h = 75f/2;</span>
+<span class="nc" id="L65">		w = 135f/2;</span>
+<span class="nc" id="L66">		gl2.glColor3d(0.9,0.9,0.9);</span>
+<span class="nc" id="L67">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L68">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L69">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L70">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L71">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L72">		gl2.glEnd();</span>
+
+<span class="nc" id="L74">		renderLCD(gl2);</span>
+
+<span class="nc" id="L76">		gl2.glPopMatrix();</span>
+<span class="nc" id="L77">	}</span>
+	
+	private void renderLCD(GL2 gl2) {
+		// position
+<span class="nc" id="L81">		gl2.glPushMatrix();</span>
+<span class="nc" id="L82">		gl2.glTranslated(-180, 0, 0);</span>
+		
+		// mounting plate for LCD
+<span class="nc" id="L85">		float w = 80f;</span>
+<span class="nc" id="L86">		float h = 50f;</span>
+<span class="nc" id="L87">		gl2.glColor3f(1,0.8f,0.5f);</span>
+<span class="nc" id="L88">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L89">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L90">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L91">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L92">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L93">		gl2.glEnd();</span>
+
+		// LCD red
+<span class="nc" id="L96">		w = 150f/2;</span>
+<span class="nc" id="L97">		h = 56f/2;</span>
+<span class="nc" id="L98">		gl2.glColor3f(0.8f,0.0f,0.0f);</span>
+<span class="nc" id="L99">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L100">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L101">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L102">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L103">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L104">		gl2.glEnd();</span>
+
+		// LCD green
+<span class="nc" id="L107">		gl2.glPushMatrix();</span>
+<span class="nc" id="L108">		gl2.glTranslated(-(2.6)/2, -0.771, 0);</span>
+		
+<span class="nc" id="L110">		w = 98f/2;</span>
+<span class="nc" id="L111">		h = 60f/2;</span>
+<span class="nc" id="L112">		gl2.glColor3f(0,0.6f,0.0f);</span>
+<span class="nc" id="L113">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L114">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L115">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L116">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L117">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L118">		gl2.glEnd();</span>
+
+		// LCD black
+<span class="nc" id="L121">		h = 40f/2;</span>
+<span class="nc" id="L122">		gl2.glColor3f(0,0,0);</span>
+<span class="nc" id="L123">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L124">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L125">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L126">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L127">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L128">		gl2.glEnd();</span>
+
+		// LCD blue
+<span class="nc" id="L131">		h = 25f/2;</span>
+<span class="nc" id="L132">		w = 75f/2;</span>
+<span class="nc" id="L133">		gl2.glColor3f(0,0,0.7f);</span>
+<span class="nc" id="L134">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L135">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L136">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L137">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L138">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L139">		gl2.glEnd();</span>
+		
+<span class="nc" id="L141">		gl2.glPopMatrix();</span>
+
+		// clean up
+<span class="nc" id="L144">		gl2.glPopMatrix();</span>
+<span class="nc" id="L145">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

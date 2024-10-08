@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RangeSlider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.rangeslider</a> &gt; <span class="el_source">RangeSlider.java</span></div><h1>RangeSlider.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.rangeslider;
+
+import javax.swing.JSlider;
+
+/**
+ * An extension of JSlider to select a range of values using two thumb controls.
+ * The thumb controls are used to select the lower and upper value of a range
+ * with predetermined minimum and maximum values.
+ * 
+ * &lt;p&gt;Note that RangeSlider makes use of the default BoundedRangeModel, which 
+ * supports an inner range defined by a value and an extent.  The upper value
+ * returned by RangeSlider is simply the lower value plus the extent.&lt;/p&gt;
+ * 
+ * see https://ernienotes.wordpress.com/2010/12/27/creating-a-java-swing-range-slider/
+ * @author Ernest Yu 
+ */
+public class RangeSlider extends JSlider {
+	/**
+     * Constructs a RangeSlider with default minimum and maximum values of 0
+     * and 100.
+     */
+<span class="nc" id="L22">    public RangeSlider() {</span>
+<span class="nc" id="L23">        initSlider();</span>
+<span class="nc" id="L24">    }</span>
+
+    /**
+     * Constructs a RangeSlider with the specified default minimum and maximum 
+     * values.
+     */
+    public RangeSlider(int min, int max) {
+<span class="nc" id="L31">        super(min, max);</span>
+<span class="nc" id="L32">        initSlider();</span>
+<span class="nc" id="L33">    }</span>
+
+    /**
+     * Initializes the slider by setting default properties.
+     */
+    private void initSlider() {
+<span class="nc" id="L39">        setOrientation(HORIZONTAL);</span>
+<span class="nc" id="L40">    }</span>
+
+    /**
+     * Overrides the superclass method to install the UI delegate to draw two
+     * thumbs.
+     */
+    @Override
+    public void updateUI() {
+<span class="nc" id="L48">        setUI(new RangeSliderUI(this));</span>
+        // Update UI for slider labels.  This must be called after updating the
+        // UI of the slider.  Refer to JSlider.updateUI().
+<span class="nc" id="L51">        updateLabelUIs();</span>
+<span class="nc" id="L52">    }</span>
+
+    /**
+     * Returns the lower value in the range.
+     */
+    @Override
+    public int getValue() {
+<span class="nc" id="L59">        return super.getValue();</span>
+    }
+
+    /**
+     * Sets the lower value in the range.
+     */
+    @Override
+    public void setValue(int value) {
+<span class="nc" id="L67">        int oldValue = getValue();</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (oldValue == value) {</span>
+<span class="nc" id="L69">            return;</span>
+        }
+
+        // Compute new value and extent to maintain upper value.
+<span class="nc" id="L73">        int oldExtent = getExtent();</span>
+<span class="nc" id="L74">        int newValue = Math.min(Math.max(getMinimum(), value), oldValue + oldExtent);</span>
+<span class="nc" id="L75">        int newExtent = oldExtent + oldValue - newValue;</span>
+
+        // Set new value and extent, and fire a single change event.
+<span class="nc" id="L78">        getModel().setRangeProperties(newValue, newExtent, getMinimum(), </span>
+<span class="nc" id="L79">            getMaximum(), getValueIsAdjusting());</span>
+<span class="nc" id="L80">    }</span>
+
+    /**
+     * Returns the upper value in the range.
+     */
+    public int getUpperValue() {
+<span class="nc" id="L86">        return getValue() + getExtent();</span>
+    }
+
+    /**
+     * Sets the upper value in the range.
+     */
+    public void setUpperValue(int value) {
+        // Compute new extent.
+<span class="nc" id="L94">        int lowerValue = getValue();</span>
+<span class="nc" id="L95">        int newExtent = Math.min(Math.max(0, value - lowerValue), getMaximum() - lowerValue);</span>
+        
+        // Set extent to set upper value.
+<span class="nc" id="L98">        setExtent(newExtent);</span>
+<span class="nc" id="L99">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

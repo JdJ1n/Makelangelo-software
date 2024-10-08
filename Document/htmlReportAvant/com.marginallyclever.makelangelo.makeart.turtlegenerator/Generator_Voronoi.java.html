@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_Voronoi.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator</a> &gt; <span class="el_source">Generator_Voronoi.java</span></div><h1>Generator_Voronoi.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+
+import com.marginallyclever.convenience.voronoi.VoronoiCell;
+import com.marginallyclever.convenience.voronoi.VoronoiTesselator2;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.select.SelectBoolean;
+import com.marginallyclever.makelangelo.select.SelectInteger;
+import com.marginallyclever.makelangelo.select.SelectRandomSeed;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Polygon;
+
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * 1cm and 10cm grid lines
+ * @author Dan Royer
+ */
+public class Generator_Voronoi extends TurtleGenerator {
+<span class="fc" id="L24">	private static int numCells = 500;</span>
+<span class="fc" id="L25">	private static boolean showCenters = false;</span>
+<span class="fc" id="L26">	private static int seed=0;</span>
+<span class="fc" id="L27">	private static final Random random = new Random();</span>
+
+	public Generator_Voronoi() {
+<span class="fc" id="L30">		super();</span>
+
+<span class="fc" id="L32">		SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;,Translator.get(&quot;Generator.randomSeed&quot;),seed);</span>
+<span class="fc" id="L33">		add(selectRandomSeed);</span>
+<span class="fc" id="L34">		selectRandomSeed.addSelectListener((evt)-&gt;{</span>
+<span class="nc" id="L35">			seed = (int)evt.getNewValue();</span>
+<span class="nc" id="L36">			random.setSeed(seed);</span>
+<span class="nc" id="L37">			generate();</span>
+<span class="nc" id="L38">		});</span>
+
+		SelectInteger cells;
+<span class="fc" id="L41">		add(cells = new SelectInteger(&quot;cells&quot;,Translator.get(&quot;Converter_VoronoiStippling.CellCount&quot;),getNumCells()));</span>
+<span class="fc" id="L42">		cells.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L43">			setNumCells(Math.max(1,cells.getValue()));</span>
+<span class="nc" id="L44">			generate();</span>
+<span class="nc" id="L45">		});</span>
+
+		SelectBoolean showCenterChoice;
+<span class="fc" id="L48">		add(showCenterChoice = new SelectBoolean(&quot;showCenters&quot;,Translator.get(&quot;Converter_Voronoi.ShowCenters&quot;),false));</span>
+<span class="fc" id="L49">		showCenterChoice.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L50">			showCenters = showCenterChoice.isSelected();</span>
+<span class="nc" id="L51">			generate();</span>
+<span class="nc" id="L52">		});</span>
+
+<span class="fc" id="L54">	}</span>
+
+	@Override
+	public String getName() {
+<span class="fc" id="L58">		return Translator.get(&quot;Converter_Voronoi.Name&quot;);</span>
+	}
+
+	static public int getNumCells() {
+<span class="fc" id="L62">		return numCells;</span>
+	}
+	static public void setNumCells(int value) {
+<span class="nc" id="L65">		numCells = value;</span>
+<span class="nc" id="L66">	}</span>
+
+	@Override
+	public void generate() {
+<span class="nc" id="L70">		Turtle turtle = new Turtle();</span>
+
+<span class="nc" id="L72">		Rectangle2D bounds = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L73">		List&lt;VoronoiCell&gt; points = seedRandomPoints(bounds);</span>
+		// generate the voronoi diagram
+<span class="nc" id="L75">		VoronoiTesselator2 diagram = new VoronoiTesselator2();</span>
+<span class="nc" id="L76">		diagram.tessellate(points,bounds,0.0001);</span>
+
+<span class="nc" id="L78">		drawGraphEdges(turtle,diagram);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if(showCenters) drawCellCenters(turtle,points);</span>
+<span class="nc" id="L80">		turtle.penUp();</span>
+
+<span class="nc" id="L82">		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</span>
+
+<span class="nc" id="L84">		notifyListeners(turtle);</span>
+<span class="nc" id="L85">	}</span>
+
+	// seed random points on the paper.
+	private List&lt;VoronoiCell&gt; seedRandomPoints(Rectangle2D bounds) {
+<span class="nc" id="L89">		List&lt;VoronoiCell&gt; points = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		for(int i=0;i&lt;numCells;++i) {</span>
+<span class="nc" id="L91">			points.add(new VoronoiCell(</span>
+<span class="nc" id="L92">					random.nextDouble()*bounds.getWidth()  + bounds.getMinX(),</span>
+<span class="nc" id="L93">					random.nextDouble()*bounds.getHeight() + bounds.getMinY()));</span>
+		}
+<span class="nc" id="L95">		return points;</span>
+	}
+
+	// draw all the graph edges according to the cells.
+	private void drawGraphEdges(Turtle turtle, VoronoiTesselator2 diagram) {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		for(int i=0;i&lt;diagram.getNumHulls();++i) {</span>
+<span class="nc" id="L101">			boolean first = true;</span>
+<span class="nc" id="L102">			Polygon poly = diagram.getHull(i);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			for (Coordinate p : poly.getExteriorRing().getCoordinates()) {</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">				if (first) {</span>
+<span class="nc" id="L105">					turtle.jumpTo(p.x, p.y);</span>
+<span class="nc" id="L106">					first=false;</span>
+<span class="nc" id="L107">				} else turtle.moveTo(p.x, p.y);</span>
+			}
+		}
+<span class="nc" id="L110">	}</span>
+
+	private void drawCellCenters(Turtle turtle, List&lt;VoronoiCell&gt; points) {
+		// draw all the cell centers
+<span class="nc" id="L114">		turtle.setColor(Color.BLUE);</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		for( VoronoiCell p : points ) {</span>
+			// jump to corner
+<span class="nc" id="L118">			turtle.jumpTo(p.center.x-0.5,p.center.y-0.5);</span>
+			// box
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			for(int i=0;i&lt;4;++i) {</span>
+<span class="nc" id="L121">				turtle.forward(1);</span>
+<span class="nc" id="L122">				turtle.turn(90);</span>
+			}
+			// point in center
+<span class="nc" id="L125">			turtle.jumpTo(p.center.x,p.center.y);</span>
+<span class="nc" id="L126">			turtle.forward(0.1);</span>
+<span class="nc" id="L127">		}</span>
+<span class="nc" id="L128">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

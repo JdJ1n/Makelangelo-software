@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TurtleFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.io</a> &gt; <span class="el_source">TurtleFactory.java</span></div><h1>TurtleFactory.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.io;
+
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.security.InvalidParameterException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Factory for creating {@link Turtle} objects from vector files and writing them to vector files.
+ * @author Dan Royer
+ */
+<span class="nc" id="L17">public class TurtleFactory {</span>
+<span class="nc" id="L18">	private static final TurtleLoader [] loaders = {</span>
+			new LoadDXF(),
+			new LoadGCode(),
+			new LoadScratch2(),
+			new LoadScratch3(),
+			new LoadSVG(),
+	};
+	
+<span class="nc" id="L26">	private static final TurtleSaver [] savers = {</span>
+			new SaveDXF(),
+			new SaveSVG(),
+			new SaveGCode(),
+			new SaveBitmap(&quot;bmp&quot;,false),
+			new SaveBitmap(&quot;gif&quot;,false),
+			new SaveBitmap(&quot;jpg&quot;,false),
+			new SaveBitmap(&quot;pio&quot;,false),
+			new SaveBitmap(&quot;png&quot;,true),
+			new SaveBitmap(&quot;tif&quot;,false),
+			new SaveBitmap(&quot;webp&quot;,true),
+	};
+	
+	public static Turtle load(String filename) throws Exception {
+<span class="nc bnc" id="L40" title="All 4 branches missed.">		if(filename == null || filename.trim().isEmpty()) throw new InvalidParameterException(&quot;filename cannot be empty&quot;);</span>
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		for( TurtleLoader loader : loaders ) {</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">			if(isValidExtension(filename,loader.getFileNameFilter())) {</span>
+<span class="nc" id="L44">				try(FileInputStream in = new FileInputStream(filename)) {</span>
+<span class="nc" id="L45">					return loader.load(in);</span>
+				}
+			}
+		}
+<span class="nc" id="L49">		throw new IllegalStateException(&quot;TurtleFactory could not load '&quot;+filename+&quot;'.&quot;);</span>
+	}
+	
+	private static boolean isValidExtension(String filename, FileNameExtensionFilter filter) {
+<span class="nc" id="L53">		filename = filename.toLowerCase();</span>
+<span class="nc" id="L54">		String [] extensions = filter.getExtensions();</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for( String e : extensions ) {</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">			if(filename.endsWith(e.toLowerCase())) return true;</span>
+		}
+<span class="nc" id="L58">		return false;</span>
+	}
+
+	public static List&lt;FileNameExtensionFilter&gt; getLoadExtensions() {
+<span class="nc" id="L62">		List&lt;FileNameExtensionFilter&gt; filters = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		for( TurtleLoader loader : loaders ) {</span>
+<span class="nc" id="L64">			filters.add( loader.getFileNameFilter() );</span>
+		}
+<span class="nc" id="L66">		return filters;</span>
+	}
+
+	public static List&lt;FileNameExtensionFilter&gt; getSaveExtensions() {
+<span class="nc" id="L70">		List&lt;FileNameExtensionFilter&gt; filters = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		for( TurtleSaver saver : savers ) {</span>
+<span class="nc" id="L72">			filters.add( saver.getFileNameFilter() );</span>
+		}
+<span class="nc" id="L74">		return filters;</span>
+	}
+
+	public static void save(Turtle turtle,String filename, PlotterSettings settings) throws Exception {
+<span class="nc bnc" id="L78" title="All 4 branches missed.">		if(filename == null || filename.trim().isEmpty()) throw new InvalidParameterException(&quot;filename cannot be empty&quot;);</span>
+
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		for (TurtleSaver saver : savers) {</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			if(isValidExtension(filename,saver.getFileNameFilter())) {</span>
+<span class="nc" id="L82">				try (FileOutputStream out = new FileOutputStream(filename)) {</span>
+<span class="nc" id="L83">					saver.save(out, turtle,settings);</span>
+				}
+<span class="nc" id="L85">				return;</span>
+			}
+		}
+<span class="nc" id="L88">		String extension = filename.substring(filename.lastIndexOf(&quot;.&quot;));</span>
+<span class="nc" id="L89">		throw new Exception(&quot;TurtleFactory could not save '&quot;+filename+&quot;' : invalid file format '&quot; + extension + &quot;'&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

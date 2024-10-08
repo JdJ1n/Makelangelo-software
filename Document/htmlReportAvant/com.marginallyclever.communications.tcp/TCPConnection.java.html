@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TCPConnection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.communications.tcp</a> &gt; <span class="el_source">TCPConnection.java</span></div><h1>TCPConnection.java</h1><pre class="source lang-java linenums">package com.marginallyclever.communications.tcp;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+
+import com.marginallyclever.communications.NetworkSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+/**
+ * Encapsulate all TCP/IP receive/transmit implementation
+ *
+ * @author Peter Colapietro
+ * @since v7 (4/12/15)
+ */
+public final class TCPConnection extends NetworkSession implements Runnable {
+<span class="nc" id="L21">	private static final Logger logger = LoggerFactory.getLogger(TCPConnection.class);</span>
+
+	public static final int DEFAULT_TCP_PORT = 9999;
+	
+	private SocketChannel socket;
+<span class="nc" id="L26">	private boolean portOpened = false;</span>
+	private Thread thread;
+	private boolean keepPolling;
+
+	// parsing input from Makelangelo
+<span class="nc" id="L31">	private String inputBuffer = &quot;&quot;;</span>
+
+
+<span class="nc" id="L34">	public TCPConnection() {}</span>
+
+	@Override
+	public void closeConnection() {
+<span class="nc bnc" id="L38" title="All 2 branches missed.">		if (!portOpened) return;</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">		if (socket != null) {</span>
+<span class="nc" id="L40">			keepPolling=false;</span>
+			
+			try {
+<span class="nc" id="L43">				socket.close();</span>
+<span class="nc" id="L44">			} catch (IOException e) {</span>
+				// Nothing to do
+<span class="nc" id="L46">			}</span>
+		}
+<span class="nc" id="L48">		portOpened = false;</span>
+<span class="nc" id="L49">	}</span>
+
+	/** 
+	 * Open a connection to a device on the net.
+	 * @param ipAddress the network address of the device
+	 */
+	@Override
+	public void openConnection(String ipAddress) throws Exception {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (portOpened) return;</span>
+
+<span class="nc" id="L59">		closeConnection();</span>
+		
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if(ipAddress.startsWith(&quot;http://&quot;)) {</span>
+<span class="nc" id="L62">			ipAddress = ipAddress.substring(7);</span>
+		}
+
+<span class="nc" id="L65">		URL a = new URL(&quot;http://&quot;+ipAddress);</span>
+<span class="nc" id="L66">		String host = a.getHost();</span>
+<span class="nc" id="L67">		int port = a.getPort();</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if(port==-1) port = DEFAULT_TCP_PORT;</span>
+<span class="nc" id="L69">		socket = SocketChannel.open();</span>
+<span class="nc" id="L70">		socket.connect(new InetSocketAddress(host,port));</span>
+<span class="nc" id="L71">		thread = new Thread(this);</span>
+		
+<span class="nc" id="L73">		setName(ipAddress);</span>
+<span class="nc" id="L74">		portOpened = true;</span>
+<span class="nc" id="L75">		keepPolling=true;</span>
+<span class="nc" id="L76">		thread.start();</span>
+<span class="nc" id="L77">	}</span>
+	
+	public void run() {
+<span class="nc" id="L80">		ByteBuffer buf = ByteBuffer.allocate(256);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		while(keepPolling) {</span>
+			try {
+<span class="nc" id="L83">				int bytesRead = socket.read(buf);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">				if(bytesRead&gt;0) {</span>
+<span class="nc" id="L85">					String line = new String(buf.array());</span>
+<span class="nc" id="L86">					dataAvailable(bytesRead,line);</span>
+<span class="nc" id="L87">					buf.rewind();</span>
+				}
+			}
+<span class="nc" id="L90">			catch (IOException e) {</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				if(keepPolling) {</span>
+<span class="nc" id="L92">					logger.error(&quot;Failed to read TCP Connection&quot;, e);</span>
+<span class="nc" id="L93">					closeConnection();</span>
+				}
+<span class="nc" id="L95">			}</span>
+		}
+<span class="nc" id="L97">	}</span>
+
+	public void dataAvailable(int len,String message) {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if(!portOpened) return;</span>
+<span class="nc" id="L101">		String rawInput = message.substring(0,len);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if( len==0 ) return;</span>
+		
+<span class="nc" id="L104">		inputBuffer+=rawInput;</span>
+		// each line ends with a \n.
+		int x;
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		for( x=inputBuffer.indexOf(&quot;\n&quot;); x!=-1; x=inputBuffer.indexOf(&quot;\n&quot;) ) {</span>
+<span class="nc" id="L109">			x=x+1;</span>
+<span class="nc" id="L110">			String oneLine = inputBuffer.substring(0,x);</span>
+<span class="nc" id="L111">			inputBuffer = inputBuffer.substring(x);</span>
+<span class="nc" id="L112">			notifyDataReceived(oneLine);</span>
+		}
+<span class="nc" id="L114">	}</span>
+
+	@Override
+	public void sendMessage(String msg) throws Exception {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if(!portOpened) return;</span>
+
+<span class="nc" id="L120">		byte[] lineBytes = msg.getBytes();</span>
+<span class="nc" id="L121">		ByteBuffer buf = ByteBuffer.allocate(lineBytes.length);</span>
+<span class="nc" id="L122">		buf.clear();</span>
+<span class="nc" id="L123">		buf.put(lineBytes);</span>
+<span class="nc" id="L124">		buf.rewind();</span>
+<span class="nc" id="L125">		socket.write(buf);</span>
+		
+<span class="nc" id="L127">		notifyDataSent(msg);</span>
+<span class="nc" id="L128">	}</span>
+
+	/**
+	 * @return the port open for this serial connection.
+	 */
+	@Override
+	public boolean isOpen() {
+<span class="nc" id="L135">		return portOpened;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

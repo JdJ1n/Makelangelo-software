@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StringHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience.helpers</a> &gt; <span class="el_source">StringHelper.java</span></div><h1>StringHelper.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience.helpers;
+
+import java.util.Locale;
+
+/**
+ * Convenience functions for working with Strings.
+ * @author Dan Royer
+ * @since 7.0.0
+ */
+<span class="nc" id="L10">public class StringHelper {</span>
+	
+	/**
+	 * format floats with 3 decimal places in US locale ONLY
+	 * @param arg0
+	 * @return the formatted string
+	 */
+	public static String formatFloat(float arg0) {
+		//return Float.toString(roundOff(arg0));
+<span class="fc" id="L19">		return String.format(Locale.US,&quot;%.3f&quot;, arg0);</span>
+	}
+
+	/**
+	 * format doubles with 3 decimal places in US locale ONLY
+	 * @param arg0
+	 * @return the formatted string
+	 */
+	public static String formatDouble(double arg0) {
+		//return Float.toString(roundOff(arg0));
+<span class="fc" id="L29">		return String.format(Locale.US,&quot;%.3f&quot;, arg0);</span>
+	}
+	
+	/**
+	 * @param s string to pad
+	 * @param n number of spaces to pad
+	 * @return newly formatted string.
+	 */
+	public static String padRight(String s, int n) {
+<span class="fc" id="L38">		return String.format(&quot;%1$-&quot; + n + &quot;s&quot;, s);</span>
+	}
+
+	public static String getElapsedTime(int seconds) {
+<span class="fc" id="L42">	    seconds /= 60;</span>
+<span class="fc" id="L43">	    long minutes = seconds % 60;</span>
+<span class="fc" id="L44">	    seconds /= 60;</span>
+<span class="fc" id="L45">	    long hours = seconds % 24;</span>
+<span class="fc" id="L46">	    return String.format(&quot;%02d:%02d:%02d&quot;, hours, minutes, seconds);</span>
+	}
+
+	/**
+	 * @param number the number to convert to hex
+	 * @return the hex number returned is 6 characters long and does not include the '0x' at the start.
+	 *  	   If needed it will pad the left end with zeros.
+	 */
+	public static String paddedHex(int number) {
+<span class="fc" id="L55">		String shortHex = Integer.toHexString(number);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">		if(shortHex.length()==6) return shortHex;</span>
+<span class="fc" id="L57">		StringBuilder builder = new StringBuilder();</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">		for(int i=0;i&lt;6-shortHex.length();++i) {</span>
+<span class="fc" id="L59">			builder.append(&quot;0&quot;);</span>
+		}
+<span class="fc" id="L61">		builder.append(shortHex);</span>
+<span class="fc" id="L62">		return builder.toString();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

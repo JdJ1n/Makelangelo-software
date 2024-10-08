@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReorderTurtleAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.tools</a> &gt; <span class="el_source">ReorderTurtleAction.java</span></div><h1>ReorderTurtleAction.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.tools;
+
+import com.marginallyclever.convenience.LineCollection;
+import com.marginallyclever.convenience.LineSegment2D;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TurtleModifierAction;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * {@link ReorderTurtleAction} tries to reorder the line segments of a {@link Turtle}'s path such that the
+ * the new path will take less time to draw.  
+ * First it attempts to remove any duplicate line segments.
+ * Second it runs a &quot;greedy tour&quot; which does a pretty good job of sorting by draw-first, travel-second behavior. 
+ * @author Dan Royer
+ *
+ */
+public class ReorderTurtleAction extends TurtleModifierAction {
+<span class="fc" id="L25">	private static final Logger logger = LoggerFactory.getLogger(ReorderTurtleAction.class);</span>
+	
+	public ReorderTurtleAction() {
+<span class="fc" id="L28">		super(Translator.get(&quot;Reorder&quot;));</span>
+<span class="fc" id="L29">	}</span>
+	
+	public Turtle run(Turtle turtle) {
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">		if(turtle.history.isEmpty()) return turtle;</span>
+		
+<span class="fc" id="L34">		logger.debug(&quot;reorder() start @ {} instructions.&quot;, turtle.history.size());</span>
+		
+<span class="fc" id="L36">		Turtle output = new Turtle();</span>
+<span class="fc" id="L37">		output.history.clear();</span>
+		
+		// history is made of changes, travels, and draws
+<span class="fc" id="L40">		List&lt;Turtle&gt; colors = turtle.splitByToolChange();</span>
+<span class="fc" id="L41">		logger.debug(&quot;reorder() layers: {}&quot;, colors.size());</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">		for( Turtle t2 : colors ) {</span>
+<span class="fc" id="L43">			output.add(reorderTurtle(t2));</span>
+<span class="fc" id="L44">		}</span>
+		
+<span class="fc" id="L46">		logger.debug(&quot;reorder() end @ {} instructions.&quot;, output.history.size());</span>
+<span class="fc" id="L47">		return output;</span>
+	}
+
+	/**
+	 * Reorder drawing moves to minimize travel moves.
+	 * look at all pen down moves.
+	 * if two pen down moves share a start/end, then they are connected in sequence.
+	 * 
+	 * @param turtle
+	 */
+	private Turtle reorderTurtle(Turtle turtle) {
+<span class="fc" id="L58">		LineCollection originalLines = turtle.getAsLineSegments();</span>
+<span class="fc" id="L59">		int originalCount = originalLines.size();</span>
+<span class="fc" id="L60">		Color c = turtle.getFirstColor();</span>
+<span class="fc" id="L61">		logger.debug(&quot;  {} converted to {} lines.&quot;, c.hashCode(), originalCount);</span>
+
+<span class="fc" id="L63">		List&lt;LineCollection&gt; firstPass = greedyReordering(originalLines);</span>
+<span class="fc" id="L64">		LineCollection secondPass = sortFirstPass(firstPass);</span>
+
+<span class="fc" id="L66">		Turtle t = new Turtle(c);</span>
+<span class="fc" id="L67">		t.addLineSegments(secondPass);</span>
+<span class="fc" id="L68">		return t;</span>
+	}
+
+	/**
+	 * Search firstPass for elements which are connected in sequence.  Two elments are connected in sequence if
+	 * (A.start == B.start || A.start == B.end).
+	 * @param firstPass a list of {@link LineCollection}s
+	 * @return
+	 */
+	private LineCollection sortFirstPass(List&lt;LineCollection&gt; firstPass) {
+<span class="fc" id="L78">		final double epsilon = 1e-6;</span>
+
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">		if(firstPass.isEmpty()) return new LineCollection();</span>
+
+<span class="fc bfc" id="L82" title="All 2 branches covered.">		for(int i=0;i&lt;firstPass.size();++i) {</span>
+<span class="fc" id="L83">		 	LineCollection a = firstPass.get(i);</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">			if(a.isEmpty()) continue;</span>
+
+<span class="fc bfc" id="L86" title="All 2 branches covered.">		 	for(int j=i+1;j&lt;firstPass.size();++j) {</span>
+<span class="fc" id="L87">				LineCollection b = firstPass.get(j);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">				if(b.isEmpty()) continue;</span>
+
+<span class="fc bfc" id="L90" title="All 2 branches covered.">				if(a.getEnd().equalsEpsilon(b.getStart(),epsilon)) {</span>
+<span class="fc" id="L91">					a.addAll(b);</span>
+<span class="fc" id="L92">					b.clear();</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">				} else if(a.getEnd().equalsEpsilon(b.getEnd(),epsilon)) {</span>
+<span class="fc" id="L94">					b.flip();</span>
+<span class="fc" id="L95">					a.addAll(b);</span>
+<span class="fc" id="L96">					b.clear();</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">				} else if(a.getStart().equalsEpsilon(b.getStart(),epsilon)) {</span>
+<span class="fc" id="L98">					a.flip();</span>
+<span class="fc" id="L99">					a.addAll(b);</span>
+<span class="fc" id="L100">					b.clear();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">				} else if(a.getStart().equalsEpsilon(b.getEnd(),epsilon)) {</span>
+<span class="fc" id="L102">					a.flip();</span>
+<span class="fc" id="L103">					b.flip();</span>
+<span class="fc" id="L104">					a.addAll(b);</span>
+<span class="fc" id="L105">					b.clear();</span>
+				}
+			}
+		}
+
+		// remove the empty elements.
+<span class="fc" id="L111">		List&lt;LineCollection&gt; secondPass = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">		for(LineCollection lc : firstPass) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">			if(!lc.isEmpty()) {</span>
+<span class="fc" id="L114">				secondPass.add(lc);</span>
+			}
+<span class="fc" id="L116">		}</span>
+
+<span class="fc" id="L118">		LineCollection output = new LineCollection();</span>
+
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">		if(secondPass.size()==0) {</span>
+<span class="nc" id="L121">			logger.debug(&quot;  no reordering.&quot;);</span>
+<span class="nc" id="L122">			return output;</span>
+		}
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">		if(secondPass.get(0).isEmpty()) {</span>
+<span class="nc" id="L125">			logger.debug(&quot;  not possible?!&quot;);</span>
+<span class="nc" id="L126">			return output;</span>
+		}
+
+		// another greedy tour.
+<span class="fc" id="L130">		Point2D lastPosition = secondPass.get(0).getEnd();</span>
+<span class="fc" id="L131">		output.addAll(secondPass.remove(0));</span>
+
+<span class="fc bfc" id="L133" title="All 2 branches covered.">		while(!secondPass.isEmpty()) {</span>
+<span class="fc" id="L134">			LineCollection best = null;</span>
+<span class="fc" id="L135">			double distance = Double.MAX_VALUE;</span>
+<span class="fc" id="L136">			boolean flip=false;</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">			for(LineCollection lc : secondPass) {</span>
+<span class="fc" id="L138">				double d0 = lc.getStart().distanceSquared(lastPosition);</span>
+<span class="fc" id="L139">				double d1 = lc.getEnd().distanceSquared(lastPosition);</span>
+<span class="fc" id="L140">				double nearest = Math.min(d0, d1);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">				if(distance &gt; nearest) {</span>
+<span class="fc" id="L142">					distance = nearest;</span>
+<span class="fc" id="L143">					best = lc;</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">					flip = (d1&lt;d0);</span>
+				}
+<span class="fc" id="L146">			}</span>
+<span class="fc" id="L147">			secondPass.remove(best);</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">			if(flip) best.flip();</span>
+<span class="fc" id="L149">			output.addAll(best);</span>
+<span class="fc" id="L150">			lastPosition = best.getEnd();</span>
+<span class="fc" id="L151">		}</span>
+
+<span class="fc" id="L153">		return output;</span>
+	}
+
+	/**
+	 * From the pool of uniqueLines, take one and make it the head.
+	 * looking for the nearest available segment that begins where the head ends.
+	 * The segment found is removed from the available pool and becomes the new head.  Repeat until the avilable pool is empty.
+	 * @param uniqueLines the unsorted list.
+	 * @return the sorted list.
+	 */
+	private List&lt;LineCollection&gt; greedyReordering(LineCollection uniqueLines) {
+<span class="fc" id="L164">		logger.debug(&quot;  greedyReordering()&quot;);</span>
+<span class="fc" id="L165">		List&lt;LineCollection&gt; firstPass = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">		if(uniqueLines.isEmpty()) return firstPass;</span>
+
+<span class="fc" id="L168">		LineCollection orderedLines = new LineCollection();</span>
+
+<span class="fc" id="L170">		Point2D lastPosition = uniqueLines.get(0).start;</span>
+		
+<span class="fc bfc" id="L172" title="All 2 branches covered.">		while(!uniqueLines.isEmpty()) {</span>
+<span class="fc" id="L173">			double bestD = Double.MAX_VALUE;</span>
+<span class="fc" id="L174">			LineSegment2D bestLine = null;</span>
+<span class="fc" id="L175">			boolean bestFlip = false;</span>
+			
+<span class="fc bfc" id="L177" title="All 2 branches covered.">			for( LineSegment2D line : uniqueLines ) {</span>
+				// is either end of line closer than our best?
+<span class="fc" id="L179">				double d0 = lastPosition.distanceSquared(line.start);</span>
+<span class="fc" id="L180">				double d1 = lastPosition.distanceSquared(line.end);</span>
+<span class="fc" id="L181">				double nearest = Math.min(d0, d1);</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">				if(bestD &gt; nearest) {</span>
+<span class="fc" id="L183">					bestD = nearest;</span>
+<span class="fc" id="L184">					bestLine = line;</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">					bestFlip = (d1 &lt; d0);</span>
+				}
+<span class="fc bfc" id="L187" title="All 2 branches covered.">				if(bestD==0) break;</span>
+<span class="fc" id="L188">			}</span>
+			
+<span class="fc bfc" id="L190" title="All 2 branches covered.">			if(bestFlip) bestLine.flip();</span>
+
+<span class="fc bfc" id="L192" title="All 2 branches covered.">			if(bestD&gt;1e-6) {</span>
+<span class="fc" id="L193">				firstPass.add(orderedLines);</span>
+<span class="fc" id="L194">				orderedLines = new LineCollection();</span>
+			}
+
+<span class="fc" id="L197">			uniqueLines.remove(bestLine);</span>
+<span class="fc" id="L198">			orderedLines.add(bestLine);</span>
+			
+			// Start next iteration where current line ends.
+<span class="fc" id="L201">			lastPosition = bestLine.end;</span>
+<span class="fc" id="L202">		}</span>
+
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">		if(!orderedLines.isEmpty()) {</span>
+<span class="fc" id="L205">			firstPass.add(orderedLines);</span>
+		}
+		
+<span class="fc" id="L208">		return firstPass;</span>
+	}
+
+	
+	// TODO: move this to its own Action?
+	@SuppressWarnings(&quot;unused&quot;)
+	private LineCollection removeDuplicates(LineCollection originalLines, double EPSILON2) {
+<span class="nc" id="L215">		logger.debug(&quot;  removeDuplicates()&quot;);</span>
+<span class="nc" id="L216">		LineCollection uniqueLines = new LineCollection();</span>
+
+<span class="nc bnc" id="L218" title="All 2 branches missed.">		for(LineSegment2D candidateLine : originalLines) {</span>
+<span class="nc" id="L219">			boolean isDuplicate = false;</span>
+			
+			// Compare this line to all the lines previously marked as non-duplicate
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			for( LineSegment2D uniqueLine : uniqueLines ) {</span>
+				// Check if lines are colinear
+<span class="nc bnc" id="L224" title="All 2 branches missed.">				if( uniqueLine.ptLineDistSq(candidateLine.start) &lt; EPSILON2 &amp;&amp;</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">					uniqueLine.ptLineDistSq(candidateLine.end) &lt; EPSILON2 ) {</span>
+					// they are!
+					// if they touch or overlap then I have a candidate.
+					// measure where the points are relative to each other.
+<span class="nc bnc" id="L229" title="All 2 branches missed.">					boolean candidateStartsCloseToUnique = uniqueLine.ptSegDistSq(candidateLine.start) &lt; EPSILON2;</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">					boolean candidateEndsCloseToUnique = uniqueLine.ptSegDistSq(candidateLine.end) &lt; EPSILON2;</span>
+					
+<span class="nc bnc" id="L232" title="All 2 branches missed.">					if(candidateStartsCloseToUnique) {</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">						if(candidateEndsCloseToUnique) {</span>
+							// Candidate doesn't add anything which isn't already covered by the unique line.
+							// No further action needed.
+						} else {
+							// Partial overlap, extend uniqueLine
+<span class="nc" id="L238">							extendLine(uniqueLine, candidateLine.end);</span>
+						}
+<span class="nc" id="L240">						isDuplicate = true;</span>
+<span class="nc" id="L241">						break;</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">					} else if(candidateEndsCloseToUnique) {</span>
+						// Partial overlap, extend uniqueLine
+<span class="nc" id="L244">						extendLine(uniqueLine, candidateLine.start);</span>
+<span class="nc" id="L245">						isDuplicate = true;</span>
+<span class="nc" id="L246">						break;						</span>
+					} else {
+						// No match, check remaining lines for duplicates
+						continue;
+					}
+				}
+<span class="nc" id="L252">			}</span>
+			
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			if(!isDuplicate) {</span>
+				// candidateLine does not match any line in the list.
+<span class="nc" id="L256">				uniqueLines.add(candidateLine);					</span>
+			}
+<span class="nc" id="L258">		}</span>
+
+<span class="nc" id="L260">		return uniqueLines;</span>
+	}
+
+	// assumes extPoint is a point which lies on the infinite extension of targetLine
+ 	private void extendLine(LineSegment2D targetLine, Point2D extPoint) {
+<span class="nc" id="L265">		double newLengthA = targetLine.start.distanceSquared(extPoint);</span>
+<span class="nc" id="L266">		double newLengthB = targetLine.end.distanceSquared(extPoint);</span>
+<span class="nc" id="L267">		double currentLength = targetLine.lengthSquared();</span>
+		
+		// Maximize length of target line by replacing the start or end point with the extPoint		
+<span class="nc bnc" id="L270" title="All 4 branches missed.">		if(newLengthA &gt; currentLength &amp;&amp; newLengthA &gt; newLengthB) {</span>
+			// Draw line from targetLine.a to extPoint
+<span class="nc" id="L272">			targetLine.end = extPoint;</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		} else if(newLengthB &gt; currentLength) {</span>
+			// Draw line from extPoint to targetLine.b 
+<span class="nc" id="L275">			targetLine.start = extPoint;</span>
+		}
+<span class="nc" id="L277">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

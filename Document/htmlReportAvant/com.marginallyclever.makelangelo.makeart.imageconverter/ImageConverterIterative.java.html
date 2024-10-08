@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageConverterIterative.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">ImageConverterIterative.java</span></div><h1>ImageConverterIterative.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.jogamp.opengl.GL2;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.preview.PreviewListener;
+import com.marginallyclever.makelangelo.select.SelectToggleButton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * Extends {@link ImageConverter} to run in an evolving, iterative process until it converges on some goal or the user pauses it.
+ * Implements {@link PreviewListener} to draw progress while it runs.
+ * @author Dan Royer
+ * @since 7?
+ */
+public abstract class ImageConverterIterative extends ImageConverter implements PreviewListener {
+<span class="nc" id="L22">    private static final Logger logger = LoggerFactory.getLogger(ImageConverterIterative.class);</span>
+    private ImageConverterThread imageConverterThread;
+    private final SelectToggleButton pauseButton;
+<span class="nc" id="L25">    protected final Lock lock = new ReentrantLock();</span>
+
+    public ImageConverterIterative() {
+<span class="nc" id="L28">        super();</span>
+
+<span class="nc" id="L30">        pauseButton = new SelectToggleButton(&quot;pauseButton&quot;,Translator.get(&quot;PlotterControls.Pause&quot;));</span>
+<span class="nc" id="L31">        add(pauseButton);</span>
+
+<span class="nc" id="L33">        pauseButton.addSelectListener((evt) -&gt; {</span>
+<span class="nc" id="L34">            imageConverterThread.setPaused(pauseButton.isSelected());</span>
+<span class="nc" id="L35">        });</span>
+<span class="nc" id="L36">    }</span>
+
+
+    @Override
+    public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L41">        super.start(paper,image);</span>
+<span class="nc" id="L42">        logger.debug(&quot;start()&quot;);</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if(imageConverterThread!=null) {</span>
+<span class="nc" id="L44">            logger.warn(&quot;called while thread is still running.&quot;);</span>
+<span class="nc" id="L45">            stop();</span>
+        }
+<span class="nc" id="L47">        imageConverterThread = new ImageConverterThread(this);</span>
+<span class="nc" id="L48">        imageConverterThread.execute();</span>
+<span class="nc" id="L49">    }</span>
+
+    @Override
+    public void stop() {
+<span class="nc" id="L53">        super.stop();</span>
+<span class="nc" id="L54">        logger.debug(&quot;stop()&quot;);</span>
+<span class="nc" id="L55">        imageConverterThread.setPaused(true);</span>
+<span class="nc" id="L56">        imageConverterThread.endThreadGracefully();</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        while(!imageConverterThread.isDone());</span>
+<span class="nc" id="L58">        imageConverterThread = null;</span>
+<span class="nc" id="L59">    }</span>
+
+    public boolean isThreadCancelled() {
+<span class="nc bnc" id="L62" title="All 4 branches missed.">        return imageConverterThread != null &amp;&amp; imageConverterThread.isCancelled();</span>
+    }
+
+    public void setThread(ImageConverterThread p) {
+<span class="nc" id="L66">        imageConverterThread = p;</span>
+<span class="nc" id="L67">    }</span>
+
+    /**
+     * run one &quot;step&quot; of an iterative image conversion process.
+     * @return true if conversion should iterate again.
+     */
+    public abstract boolean iterate();
+
+    /**
+     * called when the user pauses the conversion.  Should generate the {@link com.marginallyclever.makelangelo.turtle.Turtle} output.
+     */
+    public abstract void generateOutput();
+
+    protected ImageConverterThread getThread() {
+<span class="nc" id="L81">        return imageConverterThread;</span>
+    }
+
+    public abstract void resume();
+
+    /**
+     * Callback from {@link com.marginallyclever.makelangelo.preview.PreviewPanel} that it is time to render to the WYSIWYG display.
+     * @param gl2 the render context
+     */
+    @Override
+<span class="nc" id="L91">    public void render(GL2 gl2) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

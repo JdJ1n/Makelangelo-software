@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SerialUI.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols.communications</a> &gt; <span class="el_source">SerialUI.java</span></div><h1>SerialUI.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols.communications;
+
+import com.marginallyclever.communications.Configuration;
+import com.marginallyclever.communications.TransportLayer;
+import com.marginallyclever.communications.serial.SerialTransportLayer;
+
+import javax.swing.*;
+
+public class SerialUI implements TransportLayerUI {
+
+<span class="fc" id="L11">    private final JComboBox&lt;Integer&gt; baudRateComboBox = new JComboBox&lt;&gt;(new Integer[] {250000, 115200, 57600, 38400, 19200});</span>
+
+<span class="fc" id="L13">    public SerialUI() {}</span>
+
+    @Override
+    public void addToPanel(JPanel panel) {
+<span class="nc" id="L17">        panel.add(new JLabel(&quot;@&quot;));</span>
+<span class="nc" id="L18">        panel.add(baudRateComboBox);</span>
+<span class="nc" id="L19">    }</span>
+
+    public TransportLayer getTransportLayer() {
+<span class="fc" id="L22">        return new SerialTransportLayer();</span>
+    }
+
+    public void setSelectedValue(Configuration configuration) {
+<span class="nc" id="L26">        configuration.addConfiguration(&quot;speed&quot;, baudRateComboBox.getSelectedItem());</span>
+<span class="nc" id="L27">    }</span>
+
+    public void onClose() {
+<span class="nc" id="L30">        baudRateComboBox.setEnabled(true);</span>
+<span class="nc" id="L31">    }</span>
+
+    public void onOpen() {
+<span class="nc" id="L34">        baudRateComboBox.setEnabled(false);</span>
+<span class="nc" id="L35">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

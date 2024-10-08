@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LineInterpolator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">LineInterpolator.java</span></div><h1>LineInterpolator.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+public class LineInterpolator {
+	static public final double SMALL_VALUE = 1e-5;
+	
+<span class="nc" id="L6">	protected Point2D start = new Point2D();</span>
+<span class="nc" id="L7">	protected Point2D end = new Point2D();</span>
+	
+<span class="nc" id="L9">	public LineInterpolator() {}</span>
+	
+<span class="nc" id="L11">	public LineInterpolator(Point2D start,Point2D end) {</span>
+<span class="nc" id="L12">		this.start.set(start);</span>
+<span class="nc" id="L13">		this.end.set(end);</span>
+<span class="nc" id="L14">	}</span>
+	
+	/**
+	 * Override this method for more sophisticated lines.
+	 * @param t [0...1]
+	 * @param p will be to set to (b-a)*t+a 
+	 */
+	public void getPoint(double t,Point2D p) {
+<span class="nc" id="L22">		p.x = (end.x - start.x) * t + start.x;</span>
+<span class="nc" id="L23">		p.y = (end.y - start.y) * t + start.y;</span>
+<span class="nc" id="L24">	}</span>
+	
+	/**
+	 * @param t [0...1]
+	 * @param v set to the approximate tangent to the line at at t
+	 */
+	public void getTangent(double t,Point2D v) {
+<span class="nc bnc" id="L31" title="All 2 branches missed.">		if(t&lt;0) t=0;</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">		if(t&gt;1-SMALL_VALUE) t=1-SMALL_VALUE;</span>
+
+<span class="nc" id="L34">		double t0 = t;</span>
+<span class="nc" id="L35">		double t1 = t + SMALL_VALUE;</span>
+
+<span class="nc" id="L37">		Point2D c0 = new Point2D();</span>
+<span class="nc" id="L38">		Point2D c1 = new Point2D();</span>
+<span class="nc" id="L39">		getPoint(t0,c0);</span>
+<span class="nc" id="L40">		getPoint(t1,c1);</span>
+<span class="nc" id="L41">		v.x = c1.x-c0.x;</span>
+<span class="nc" id="L42">		v.y = c1.y-c0.y;</span>
+
+		// try to normalize the vector
+<span class="nc" id="L45">		double len = v.length();</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		if(len!=0) {</span>
+<span class="nc" id="L47">			v.scale(1.0/len);</span>
+		}
+<span class="nc" id="L49">	}</span>
+
+	/**
+	 * @param t [0...1]
+	 * @param n set to the normal to the approximate tangent to the line at at t
+	 */
+	public void getNormal(double t,Point2D n) {
+<span class="nc" id="L56">		getTangent(t,n);</span>
+<span class="nc" id="L57">		double z = n.y;</span>
+<span class="nc" id="L58">		n.y = -n.x;</span>
+<span class="nc" id="L59">		n.x = z;</span>
+<span class="nc" id="L60">	}</span>
+
+	public Point2D getStart() {
+<span class="nc" id="L63">		return start;</span>
+	}
+
+	public void setStart(Point2D start) {
+<span class="nc" id="L67">		this.start = start;</span>
+<span class="nc" id="L68">	}</span>
+
+	public Point2D getEnd() {
+<span class="nc" id="L71">		return end;</span>
+	}
+
+	public void setEnd(Point2D end) {
+<span class="nc" id="L75">		this.end = end;</span>
+<span class="nc" id="L76">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

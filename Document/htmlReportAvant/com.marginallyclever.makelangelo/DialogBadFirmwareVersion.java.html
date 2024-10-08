@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DialogBadFirmwareVersion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">DialogBadFirmwareVersion.java</span></div><h1>DialogBadFirmwareVersion.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo;
+
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+
+import java.awt.Component;
+import javax.swing.JOptionPane;
+import javax.swing.text.JTextComponent;
+
+@Deprecated
+<span class="nc" id="L10">public class DialogBadFirmwareVersion {</span>
+	/**
+	 * &lt;p&gt;
+	 * Uses {@link java.lang.StringBuilder#append(String)} to create an internationalization supported {@code String}
+	 * representing the About Message Dialog's HTML.
+	 * &lt;/p&gt;
+	 * &lt;p&gt;
+	 * &lt;p&gt;
+	 * The summation of {@link String#length()} for each of the respective values retrieved with the
+	 * {@code &quot;AboutHTMLBeforeVersionNumber&quot;}, and {@code &quot;AboutHTMLAfterVersionNumber&quot;} {@link Translator} keys,
+	 * in conjunction with {@link Makelangelo#VERSION} is calculated for use with {@link java.lang.StringBuilder#StringBuilder(int)}.
+	 * &lt;/p&gt;
+	 *
+	 * @return An HTML string used for the About Message Dialog.
+	 */
+	private String getAboutHtmlFromMultilingualString(String version) {
+<span class="nc" id="L26">		return Translator.get(&quot;firmwareVersionBadMessage&quot;, new String[]{version});</span>
+	}
+
+	public void display(Component parent,String version) {
+<span class="nc" id="L30">		final String aboutHtml = getAboutHtmlFromMultilingualString(version);</span>
+<span class="nc" id="L31">		final JTextComponent bottomText = SelectReadOnlyText.createJEditorPaneWithHyperlinkListenerAndToolTipsForDesktopBrowse(aboutHtml);</span>
+<span class="nc" id="L32">		JOptionPane.showMessageDialog(parent, bottomText, Translator.get(&quot;firmwareVersionBadTitle&quot;), JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L33">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

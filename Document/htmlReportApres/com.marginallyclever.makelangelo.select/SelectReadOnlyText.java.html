@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectReadOnlyText.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.select</a> &gt; <span class="el_source">SelectReadOnlyText.java</span></div><h1>SelectReadOnlyText.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.select;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+/**
+ * Read only JEditorPane with an HyperlinkListener for text/html, contening or not, multiple html link.
+ * With clickable link (Desktop.BROWSE) and ToolTips when hovered over.
+ * 
+ * @author Dan Royer
+ * @since 7.24.0
+ */
+public class SelectReadOnlyText extends Select {
+<span class="fc" id="L21">	private static final Logger logger = LoggerFactory.getLogger(SelectReadOnlyText.class);</span>
+
+	public SelectReadOnlyText(String internalName,String labelKey) {
+<span class="fc" id="L24">		super(internalName);</span>
+
+<span class="fc" id="L26">		JEditorPane jEdPane = createJEditorPaneWithHyperlinkListenerAndToolTipsForDesktopBrowse(&quot;&lt;html&gt;&quot; + labelKey + &quot;&lt;/html&gt;&quot;);</span>
+<span class="fc" id="L27">		this.add(jEdPane,BorderLayout.CENTER);</span>
+<span class="fc" id="L28">	}</span>
+	
+	/**
+	 * Create a JEditorPane not editable for text/html contente, with an HyperLinkListener to Desktop Browse (when clicked) and show a ToolTips with the URL hovered.
+	 * @param sToSetAsTextToTheHtmlEditorPane
+	 * @return 
+	 */
+	public static JEditorPane createJEditorPaneWithHyperlinkListenerAndToolTipsForDesktopBrowse(String sToSetAsTextToTheHtmlEditorPane) {
+<span class="fc" id="L36">		JEditorPane createdJEditorPane =  new JEditorPane();</span>
+<span class="fc" id="L37">		createdJEditorPane.setEditable(false);</span>
+<span class="fc" id="L38">		createdJEditorPane.setOpaque(false);</span>
+<span class="fc" id="L39">		createdJEditorPane.setContentType(&quot;text/html&quot;);</span>
+<span class="fc" id="L40">		createdJEditorPane.setText(sToSetAsTextToTheHtmlEditorPane);</span>
+<span class="fc" id="L41">		createdJEditorPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);</span>
+<span class="fc" id="L42">		createdJEditorPane.setFont(UIManager.getFont(&quot;Label.font&quot;));</span>
+<span class="pc" id="L43">		createdJEditorPane.addHyperlinkListener((HyperlinkEvent hyperlinkEvent) -&gt; reactToHyperlink(hyperlinkEvent,createdJEditorPane));</span>
+<span class="fc" id="L44">		return createdJEditorPane;</span>
+	}
+
+	private static void reactToHyperlink(HyperlinkEvent hyperlinkEvent,JEditorPane createdJEditorPane) {
+<span class="nc" id="L48">		HyperlinkEvent.EventType eventType = hyperlinkEvent.getEventType();</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if(eventType == HyperlinkEvent.EventType.ACTIVATED) {</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">			if (Desktop.isDesktopSupported()) {</span>
+				try {
+<span class="nc" id="L52">					URI u = hyperlinkEvent.getURL().toURI();</span>
+<span class="nc" id="L53">					Desktop desktop = Desktop.getDesktop();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">					if (desktop.isSupported(Desktop.Action.BROWSE)) {</span>
+<span class="nc" id="L55">						logger.debug(&quot;Desktop.Action.BROWSE {}&quot;, u);</span>
+<span class="nc" id="L56">						desktop.browse(u);</span>
+					} else {
+<span class="nc" id="L58">						logger.error(&quot;Desktop.Action.BROWSE not supported. Cant browse {}&quot;, u);</span>
+					}
+<span class="nc" id="L60">				} catch (IOException | URISyntaxException e) {</span>
+<span class="nc" id="L61">					logger.error(&quot;Failed to open the browser to the url&quot;, e);</span>
+<span class="nc" id="L62">				}</span>
+			} else {
+<span class="nc" id="L64">				logger.error(&quot;Desktop not supported. Cant browse {}&quot;, hyperlinkEvent.getURL());</span>
+			}
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		} else if(eventType == HyperlinkEvent.EventType.ENTERED) {</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">			if (!(hyperlinkEvent.getURL() == null || hyperlinkEvent.getURL().toString().isEmpty())) {</span>
+<span class="nc" id="L68">				createdJEditorPane.setToolTipText(hyperlinkEvent.getURL().toExternalForm());</span>
+
+				// TODO should be set at the starting of the application
+<span class="nc" id="L71">				ToolTipManager.sharedInstance().setInitialDelay(0);</span>
+<span class="nc" id="L72">				ToolTipManager.sharedInstance().setDismissDelay(5000);</span>
+			}
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		} else if(eventType == HyperlinkEvent.EventType.EXITED) {</span>
+<span class="nc" id="L75">			createdJEditorPane.setToolTipText(null);// null to turn off the tooltips.</span>
+		}
+<span class="nc" id="L77">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Plotter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter</a> &gt; <span class="el_source">Plotter.java</span></div><h1>Plotter.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter;
+
+import com.jogamp.opengl.GL2;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+import com.marginallyclever.makelangelo.preview.PreviewListener;
+import com.marginallyclever.makelangelo.preview.PreviewPanel;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+
+import java.security.InvalidParameterException;
+import java.util.ArrayList;
+
+/**
+ * {@link Plotter} contains the live state of the drawing robot: the position of the pen, is it homed, and
+ * are motors engaged.  It also contains the {@link PlotterSettings} which define the physical characteristics.
+ * @author Dan
+ * @since 7.2.10
+ */
+<span class="fc" id="L20">public class Plotter implements PreviewListener, Cloneable {	</span>
+<span class="fc" id="L21">	private PlotterSettings settings = new PlotterSettings(&quot;Makelangelo 5&quot;);</span>
+
+	// are motors actively engaged?  when disengaged pen can drift and re-homing is required.
+<span class="fc" id="L24">	private boolean areMotorsEngaged = true;</span>
+	// did the robot find home?  if it has not then the pen position is undefined.
+<span class="fc" id="L26">	private boolean didFindHome = false;</span>
+	// if pen is &quot;up&quot; then it is not drawing.
+<span class="fc" id="L28">	private boolean penIsUp = false;</span>
+	// current pen position
+<span class="fc" id="L30">	private Point2D pos = new Point2D(0,0);</span>
+	
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+<span class="nc" id="L34">		Plotter b = (Plotter)super.clone();</span>
+<span class="nc" id="L35">		b.listeners = new ArrayList&lt;PlotterEventListener&gt;();</span>
+<span class="nc" id="L36">		b.pos = new Point2D();</span>
+<span class="nc" id="L37">		b.pos.set(this.pos);</span>
+<span class="nc" id="L38">		return b;</span>
+	}
+	
+	// OBSERVER PATTERN
+	
+<span class="fc" id="L43">	private ArrayList&lt;PlotterEventListener&gt; listeners = new ArrayList&lt;PlotterEventListener&gt;();</span>
+
+	/**
+	 * Subscribe to listen to {@link PlotterEvent}s.
+	 * @param listener
+	 */
+	public void addPlotterEventListener(PlotterEventListener listener) {
+<span class="fc" id="L50">		listeners.add(listener);</span>
+<span class="fc" id="L51">	}</span>
+
+	/**
+	 * unsubscribe from {@link PlotterEvent}s.
+	 * @param listener
+	 */
+	public void removePlotterEventListener(PlotterEventListener listener) {
+<span class="nc" id="L58">		listeners.remove(listener);</span>
+<span class="nc" id="L59">	}</span>
+	
+	private void firePlotterEvent(PlotterEvent e) {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">		for (PlotterEventListener listener : listeners) listener.plotterEvent(e);</span>
+<span class="fc" id="L63">	}</span>
+
+	// OBSERVER PATTERN ENDS
+
+	/**
+	 * Lift the pen up.  When the pen is up {@code setPos} will move the pen
+	 * across the {@link Paper} without leaving a mark.
+	 */
+	public void raisePen() {
+<span class="nc" id="L72">		penIsUp=true;</span>
+<span class="nc" id="L73">		firePlotterEvent(new PlotterEvent(PlotterEvent.PEN_UPDOWN,this,true));</span>
+<span class="nc" id="L74">	}</span>
+	
+	/**
+	 * Put the pen down.  When the pen is down {@code setPos} will drag the pen
+	 * across the {@link Paper}, producing a visible line in the chosen pen color.
+	 */
+	public void lowerPen() {
+<span class="nc" id="L81">		penIsUp = false;</span>
+<span class="nc" id="L82">		firePlotterEvent(new PlotterEvent(PlotterEvent.PEN_UPDOWN,this,false));</span>
+<span class="nc" id="L83">	}</span>
+
+	/**
+	 * @return true if pen is up, false if pen is down.
+	 */
+	public boolean getPenIsUp() {
+<span class="fc" id="L89">		return penIsUp;</span>
+	}
+	
+	private void requestUserChangeTool(int toolNumber) {
+<span class="nc" id="L93">		firePlotterEvent(new PlotterEvent(PlotterEvent.TOOL_CHANGE, this, toolNumber));</span>
+<span class="nc" id="L94">	}</span>
+	
+	/**
+	 * When the {@link Plotter} first turns on it has no idea where it is.
+	 * This method will instruct it to touch off the limit switches, after which 
+	 * it will be at the home position obtained from {@code getHome()}.
+	 */
+	public void findHome() {
+<span class="nc" id="L102">		raisePen();</span>
+<span class="nc" id="L103">		pos.set(settings.getHome());</span>
+<span class="nc" id="L104">		didFindHome = true;</span>
+<span class="nc" id="L105">		firePlotterEvent(new PlotterEvent(PlotterEvent.HOME_FOUND,this));</span>
+<span class="nc" id="L106">	}</span>
+	
+	/**
+	 * @return true if the machine has found home at least once.
+	 */
+	public boolean getDidFindHome() {
+<span class="nc" id="L112">		return didFindHome;</span>
+	}
+
+	/**
+	 * move the {@link Plotter} pen holder to the desired position
+	 * @param x in mm
+	 * @param y in mm
+	 */
+	public void setPos(double x, double y) {
+<span class="fc" id="L121">		pos.set(x,y);</span>
+<span class="fc" id="L122">		firePlotterEvent(new PlotterEvent(PlotterEvent.POSITION,this));</span>
+<span class="fc" id="L123">	}</span>
+
+	/**
+	 * @return the current pen holder position.
+	 */
+	public Point2D getPos() {
+<span class="fc" id="L129">		return pos;</span>
+	}
+
+	/**
+	 * @return true for engaged, false for disengaged.
+	 */
+	public boolean getMotorsEngaged() {
+<span class="nc" id="L136">		return areMotorsEngaged;</span>
+	}
+	
+	/**
+	 * @param state true for engaged, false for disengaged.
+	 */
+	public void setMotorsEngaged(boolean state) {
+<span class="nc" id="L143">		areMotorsEngaged = state;</span>
+<span class="nc" id="L144">		firePlotterEvent(new PlotterEvent(PlotterEvent.MOTORS_ENGAGED,this,state));</span>
+<span class="nc" id="L145">	}</span>
+
+	/**
+	 * When a new connection is established, Marlin released the motors and reset the home position
+	 */
+	public void reInit() {
+<span class="nc" id="L151">		areMotorsEngaged = false;</span>
+<span class="nc" id="L152">		didFindHome = false;</span>
+<span class="nc" id="L153">	}</span>
+
+	/**
+	 * @return a reference to the active {@link PlotterSettings} in this {@link Plotter}.
+	 * Modifications will immediately affect the {@link Plotter}.
+	 */
+	public PlotterSettings getSettings() {
+<span class="fc" id="L160">		return settings;</span>
+	}
+	
+	/**
+	 * Replace the existing {@link PlotterSettings} inside this {@link Plotter}.
+	 * Does not fire any event notification.
+	 * @param s the new plottersettings.
+	 */
+	public void setSettings(PlotterSettings s) throws InvalidParameterException {
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">		if(s==null) throw new InvalidParameterException(PlotterSettings.class.getSimpleName()+&quot; cannot be null.&quot;);</span>
+<span class="fc" id="L170">		settings=s;</span>
+<span class="fc" id="L171">	}</span>
+	
+	/**
+	 * Callback from {@link PreviewPanel} that it is time to render to the WYSIWYG display.
+	 * @param gl2 the render context
+	 */
+	@Override
+	public void render(GL2 gl2) {		
+<span class="nc" id="L179">		float[] lineWidthBuf = new float[1];</span>
+<span class="nc" id="L180">		gl2.glGetFloatv(GL2.GL_LINE_WIDTH, lineWidthBuf, 0);</span>
+		
+<span class="nc" id="L182">		drawPhysicalLimits(gl2);</span>
+		
+<span class="nc" id="L184">		gl2.glLineWidth(lineWidthBuf[0]);</span>
+<span class="nc" id="L185">	}	</span>
+	
+	/**
+	 * Outline the drawing limits
+	 * @param gl2
+	 */
+	private void drawPhysicalLimits(GL2 gl2) {
+<span class="nc" id="L192">		gl2.glLineWidth(1);</span>
+<span class="nc" id="L193">		gl2.glColor3f(0.9f, 0.9f, 0.9f); // #color </span>
+		
+<span class="nc" id="L195">		gl2.glBegin(GL2.GL_LINE_LOOP);</span>
+<span class="nc" id="L196">		gl2.glVertex2d(settings.getDouble(PlotterSettings.LIMIT_LEFT), settings.getDouble(PlotterSettings.LIMIT_TOP));</span>
+<span class="nc" id="L197">		gl2.glVertex2d(settings.getDouble(PlotterSettings.LIMIT_RIGHT), settings.getDouble(PlotterSettings.LIMIT_TOP));</span>
+<span class="nc" id="L198">		gl2.glVertex2d(settings.getDouble(PlotterSettings.LIMIT_RIGHT), settings.getDouble(PlotterSettings.LIMIT_BOTTOM));</span>
+<span class="nc" id="L199">		gl2.glVertex2d(settings.getDouble(PlotterSettings.LIMIT_LEFT), settings.getDouble(PlotterSettings.LIMIT_BOTTOM));</span>
+<span class="nc" id="L200">		gl2.glEnd();</span>
+<span class="nc" id="L201">	}</span>
+
+	/**
+	 * Instruct the {@link Plotter} to move.
+	 * @param move a {@link TurtleMove} with instructions.
+	 */
+	public void turtleMove(TurtleMove move) {
+<span class="nc bnc" id="L208" title="All 4 branches missed.">		switch(move.type) {</span>
+		case TRAVEL:
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			if(!penIsUp) raisePen();</span>
+<span class="nc" id="L211">			setPos(move.x,move.y);</span>
+<span class="nc" id="L212">			break;</span>
+		case DRAW_LINE:
+<span class="nc bnc" id="L214" title="All 2 branches missed.">			if(penIsUp) lowerPen();</span>
+<span class="nc" id="L215">			setPos(move.x,move.y);</span>
+<span class="nc" id="L216">			break;</span>
+		case TOOL_CHANGE:
+<span class="nc" id="L218">			requestUserChangeTool((int)move.x);</span>
+			break;
+		}
+<span class="nc" id="L221">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

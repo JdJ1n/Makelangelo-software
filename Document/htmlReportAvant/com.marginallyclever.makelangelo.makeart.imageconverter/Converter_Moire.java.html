@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_Moire.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_Moire.java</span></div><h1>Converter_Moire.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.convenience.LineInterpolator;
+import com.marginallyclever.convenience.LineInterpolatorSinCurve;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectDouble;
+import com.marginallyclever.makelangelo.select.SelectOneOfMany;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.ListIterator;
+
+
+/**
+ * 
+ * @author Dan Royer
+ */
+public class Converter_Moire extends ImageConverter {
+<span class="nc" id="L24">	private static double blockScale = 4.0f;</span>
+<span class="nc" id="L25">	private static int direction = 0;</span>
+<span class="nc" id="L26">	private final String[] directionChoices = new String[]{Translator.get(&quot;horizontal&quot;), Translator.get(&quot;vertical&quot;) };</span>
+
+	public Converter_Moire() {
+<span class="nc" id="L29">		super();</span>
+
+<span class="nc" id="L31">		SelectDouble selectSize = new SelectDouble(&quot;size&quot;,Translator.get(&quot;HilbertCurveSize&quot;),getScale());</span>
+<span class="nc" id="L32">		SelectOneOfMany selectDirection = new SelectOneOfMany(&quot;direction&quot;,Translator.get(&quot;Direction&quot;),getDirections(),getDirectionIndex());</span>
+
+<span class="nc" id="L34">		add(selectSize);</span>
+<span class="nc" id="L35">		add(selectDirection);</span>
+
+<span class="nc" id="L37">		selectSize.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L38">			setScale((double)evt.getNewValue());</span>
+<span class="nc" id="L39">			fireRestart();</span>
+<span class="nc" id="L40">		});</span>
+<span class="nc" id="L41">		selectDirection.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L42">			setDirectionIndex((int)evt.getNewValue());</span>
+<span class="nc" id="L43">			fireRestart();</span>
+<span class="nc" id="L44">		});</span>
+<span class="nc" id="L45">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="nc" id="L49">		return Translator.get(&quot;MoireName&quot;);</span>
+	}
+
+	public double getScale() {
+<span class="nc" id="L53">		return blockScale;</span>
+	}
+	
+	public void setScale(double value) {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if(value&lt;1) value=1;</span>
+<span class="nc" id="L58">		blockScale = value;</span>
+<span class="nc" id="L59">	}</span>
+	
+	public String[] getDirections() {
+<span class="nc" id="L62">		return directionChoices;</span>
+	}
+	
+	public int getDirectionIndex() {
+<span class="nc" id="L66">		return direction;</span>
+	}
+	
+	public void setDirectionIndex(int value) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if(value&lt;0) value=0;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if(value&gt;=directionChoices.length) value=directionChoices.length-1;</span>
+<span class="nc" id="L72">		direction = value;</span>
+<span class="nc" id="L73">	}</span>
+
+	protected void convertLine(TransformedImage img, double spaceBetweenLines, double halfStep, Point2D a, Point2D b) {
+<span class="nc" id="L76">		LineInterpolatorSinCurve line = new LineInterpolatorSinCurve(a,b);</span>
+<span class="nc" id="L77">		line.setAmplitude(0.4);</span>
+		
+<span class="nc" id="L79">		double CUTOFF = 1.0/255.0;</span>
+<span class="nc" id="L80">		double iterStepSize = 0.002;//machine.getDouble(PlotterSettings.DIAMETER)/2;</span>
+		
+		// examine the line once.  all Z values will be in the range 0...1
+<span class="nc" id="L83">		ArrayList&lt;Double&gt; zList = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc" id="L85">		Point2D p = new Point2D();</span>
+		//Point2D n = new Point2D();
+<span class="nc" id="L87">		double maxPixel=0;</span>
+		
+		
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		for (double t = 0; t &lt;= 1.0; t += iterStepSize) {</span>
+<span class="nc" id="L91">			line.getPoint(t, p);</span>
+			// read a block of the image and find the average intensity in this block
+<span class="nc" id="L93">			double pixel = img.sample( p.x, p.y, halfStep*2 );</span>
+			// scale the intensity value
+<span class="nc" id="L95">			double pixelNormalized = (255.0f - pixel) / 255.0f;</span>
+<span class="nc" id="L96">			pixelNormalized = Math.max(Math.min(pixelNormalized,1), 0);</span>
+<span class="nc" id="L97">			zList.add(pixelNormalized);</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">			if(maxPixel&lt;pixelNormalized) maxPixel=pixelNormalized;</span>
+		}
+		
+		// find the maximum number of passes for any given line
+<span class="nc" id="L102">		double pd = 0.7;</span>
+<span class="nc" id="L103">		int maxPasses = (int)Math.floor( spaceBetweenLines / pd )-1;</span>
+		// adjust to the maximum number used in *this* line.
+<span class="nc" id="L105">		int passesThisLine = (int)(maxPasses * maxPixel);</span>
+
+		//logger.debug(passesThisLine+&quot;/&quot;+maxPasses);
+		
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if(passesThisLine==0) return;  // empty line!</span>
+
+<span class="nc" id="L111">		int ziMeta = 0;</span>
+<span class="nc" id="L112">		int ziStart = -1;</span>
+<span class="nc" id="L113">		int ziEnd = -1;</span>
+
+<span class="nc" id="L115">		ListIterator&lt;Double&gt; zi = zList.listIterator(ziMeta);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		while(zi.hasNext()) {</span>
+<span class="nc" id="L117">			double z = zi.next();</span>
+<span class="nc" id="L118">			ziMeta++;</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if(ziStart == -1) {</span>
+				// is this the start of a segment?
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				if(z&gt;CUTOFF) {</span>
+					// yes
+<span class="nc" id="L123">					ziStart = ziMeta;</span>
+<span class="nc" id="L124">					continue;</span>
+				}
+			} else {
+				// is this the end of a segment? (either image light enough OR end of the line)
+<span class="nc bnc" id="L128" title="All 4 branches missed.">				if(z&lt;=CUTOFF || !zi.hasNext()) {</span>
+					// yes
+<span class="nc" id="L130">					ziEnd = ziMeta;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">					if(!zi.hasNext()) ziEnd--;</span>
+					
+					// now draw the segment.
+					// find the number of passes in this segment
+<span class="nc" id="L135">					ListIterator&lt;Double&gt; zi2 = zList.listIterator(ziStart);</span>
+<span class="nc" id="L136">					maxPixel=0;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">					for(int zc=ziStart; zc&lt;ziEnd; ++zc) {</span>
+<span class="nc" id="L138">						z = zi2.next();</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">						if(maxPixel&lt;z) maxPixel=z;</span>
+					}
+<span class="nc" id="L141">					int passesThisSegment = (int)(maxPasses * maxPixel);</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">					if(passesThisSegment&gt;0) {</span>
+						// jump to the start of the segment
+<span class="nc" id="L144">						double t = ziStart * iterStepSize;</span>
+<span class="nc" id="L145">						line.getPoint(t, p);</span>
+<span class="nc" id="L146">						double x=p.x;</span>
+<span class="nc" id="L147">						double y=p.y;</span>
+<span class="nc" id="L148">						turtle.jumpTo(myPaper.getCenterX()+x,myPaper.getCenterY()+y);</span>
+						
+						// draw back and forth over the segment, each line a little offset from the one before.
+<span class="nc" id="L151">						double halfSpace = pd*(double)passesThisSegment/2.0;</span>
+<span class="nc" id="L152">						int direction=1;</span>
+						
+<span class="nc bnc" id="L154" title="All 2 branches missed.">						for(int k=0;k&lt;passesThisSegment;++k) {</span>
+<span class="nc" id="L155">							double maxPulseNow = pd * k - halfSpace;</span>
+
+<span class="nc" id="L157">							int zc=0;</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">							if(direction==1) {</span>
+<span class="nc" id="L159">								zi2 = zList.listIterator(ziStart);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">								for(zc=ziStart; zc&lt;ziEnd; ++zc) {</span>
+<span class="nc" id="L161">									z = zi2.next();</span>
+<span class="nc" id="L162">									lineInternal(maxPulseNow,z,line,zc*iterStepSize);</span>
+								}
+							} else {
+<span class="nc" id="L165">								zi2 = zList.listIterator(ziEnd);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">								for(zc=ziEnd-1; zc&gt;=ziStart; --zc) {</span>
+<span class="nc" id="L167">									z = zi2.previous();</span>
+<span class="nc" id="L168">									lineInternal(maxPulseNow,z,line,zc*iterStepSize);</span>
+								}
+							}
+<span class="nc" id="L171">							direction=-direction;</span>
+						}
+					}
+					// reset to go again.
+<span class="nc" id="L175">					ziStart = -1;</span>
+				}
+			}
+<span class="nc" id="L178">		}</span>
+<span class="nc" id="L179">	}</span>
+	
+	protected void lineInternal(double maxPulseNow,double z,LineInterpolator line,double t) {
+<span class="nc" id="L182">		double pulseSize = maxPulseNow * z;</span>
+<span class="nc" id="L183">		Point2D p = new Point2D();</span>
+<span class="nc" id="L184">		Point2D n = new Point2D();</span>
+<span class="nc" id="L185">		line.getPoint(t, p);</span>
+<span class="nc" id="L186">		line.getNormal(t, n);</span>
+<span class="nc" id="L187">		double x=myPaper.getCenterX()+p.x + n.x*pulseSize;</span>
+<span class="nc" id="L188">		double y=myPaper.getCenterY()+p.y + n.y*pulseSize;</span>
+<span class="nc" id="L189">		turtle.moveTo(x,y);</span>
+<span class="nc" id="L190">	}</span>
+
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L194">		super.start(paper, image);</span>
+
+<span class="nc" id="L196">		FilterDesaturate bw = new FilterDesaturate(myImage);</span>
+<span class="nc" id="L197">		TransformedImage img = bw.filter();</span>
+
+<span class="nc" id="L199">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L200">		double xLeft   = rect.getMinX();</span>
+<span class="nc" id="L201">		double yBottom = rect.getMinY();</span>
+<span class="nc" id="L202">		double xRight  = rect.getMaxX();</span>
+<span class="nc" id="L203">		double yTop    = rect.getMaxY();</span>
+
+<span class="nc" id="L205">		double h=yTop-yBottom;</span>
+<span class="nc" id="L206">		double w=xRight-xLeft;</span>
+		
+		// figure out how many lines we're going to have on this image.
+<span class="nc" id="L209">		double halfStep = 1;</span>
+<span class="nc" id="L210">		double spaceBetweenLines = blockScale;</span>
+
+		// from top to bottom of the image...
+<span class="nc" id="L213">		Point2D a = new Point2D();</span>
+<span class="nc" id="L214">		Point2D b = new Point2D();</span>
+		
+<span class="nc" id="L216">		turtle = new Turtle();</span>
+
+<span class="nc bnc" id="L218" title="All 2 branches missed.">		if (direction == 0) {</span>
+			// horizontal
+<span class="nc" id="L220">			yBottom -= h;</span>
+<span class="nc" id="L221">			yTop    += h;</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			for (double y = yBottom; y &lt; yTop; y += spaceBetweenLines) {</span>
+<span class="nc" id="L223">				a.set(xRight,y);</span>
+<span class="nc" id="L224">				b.set(xLeft,y);</span>
+<span class="nc" id="L225">				convertLine(img,spaceBetweenLines,halfStep,a,b);</span>
+			}
+		} else {
+			// vertical
+<span class="nc" id="L229">			xLeft  -= w;</span>
+<span class="nc" id="L230">			xRight += w;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">			for (double x = xLeft; x &lt; xRight; x += spaceBetweenLines) {</span>
+<span class="nc" id="L232">				a.set(x,yTop);</span>
+<span class="nc" id="L233">				b.set(x,yBottom);</span>
+<span class="nc" id="L234">				convertLine(img,spaceBetweenLines,halfStep,a,b);</span>
+			}
+		}
+
+<span class="nc" id="L238">		fireConversionFinished();</span>
+<span class="nc" id="L239">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

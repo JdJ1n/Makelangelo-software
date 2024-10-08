@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterDitherFloydSteinberg.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imagefilter</a> &gt; <span class="el_source">FilterDitherFloydSteinberg.java</span></div><h1>FilterDitherFloydSteinberg.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imagefilter;
+
+import com.marginallyclever.convenience.ResizableImagePanel;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/**
+ * Floyd/Steinberg dithering
+ *
+ * @author Dan
+ * See &lt;a href=&quot;http://en.literateprograms.org/Floyd-Steinberg_dithering_%28C%29&quot;&gt;http://en.literateprograms.org/Floyd-Steinberg_dithering_%28C%29&lt;/a&gt; and &lt;a href=&quot;http://www.home.unix-ag.org/simon/gimp/fsdither.c&quot;&gt;http://www.home.unix-ag.org/simon/gimp/fsdither.c&lt;/a&gt;
+ */
+public class FilterDitherFloydSteinberg extends ImageFilter {
+  private long tone;
+  private final TransformedImage img;
+
+  public FilterDitherFloydSteinberg(TransformedImage img) {
+<span class="nc" id="L22">    super();</span>
+<span class="nc" id="L23">    this.img = img;</span>
+<span class="nc" id="L24">  }</span>
+
+  private int quantizeColor(int original) {
+<span class="nc" id="L27">    int i = (int) Math.min(Math.max(original, 0), 255);</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">    return (i &gt; tone) ? 255 : 0;</span>
+  }
+
+  private void ditherDirection(TransformedImage img, BufferedImage after, int y, int[] error, int[] nexterror, int direction) {
+<span class="nc" id="L32">    int w = img.getSourceImage().getWidth();</span>
+    int oldPixel, newPixel, quant_error;
+    int start, end, x;
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">    for (x = 0; x &lt; w; ++x) nexterror[x] = 0;</span>
+
+<span class="nc bnc" id="L38" title="All 2 branches missed.">    if (direction &gt; 0) {</span>
+<span class="nc" id="L39">      start = 0;</span>
+<span class="nc" id="L40">      end = w;</span>
+    } else {
+<span class="nc" id="L42">      start = w - 1;</span>
+<span class="nc" id="L43">      end = -1;</span>
+    }
+
+    // for each x from left to right
+<span class="nc bnc" id="L47" title="All 2 branches missed.">    for (x = start; x != end; x += direction) {</span>
+      // oldpixel := pixel[x][y]
+<span class="nc" id="L49">      oldPixel = decode32bit(img.getSourceImage().getRGB(x, y)) + error[x];</span>
+      // newpixel := find_closest_palette_color(oldpixel)
+<span class="nc" id="L51">      newPixel = quantizeColor(oldPixel);</span>
+      // pixel[x][y] := newpixel
+<span class="nc" id="L53">      after.setRGB(x, y, ImageFilter.encode32bit(newPixel));</span>
+      // quant_error := oldpixel - newpixel
+<span class="nc" id="L55">      quant_error = oldPixel - newPixel;</span>
+      // pixel[x+1][y  ] += 7/16 * quant_error
+      // pixel[x-1][y+1] += 3/16 * quant_error
+      // pixel[x  ][y+1] += 5/16 * quant_error
+      // pixel[x+1][y+1] += 1/16 * quant_error
+<span class="nc" id="L60">      nexterror[x] += (5.0 / 16.0) * quant_error;</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">      if (x + direction &gt;= 0 &amp;&amp; x + direction &lt; w) {</span>
+<span class="nc" id="L62">        error[x + direction] += (7.0 / 16.0) * quant_error;</span>
+<span class="nc" id="L63">        nexterror[x + direction] += (1.0 / 16.0) * quant_error;</span>
+      }
+<span class="nc bnc" id="L65" title="All 4 branches missed.">      if (x - direction &gt;= 0 &amp;&amp; x - direction &lt; w) {</span>
+<span class="nc" id="L66">        nexterror[x - direction] += (3.0 / 16.0) * quant_error;</span>
+      }
+    }
+<span class="nc" id="L69">  }</span>
+
+  @Override
+  public TransformedImage filter() {
+    int y, x;
+<span class="nc" id="L74">    int h = img.getSourceImage().getHeight();</span>
+<span class="nc" id="L75">    int w = img.getSourceImage().getWidth();</span>
+<span class="nc" id="L76">    int direction = 1;</span>
+<span class="nc" id="L77">    int[] error = new int[w];</span>
+<span class="nc" id="L78">    int[] nexterror = new int[w];</span>
+
+<span class="nc bnc" id="L80" title="All 2 branches missed.">    for (y = 0; y &lt; w; ++y) {</span>
+<span class="nc" id="L81">      error[y] = nexterror[y] = 0;</span>
+    }
+
+    // find the average color of the system
+<span class="nc bnc" id="L85" title="All 2 branches missed.">    for (y = 0; y &lt; h; ++y) {</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">      for (x = 0; x &lt; w; ++x) {</span>
+<span class="nc" id="L87">        tone += decode32bit(img.getSourceImage().getRGB(x, y));</span>
+      }
+    }
+
+<span class="nc" id="L91">    tone /= ((long) w * h);</span>
+
+
+<span class="nc" id="L94">    TransformedImage after = new TransformedImage(img);</span>
+<span class="nc" id="L95">    BufferedImage afterBI = after.getSourceImage();</span>
+    
+    // for each y from top to bottom
+<span class="nc bnc" id="L98" title="All 2 branches missed.">    for (y = 0; y &lt; h; ++y) {</span>
+<span class="nc" id="L99">      ditherDirection(img, afterBI, y, error, nexterror, direction);</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">      direction = direction &gt; 0 ? -1 : 1;</span>
+<span class="nc" id="L102">      int[] tmp = error;</span>
+<span class="nc" id="L103">      error = nexterror;</span>
+<span class="nc" id="L104">      nexterror = tmp;</span>
+    }
+
+<span class="nc" id="L107">    return after;</span>
+  }
+
+  public static void main(String[] args) throws IOException {
+<span class="nc" id="L111">    TransformedImage src = new TransformedImage( ImageIO.read(new FileInputStream(&quot;src/test/resources/mandrill.png&quot;)) );</span>
+<span class="nc" id="L112">    FilterDitherFloydSteinberg f = new FilterDitherFloydSteinberg(src);</span>
+<span class="nc" id="L113">    TransformedImage dest = f.filter();</span>
+<span class="nc" id="L114">    ResizableImagePanel.showImage(dest.getSourceImage(), &quot;Filter_DitherFloydSteinberg&quot; );</span>
+<span class="nc" id="L115">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

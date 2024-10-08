@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MarlinSimulationBlock.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.marlinsimulation</a> &gt; <span class="el_source">MarlinSimulationBlock.java</span></div><h1>MarlinSimulationBlock.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.marlinsimulation;
+
+import com.marginallyclever.convenience.helpers.StringHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.vecmath.Vector3d;
+
+/**
+ * {@link MarlinSimulationBlock} is one block in the queue of blocks inside a {@link MarlinSimulation}.
+ * For more details, please see Marlin documentation.
+ * @author Dan Royer
+ * @since 7.24.0
+ */
+public class MarlinSimulationBlock {
+<span class="nc" id="L16">	private static final Logger logger = LoggerFactory.getLogger(MarlinSimulationBlock.class);</span>
+
+<span class="nc" id="L18">	public static int counter=0;</span>
+	public int id;
+	
+<span class="nc" id="L21">	public Vector3d start = new Vector3d();</span>
+<span class="nc" id="L22">	public Vector3d end = new Vector3d();</span>
+<span class="nc" id="L23">	public Vector3d delta = new Vector3d();</span>
+<span class="nc" id="L24">	public Vector3d normal = new Vector3d();</span>
+	
+	//public double start_s;
+	public double end_s;
+	//public double now_s;
+	
+	public double feedrate;
+	
+	public double distance;
+	public double nominalSpeed;  // top speed in this segment
+	public double entrySpeed;  // per second
+	public double exitSpeed;  // per second
+	public double acceleration;  // per second per second
+	
+	public double entrySpeedMax;
+	public double accelerateUntilD;  // distance
+	public double decelerateAfterD;  // distance
+	public double plateauD;  // distance
+
+	public double accelerateUntilT;  // seconds
+	public double decelerateAfterT;  // seconds
+	
+	public double allowableSpeed;
+	
+	// when optimizing, should we recheck the entry + exit v of this segment?
+	public boolean recalculate;
+	// is this segment 100% full speed, end to end?
+	public boolean nominalLength;
+	// is the robot moving through this segment right now?
+	public boolean busy;
+	
+	
+	// delta is calculated here in the constructor.
+<span class="nc" id="L57">	public MarlinSimulationBlock(final Vector3d endPose,final Vector3d deltaPose) {</span>
+<span class="nc" id="L58">		end.set(endPose);</span>
+<span class="nc" id="L59">		delta.set(deltaPose);</span>
+<span class="nc" id="L60">		normal.set(deltaPose);</span>
+<span class="nc" id="L61">		normal.normalize();</span>
+<span class="nc" id="L62">		start.sub(end,delta);</span>
+		
+<span class="nc" id="L64">		id=counter++;</span>
+<span class="nc" id="L65">		distance = delta.length();</span>
+<span class="nc" id="L66">		busy=false;</span>
+<span class="nc" id="L67">		recalculate=true;</span>
+<span class="nc" id="L68">	}</span>
+	
+	public void report() {
+<span class="nc" id="L71">		String res = &quot;S&quot; + &quot;\t&quot; + id +</span>
+				&quot;\t&quot; + start +
+				&quot;\t&quot; + end +
+				&quot;\t&quot; + delta +
+				&quot;\t&quot; + normal +
+<span class="nc" id="L76">				&quot;\t&quot; + StringHelper.formatDouble(end_s) +</span>
+<span class="nc" id="L77">				&quot;\t&quot; + StringHelper.formatDouble(feedrate) +</span>
+<span class="nc" id="L78">				&quot;\t&quot; + StringHelper.formatDouble(distance) +</span>
+<span class="nc" id="L79">				&quot;\t&quot; + StringHelper.formatDouble(nominalSpeed) +</span>
+<span class="nc" id="L80">				&quot;\t&quot; + StringHelper.formatDouble(entrySpeed) +</span>
+<span class="nc" id="L81">				&quot;\t&quot; + StringHelper.formatDouble(exitSpeed) +</span>
+<span class="nc" id="L82">				&quot;\t&quot; + StringHelper.formatDouble(entrySpeedMax) +</span>
+<span class="nc" id="L83">				&quot;\t&quot; + StringHelper.formatDouble(allowableSpeed) +</span>
+<span class="nc" id="L84">				&quot;\t&quot; + StringHelper.formatDouble(acceleration) +</span>
+<span class="nc" id="L85">				&quot;\t&quot; + StringHelper.formatDouble(accelerateUntilD) +</span>
+<span class="nc" id="L86">				&quot;\t&quot; + StringHelper.formatDouble(plateauD) +</span>
+<span class="nc" id="L87">				&quot;\t&quot; + StringHelper.formatDouble(decelerateAfterD) +</span>
+<span class="nc" id="L88">				&quot;\t&quot; + StringHelper.formatDouble(accelerateUntilT) +</span>
+<span class="nc" id="L89">				&quot;\t&quot; + StringHelper.formatDouble(decelerateAfterT) +</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				&quot;\t&quot; + (nominalLength ? 1 : 0);</span>
+<span class="nc" id="L91">		logger.debug(res);</span>
+<span class="nc" id="L92">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

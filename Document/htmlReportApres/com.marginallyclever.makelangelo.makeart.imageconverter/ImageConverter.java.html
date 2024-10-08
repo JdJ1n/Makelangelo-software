@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">ImageConverter.java</span></div><h1>ImageConverter.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.util.texture.Texture;
+import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
+import com.marginallyclever.convenience.Clipper2D;
+import com.marginallyclever.convenience.helpers.MathHelper;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.Select;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Converts a {@link TransformedImage} to {@link Turtle}
+ * @author Dan Royer
+ */
+<span class="nc" id="L24">public abstract class ImageConverter {</span>
+<span class="nc" id="L25">	private static final Logger logger = LoggerFactory.getLogger(ImageConverter.class);</span>
+	protected TransformedImage myImage;
+	protected Paper myPaper;
+<span class="nc" id="L28">	public Turtle turtle = new Turtle();</span>
+
+	// for previewing the image
+<span class="nc" id="L31">	private Texture texture = null;</span>
+
+<span class="nc" id="L33">	private final List&lt;Select&gt; panelElements = new ArrayList&lt;&gt;();</span>
+
+	/**
+	 * @return the translated name.
+	 */
+	abstract public String getName();
+
+	/**
+	 * Start the conversion process.
+	 * @param paper the bounds of the final output.
+	 * @param img the {@code TransformedImage} this filter is using as source material.
+	 */
+	public void start(Paper paper,TransformedImage img) {
+<span class="nc" id="L46">		myPaper = paper;</span>
+<span class="nc" id="L47">		myImage = img;</span>
+<span class="nc" id="L48">		texture = null;</span>
+<span class="nc" id="L49">	}</span>
+
+	/**
+	 * Stop the conversion process.  Called by the GUI when the user cancels the conversion, either by changing the
+	 * style or halting altogether.  In both cases the conversion should be aborted.
+	 */
+<span class="nc" id="L55">	public void stop() {}</span>
+
+	/**
+	 * Live preview as the system is converting pictures.
+	 * draw the results as the calculation is being performed.
+	 */
+	protected void render(GL2 gl2) {
+<span class="nc bnc" id="L62" title="All 4 branches missed.">		if( texture==null &amp;&amp; myImage!=null) {</span>
+<span class="nc" id="L63">			texture = AWTTextureIO.newTexture(gl2.getGLProfile(), myImage.getSourceImage(), false);</span>
+		}
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if(texture!=null) {</span>
+<span class="nc" id="L66">			double w = myImage.getSourceImage().getWidth() * myImage.getScaleX();</span>
+<span class="nc" id="L67">			double h = myImage.getSourceImage().getHeight() * myImage.getScaleY();</span>
+<span class="nc" id="L68">			gl2.glEnable(GL2.GL_TEXTURE_2D);</span>
+<span class="nc" id="L69">			gl2.glEnable(GL2.GL_BLEND);</span>
+<span class="nc" id="L70">			gl2.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);</span>
+<span class="nc" id="L71">			gl2.glDisable(GL2.GL_COLOR);</span>
+<span class="nc" id="L72">			gl2.glColor4f(1, 1, 1,0.5f);</span>
+<span class="nc" id="L73">			gl2.glTexEnvf(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_MODULATE);</span>
+<span class="nc" id="L74">			texture.bind(gl2);</span>
+<span class="nc" id="L75">			gl2.glBegin(GL2.GL_TRIANGLE_FAN);</span>
+<span class="nc" id="L76">			gl2.glTexCoord2d(0, 0);	gl2.glVertex2d(-w/2, -h/2 );</span>
+<span class="nc" id="L77">			gl2.glTexCoord2d(1, 0);	gl2.glVertex2d( w/2, -h/2 );</span>
+<span class="nc" id="L78">			gl2.glTexCoord2d(1, 1);	gl2.glVertex2d( w/2, h/2);</span>
+<span class="nc" id="L79">			gl2.glTexCoord2d(0, 1);	gl2.glVertex2d(-w/2, h/2);</span>
+<span class="nc" id="L80">			gl2.glEnd();</span>
+<span class="nc" id="L81">			gl2.glDisable(GL2.GL_TEXTURE_2D);</span>
+<span class="nc" id="L82">			gl2.glDisable(GL2.GL_BLEND);</span>
+<span class="nc" id="L83">			gl2.glEnable(GL2.GL_COLOR);</span>
+		}	
+<span class="nc" id="L85">	}</span>
+	
+	/**
+	 * Drag the pen across the paper from p0 to p1, sampling (p1-p0)/stepSize times.  If the intensity of img
+	 * at a sample location is greater than the channelCutff, raise the pen.  Print the gcode results to out.
+	 * This method is used by several converters.
+	 * 
+	 * @param x0 starting position on the paper.
+	 * @param y0 starting position on the paper.
+	 * @param x1 ending position on the paper.
+	 * @param y1 ending position on the paper.
+	 * @param stepSize mm level of detail for this line.
+	 * @param channelCutoff only put pen down when color below this amount.
+	 * @param img the image to sample while converting along the line.
+	 */
+	protected void convertAlongLine(double x0,double y0,double x1,double y1,double stepSize,double channelCutoff,TransformedImage img) {
+<span class="nc" id="L101">		Point2D P0 = new Point2D(x0,y0);</span>
+<span class="nc" id="L102">		Point2D P1 = new Point2D(x1,y1);</span>
+
+<span class="nc" id="L104">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L105">		Point2D rMax = new Point2D(rect.getMaxX(),rect.getMaxY());</span>
+<span class="nc" id="L106">		Point2D rMin = new Point2D(rect.getMinX(),rect.getMinY());</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if(!Clipper2D.clipLineToRectangle(P0, P1, rMax, rMin)) {</span>
+			// entire line clipped
+<span class="nc" id="L109">			return;</span>
+		}
+
+<span class="nc" id="L112">		double cx = myPaper.getCenterX();</span>
+<span class="nc" id="L113">		double cy = myPaper.getCenterY();</span>
+		
+<span class="nc" id="L115">		double ox=turtle.getX()-P0.x;</span>
+<span class="nc" id="L116">		double oy=turtle.getY()-P0.y;</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		boolean firstJump = MathHelper.lengthSquared(ox, oy)&gt;2;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if(firstJump) turtle.jumpTo(cx+P0.x,cy+P0.y);</span>
+			
+		double b;
+<span class="nc" id="L121">		double dx=P1.x-P0.x;</span>
+<span class="nc" id="L122">		double dy=P1.y-P0.y;</span>
+<span class="nc" id="L123">		double halfStep = stepSize/2.0;</span>
+<span class="nc" id="L124">		double distance = Math.sqrt(dx*dx+dy*dy);</span>
+
+		double n,x,y,v;
+		
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		for( b = 0; b &lt;= distance; b+=stepSize ) {</span>
+<span class="nc" id="L129">			n = b / distance;</span>
+<span class="nc" id="L130">			x = dx * n + P0.x;</span>
+<span class="nc" id="L131">			y = dy * n + P0.y;</span>
+			
+<span class="nc" id="L133">			v = img.sample( x, y , halfStep);</span>
+
+<span class="nc" id="L135">			x+=cx;</span>
+<span class="nc" id="L136">			y+=cy;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if(v&lt;channelCutoff) turtle.moveTo(x,y);</span>
+<span class="nc" id="L138">			else turtle.jumpTo(x,y);</span>
+		}
+<span class="nc" id="L140">	}</span>
+	
+	/**
+	 * Drag the pen across the paper from p0 to p1, sampling (p1-p0)/stepSize times.  If the intensity of img
+	 * at a sample location is greater than the channelCutff, raise the pen.  Print the gcode results to out.
+	 * This method is used by several converters.
+	 * 
+	 * @param x0 starting position on the paper.
+	 * @param y0 starting position on the paper.
+	 * @param x1 ending position on the paper.
+	 * @param y1 ending position on the paper.
+	 * @param stepSize mm level of detail for this line.
+	 * @param channelCutoff only put pen down when color below this amount.
+	 * @param img the image to sample while converting along the line.
+	 */
+	protected void convertAlongLineErrorTerms(double x0,double y0,double x1,double y1,double stepSize,double channelCutoff,double [] error0,double [] error1,TransformedImage img) {
+		double b;
+<span class="nc" id="L157">		double dx=x1-x0;</span>
+<span class="nc" id="L158">		double dy=y1-y0;</span>
+<span class="nc" id="L159">		double halfStep = stepSize/2.0;</span>
+<span class="nc" id="L160">		double distance = Math.sqrt(dx*dx+dy*dy);</span>
+
+		double n,x,y,oldPixel,newPixel;
+
+<span class="nc" id="L164">		boolean wasInside = false;</span>
+		boolean isInside;
+		boolean penUp;
+<span class="nc" id="L167">		int steps=0;</span>
+
+<span class="nc" id="L169">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		for (b = 0; b &lt;= distance; b+=stepSize) {</span>
+<span class="nc" id="L172">			n = b / distance;</span>
+<span class="nc" id="L173">			x = dx * n + x0;</span>
+<span class="nc" id="L174">			y = dy * n + y0;</span>
+<span class="nc" id="L175">			isInside = rect.contains(x,y);</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if(isInside) {</span>
+<span class="nc" id="L177">				oldPixel = img.sample( x, y, halfStep);</span>
+<span class="nc" id="L178">				int b2 = (int)Math.min(b, error0.length-2);</span>
+<span class="nc" id="L179">				oldPixel += error0[b2];</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				newPixel = oldPixel&gt;=channelCutoff? 255:0;</span>
+<span class="nc" id="L181">				double quantError = oldPixel - newPixel;</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">				if(b2+1&lt; steps) error0[b2+1] += quantError * 7.0/16.0;</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				if(b2-1&gt;=0    ) error1[b2-1] += quantError * 3.0/16.0;</span>
+<span class="nc" id="L184">				                error1[b2  ] += quantError * 5.0/16.0;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">				if(b2+1&lt; steps) error1[b2+1] += quantError * 1.0/16.0;</span>
+				
+<span class="nc bnc" id="L187" title="All 2 branches missed.">				penUp = (newPixel==255);</span>
+<span class="nc" id="L188">			} else {</span>
+<span class="nc" id="L189">				penUp=true;</span>
+			}
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			if(penUp) turtle.penUp();</span>
+<span class="nc" id="L192">			else turtle.penDown();</span>
+<span class="nc" id="L193">			turtle.moveTo(x,y);</span>
+<span class="nc" id="L194">			steps++;</span>
+			
+<span class="nc bnc" id="L196" title="All 4 branches missed.">			if( wasInside &amp;&amp; !isInside ) break;  // done</span>
+<span class="nc" id="L197">			wasInside=isInside;</span>
+		}
+<span class="nc" id="L199">		turtle.penUp();</span>
+<span class="nc" id="L200">	}</span>
+
+	// Observer pattern notified when a converter has finished a job.
+<span class="nc" id="L203">	private final List&lt;ImageConverterListener&gt; listeners = new ArrayList&lt;&gt;();</span>
+
+	public void addImageConverterListener(ImageConverterListener listener) {
+<span class="nc" id="L206">		listeners.add(listener);</span>
+<span class="nc" id="L207">	}</span>
+
+	public void removeImageConverterListener(ImageConverterListener listener) {
+<span class="nc" id="L210">		listeners.remove(listener);</span>
+<span class="nc" id="L211">	}</span>
+
+	protected void fireRestart() {
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		for(ImageConverterListener listener:listeners) listener.onRestart(this);</span>
+<span class="nc" id="L215">	}</span>
+
+	/**
+	 * Called when the converter has successfully finished a job.
+	 */
+	protected void fireConversionFinished() {
+<span class="nc" id="L221">		logger.debug(&quot;fire conversion finished&quot;);</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		for(ImageConverterListener listener : listeners) {</span>
+<span class="nc" id="L223">			listener.onConvertFinished(turtle);</span>
+<span class="nc" id="L224">		}</span>
+<span class="nc" id="L225">	}</span>
+
+	public void add(Select element) {
+<span class="nc" id="L228">		panelElements.add(element);</span>
+<span class="nc" id="L229">	}</span>
+	public List&lt;Select&gt; getPanelElements() {
+<span class="nc" id="L231">		return panelElements;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

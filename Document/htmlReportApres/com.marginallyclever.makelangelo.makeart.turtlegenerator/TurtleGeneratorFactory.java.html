@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TurtleGeneratorFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator</a> &gt; <span class="el_source">TurtleGeneratorFactory.java</span></div><h1>TurtleGeneratorFactory.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal.*;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.grid.Generator_GraphPaper;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.grid.Generator_GridFit;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.grid.Generator_GridHexagons;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.lineweight.LineWeightByImageIntensity;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.maze.Generator_MazeCircle;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.maze.Generator_MazeHoneycomb;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.maze.Generator_MazeRectangle;
+
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L16">public class TurtleGeneratorFactory {</span>
+	public static class TurtleGeneratorNode {
+		private final String name;
+<span class="fc" id="L19">		public final List&lt;TurtleGeneratorNode&gt; children = new ArrayList&lt;&gt;();</span>
+		public TurtleGenerator generator;
+
+		public String getName() {
+<span class="fc" id="L23">			return name;</span>
+		}
+
+<span class="fc" id="L26">		public TurtleGeneratorNode(String name, TurtleGeneratorNode [] kids) {</span>
+<span class="fc" id="L27">			this.name = name;</span>
+<span class="fc" id="L28">			children.addAll(List.of(kids));</span>
+<span class="fc" id="L29">		}</span>
+<span class="fc" id="L30">		public TurtleGeneratorNode(TurtleGenerator gen) {</span>
+<span class="fc" id="L31">			this.name = gen.getName();</span>
+<span class="fc" id="L32">			this.generator = gen;</span>
+<span class="fc" id="L33">		}</span>
+
+		public TurtleGenerator getGenerator() {
+<span class="fc" id="L36">			return generator;</span>
+		}
+
+		public List&lt;TurtleGeneratorNode&gt; getChildren() {
+<span class="fc" id="L40">			return children;</span>
+		}
+	};
+
+<span class="fc" id="L44">	public static TurtleGeneratorNode available = new TurtleGeneratorNode(Translator.get(&quot;MenuGenerate&quot;),new TurtleGeneratorNode[]{</span>
+			new TurtleGeneratorNode(new Generator_Border()),
+<span class="fc" id="L46">			new TurtleGeneratorNode(Translator.get(&quot;MenuGenerate.Fractals&quot;), new TurtleGeneratorNode[]{</span>
+                    new TurtleGeneratorNode(new Generator_Dragon()),
+                    new TurtleGeneratorNode(new Generator_FibonacciSpiral()),
+                    new TurtleGeneratorNode(new Generator_GosperCurve()),
+                    new TurtleGeneratorNode(new Generator_HilbertCurve()),
+                    new TurtleGeneratorNode(new Generator_KochCurve()),
+                    new TurtleGeneratorNode(new Generator_LSystemTree()),
+					new TurtleGeneratorNode(new Generator_SierpinskiTriangle()),
+            }),
+<span class="fc" id="L55">			new TurtleGeneratorNode(Translator.get(&quot;MenuGenerate.Grids&quot;), new TurtleGeneratorNode[]{</span>
+					new TurtleGeneratorNode(new Generator_GraphPaper()),
+					new TurtleGeneratorNode(new Generator_GridFit()),
+					new TurtleGeneratorNode(new Generator_GridHexagons()),
+			}),
+<span class="fc" id="L60">			new TurtleGeneratorNode(Translator.get(&quot;MenuGenerate.SpaceFillers&quot;), new TurtleGeneratorNode[]{</span>
+					new TurtleGeneratorNode(new Generator_FillPage()),
+					new TurtleGeneratorNode(new Generator_FlowField()),
+					new TurtleGeneratorNode(new Generator_Spiral()),
+					new TurtleGeneratorNode(new Generator_TruchetTiles()),
+					new TurtleGeneratorNode(new Generator_Voronoi()),
+			}),
+<span class="fc" id="L67">			new TurtleGeneratorNode(Translator.get(&quot;MenuGenerate.Mazes&quot;), new TurtleGeneratorNode[]{</span>
+					new TurtleGeneratorNode(new Generator_MazeCircle()),
+					new TurtleGeneratorNode(new Generator_MazeHoneycomb()),
+					new TurtleGeneratorNode(new Generator_MazeRectangle()),
+			}),
+			new TurtleGeneratorNode(new LineWeightByImageIntensity()),
+			new TurtleGeneratorNode(new Generator_Lissajous()),
+			new TurtleGeneratorNode(new Generator_Package()),
+			new TurtleGeneratorNode(new Generator_Polyeder()),
+			new TurtleGeneratorNode(new Generator_Spirograph()),
+			new TurtleGeneratorNode(new Generator_Text()),
+	});
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

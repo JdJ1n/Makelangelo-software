@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransformedImage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart</a> &gt; <span class="el_source">TransformedImage.java</span></div><h1>TransformedImage.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart;
+
+import com.marginallyclever.makelangelo.makeart.imagefilter.ImageFilter;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
+import java.util.Arrays;
+
+/**
+ * TransformedImage is a {@link BufferedImage}, with a transformation matrix on top.
+ * All sampling interactions are done in paper space coordinates and {@link TransformedImage} takes care of the rest.
+ * The original {@link BufferedImage} is not modified so there is no data loss.  This also means one matrix transform
+ * per pixel sample, which is slow.
+ * @author Dan Royer
+ */
+public class TransformedImage {
+	private final BufferedImage sourceImage;
+	private float scaleX, scaleY;
+	private float translateX, translateY;
+
+<span class="fc" id="L22">	public TransformedImage(BufferedImage src) {</span>
+<span class="fc" id="L23">		sourceImage = src;</span>
+<span class="fc" id="L24">		translateX = -src.getWidth() / 2.0f;</span>
+<span class="fc" id="L25">		translateY = -src.getHeight() / 2.0f;</span>
+<span class="fc" id="L26">		scaleX = 1;</span>
+<span class="fc" id="L27">		scaleY = -1;</span>
+<span class="fc" id="L28">	}</span>
+
+	// https://stackoverflow.com/questions/3514158/how-do-you-clone-a-bufferedimage
+	protected BufferedImage deepCopy(BufferedImage bi) {
+<span class="fc" id="L32">		ColorModel cm = bi.getColorModel();</span>
+<span class="fc" id="L33">		boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();</span>
+<span class="fc" id="L34">		WritableRaster raster = bi.copyData(null);</span>
+<span class="fc" id="L35">		return new BufferedImage(cm, raster, isAlphaPremultiplied, null);</span>
+	}
+  
+<span class="fc" id="L38">	public TransformedImage(TransformedImage copy) {</span>
+<span class="fc" id="L39">		sourceImage = deepCopy(copy.sourceImage);</span>
+<span class="fc" id="L40">		translateX = copy.translateX;</span>
+<span class="fc" id="L41">		translateY = copy.translateY;</span>
+<span class="fc" id="L42">		scaleX = copy.scaleX;</span>
+<span class="fc" id="L43">		scaleY = copy.scaleY;</span>
+<span class="fc" id="L44">	}</span>
+
+	public boolean canSampleAt(double x, double y) {
+<span class="nc" id="L47">		int sampleX = getTransformedX(x);</span>
+<span class="nc" id="L48">		int sampleY = getTransformedY(y);</span>
+
+<span class="nc bnc" id="L50" title="All 4 branches missed.">		if (sampleX &lt; 0 || sampleX &gt;= sourceImage.getWidth ()) return false;</span>
+<span class="nc bnc" id="L51" title="All 4 branches missed.">		if (sampleY &lt; 0 || sampleY &gt;= sourceImage.getHeight()) return false;</span>
+<span class="nc" id="L52">		return true;</span>
+	}
+
+	public void copySettingsFrom(TransformedImage other) {
+<span class="nc" id="L56">		scaleX = other.scaleX;</span>
+<span class="nc" id="L57">		scaleY = other.scaleY;</span>
+<span class="nc" id="L58">		translateX = other.translateX;</span>
+<span class="nc" id="L59">		translateY = other.translateY;</span>
+<span class="nc" id="L60">	}</span>
+
+	public float getScaleX() {
+<span class="nc" id="L63">		return scaleX;</span>
+	}
+
+	public float getScaleY() {
+<span class="nc" id="L67">		return scaleY;</span>
+	}
+
+	public BufferedImage getSourceImage() {
+<span class="fc" id="L71">		return sourceImage;</span>
+	}
+
+	private int getTransformedX(double x) {
+<span class="nc" id="L75">		return (int) ((x / scaleX) - translateX);</span>
+	}
+
+	public int getTransformedY(double y) {
+<span class="nc" id="L79">		return (int) ((y / scaleY) - translateY);</span>
+	}
+
+	/**
+	 * Returns the greyscale intensity [0...255]
+	 * @param cx center of the sample area
+	 * @param cy center of the sample area
+	 * @param radius radius of the sample area
+	 * @return the greyscale intensity [0...255]
+	 */
+	public int sample(double cx, double cy, double radius) {
+<span class="nc" id="L90">		return sample(cx-radius,cy-radius,cx+radius,cy+radius);</span>
+	}
+	
+	/**
+	 * Sample the image, taking into account fractions of pixels. left must be less than right, bottom must be less than top.
+	 * @param x0 left
+	 * @param y0 top
+	 * @param x1 right
+	 * @param y1 bottom
+	 * @return greyscale intensity in this region. [0...255]v
+	 */
+	public int sample(double x0, double y0, double x1, double y1) {
+<span class="nc" id="L102">		double sampleValue = 0;</span>
+<span class="nc" id="L103">		double weightedSum = 0;</span>
+
+<span class="nc" id="L105">		int left   = (int)Math.floor(x0);</span>
+<span class="nc" id="L106">		int right  = (int)Math.ceil (x1);</span>
+<span class="nc" id="L107">		int bottom = (int)Math.floor(y0);</span>
+<span class="nc" id="L108">		int top    = (int)Math.ceil (y1);</span>
+
+		// calculate the weight matrix
+<span class="nc" id="L111">		int w = Math.max(1,right-left);</span>
+<span class="nc" id="L112">		int h = Math.max(1,top-bottom);</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">		if(w==1 &amp;&amp; h==1) {</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if (canSampleAt(left, bottom)) {</span>
+<span class="nc" id="L115">				return sample1x1Unchecked(left, bottom);</span>
+			} else {
+<span class="nc" id="L117">				return 0;</span>
+			}
+		}
+		
+<span class="nc" id="L121">		double [] m = new double[w*h];</span>
+<span class="nc" id="L122">		Arrays.fill(m, 1);</span>
+
+		// bottom edge
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if(bottom&lt;y0) {</span>
+<span class="nc" id="L126">			double yWeightStart = y0-bottom;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			for(int i=0;i&lt;w;++i) {</span>
+<span class="nc" id="L128">				m[i]*=yWeightStart;</span>
+			}
+		}
+		// top edge
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if(top&gt;y1) {</span>
+<span class="nc" id="L133">			double yWeightEnd = top-y1;</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			for(int i=0;i&lt;w;++i) {</span>
+<span class="nc" id="L135">				m[m.length-w+i]*=yWeightEnd;</span>
+			}
+		}
+		// left edge
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if(left&lt;x0) {</span>
+<span class="nc" id="L140">			double xWeightStart = x0-left;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			for(int i=0;i&lt;h;++i) {</span>
+<span class="nc" id="L142">				m[i*w]*=xWeightStart;</span>
+			}
+		}
+		// right edge
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		if(right&gt;x1) {</span>
+<span class="nc" id="L147">			double xWeightEnd = right-x1;</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">			for(int i=0;i&lt;h;++i) {</span>
+<span class="nc" id="L149">				m[(i+1)*w-1]*=xWeightEnd;</span>
+			}
+		}
+		
+<span class="nc" id="L153">		int i=0;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		for(int y=bottom;y&lt;top;++y) {</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			for(int x=left;x&lt;right;++x) {</span>
+<span class="nc" id="L156">				double s = m[i++];</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				if (canSampleAt(x, y)) {</span>
+<span class="nc" id="L158">					sampleValue += sample1x1Unchecked(x,y) * s;</span>
+<span class="nc" id="L159">					weightedSum += s;</span>
+				}
+			}
+		}
+
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		if (weightedSum == 0)</span>
+<span class="nc" id="L165">			return 255;</span>
+
+<span class="nc" id="L167">		double result = sampleValue / weightedSum;</span>
+		
+<span class="nc" id="L169">		return (int)Math.min( Math.max(result, 0), 255 );</span>
+	}
+
+	/**
+	 * Attempt to sample a pixel of the source image, if the (x,y) coordinate is within the bounds of the 
+	 * @param x paper-space coordinates of the image
+	 * @param y paper-space coordinates of the image
+	 * @return 255 if the image cannot be sampled.  The intensity of the color channel [0...255]
+	 */
+	public int sample1x1(double x, double y) {
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (canSampleAt(x, y)) {</span>
+<span class="nc" id="L180">			return sample1x1Unchecked(x, y);</span>
+		}
+<span class="nc" id="L182">		return 255;</span>
+	}
+
+	/**
+	 * Sample a pixel of the source image without a safety check.
+	 * @param x paper-space coordinates of the image
+	 * @param y paper-space coordinates of the image
+	 * @return 255 if the image cannot be sampled.  The intensity of the color channel [0...255].  the color channel is selected with
+	 */
+	public int sample1x1Unchecked(double x, double y) {
+<span class="nc" id="L192">		int sampleX = getTransformedX(x);</span>
+<span class="nc" id="L193">		int sampleY = getTransformedY(y);</span>
+
+<span class="nc" id="L195">		int c2 = sourceImage.getRGB(sampleX, sampleY);</span>
+<span class="nc" id="L196">		return ImageFilter.decode32bit(c2) &amp; 0xFF;</span>
+	}
+
+	// sample the pixels from x0,y0 (top left) to x1,y1 (bottom right)
+	public int sampleArea(int x0, int y0, int x1, int y1) {
+<span class="nc" id="L201">		int value = 0;</span>
+<span class="nc" id="L202">		int sum = 0;</span>
+
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		for (int y = y0; y &lt; y1; ++y) {</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			for (int x = x0; x &lt; x1; ++x) {</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">				if (canSampleAt(x, y)) {</span>
+<span class="nc" id="L207">					value += sample1x1Unchecked(x, y);</span>
+<span class="nc" id="L208">					++sum;</span>
+				}
+			}
+		}
+
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		if (sum == 0)</span>
+<span class="nc" id="L214">			return 255;</span>
+
+<span class="nc" id="L216">		return value / sum;</span>
+	}	
+
+	public void setScale(float x,float y) {
+<span class="nc" id="L220">		scaleX = x;</span>
+<span class="nc" id="L221">		scaleY = y;</span>
+<span class="nc" id="L222">	}</span>
+
+
+	public void setRGB(float x, float y, int c) {
+<span class="nc" id="L226">		sourceImage.setRGB(getTransformedX(x), getTransformedY(y), c);</span>
+<span class="nc" id="L227">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

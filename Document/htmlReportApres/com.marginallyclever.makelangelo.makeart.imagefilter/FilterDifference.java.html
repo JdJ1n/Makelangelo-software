@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterDifference.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imagefilter</a> &gt; <span class="el_source">FilterDifference.java</span></div><h1>FilterDifference.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imagefilter;
+
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+
+/**
+ * Calculate abs(a-b) for every pixel
+ * @author Dan Royer
+ * @since 7.46.0
+ */
+public class FilterDifference extends ImageFilter {
+    private final TransformedImage a,b;
+
+<span class="nc" id="L16">    public FilterDifference(TransformedImage a, TransformedImage b) {</span>
+<span class="nc" id="L17">        this.a = a;</span>
+<span class="nc" id="L18">        this.b = b;</span>
+<span class="nc" id="L19">    }</span>
+
+    @Override
+    public TransformedImage filter() {
+<span class="nc" id="L23">        TransformedImage result = new TransformedImage(a);</span>
+<span class="nc" id="L24">        BufferedImage aa = a.getSourceImage();</span>
+<span class="nc" id="L25">        BufferedImage bb = b.getSourceImage();</span>
+<span class="nc" id="L26">        int w = aa.getWidth();</span>
+<span class="nc" id="L27">        int h = aa.getHeight();</span>
+<span class="nc bnc" id="L28" title="All 4 branches missed.">        if(w != bb.getWidth() || h != bb.getHeight()) {</span>
+<span class="nc" id="L29">            throw new RuntimeException(&quot;Images must be the same size.&quot;);</span>
+        }
+
+<span class="nc" id="L32">        BufferedImage rr = result.getSourceImage();</span>
+
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        for (int y = 0; y &lt; h; ++y) {</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">            for (int x = 0; x &lt; w; ++x) {</span>
+<span class="nc" id="L36">                Color diff = new Color(aa.getRGB(x, y));</span>
+<span class="nc" id="L37">                Color other = new Color(bb.getRGB(x, y));</span>
+<span class="nc" id="L38">                var diff2 = new Color(</span>
+<span class="nc" id="L39">                        modify(diff.getRed()  , other.getRed()  ),</span>
+<span class="nc" id="L40">                        modify(diff.getGreen(), other.getGreen()),</span>
+<span class="nc" id="L41">                        modify(diff.getBlue() , other.getBlue() ) );</span>
+<span class="nc" id="L42">                rr.setRGB(x, y, diff2.hashCode());</span>
+            }
+        }
+
+<span class="nc" id="L46">        return result;</span>
+    }
+
+    private int modify(int a,int b) {
+<span class="nc" id="L50">        double v = Math.abs(a-b);</span>
+<span class="nc" id="L51">        return (int)Math.max(0,Math.min(255, v));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

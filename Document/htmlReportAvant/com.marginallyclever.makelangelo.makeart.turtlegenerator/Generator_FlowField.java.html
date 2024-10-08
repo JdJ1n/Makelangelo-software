@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_FlowField.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator</a> &gt; <span class="el_source">Generator_FlowField.java</span></div><h1>Generator_FlowField.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+
+import com.marginallyclever.convenience.noise.Noise;
+import com.marginallyclever.convenience.noise.NoiseFactory;
+import com.marginallyclever.convenience.noise.PerlinNoise;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.select.*;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import javax.vecmath.Vector2d;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.Random;
+
+/**
+ * Two kinds of flow fields.  Uses Perlin noise to generate the field.
+ * @author Dan Royer
+ * @since 2022-04-05
+ */
+public class Generator_FlowField extends TurtleGenerator {
+<span class="fc" id="L21">	private static double scaleX = 0.01; // controls complexity of curve</span>
+<span class="fc" id="L22">	private static double scaleY = 0.01; // controls complexity of curve</span>
+<span class="fc" id="L23">	private static double offsetX = 0; // controls complexity of curve</span>
+<span class="fc" id="L24">	private static double offsetY = 0; // controls complexity of curve</span>
+<span class="fc" id="L25">	private static int stepSize = 5; // controls complexity of curve</span>
+<span class="fc" id="L26">	private static int stepLength = 10;</span>
+<span class="fc" id="L27">	private static int stepVariation = 5;</span>
+<span class="fc" id="L28">	private static boolean fromEdge = false;  // continuous lines</span>
+<span class="fc" id="L29">	private static boolean rightAngle = false;</span>
+<span class="fc" id="L30">	private Noise noiseMaker = new PerlinNoise();</span>
+<span class="fc" id="L31">	private static int seed=0;</span>
+<span class="fc" id="L32">	private static final Random random = new Random();</span>
+
+	public static void setStepSize(int stepSize) {
+<span class="nc" id="L35">		Generator_FlowField.stepSize = stepSize;</span>
+<span class="nc" id="L36">	}</span>
+	public static int getStepSize() {
+<span class="nc" id="L38">		return stepSize;</span>
+	}
+
+	public Generator_FlowField() {
+<span class="fc" id="L42">		super();</span>
+<span class="fc" id="L43">		SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;,Translator.get(&quot;Generator.randomSeed&quot;),seed);</span>
+<span class="fc" id="L44">		add(selectRandomSeed);</span>
+<span class="fc" id="L45">		selectRandomSeed.addSelectListener((evt)-&gt;{</span>
+<span class="nc" id="L46">			seed = (int)evt.getNewValue();</span>
+<span class="nc" id="L47">			random.setSeed(seed);</span>
+<span class="nc" id="L48">			generate();</span>
+<span class="nc" id="L49">		});</span>
+
+<span class="fc" id="L51">		SelectOneOfMany fieldNoise = new SelectOneOfMany(&quot;noiseType&quot;,Translator.get(&quot;Generator_FlowField.noiseType&quot;), NoiseFactory.getNames(),0);</span>
+<span class="fc" id="L52">		SelectDouble fieldScaleX = new SelectDouble(&quot;scaleX&quot;,Translator.get(&quot;Generator_FlowField.scaleX&quot;),scaleX);</span>
+<span class="fc" id="L53">		SelectDouble fieldScaleY = new SelectDouble(&quot;scaleY&quot;,Translator.get(&quot;Generator_FlowField.scaleY&quot;),scaleY);</span>
+<span class="fc" id="L54">		SelectDouble fieldOffsetX = new SelectDouble(&quot;offsetX&quot;,Translator.get(&quot;Generator_FlowField.offsetX&quot;),offsetX);</span>
+<span class="fc" id="L55">		SelectDouble fieldOffsetY = new SelectDouble(&quot;offsetY&quot;,Translator.get(&quot;Generator_FlowField.offsetY&quot;),offsetY);</span>
+<span class="fc" id="L56">		SelectSlider fieldStepSize = new SelectSlider(&quot;stepSize&quot;,Translator.get(&quot;Generator_FlowField.stepSize&quot;),25,2,stepSize);</span>
+<span class="fc" id="L57">		SelectSlider fieldStepVariation = new SelectSlider(&quot;stepVariation&quot;,Translator.get(&quot;Generator_FlowField.stepVariation&quot;),20,0,stepVariation);</span>
+<span class="fc" id="L58">		SelectSlider fieldStepLength = new SelectSlider(&quot;stepLength&quot;,Translator.get(&quot;Generator_FlowField.stepLength&quot;),20,1,stepLength);</span>
+<span class="fc" id="L59">		SelectBoolean fieldFromEdge = new SelectBoolean(&quot;fromEdge&quot;,Translator.get(&quot;Generator_FlowField.fromEdge&quot;),fromEdge);</span>
+<span class="fc" id="L60">		SelectBoolean fieldRightAngle = new SelectBoolean(&quot;rightAngle&quot;,Translator.get(&quot;Generator_FlowField.rightAngle&quot;),rightAngle);</span>
+
+<span class="fc" id="L62">		add(fieldNoise);</span>
+<span class="fc" id="L63">		fieldNoise.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L64">			noiseMaker = NoiseFactory.getNoise(fieldNoise.getSelectedIndex());</span>
+<span class="nc" id="L65">			generate();</span>
+<span class="nc" id="L66">		});</span>
+
+<span class="fc" id="L68">		add(fieldScaleX);</span>
+<span class="fc" id="L69">		fieldScaleX.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L70">			scaleX = (fieldScaleX.getValue());</span>
+<span class="nc" id="L71">			generate();</span>
+<span class="nc" id="L72">		});</span>
+<span class="fc" id="L73">		add(fieldScaleY);</span>
+<span class="fc" id="L74">		fieldScaleY.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L75">			scaleY = (fieldScaleY.getValue());</span>
+<span class="nc" id="L76">			generate();</span>
+<span class="nc" id="L77">		});</span>
+<span class="fc" id="L78">		add(fieldOffsetX);</span>
+<span class="fc" id="L79">		fieldOffsetX.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L80">			offsetX = (fieldOffsetX.getValue());</span>
+<span class="nc" id="L81">			generate();</span>
+<span class="nc" id="L82">		});</span>
+<span class="fc" id="L83">		add(fieldOffsetY);</span>
+<span class="fc" id="L84">		fieldOffsetY.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L85">			offsetY =(fieldOffsetY.getValue());</span>
+<span class="nc" id="L86">			generate();</span>
+<span class="nc" id="L87">		});</span>
+<span class="fc" id="L88">		add(fieldStepSize);</span>
+<span class="fc" id="L89">		fieldStepSize.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L90">			stepSize = (fieldStepSize.getValue());</span>
+<span class="nc" id="L91">			generate();</span>
+<span class="nc" id="L92">		});</span>
+<span class="fc" id="L93">		add(fieldStepVariation);</span>
+<span class="fc" id="L94">		fieldStepVariation.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L95">			stepVariation = (fieldStepVariation.getValue());</span>
+<span class="nc" id="L96">			generate();</span>
+<span class="nc" id="L97">		});</span>
+<span class="fc" id="L98">		add(fieldStepLength);</span>
+<span class="fc" id="L99">		fieldStepLength.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L100">			stepLength = (fieldStepLength.getValue());</span>
+<span class="nc" id="L101">			generate();</span>
+<span class="nc" id="L102">		});</span>
+<span class="fc" id="L103">		add(fieldFromEdge);</span>
+<span class="fc" id="L104">		fieldFromEdge.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L105">			fromEdge = (fieldFromEdge.isSelected());</span>
+<span class="nc" id="L106">			generate();</span>
+<span class="nc" id="L107">		});</span>
+<span class="fc" id="L108">		add(fieldRightAngle);</span>
+<span class="fc" id="L109">		fieldRightAngle.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L110">			rightAngle = (fieldRightAngle.isSelected());</span>
+<span class="nc" id="L111">			generate();</span>
+<span class="nc" id="L112">		});</span>
+<span class="fc" id="L113">		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href='https://en.wikipedia.org/wiki/Perlin_noise'&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</span>
+<span class="fc" id="L114">	}</span>
+
+	@Override
+	public String getName() {
+<span class="fc" id="L118">		return Translator.get(&quot;Generator_FlowField.name&quot;);</span>
+	}
+
+	@Override
+	public void generate() {
+<span class="nc" id="L123">		Turtle turtle = new Turtle();</span>
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (fromEdge) {</span>
+<span class="nc" id="L126">			fromEdge(turtle);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if(rightAngle) {</span>
+<span class="nc" id="L128">				rightAngle=false;</span>
+<span class="nc" id="L129">				fromEdge(turtle);</span>
+<span class="nc" id="L130">				rightAngle=true;</span>
+			}
+		} else {
+<span class="nc" id="L133">			asGrid(turtle);</span>
+		}
+
+<span class="nc" id="L136">		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</span>
+
+<span class="nc" id="L138">		notifyListeners(turtle);</span>
+<span class="nc" id="L139">	}</span>
+
+	private void fromEdge(Turtle turtle) {
+<span class="nc" id="L142">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L143">		double yMin = rect.getMinY()-stepSize;</span>
+<span class="nc" id="L144">		double xMin = rect.getMinX()-stepSize;</span>
+<span class="nc" id="L145">		double yMax = rect.getMaxY()+stepSize;</span>
+<span class="nc" id="L146">		double xMax = rect.getMaxX()+stepSize;</span>
+<span class="nc" id="L147">		Rectangle r = new Rectangle((int)xMin,(int)yMin,(int)(xMax-xMin),(int)(yMax-yMin));</span>
+<span class="nc" id="L148">		r.grow(1,1);</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		for(double y = yMin; y&lt;yMax; y+=stepSize) {</span>
+<span class="nc" id="L151">			makeLine(turtle, r, xMin, y);</span>
+<span class="nc" id="L152">			makeLine(turtle, r, xMax, y);</span>
+		}
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		for(double x = xMin; x&lt;xMax; x+=stepSize) {</span>
+<span class="nc" id="L155">			makeLine(turtle, r, x, yMin);</span>
+<span class="nc" id="L156">			makeLine(turtle, r, x, yMax);</span>
+		}
+<span class="nc" id="L158">	}</span>
+
+	private void makeLine(Turtle turtle, Rectangle r, double x, double y) {
+<span class="nc" id="L161">		turtle.jumpTo(x,y);</span>
+		// if the first step at this position would be outside the rectangle, reverse the direction.
+<span class="nc" id="L163">		double v = noiseMaker.noise(turtle.getX() * scaleX + offsetX, turtle.getY() * scaleY + offsetY, 0);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		turtle.setAngle(v * 180 + (rightAngle?90:0));</span>
+<span class="nc" id="L165">		Vector2d nextStep = turtle.getHeading();</span>
+<span class="nc" id="L166">		nextStep.scale(stepSize);</span>
+<span class="nc" id="L167">		nextStep.add(turtle.getPosition());</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		continueLine(turtle, r,!r.contains(nextStep.x,nextStep.y));</span>
+<span class="nc" id="L169">	}</span>
+
+	private void continueLine(Turtle turtle, Rectangle r, boolean reverse) {
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		for(int i=0;i&lt;200;++i) {</span>
+<span class="nc" id="L173">			double v = noiseMaker.noise(turtle.getX() * scaleX + offsetX, turtle.getY() * scaleY + offsetY, 0);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			turtle.setAngle(v * 180 + (rightAngle?90:0));</span>
+<span class="nc" id="L175">			Vector2d nextStep = turtle.getHeading();</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			nextStep.scale(reverse?-stepSize:stepSize);</span>
+<span class="nc" id="L177">			nextStep.add(turtle.getPosition());</span>
+			// stop if we leave the rectangle
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if(!r.contains(nextStep.x,nextStep.y)) break;</span>
+<span class="nc" id="L180">			turtle.moveTo(nextStep.x,nextStep.y);</span>
+		}
+<span class="nc" id="L182">	}</span>
+
+	private void asGrid(Turtle turtle) {
+<span class="nc" id="L185">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L186">		double yMin = rect.getMinY();</span>
+<span class="nc" id="L187">		double yMax = rect.getMaxY();</span>
+<span class="nc" id="L188">		double xMin = rect.getMinX();</span>
+<span class="nc" id="L189">		double xMax = rect.getMaxX();</span>
+<span class="nc" id="L190">		Rectangle r = new Rectangle((int)xMin,(int)yMin,(int)(xMax-xMin),(int)(yMax-yMin));</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		for(double y = yMin; y&lt;yMax; y+=stepSize) {</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">			for (double x = xMin; x &lt; xMax; x += stepSize) {</span>
+<span class="nc" id="L193">				followLine(turtle,x,y,r);</span>
+			}
+		}
+<span class="nc" id="L196">	}</span>
+
+	private void followLine(Turtle turtle,double x,double y,Rectangle r) {
+<span class="nc" id="L199">		double xx = x + stepVariation * (random.nextDouble() * 2.0 - 1.0);</span>
+<span class="nc" id="L200">		double yy = y + stepVariation * (random.nextDouble() * 2.0 - 1.0);</span>
+
+<span class="nc" id="L202">		turtle.jumpTo(xx, yy);</span>
+<span class="nc" id="L203">		followLine(turtle, r, 2);</span>
+<span class="nc" id="L204">		turtle.jumpTo(xx, yy);</span>
+<span class="nc" id="L205">		followLine(turtle, r, -2);</span>
+<span class="nc" id="L206">	}</span>
+
+	private void followLine(Turtle turtle, Rectangle r, int step) {
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		for(int i=0;i&lt;stepLength/2;++i) {</span>
+<span class="nc" id="L210">			double v = noiseMaker.noise(turtle.getX() * scaleX + offsetX, turtle.getY() * scaleY + offsetY, 0);</span>
+<span class="nc" id="L211">			turtle.setAngle(v * 180);</span>
+<span class="nc" id="L212">			Vector2d nextStep = turtle.getHeading();</span>
+<span class="nc" id="L213">			nextStep.scale(step);</span>
+<span class="nc" id="L214">			nextStep.add(turtle.getPosition());</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			if(!r.contains(nextStep.x,nextStep.y)) break;</span>
+<span class="nc" id="L216">			turtle.forward(step);</span>
+		}
+<span class="nc" id="L218">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

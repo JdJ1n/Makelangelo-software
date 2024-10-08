@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TextInterfaceToNetworkSession.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols</a> &gt; <span class="el_source">TextInterfaceToNetworkSession.java</span></div><h1>TextInterfaceToNetworkSession.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols;
+
+import com.marginallyclever.communications.NetworkSession;
+import com.marginallyclever.communications.NetworkSessionEvent;
+import com.marginallyclever.communications.NetworkSessionListener;
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.util.PreferencesHelper;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * {@link TextInterfaceToNetworkSession} provides a method to open and close a 
+ * {@link NetworkSession} connection through a {@link ChooseConnection}
+ * interface and allow two way communication through a {@link TextInterfaceWithHistory} interface. 
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class TextInterfaceToNetworkSession extends JPanel implements NetworkSessionListener {
+<span class="fc" id="L23">	private final TextInterfaceWithHistory myInterface = new TextInterfaceWithHistory();</span>
+	private NetworkSession mySession;
+
+	public TextInterfaceToNetworkSession(ChooseConnection chooseConnection) {
+<span class="fc" id="L27">		super();</span>
+
+<span class="fc" id="L29">		setLayout(new BorderLayout());</span>
+		
+<span class="fc" id="L31">		add(myInterface,BorderLayout.CENTER);</span>
+		
+<span class="fc" id="L33">		myInterface.setEnabled(false);</span>
+<span class="fc" id="L34">		myInterface.addActionListener( (evt) -&gt; {</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">			if(mySession==null) return;</span>
+			
+<span class="nc" id="L37">			String str = evt.getActionCommand();</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">			if(!str.endsWith(&quot;\n&quot;)) str+=&quot;\n&quot;;</span>
+			
+			try {
+<span class="nc" id="L41">				mySession.sendMessage(str);</span>
+<span class="nc" id="L42">			} catch (Exception e1) {</span>
+<span class="nc" id="L43">				JOptionPane.showMessageDialog(this,e1.getLocalizedMessage(),&quot;Error&quot;,JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L44">			}</span>
+<span class="nc" id="L45">		});</span>
+<span class="fc" id="L46">		chooseConnection.addListener((e)-&gt;{</span>
+<span class="nc bnc" id="L47" title="All 3 branches missed.">			switch (e.flag) {</span>
+<span class="nc" id="L48">				case NetworkSessionEvent.CONNECTION_OPENED -&gt; setNetworkSession((NetworkSession) e.data);</span>
+<span class="nc" id="L49">				case NetworkSessionEvent.CONNECTION_CLOSED -&gt; setNetworkSession(null);</span>
+			}
+
+<span class="nc" id="L52">			notifyListeners(e);</span>
+<span class="nc" id="L53">		});</span>
+<span class="fc" id="L54">	}</span>
+
+	public void setNetworkSession(NetworkSession session) {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if(mySession!=null) mySession.removeListener(this);</span>
+<span class="nc" id="L58">		mySession = session;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if(mySession!=null) mySession.addListener(this);</span>
+		
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		myInterface.setEnabled(mySession!=null);</span>
+<span class="nc" id="L62">	}</span>
+
+	public void sendCommand(String str) {
+<span class="nc" id="L65">		myInterface.sendCommand(str);</span>
+<span class="nc" id="L66">	}</span>
+
+	public void displayError(String str) {
+<span class="nc" id="L69">		myInterface.addToHistory(&quot;Error&quot;, str);</span>
+<span class="nc" id="L70">	}</span>
+	
+	public String getCommand() {
+<span class="nc" id="L73">		return myInterface.getCommand();</span>
+	}
+
+	public void setCommand(String str) {
+<span class="nc" id="L77">		myInterface.setCommand(str);</span>
+<span class="nc" id="L78">	}</span>
+	
+	@Override
+	public void networkSessionEvent(NetworkSessionEvent evt) {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if(evt.flag == NetworkSessionEvent.DATA_RECEIVED) {</span>
+<span class="nc" id="L83">			myInterface.addToHistory(mySession.getName(),((String)evt.data).trim());</span>
+		}
+<span class="nc" id="L85">	}</span>
+
+	public boolean getIsConnected() { 
+<span class="nc bnc" id="L88" title="All 4 branches missed.">		return (mySession!=null &amp;&amp; mySession.isOpen());</span>
+	}
+
+	public void closeConnection() {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (mySession != null) {</span>
+<span class="nc" id="L93">			mySession.closeConnection();</span>
+		}
+<span class="nc" id="L95">	}</span>
+
+	// OBSERVER PATTERN
+
+<span class="fc" id="L99">	private final List&lt;NetworkSessionListener&gt; listeners = new ArrayList&lt;&gt;();</span>
+
+	public void addListener(NetworkSessionListener listener) {
+<span class="fc" id="L102">		listeners.add(listener);</span>
+<span class="fc" id="L103">	}</span>
+
+	public void removeListener(NetworkSessionListener listener) {
+<span class="nc" id="L106">		listeners.remove(listener);</span>
+<span class="nc" id="L107">	}</span>
+
+	private void notifyListeners(NetworkSessionEvent evt) {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		for( NetworkSessionListener a : listeners ) {</span>
+<span class="nc" id="L111">			a.networkSessionEvent(evt);</span>
+<span class="nc" id="L112">		}</span>
+<span class="nc" id="L113">	}</span>
+
+	public void addNetworkSessionListener(NetworkSessionListener a) {
+<span class="nc" id="L116">		mySession.addListener(a);</span>
+<span class="nc" id="L117">	}</span>
+	
+	public void removeNetworkSessionListener(NetworkSessionListener a) {
+<span class="nc" id="L120">		mySession.removeListener(a);</span>
+<span class="nc" id="L121">	}</span>
+
+	// TEST 
+	
+	public static void main(String[] args) {
+<span class="nc" id="L126">		PreferencesHelper.start();</span>
+<span class="nc" id="L127">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L128">		Translator.start();</span>
+		
+<span class="nc" id="L130">		JFrame frame = new JFrame(TextInterfaceToNetworkSession.class.getSimpleName());</span>
+<span class="nc" id="L131">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+//		frame.setPreferredSize(new Dimension(600, 400));
+<span class="nc" id="L133">		frame.add(new TextInterfaceToNetworkSession(new ChooseConnection()));</span>
+<span class="nc" id="L134">		frame.pack();</span>
+<span class="nc" id="L135">		frame.setVisible(true);</span>
+<span class="nc" id="L136">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

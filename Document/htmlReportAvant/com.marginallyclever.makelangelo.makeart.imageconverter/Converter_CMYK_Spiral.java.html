@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_CMYK_Spiral.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_CMYK_Spiral.java</span></div><h1>Converter_CMYK_Spiral.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterCMYK;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectBoolean;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+
+/**
+ * Generate a Gcode file from the BufferedImage supplied.&lt;br&gt;
+ * Use the filename given in the constructor as a basis for the gcode filename, but change the extension to .ngc
+ *  
+ * Inspired by reddit user bosny
+ * 
+ * @author Dan
+ */
+public class Converter_CMYK_Spiral extends ImageConverter {
+<span class="nc" id="L24">	private static final Logger logger = LoggerFactory.getLogger(Converter_CMYK_Spiral.class);</span>
+<span class="nc" id="L25">	private static boolean convertToCorners = false;  // draw the spiral right out to the edges of the square bounds.</span>
+
+	public Converter_CMYK_Spiral() {
+<span class="nc" id="L28">		super();</span>
+
+<span class="nc" id="L30">		SelectBoolean toCorners = new SelectBoolean(&quot;toCorners&quot;, Translator.get(&quot;Spiral.toCorners&quot;), getToCorners());</span>
+<span class="nc" id="L31">		toCorners.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L32">			setToCorners((boolean)evt.getNewValue());</span>
+<span class="nc" id="L33">			fireRestart();</span>
+<span class="nc" id="L34">		});</span>
+<span class="nc" id="L35">		add(toCorners);</span>
+<span class="nc" id="L36">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="nc" id="L40">		return Translator.get(&quot;Converter_CMYK_Spiral.Name&quot;);</span>
+	}
+
+	public boolean getToCorners() {
+<span class="nc" id="L44">		return convertToCorners;</span>
+	}
+	
+	public void setToCorners(boolean arg0) {
+<span class="nc" id="L48">		convertToCorners=arg0;</span>
+<span class="nc" id="L49">	}</span>
+	
+	/**
+	 * create a spiral across the image.  raise and lower the pen to darken the appropriate areas
+	 */
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L56">		super.start(paper, image);</span>
+
+<span class="nc" id="L58">		FilterCMYK cmyk = new FilterCMYK(myImage);</span>
+<span class="nc" id="L59">		cmyk.filter();</span>
+
+		double separation; 
+<span class="nc" id="L62">		float h2 = (float)myPaper.getPaperHeight();</span>
+<span class="nc" id="L63">		float w2 = (float)myPaper.getPaperWidth();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		separation = (w2&lt;h2) ? w2/4 : h2/4;</span>
+
+<span class="nc" id="L66">		turtle = new Turtle();</span>
+		// remove extra change color at the start of the turtle
+<span class="nc" id="L68">		turtle.history.clear();</span>
+		
+<span class="nc" id="L70">		logger.debug(&quot;Yellow...&quot;);		outputChannel(cmyk.getY(),Color.YELLOW,45    ,separation);</span>
+<span class="nc" id="L71">		logger.debug(&quot;Cyan...&quot;);		outputChannel(cmyk.getC(),Color.CYAN,45+ 90,separation);</span>
+<span class="nc" id="L72">		logger.debug(&quot;Magenta...&quot;);		outputChannel(cmyk.getM(),Color.MAGENTA,45+180,separation);</span>
+<span class="nc" id="L73">		logger.debug(&quot;Black...&quot;);		outputChannel(cmyk.getK(),Color.BLACK,45+270,separation);</span>
+
+<span class="nc" id="L75">		fireConversionFinished();</span>
+<span class="nc" id="L76">	}</span>
+
+	protected void outputChannel(TransformedImage img, Color newColor, double angle, double separation) {
+<span class="nc" id="L79">		double cx = Math.cos(Math.toRadians(angle))*separation;</span>
+<span class="nc" id="L80">		double cy = Math.sin(Math.toRadians(angle))*separation;</span>
+<span class="nc" id="L81">		turtle.setColor(newColor);</span>
+		
+		double maxr;
+<span class="nc" id="L84">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (convertToCorners) {</span>
+			// go right to the corners
+<span class="nc" id="L87">			double h2 = rect.getHeight();</span>
+<span class="nc" id="L88">			double w2 = rect.getWidth();</span>
+<span class="nc" id="L89">			maxr = Math.sqrt(h2 * h2 + w2 * w2) + 1.0;</span>
+<span class="nc" id="L90">		} else {</span>
+			// do the largest circle that still fits in the image.
+<span class="nc" id="L92">			double w = rect.getWidth()/2.0f;</span>
+<span class="nc" id="L93">			double h = rect.getHeight()/2.0f;</span>
+<span class="nc" id="L94">			maxr = Math.min(h, w);</span>
+		}
+
+<span class="nc" id="L97">		double px = myPaper.getCenterX();</span>
+<span class="nc" id="L98">		double py = myPaper.getCenterY();</span>
+<span class="nc" id="L99">		double toolDiameter = 1;</span>
+
+		int i, j;
+<span class="nc" id="L102">		int steps = 4;</span>
+<span class="nc" id="L103">		double leveladd = 255.0 / (double)(steps+1);</span>
+		double level;
+<span class="nc" id="L105">		int z = 0;</span>
+
+<span class="nc" id="L107">		double r = maxr;</span>
+		double fx, fy;
+<span class="nc" id="L109">		int numRings = 0;</span>
+<span class="nc" id="L110">		j = 0;</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		while (r &gt; toolDiameter) {</span>
+<span class="nc" id="L112">			++j;</span>
+<span class="nc" id="L113">			double level0 = leveladd * (1+(j%steps));</span>
+<span class="nc" id="L114">			double level1 = leveladd * (1+((j+1)%steps));</span>
+			// find circumference of current circle
+<span class="nc" id="L116">			double c1 = Math.floor((2.0f * r - toolDiameter) * Math.PI);</span>
+			
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			for (i = 0; i &lt; c1; ++i) {</span>
+<span class="nc" id="L119">				double p = (double)i / c1;</span>
+<span class="nc" id="L120">				double f = Math.PI * 2.0 * p;</span>
+<span class="nc" id="L121">				double r1 = r - toolDiameter * p;</span>
+<span class="nc" id="L122">				fx = cx + Math.cos(f) * r1;</span>
+<span class="nc" id="L123">				fy = cy + Math.sin(f) * r1;</span>
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">				if(rect.contains(fx, fy)) {</span>
+					try {
+<span class="nc" id="L127">						z = img.sample(fx, fy,1);</span>
+<span class="nc" id="L128">					} catch(Exception e) {</span>
+<span class="nc" id="L129">						logger.error(&quot;Failed to sample&quot;, e);</span>
+<span class="nc" id="L130">					}</span>
+
+<span class="nc" id="L132">					level = (level1-level0)*p + level0;</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">					if(z&lt;level) turtle.penDown();</span>
+<span class="nc" id="L134">					else turtle.penUp();</span>
+<span class="nc" id="L135">				} else turtle.penUp();</span>
+<span class="nc" id="L136">				turtle.moveTo(px+fx, py+fy);</span>
+			}
+<span class="nc" id="L138">			r -= toolDiameter;</span>
+<span class="nc" id="L139">			++numRings;</span>
+<span class="nc" id="L140">		}</span>
+
+<span class="nc" id="L142">		logger.debug(&quot;{} rings.&quot;, numRings);</span>
+<span class="nc" id="L143">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

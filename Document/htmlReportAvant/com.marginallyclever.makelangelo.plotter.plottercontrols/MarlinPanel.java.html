@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MarlinPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols</a> &gt; <span class="el_source">MarlinPanel.java</span></div><h1>MarlinPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols;
+
+import com.marginallyclever.communications.NetworkSessionEvent;
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * The {@link MarlinPanel} manages communication with a remote device running Marlin firmware.
+ * In the OSI model of network interfaces this is the Presentation/Syntax layer which
+ * &quot;ensures that data is in a usable format and is where data encryption occurs&quot;.
+ * That means checksum verification and resend control.
+ * 
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class MarlinPanel extends JPanel {
+<span class="fc" id="L25">	private static final Logger logger = LoggerFactory.getLogger(MarlinPanel.class);</span>
+
+	// number of commands we'll hold on to in case there's a resend.
+	private static final int HISTORY_BUFFER_LIMIT = 250;
+	// Marlin can buffer this many commands from serial, before processing.
+	private static final int MARLIN_SEND_LIMIT = 20;
+	// If nothing is heard for this many ms then send a ping to check if the connection is still live. 
+	private static final int TIMEOUT_DELAY = 5000;
+	// Max duration before alerting the user something is wrong
+	private static final int FATAL_TIMEOUT_DELAY = TIMEOUT_DELAY * 5;
+	// Marlin says this when a resend is needed, followed by the last well-received line number.
+	private static final String STR_RESEND = &quot;Resend: &quot;;
+	// Marlin sends this event when the robot is ready to receive more.
+	private static final String STR_OK = &quot;ok&quot;;
+	// Marlin sends this message when an error happened.
+	public static final String STR_ERROR = &quot;Error:&quot;;
+	// Marlin sends this message when a fatal error occured.
+	public static final String STR_PRINTER_HALTED = &quot;Printer halted&quot;;
+	// Marlin sends this event when the robot must be homed first
+	private static final String STR_HOME_XY_FIRST = &quot;echo:Home XY First&quot;;
+
+	// Marlin sends this message when the robot is sending an Action Command.
+	public static final String STR_ACTION_COMMAND = &quot;//action:&quot;;
+	public static final String PROMPT_BEGIN = &quot;prompt_begin&quot;;
+	public static final String PROMPT_CHOICE = &quot;prompt_choice&quot;;
+	public static final String PROMPT_BUTTON = &quot;prompt_button&quot;;
+	public static final String PROMPT_SHOW = &quot;prompt_show&quot;;
+	public static final String PROMPT_END = &quot;prompt_end&quot;;
+	public static final String STR_I_HANDLE_DIALOGS = &quot;M876 P1&quot;;
+
+	private final TextInterfaceToNetworkSession chatInterface;
+
+<span class="fc" id="L57">	private final List&lt;MarlinCommand&gt; myHistory = new ArrayList&lt;&gt;();</span>
+
+	// the next line number I should send.  Marlin may say &quot;please resend previous line x&quot;, which would change this.
+	private int lineNumberToSend;
+	// the last line number added to the queue.
+	private int lineNumberAdded;
+	// don't send more than this many at a time without acknowledgement.
+<span class="fc" id="L64">	private int busyCount = MARLIN_SEND_LIMIT;</span>
+	
+<span class="pc" id="L66">	private final Timer timeoutChecker = new Timer(TIMEOUT_DELAY,(e)-&gt;onTimeoutCheck());</span>
+	private long lastReceivedTime;
+
+<span class="fc" id="L69">	private final ActionCommandDialog promptDialog = new ActionCommandDialog();</span>
+<span class="fc" id="L70">	private boolean waitingForResponse = false;</span>
+	
+	public MarlinPanel(ChooseConnection chooseConnection) {
+<span class="fc" id="L73">		super(new BorderLayout());</span>
+
+<span class="fc" id="L75">		chatInterface = new TextInterfaceToNetworkSession(chooseConnection);</span>
+<span class="fc" id="L76">		this.add(chatInterface, BorderLayout.CENTER);</span>
+
+<span class="fc" id="L78">		chatInterface.addListener((e) -&gt; {</span>
+<span class="nc bnc" id="L79" title="All 3 branches missed.">			switch (e.flag) {</span>
+<span class="nc" id="L80">				case NetworkSessionEvent.CONNECTION_OPENED -&gt; onConnect();</span>
+<span class="nc" id="L81">				case NetworkSessionEvent.CONNECTION_CLOSED -&gt; onClose();</span>
+			}
+<span class="nc" id="L83">		});</span>
+<span class="fc" id="L84">	}</span>
+
+	private void onConnect() {
+<span class="nc" id="L87">		logger.debug(&quot;MarlinInterface connected.&quot;);</span>
+<span class="nc" id="L88">		setupNetworkListener();</span>
+<span class="nc" id="L89">		lineNumberToSend=1;</span>
+<span class="nc" id="L90">		lineNumberAdded=0;</span>
+<span class="nc" id="L91">		myHistory.clear();</span>
+<span class="nc" id="L92">		lastReceivedTime = System.currentTimeMillis();</span>
+<span class="nc" id="L93">		queueAndSendCommand(STR_I_HANDLE_DIALOGS);</span>
+		// timeoutChecker uses lastReceivedTime to check if the connection is still live.
+		// so start it after setting the lastReceived time or the first check will fail.
+<span class="nc" id="L96">		timeoutChecker.start();</span>
+<span class="nc" id="L97">	}</span>
+	
+	private void onClose() {
+<span class="nc" id="L100">		logger.debug(&quot;MarlinInterface disconnected.&quot;);</span>
+<span class="nc" id="L101">		timeoutChecker.stop();</span>
+<span class="nc" id="L102">	}</span>
+	
+	private void onTimeoutCheck() {
+<span class="nc" id="L105">		long delay = System.currentTimeMillis() - lastReceivedTime;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (delay &gt; TIMEOUT_DELAY) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			if (delay &gt; FATAL_TIMEOUT_DELAY) {</span>
+<span class="nc" id="L108">				logger.error(&quot;No answer from the robot&quot;);</span>
+<span class="nc" id="L109">				notifyListeners( MarlinPanelEvent.COMMUNICATION_FAILURE, MarlinPanelEvent.COMMUNICATION_COMMAND);</span>
+<span class="nc" id="L110">				chatInterface.displayError(&quot;No answer from the robot, retrying...&quot;);</span>
+			} else {
+<span class="nc" id="L112">				logger.trace(&quot;Heartbeat: M400&quot;);</span>
+<span class="nc" id="L113">				chatInterface.sendCommand(&quot;M400&quot;);</span>
+			}
+		}
+<span class="nc" id="L116">	}</span>
+
+	private void setupNetworkListener() {
+<span class="nc" id="L119">		chatInterface.addNetworkSessionListener(this::onDataReceived);</span>
+<span class="nc" id="L120">	}</span>
+
+	/**
+	 * This does not fire on the Swing EVT thread.  Be careful!  Concurrency problems may happen.
+	 * @param evt the network session event
+	 */
+	protected void onDataReceived(NetworkSessionEvent evt) {
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">		if (evt.flag == NetworkSessionEvent.DATA_RECEIVED) {</span>
+<span class="fc" id="L128">			lastReceivedTime = System.currentTimeMillis();</span>
+<span class="fc" id="L129">			String message = ((String)evt.data).trim();</span>
+
+<span class="fc" id="L131">			logger.trace(&quot;received '{}'&quot;, message.trim());</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">			if(message.startsWith(STR_OK)) {</span>
+<span class="nc" id="L133">				onHearOK();</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">			} else if(message.contains(STR_RESEND)) {</span>
+<span class="nc" id="L135">				onHearResend(message);</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">			} else if(message.startsWith(STR_ERROR)) {</span>
+<span class="fc" id="L137">				onHearError(message.substring(STR_ERROR.length()).trim());</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">			} else if(message.startsWith(STR_HOME_XY_FIRST)) {</span>
+<span class="fc" id="L139">				onHearHomeXYFirst();</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">			} else if(message.startsWith(STR_ACTION_COMMAND)) {</span>
+<span class="fc" id="L141">				onHearActionCommand(message.substring(STR_ACTION_COMMAND.length()).trim());</span>
+			}
+		}
+<span class="fc" id="L144">	}</span>
+
+	private void onHearResend(String message) {
+<span class="nc" id="L147">		String numberPart = message.substring(message.indexOf(STR_RESEND) + STR_RESEND.length());</span>
+		try {
+<span class="nc" id="L149">			int n = Integer.parseInt(numberPart);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (n &gt; lineNumberAdded) {</span>
+<span class="nc" id="L151">				logger.warn(&quot;Resend line {} asked but never sent&quot;, n);</span>
+			}
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			if (n &gt; lineNumberAdded - MarlinPanel.HISTORY_BUFFER_LIMIT) {</span>
+				// no problem.
+<span class="nc" id="L155">				lineNumberToSend = n;</span>
+			} else {
+				// line is no longer in the buffer.  should not be possible!
+<span class="nc" id="L158">				logger.warn(&quot;Resend line {} asked but no longer in the buffer&quot;, n);</span>
+			}
+<span class="nc" id="L160">		} catch (NumberFormatException e) {</span>
+<span class="nc" id="L161">			logger.debug(&quot;Resend request for '{}' failed: {}&quot;, message, e.getMessage());</span>
+<span class="nc" id="L162">		}</span>
+<span class="nc" id="L163">	}</span>
+
+	private void onHearOK() {
+<span class="nc" id="L166">		SwingUtilities.invokeLater(() -&gt; {</span>
+<span class="nc" id="L167">    		busyCount++;</span>
+<span class="nc" id="L168">    		sendQueuedCommand();</span>
+<span class="nc" id="L169">        	clearOldHistory();</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">    		if(lineNumberToSend&gt;=lineNumberAdded &amp;&amp; !waitingForResponse) {</span>
+<span class="nc" id="L171">    			fireIdleNotice();</span>
+    		}
+<span class="nc" id="L173">        });</span>
+<span class="nc" id="L174">	}</span>
+
+	private void onHearError(String message) {
+<span class="fc" id="L177">		logger.error(&quot;Error from printer '{}'&quot;, message);</span>
+		
+		// only notify listeners of a fatal error (MarlinInterface.ERROR) if the printer halts.
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">		if (message.contains(STR_PRINTER_HALTED)) {</span>
+<span class="fc" id="L181">			notifyListeners( MarlinPanelEvent.ERROR, MarlinPanelEvent.HALTED_COMMAND );</span>
+		}
+<span class="fc" id="L183">	}</span>
+
+	private void onHearHomeXYFirst() {
+<span class="fc" id="L186">		logger.warn(&quot;Home XY First&quot;);</span>
+<span class="fc" id="L187">		notifyListeners( MarlinPanelEvent.HOME_XY_FIRST,MarlinPanelEvent.HOME_XY_COMMAND );</span>
+<span class="fc" id="L188">	}</span>
+
+	private void onHearActionCommand(String command) {
+<span class="fc" id="L191">		logger.debug(&quot;Action command {}&quot;, command);</span>
+
+<span class="fc" id="L193">		processActionCommand(command);</span>
+
+<span class="fc" id="L195">		notifyListeners( MarlinPanelEvent.ACTION_COMMAND, command );</span>
+<span class="fc" id="L196">	}</span>
+
+	private void onDidNotFindCommandInHistory() {
+<span class="fc" id="L199">		notifyListeners( MarlinPanelEvent.DID_NOT_FIND, MarlinPanelEvent.DID_NOT_FIND_COMMAND );</span>
+<span class="fc" id="L200">	}</span>
+
+	private void fireIdleNotice() {
+<span class="nc" id="L203">		notifyListeners( MarlinPanelEvent.IDLE, MarlinPanelEvent.IDLE_COMMAND );</span>
+<span class="nc" id="L204">	}</span>
+
+	private void clearOldHistory() {
+<span class="pc bpc" id="L207" title="2 of 4 branches missed.">		while(myHistory.size()&gt;0 &amp;&amp; myHistory.get(0).lineNumber &lt; lineNumberAdded-HISTORY_BUFFER_LIMIT) {</span>
+<span class="nc" id="L208">			myHistory.remove(0);</span>
+		}
+<span class="fc" id="L210">	}</span>
+	
+	public void queueAndSendCommand(String str) {
+<span class="fc" id="L213">		str = removeComment(str);</span>
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">		if(str.length()==0) return;</span>
+
+<span class="fc" id="L216">		lineNumberAdded++;</span>
+<span class="fc" id="L217">		String withLineNumber = &quot;N&quot;+lineNumberAdded+&quot; &quot;+str;</span>
+<span class="fc" id="L218">		String assembled = withLineNumber + generateChecksum(withLineNumber);</span>
+<span class="fc" id="L219">		myHistory.add(new MarlinCommand(lineNumberAdded,assembled));</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">		if(busyCount&gt;0) sendQueuedCommand();</span>
+<span class="fc" id="L221">	}</span>
+
+	public String removeComment(String str) {
+<span class="fc" id="L224">		int first = str.indexOf(';');</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">		if(first&gt;-1) {</span>
+<span class="fc" id="L226">			str = str.substring(0,first);</span>
+		}
+<span class="fc" id="L228">		return str.trim();</span>
+	}
+
+	private void sendQueuedCommand() {
+<span class="fc" id="L232">		clearOldHistory();</span>
+		
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">		if(myHistory.size()==0) return;</span>
+		
+<span class="fc" id="L236">		int smallest = Integer.MAX_VALUE;</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">		for( MarlinCommand mc : myHistory ) {</span>
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">			if(smallest &gt; mc.lineNumber) smallest = mc.lineNumber;</span>
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">			if(mc.lineNumber == lineNumberToSend) {</span>
+<span class="nc" id="L240">				busyCount--;</span>
+<span class="nc" id="L241">				lineNumberToSend++;</span>
+<span class="nc" id="L242">				logger.trace(&quot;sending '{}'&quot;, mc.command);</span>
+<span class="nc" id="L243">				chatInterface.sendCommand(mc.command);</span>
+<span class="nc" id="L244">				return;</span>
+			}
+<span class="fc" id="L246">		}</span>
+		
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">		if(smallest&gt;lineNumberToSend) {</span>
+			// history no longer contains the line?!
+<span class="fc" id="L250">			logger.warn(&quot;Did not find {}&quot;, lineNumberToSend);</span>
+<span class="fc" id="L251">			onDidNotFindCommandInHistory();</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">			if (logger.isDebugEnabled()) {</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">				for (MarlinCommand mc : myHistory) {</span>
+<span class="nc" id="L254">					logger.debug(&quot;...{}: {}&quot;, mc.lineNumber, mc.command);</span>
+<span class="nc" id="L255">				}</span>
+			}
+		}
+<span class="fc" id="L258">	}</span>
+
+	private String generateChecksum(String line) {
+<span class="fc" id="L261">		byte checksum = 0;</span>
+
+<span class="fc" id="L263">		int i=line.length();</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">		while(i&gt;0) checksum ^= (byte)line.charAt(--i);</span>
+
+<span class="fc" id="L266">		return &quot;*&quot; + Integer.toString(checksum);</span>
+	}
+
+	public boolean getIsBusy() {
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		return busyCount&lt;=0;</span>
+	}
+
+	public void sendESTOP() {
+<span class="nc" id="L274">		logger.warn(&quot;Emergency stop&quot;);</span>
+<span class="nc" id="L275">		chatInterface.sendCommand(&quot;M112&quot;);</span>
+<span class="nc" id="L276">		chatInterface.sendCommand(&quot;M112&quot;);</span>
+<span class="nc" id="L277">		chatInterface.sendCommand(&quot;M112&quot;);</span>
+<span class="nc" id="L278">	}</span>
+
+
+	private void processActionCommand(String actionCommand) {
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">		if(actionCommand.startsWith(PROMPT_BEGIN)) {</span>
+<span class="fc" id="L283">			promptDialog.setPromptMessage(actionCommand.substring(PROMPT_BEGIN.length()));</span>
+<span class="fc" id="L284">			promptDialog.clearPrompts();</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		} else if(actionCommand.startsWith(PROMPT_CHOICE)) {</span>
+<span class="nc" id="L286">			promptDialog.addOption(actionCommand.substring(PROMPT_CHOICE.length()).trim());</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">		} else if(actionCommand.startsWith(PROMPT_BUTTON)) {</span>
+<span class="nc" id="L288">			promptDialog.addOption(actionCommand.substring(PROMPT_BUTTON.length()).trim());</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		} else if(actionCommand.startsWith(PROMPT_SHOW)) {</span>
+<span class="nc" id="L290">			promptDialog.run(this, Translator.get(&quot;InfoTitle&quot;),(result)-&gt; {</span>
+<span class="nc" id="L291">				queueAndSendCommand(&quot;M876 S&quot; + Math.max(0,result));</span>
+<span class="nc" id="L292">				waitingForResponse = false;</span>
+<span class="nc" id="L293">				fireIdleNotice();</span>
+<span class="nc" id="L294">			});</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		} else if(actionCommand.startsWith(PROMPT_END)) {</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">			if(promptDialog.isOpen()) {</span>
+				// close the dialog because user clicked dial on robot LCD.
+<span class="nc" id="L298">				promptDialog.close();</span>
+<span class="nc" id="L299">				waitingForResponse = false;</span>
+<span class="nc" id="L300">				fireIdleNotice();</span>
+			}
+		}
+<span class="fc" id="L303">	}</span>
+
+	// OBSERVER PATTERN
+	
+<span class="fc" id="L307">	private final List&lt;MarlinPanelListener&gt; listeners = new ArrayList&lt;&gt;();</span>
+
+	public void addListener(MarlinPanelListener listener) {
+<span class="fc" id="L310">		listeners.add(listener);</span>
+<span class="fc" id="L311">	}</span>
+
+	public void removeListener(MarlinPanelListener listener) {
+<span class="nc" id="L314">		listeners.remove(listener);</span>
+<span class="nc" id="L315">	}</span>
+
+	private void notifyListeners(int id,String command) {
+<span class="fc" id="L318">		MarlinPanelEvent event = new MarlinPanelEvent(this,id,command);</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">		for (MarlinPanelListener listener : listeners) listener.actionPerformed(event);</span>
+<span class="fc" id="L320">	}</span>
+
+	// OBSERVER PATTERN ENDS
+
+	// TEST
+
+	public static void main(String[] args) {
+<span class="nc" id="L327">		PreferencesHelper.start();</span>
+<span class="nc" id="L328">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L329">		Translator.start();</span>
+
+<span class="nc" id="L331">		JFrame frame = new JFrame(MarlinPanel.class.getSimpleName());</span>
+<span class="nc" id="L332">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L333">		frame.add(new MarlinPanel(new ChooseConnection()));</span>
+<span class="nc" id="L334">		frame.pack();</span>
+<span class="nc" id="L335">		frame.setVisible(true);</span>
+<span class="nc" id="L336">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

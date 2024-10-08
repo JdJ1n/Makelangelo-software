@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DonatelloRegistry.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.donatelloimpl</a> &gt; <span class="el_source">DonatelloRegistry.java</span></div><h1>DonatelloRegistry.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.donatelloimpl;
+
+import com.marginallyclever.makelangelo.donatelloimpl.nodes.*;
+import com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes.Circle;
+import com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes.Line;
+import com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes.NGon;
+import com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes.Rectangle;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.nodegraphcore.DAO4JSONFactory;
+import com.marginallyclever.nodegraphcore.DAORegistry;
+import com.marginallyclever.nodegraphcore.NodeFactory;
+import com.marginallyclever.nodegraphcore.NodeRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Register custom nodes for {@link Turtle}s.
+ * @author Dan Royer
+ * @since 2022-02-01
+ */
+<span class="fc" id="L21">public class DonatelloRegistry implements DAORegistry, NodeRegistry {</span>
+<span class="fc" id="L22">    private static final Logger logger = LoggerFactory.getLogger(DonatelloRegistry.class);</span>
+
+    public String getName() {
+<span class="nc" id="L25">        return &quot;Makelangelo&quot;;</span>
+    }
+
+    @Override
+    public void registerDAO() {
+<span class="fc" id="L30">        logger.info(&quot;Registering makelangelo-software DAOs&quot;);</span>
+<span class="fc" id="L31">        DAO4JSONFactory.registerDAO(Turtle.class,new TurtleDAO4JSON());</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    public void registerNodes() {
+<span class="fc" id="L36">        logger.info(&quot;Registering makelangelo-software nodes&quot;);</span>
+        //NodeFactory.registerAllNodesInPackage(&quot;com.marginallyclever.makelangelo.donatelloimpl&quot;);
+
+<span class="fc" id="L39">        NodeFactory.registerNode(Circle.class);</span>
+<span class="fc" id="L40">        NodeFactory.registerNode(Line.class);</span>
+<span class="fc" id="L41">        NodeFactory.registerNode(Rectangle.class);</span>
+<span class="fc" id="L42">        NodeFactory.registerNode(AddTurtles.class);</span>
+<span class="fc" id="L43">        NodeFactory.registerNode(ColorTurtle.class);</span>
+<span class="fc" id="L44">        NodeFactory.registerNode(LoadTurtle.class);</span>
+<span class="fc" id="L45">        NodeFactory.registerNode(PathImageMask.class);</span>
+<span class="fc" id="L46">        NodeFactory.registerNode(PatternOnPath.class);</span>
+<span class="fc" id="L47">        NodeFactory.registerNode(PointOnPath.class);</span>
+<span class="fc" id="L48">        NodeFactory.registerNode(PrintTurtle.class);</span>
+<span class="fc" id="L49">        NodeFactory.registerNode(SaveTurtle.class);</span>
+<span class="fc" id="L50">        NodeFactory.registerNode(TransformTurtle.class);</span>
+<span class="fc" id="L51">        NodeFactory.registerNode(TurtleToBufferedImage.class);</span>
+<span class="fc" id="L52">        NodeFactory.registerNode(TurtleToRectangle.class);</span>
+<span class="fc" id="L53">        NodeFactory.registerNode(NGon.class);</span>
+<span class="fc" id="L54">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

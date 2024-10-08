@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TruchetCurved.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.truchet</a> &gt; <span class="el_source">TruchetCurved.java</span></div><h1>TruchetCurved.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.truchet;
+
+import com.marginallyclever.convenience.helpers.MathHelper;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import javax.vecmath.Vector2d;
+
+public class TruchetCurved implements TruchetTile {
+    public static final int TYPE_RANDOM = 0;
+    public static final int TYPE_CURTAIN_LEFT = 1;
+    public static final int TYPE_CURTAIN_RIGHT = 2;
+    public static final int TYPE_FAN_LEFT = 3;
+    public static final int TYPE_FAN_RIGHT = 4;
+    public static final int MAX_TYPES = 5;
+
+<span class="fc" id="L16">    private int type = 0;</span>
+    private final Turtle turtle;
+    private final double spaceBetweenLines;
+    private final double tileSize;
+
+    public TruchetCurved(Turtle turtle,double spaceBetweenLines,double linesPerTileCount) {
+<span class="fc" id="L22">        super();</span>
+<span class="fc" id="L23">        this.turtle=turtle;</span>
+<span class="fc" id="L24">        this.spaceBetweenLines = spaceBetweenLines;</span>
+<span class="fc" id="L25">        tileSize = spaceBetweenLines * linesPerTileCount;</span>
+<span class="fc" id="L26">    }</span>
+
+    @Override
+    public void drawTile(double x,double y) {
+<span class="pc bpc" id="L30" title="2 of 6 branches missed.">        switch(type) {</span>
+            case TYPE_RANDOM -&gt; {
+<span class="nc" id="L32">                double r = Math.random();</span>
+
+<span class="nc bnc" id="L34" title="All 2 branches missed.">                if(r&lt;0.25) tileA1(x,y);</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">                else if(r&lt;0.50) tileB1(x,y);</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">                else if(r&lt;0.75) tileA2(x,y);</span>
+<span class="nc" id="L37">                else            tileB2(x,y);</span>
+<span class="nc" id="L38">            }</span>
+<span class="fc" id="L39">            case TYPE_CURTAIN_LEFT -&gt; tileA1(x,y);</span>
+<span class="fc" id="L40">            case TYPE_CURTAIN_RIGHT -&gt; tileB1(x,y);</span>
+<span class="fc" id="L41">            case TYPE_FAN_LEFT -&gt; tileA2(x,y);</span>
+<span class="fc" id="L42">            case TYPE_FAN_RIGHT -&gt; tileB2(x,y);</span>
+        }
+<span class="fc" id="L44">    }</span>
+
+    /**
+     * Style=/
+     * @param x0 top-left corner
+     * @param y0 top-left corner
+     */
+    public void tileA1(double x0,double y0) {
+<span class="fc" id="L52">        double x1=x0+tileSize;</span>
+<span class="fc" id="L53">        double y1=y0+tileSize;</span>
+<span class="fc" id="L54">        double d=Math.sqrt(tileSize*tileSize+tileSize*tileSize);</span>
+
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        for(double r1=spaceBetweenLines;r1&lt;=tileSize;r1 += spaceBetweenLines) {</span>
+<span class="fc" id="L57">            interTile(x1,y1,r1,Math.PI*1.5,Math.PI*1.0);</span>
+
+            double v;
+            try {
+<span class="fc" id="L61">                Vector2d p = MathHelper.intersectionOfCircles(r1,tileSize,d);</span>
+<span class="fc" id="L62">                v = Math.abs(Math.atan(p.y/p.x)) - Math.PI * 0.25;</span>
+<span class="fc" id="L63">                interTile(x0, y0, r1, Math.PI * 0.0, -v);</span>
+<span class="fc" id="L64">                interTile(x0, y0, r1, Math.PI * 0.5, Math.PI * 0.5+v);</span>
+<span class="fc" id="L65">            } catch(IllegalArgumentException e) {</span>
+<span class="fc" id="L66">                interTile(x0,y0,r1,Math.PI*0.0,Math.PI*0.5);</span>
+<span class="fc" id="L67">            }</span>
+        }
+<span class="fc" id="L69">    }</span>
+
+    /**
+     * Style=/
+     * @param x0 top-left corner
+     * @param y0 top-left corner
+     */
+    public void tileA2(double x0,double y0) {
+<span class="fc" id="L77">        double x1=x0+tileSize;</span>
+<span class="fc" id="L78">        double y1=y0+tileSize;</span>
+<span class="fc" id="L79">        double d=Math.sqrt(tileSize*tileSize+tileSize*tileSize);</span>
+
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        for(double r1=spaceBetweenLines;r1&lt;=tileSize;r1 += spaceBetweenLines) {</span>
+<span class="fc" id="L82">            interTile(x0,y0,r1,Math.PI*0.0,Math.PI*0.5);</span>
+
+            double v;
+            try {
+<span class="fc" id="L86">                Vector2d p = MathHelper.intersectionOfCircles(r1,tileSize,d);</span>
+<span class="fc" id="L87">                v = Math.abs(Math.atan(p.y/p.x)) - Math.PI * 0.25;</span>
+<span class="fc" id="L88">                interTile(x1,y1, r1, Math.PI * 1.0, Math.PI * 1.0-v);</span>
+<span class="fc" id="L89">                interTile(x1,y1, r1, Math.PI * 1.5, Math.PI * 1.5+v);</span>
+<span class="fc" id="L90">            } catch(IllegalArgumentException e) {</span>
+<span class="fc" id="L91">                interTile(x1,y1,r1,Math.PI*1.5,Math.PI*1.0);</span>
+<span class="fc" id="L92">            }</span>
+        }
+<span class="fc" id="L94">    }</span>
+
+    /**
+     * Style=\
+     * @param x0 top-left corner
+     * @param y0 top-left corner
+     */
+    public void tileB1(double x0,double y0) {
+<span class="fc" id="L102">        double x1=x0+tileSize;</span>
+<span class="fc" id="L103">        double y1=y0+tileSize;</span>
+<span class="fc" id="L104">        double d=Math.sqrt(tileSize*tileSize+tileSize*tileSize);</span>
+
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        for(double r1=spaceBetweenLines;r1&lt;=tileSize;r1 += spaceBetweenLines) {</span>
+<span class="fc" id="L107">            interTile(x0,y1,r1,Math.PI*2.0,Math.PI*1.5);</span>
+
+            double v;
+            try {
+<span class="fc" id="L111">                Vector2d p = MathHelper.intersectionOfCircles(r1,tileSize,d);</span>
+<span class="fc" id="L112">                v = Math.abs(Math.atan(p.y/p.x)) - Math.PI * 0.25;</span>
+<span class="fc" id="L113">                interTile(x1, y0, r1, Math.PI * 0.5, Math.PI * 0.5-v);</span>
+<span class="fc" id="L114">                interTile(x1, y0, r1, Math.PI * 1.0, Math.PI * 1.0+v);</span>
+<span class="fc" id="L115">            } catch(IllegalArgumentException e) {</span>
+<span class="fc" id="L116">                interTile(x1,y0,r1,Math.PI*1.0,Math.PI*0.5);</span>
+<span class="fc" id="L117">            }</span>
+        }
+<span class="fc" id="L119">    }</span>
+
+    /**
+     * Style=\
+     * @param x0 top-left corner
+     * @param y0 top-left corner
+     */
+    public void tileB2(double x0,double y0) {
+<span class="fc" id="L127">        double x1=x0+tileSize;</span>
+<span class="fc" id="L128">        double y1=y0+tileSize;</span>
+<span class="fc" id="L129">        double d=Math.sqrt(tileSize*tileSize+tileSize*tileSize);</span>
+
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        for(double r1=spaceBetweenLines;r1&lt;=tileSize;r1 += spaceBetweenLines) {</span>
+<span class="fc" id="L132">            interTile(x1,y0,r1,Math.PI*1.0,Math.PI*0.5);</span>
+
+            double v;
+            try {
+<span class="fc" id="L136">                Vector2d p = MathHelper.intersectionOfCircles(r1,tileSize,d);</span>
+<span class="fc" id="L137">                v = Math.abs(Math.atan(p.y/p.x)) - Math.PI * 0.25;</span>
+<span class="fc" id="L138">                interTile(x0, y1, r1, Math.PI * 1.5, Math.PI * 1.5-v);</span>
+<span class="fc" id="L139">                interTile(x0, y1, r1, Math.PI * 2.0, Math.PI * 2.0+v);</span>
+<span class="fc" id="L140">            } catch(IllegalArgumentException e) {</span>
+<span class="fc" id="L141">                interTile(x0,y1,r1,Math.PI*2.0,Math.PI*1.5);</span>
+<span class="fc" id="L142">            }</span>
+        }
+<span class="fc" id="L144">    }</span>
+
+    // Interpolate from (x0,y0) to (x1,y1) in steps of length iterSize.
+    private void interTile(double cx,double cy,double radius,double a0, double a1) {
+<span class="fc" id="L148">        turtle.drawArc(cx,cy,radius,a0,a1,10);</span>
+<span class="fc" id="L149">    }</span>
+
+    public int getType() {
+<span class="nc" id="L152">        return type;</span>
+    }
+
+    public void setType(int type) {
+<span class="pc bpc" id="L156" title="2 of 4 branches missed.">        if(type&lt;0 || type &gt;=MAX_TYPES) throw new IllegalArgumentException(&quot;Invalid type&quot;);</span>
+<span class="fc" id="L157">        this.type = type;</span>
+<span class="fc" id="L158">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

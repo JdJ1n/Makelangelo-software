@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Histogram.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">Histogram.java</span></div><h1>Histogram.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.security.InvalidParameterException;
+
+/**
+ * Histogram of an image with 8 bits red, 8 bits green, and 8 bits blue.
+ *
+ * @author Dan Royer
+ * @since 7.1.4-SNAPSHOT?
+ */
+public class Histogram {
+<span class="nc" id="L17">	private static final Logger logger = LoggerFactory.getLogger(Histogram.class);</span>
+	
+<span class="nc" id="L19">	public char[] red = new char[256];</span>
+<span class="nc" id="L20">	public char[] green = new char[256];</span>
+<span class="nc" id="L21">	public char[] blue = new char[256];</span>
+
+<span class="nc" id="L23">	public Histogram() {}</span>
+
+	public void getRGBHistogramOf(BufferedImage img) {
+<span class="nc" id="L26">		int w = img.getWidth();</span>
+<span class="nc" id="L27">		int h = img.getHeight();</span>
+		int x, y;
+
+<span class="nc bnc" id="L30" title="All 2 branches missed.">		for (y = 0; y &lt; 255; ++y) {</span>
+<span class="nc" id="L31">			red[y] = 0;</span>
+<span class="nc" id="L32">			green[y] = 0;</span>
+<span class="nc" id="L33">			blue[y] = 0;</span>
+		}
+		
+<span class="nc bnc" id="L36" title="All 2 branches missed.">		for (y = 0; y &lt; h; ++y) {</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">			for (x = 0; x &lt; w; ++x) {</span>
+<span class="nc" id="L38">				Color c = new Color(img.getRGB(x, y));</span>
+<span class="nc" id="L39">				red[c.getRed()]++;</span>
+<span class="nc" id="L40">				green[c.getGreen()]++;</span>
+<span class="nc" id="L41">				blue[c.getBlue()]++;</span>
+			}
+		}
+<span class="nc" id="L44">	}</span>
+
+	/**
+	 * calculate the greyscale histogram of the BufferedImage and store it in th red[] channel.
+	 * @param img
+	 */
+	public void getGreyHistogramOf(BufferedImage img) {
+<span class="nc" id="L51">		int w = img.getWidth();</span>
+<span class="nc" id="L52">		int h = img.getHeight();</span>
+		int x, y;
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for (y = 0; y &lt; 255; ++y) {</span>
+<span class="nc" id="L56">			red[y]=0;</span>
+		}
+		
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		for (y = 0; y &lt; h; ++y) {</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">			for (x = 0; x &lt; w; ++x) {</span>
+<span class="nc" id="L61">				Color c = new Color(img.getRGB(x, y));</span>
+<span class="nc" id="L62">				int v = (c.getRed()+c.getGreen()+c.getBlue())/3;</span>
+<span class="nc" id="L63">				v = Math.min(Math.max(0, v), 255);</span>
+<span class="nc" id="L64">				red[v]++;</span>
+			}
+		}
+<span class="nc" id="L67">	}</span>
+
+	/**
+	 * Split a histogram into numLevels regions of equal weight.  the total weight is the sum of all the histogram values.
+	 * @param numLevels must be &gt;0
+	 * @return an array filled with the cutoff point between each of the weighted zones.
+	 */
+	public double[] getLevels(int numLevels) throws InvalidParameterException {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if(numLevels&lt;1) throw new InvalidParameterException(&quot;numLevels must be greater than zero.&quot;);</span>
+		
+		// sum the total score of the histogram.
+<span class="nc" id="L78">		long total = 0;</span>
+		
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		for(int i=0;i&lt;256;++i) {</span>
+<span class="nc" id="L81">			total+=red[i];</span>
+		}
+		
+<span class="nc" id="L84">		double costPerLevel = (double)total/(double)numLevels;</span>
+<span class="nc" id="L85">		double[] levels = new double[numLevels];</span>
+		
+<span class="nc" id="L87">		int sum=0;</span>
+<span class="nc" id="L88">		int j=0;</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for(int i=0;i&lt;256;++i) {</span>
+<span class="nc" id="L90">			sum+=red[i];</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if(sum&gt;=costPerLevel) {</span>
+<span class="nc" id="L92">				levels[j++]=i;</span>
+<span class="nc" id="L93">				sum-=costPerLevel;</span>
+<span class="nc" id="L94">				logger.debug(&quot;Level @ {}&quot;, i);</span>
+			}
+		}
+		
+<span class="nc" id="L98">		return levels;</span>
+	}
+
+
+	/**
+	 * Split a histogram into regions.  The total weight is the sum of all the histogram values.  The 
+	 * @param input an array of values [0...1] indicating the cutoff desired for each zone.
+	 * @return a new array of values with the equivalent histogram value for each cutoff.
+	 */
+	public double[] getLevelsMapped(double [] input) throws InvalidParameterException {
+<span class="nc bnc" id="L108" title="All 4 branches missed.">		if(input==null || input.length&lt;1) throw new InvalidParameterException(&quot;input length must be greater than zero.&quot;);</span>
+		
+		// sum the total score of the histogram.
+<span class="nc" id="L111">		double totalWeight = 0;</span>
+		
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		for(int i=0;i&lt;256;++i) {</span>
+<span class="nc" id="L114">			totalWeight+=red[i];</span>
+		}
+<span class="nc" id="L116">		logger.debug(&quot;Total weight={}&quot;, totalWeight);</span>
+		
+<span class="nc" id="L118">		double[] levels = new double[input.length];</span>
+
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		for(int j=0;j&lt;input.length;++j) {</span>
+<span class="nc" id="L121">			double weightScaled = totalWeight*input[j];</span>
+			int i;
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			for(i=0;i&lt;256;++i) {</span>
+<span class="nc" id="L124">				weightScaled-=red[i];</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">				if(weightScaled&lt;=0) {</span>
+<span class="nc" id="L126">					break;</span>
+				}
+			}
+<span class="nc" id="L129">			i = Math.min(i,255);</span>
+<span class="nc" id="L130">			levels[j]=i;</span>
+<span class="nc" id="L131">			logger.debug(&quot;Level {} ({}) -&gt; {} = {}&quot;, input[j], (input[j]*100.0), weightScaled, i);</span>
+		}
+		
+<span class="nc" id="L134">		return levels;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

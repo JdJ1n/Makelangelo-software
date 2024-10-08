@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MakelangeloDropTarget.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">MakelangeloDropTarget.java</span></div><h1>MakelangeloDropTarget.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTargetAdapter;
+import java.awt.dnd.DropTargetDropEvent;
+import java.io.File;
+import java.util.List;
+
+public class MakelangeloDropTarget extends DropTargetAdapter {
+<span class="nc" id="L15">    private static final Logger logger = LoggerFactory.getLogger(MakelangeloDropTarget.class);</span>
+    private final Makelangelo app;
+
+    public MakelangeloDropTarget(Makelangelo app) {
+<span class="nc" id="L19">        super();</span>
+<span class="nc" id="L20">        this.app = app;</span>
+<span class="nc" id="L21">    }</span>
+
+    @Override
+    public void drop(DropTargetDropEvent dtde) {
+        try {
+<span class="nc" id="L26">            Transferable tr = dtde.getTransferable();</span>
+<span class="nc" id="L27">            DataFlavor[] flavors = tr.getTransferDataFlavors();</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">            for (DataFlavor flavor : flavors) {</span>
+<span class="nc" id="L29">                logger.debug(&quot;Possible flavor: {}&quot;, flavor.getMimeType());</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">                if (flavor.isFlavorJavaFileListType()) {</span>
+<span class="nc" id="L31">                    dtde.acceptDrop(DnDConstants.ACTION_COPY);</span>
+<span class="nc" id="L32">                    Object o = tr.getTransferData(flavor);</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">                    if (o instanceof List&lt;?&gt;) {</span>
+<span class="nc" id="L34">                        List&lt;?&gt; list = (List&lt;?&gt;) o;</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">                        if (list.size() &gt; 0) {</span>
+<span class="nc" id="L36">                            o = list.get(0);</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">                            if (o instanceof File) {</span>
+<span class="nc" id="L38">                                app.openFile(((File) o).getAbsolutePath());</span>
+<span class="nc" id="L39">                                dtde.dropComplete(true);</span>
+<span class="nc" id="L40">                                return;</span>
+                            }
+                        }
+                    }
+                }
+            }
+<span class="nc" id="L46">            logger.debug(&quot;Drop failed: {}&quot;, dtde);</span>
+<span class="nc" id="L47">            dtde.rejectDrop();</span>
+<span class="nc" id="L48">        } catch (Exception e) {</span>
+<span class="nc" id="L49">            logger.error(&quot;Drop error&quot;, e);</span>
+<span class="nc" id="L50">            dtde.rejectDrop();</span>
+<span class="nc" id="L51">        }</span>
+<span class="nc" id="L52">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

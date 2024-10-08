@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_LSystemTree.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal</a> &gt; <span class="el_source">Generator_LSystemTree.java</span></div><h1>Generator_LSystemTree.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.tools.ResizeTurtleToPaperAction;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.select.SelectRandomSeed;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+import java.util.Random;
+
+/**
+ * L System fractal
+ * @author Dan Royer
+ */
+public class Generator_LSystemTree extends TurtleGenerator {
+<span class="fc" id="L19">	private static int order = 4; // controls complexity of curve</span>
+<span class="fc" id="L20">	private static double angleSpan = 120;</span>
+<span class="fc" id="L21">	private static int numBranches = 3;</span>
+<span class="fc" id="L22">	private static int noise = 0;</span>
+<span class="fc" id="L23">	private static double orderScale = 0.76f;</span>
+<span class="fc" id="L24">	private final Random random = new Random();</span>
+<span class="fc" id="L25">	private static int seed=0xDEADBEEF;</span>
+
+	public Generator_LSystemTree() {
+<span class="fc" id="L28">		super();</span>
+
+		SelectSlider field_order;
+		SelectSlider field_branches;
+		SelectSlider field_orderScale;
+		SelectSlider field_angle;
+		SelectSlider field_noise;
+
+<span class="fc" id="L36">		SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;,Translator.get(&quot;Generator.randomSeed&quot;),seed);</span>
+<span class="fc" id="L37">		add(selectRandomSeed);</span>
+<span class="fc" id="L38">		selectRandomSeed.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L39">			seed = (int)evt.getNewValue();</span>
+<span class="nc" id="L40">			random.setSeed(seed);</span>
+<span class="nc" id="L41">			generate();</span>
+<span class="nc" id="L42">		});</span>
+
+<span class="fc" id="L44">		add(field_order      = new SelectSlider(&quot;order&quot;,Translator.get(&quot;HilbertCurveOrder&quot;),10,1,getOrder()));</span>
+<span class="fc" id="L45">		field_order.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L46">			setOrder(field_order.getValue());</span>
+<span class="nc" id="L47">			generate();</span>
+<span class="nc" id="L48">		});</span>
+
+<span class="fc" id="L50">		add(field_branches   = new SelectSlider(&quot;branches&quot;,Translator.get(&quot;LSystemBranches&quot;),8,1,getBranches()));</span>
+<span class="fc" id="L51">		field_branches.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L52">			setBranches(field_branches.getValue());</span>
+<span class="nc" id="L53">			generate();</span>
+<span class="nc" id="L54">		});</span>
+
+<span class="fc" id="L56">		add(field_orderScale = new SelectSlider(&quot;scale&quot;,Translator.get(&quot;LSystemOrderScale&quot;),100,1,(int)(getScale()*100)));</span>
+<span class="fc" id="L57">		field_orderScale.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L58">			setScale(field_orderScale.getValue()/100.0f);</span>
+<span class="nc" id="L59">			generate();</span>
+<span class="nc" id="L60">		});</span>
+
+<span class="fc" id="L62">		add(field_angle      = new SelectSlider(&quot;angle&quot;,Translator.get(&quot;LSystemAngle&quot;),360,1,(int)getAngle()));</span>
+<span class="fc" id="L63">		field_angle.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L64">			setAngle(field_angle.getValue());</span>
+<span class="nc" id="L65">			generate();</span>
+<span class="nc" id="L66">		});</span>
+
+<span class="fc" id="L68">		add(field_noise      = new SelectSlider(&quot;noise&quot;,Translator.get(&quot;LSystemNoise&quot;),100,0,(int)getNoise()));</span>
+<span class="fc" id="L69">		field_noise.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L70">			setNoise(field_noise.getValue());</span>
+<span class="nc" id="L71">			generate();</span>
+<span class="nc" id="L72">		});</span>
+
+<span class="fc" id="L74">		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href='https://en.wikipedia.org/wiki/L-system'&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</span>
+<span class="fc" id="L75">	}</span>
+
+	@Override
+	public String getName() {
+<span class="fc" id="L79">		return Translator.get(&quot;LSystemTreeName&quot;);</span>
+	}
+
+	@Override
+	public void generate() {
+<span class="nc" id="L84">		Turtle turtle = new Turtle();</span>
+
+<span class="nc" id="L86">		random.setSeed(seed);</span>
+<span class="nc" id="L87">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+		// move to starting position
+<span class="nc" id="L89">		turtle.moveTo(0,-rect.getHeight()/2);</span>
+<span class="nc" id="L90">		turtle.turn(90);</span>
+<span class="nc" id="L91">		turtle.penDown();</span>
+		// do the curve
+<span class="nc" id="L93">		lSystemTree(turtle,order, 10);</span>
+
+		// scale turtle to fit paper
+<span class="nc" id="L96">		ResizeTurtleToPaperAction action = new ResizeTurtleToPaperAction(myPaper,false,null);</span>
+<span class="nc" id="L97">		turtle = action.run(turtle);</span>
+
+<span class="nc" id="L99">		notifyListeners(turtle);</span>
+<span class="nc" id="L100">	}</span>
+
+
+	// recursive L System tree fractal
+	private void lSystemTree(Turtle turtle,int n, double distance) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (n == 0) return;</span>
+
+<span class="nc" id="L107">		turtle.forward(distance);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if(n&gt;1) {</span>
+<span class="nc" id="L109">			double angleStep = angleSpan / (float)(numBranches-1);</span>
+<span class="nc" id="L110">			double oldAngle = turtle.getAngle();</span>
+<span class="nc" id="L111">			double len = distance*orderScale;</span>
+<span class="nc" id="L112">			double noiseUnit = noise/100.0;</span>
+
+<span class="nc" id="L114">			turtle.turn(-(angleSpan/2.0f));</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			for(int i=0;i&lt;numBranches;++i) {</span>
+<span class="nc" id="L116">				lSystemTree(turtle,n-1,len - len * noiseUnit * random.nextDouble() );</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">				if(noise&gt;0) {</span>
+<span class="nc" id="L118">					turtle.turn(angleStep + angleStep * (random.nextDouble()-0.5)*noiseUnit);</span>
+				} else {
+<span class="nc" id="L120">					turtle.turn(angleStep);</span>
+				}
+			}
+<span class="nc" id="L123">			turtle.setAngle(oldAngle);</span>
+		}
+<span class="nc" id="L125">		turtle.forward(-distance);</span>
+<span class="nc" id="L126">	}</span>
+
+
+	public void setOrder(int value) {
+<span class="nc" id="L130">		order=value;	</span>
+<span class="nc" id="L131">	}</span>
+	public int getOrder() {
+<span class="fc" id="L133">		return order;</span>
+	}
+
+	public void setScale(double value) {
+<span class="nc" id="L137">		orderScale = value;</span>
+<span class="nc" id="L138">	}</span>
+	public double getScale() {
+<span class="fc" id="L140">		return orderScale;</span>
+	}
+
+	public void setAngle(double value) {
+<span class="nc" id="L144">		angleSpan = value;</span>
+<span class="nc" id="L145">	}</span>
+	public double getAngle() {
+<span class="fc" id="L147">		return angleSpan;</span>
+	}
+
+	public void setBranches(int value) {
+<span class="nc" id="L151">		numBranches = value;</span>
+<span class="nc" id="L152">	}</span>
+	public int getBranches() {
+<span class="fc" id="L154">		return numBranches;</span>
+	}
+
+	public void setNoise(int value) {
+<span class="nc" id="L158">		noise = value;		</span>
+<span class="nc" id="L159">	}</span>
+
+	public int getNoise() {
+<span class="fc" id="L162">		return noise;		</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

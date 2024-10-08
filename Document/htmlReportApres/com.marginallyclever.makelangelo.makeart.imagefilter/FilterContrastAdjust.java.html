@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterContrastAdjust.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imagefilter</a> &gt; <span class="el_source">FilterContrastAdjust.java</span></div><h1>FilterContrastAdjust.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imagefilter;
+
+import com.marginallyclever.convenience.ResizableImagePanel;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.rangeslider.RangeSlider;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/**
+ * Adjusts the top and bottom of the constrast curve.
+ * @author Dan Royer
+ * @since 7.39.9
+ */
+public class FilterContrastAdjust extends ImageFilter {
+	private final TransformedImage img;
+	private final int bottom;
+	private final float range;
+
+	/**
+	 * Scale the colors so that bottom...top becomes 0...255
+	 * @param bottom the new bottom range
+	 * @param top the new top range.
+	 */
+	public FilterContrastAdjust(TransformedImage img, int bottom, int top) {
+<span class="nc" id="L30">		super();</span>
+<span class="nc" id="L31">		this.img = img;</span>
+<span class="nc" id="L32">		this.bottom = bottom;</span>
+<span class="nc" id="L33">		range = 255f / (top-bottom);</span>
+<span class="nc" id="L34">	}</span>
+
+	@Override
+	public TransformedImage filter() {
+<span class="nc" id="L38">		int h = img.getSourceImage().getHeight();</span>
+<span class="nc" id="L39">		int w = img.getSourceImage().getWidth();</span>
+<span class="nc" id="L40">		BufferedImage bi = img.getSourceImage();</span>
+<span class="nc" id="L41">		TransformedImage after = new TransformedImage(img);</span>
+<span class="nc" id="L42">		BufferedImage afterBI = after.getSourceImage();</span>
+
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		for (int y = 0; y &lt; h; ++y) {</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">			for (int x = 0; x &lt; w; ++x) {</span>
+<span class="nc" id="L46">				int color = bi.getRGB(x, y);</span>
+<span class="nc" id="L47">				int red = adjust(red32(color));</span>
+<span class="nc" id="L48">				int green = adjust(green32(color));</span>
+<span class="nc" id="L49">				int blue = adjust(blue32(color));</span>
+<span class="nc" id="L50">				int alpha = alpha32(color);</span>
+
+<span class="nc" id="L52">				afterBI.setRGB(x, y, ImageFilter.encode32bit(red,green,blue,alpha));</span>
+			}
+		}
+
+<span class="nc" id="L56">		return after;</span>
+	}
+
+	private int adjust(int color) {
+<span class="nc" id="L60">		color = Math.max(color-bottom,0);</span>
+<span class="nc" id="L61">		return Math.min((int)(color*range),255);</span>
+	}
+
+	public static void main(String[] args) throws IOException {
+<span class="nc" id="L65">		TransformedImage src = new TransformedImage( ImageIO.read(new FileInputStream(&quot;src/test/resources/mandrill.png&quot;)) );</span>
+<span class="nc" id="L66">		JPanel panel = new JPanel();</span>
+<span class="nc" id="L67">		panel.setLayout(new BorderLayout());</span>
+
+<span class="nc" id="L69">		final RangeSlider slider = new RangeSlider(0,255);</span>
+<span class="nc" id="L70">		slider.setValue(0);</span>
+<span class="nc" id="L71">		slider.setUpperValue(255);</span>
+<span class="nc" id="L72">		panel.add(slider,BorderLayout.NORTH);</span>
+
+<span class="nc" id="L74">		slider.addChangeListener(e-&gt;{</span>
+<span class="nc" id="L75">			FilterContrastAdjust f = new FilterContrastAdjust(src,slider.getValue(),slider.getUpperValue());</span>
+<span class="nc" id="L76">			ResizableImagePanel rip = new ResizableImagePanel(f.filter().getSourceImage());</span>
+<span class="nc" id="L77">			BorderLayout layout = (BorderLayout)panel.getLayout();</span>
+<span class="nc" id="L78">			Component c = layout.getLayoutComponent(BorderLayout.CENTER);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">			if(c!=null) panel.remove(c);</span>
+<span class="nc" id="L80">			panel.add(rip,BorderLayout.CENTER);</span>
+<span class="nc" id="L81">			rip.revalidate();</span>
+<span class="nc" id="L82">			rip.repaint();</span>
+<span class="nc" id="L83">		});</span>
+
+<span class="nc" id="L85">		JFrame frame = new JFrame(&quot;Filter_ContrastAdjust&quot;);</span>
+<span class="nc" id="L86">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L87">		frame.setSize(400, 500);</span>
+<span class="nc" id="L88">		frame.add(panel);</span>
+<span class="nc" id="L89">		frame.setVisible(true);</span>
+<span class="nc" id="L90">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

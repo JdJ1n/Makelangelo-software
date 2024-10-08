@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TruchetDiagonal.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.truchet</a> &gt; <span class="el_source">TruchetDiagonal.java</span></div><h1>TruchetDiagonal.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.truchet;
+
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+public class TruchetDiagonal implements TruchetTile {
+    public static final int TYPE_RANDOM = 0;
+    public static final int TYPE_RISING = 1;
+    public static final int TYPE_FALLING = 2;
+    public static final int MAX_TYPES = 3;
+
+<span class="fc" id="L11">    private int type = TYPE_RANDOM;</span>
+    private final Turtle turtle;
+    private final double spaceBetweenLines;
+    private final double tileSize;
+
+    public TruchetDiagonal(Turtle turtle,double spaceBetweenLines,double linesPerTileCount) {
+<span class="fc" id="L17">        super();</span>
+<span class="fc" id="L18">        this.turtle=turtle;</span>
+<span class="fc" id="L19">        this.spaceBetweenLines = spaceBetweenLines;</span>
+<span class="fc" id="L20">        tileSize = spaceBetweenLines * linesPerTileCount;</span>
+<span class="fc" id="L21">    }</span>
+
+    @Override
+    public void drawTile(double x,double y) {
+<span class="pc bpc" id="L25" title="2 of 4 branches missed.">        switch(type) {</span>
+            case TYPE_RANDOM -&gt; {
+<span class="nc bnc" id="L27" title="All 2 branches missed.">                if (Math.random() &gt;= 0.5) tileA(x, y);</span>
+<span class="nc" id="L28">                else tileB(x, y);</span>
+<span class="nc" id="L29">            }</span>
+<span class="fc" id="L30">            case TYPE_RISING -&gt; tileA(x, y);</span>
+<span class="fc" id="L31">            case TYPE_FALLING -&gt; tileB(x, y);</span>
+        }
+<span class="fc" id="L33">    }</span>
+
+    // style=/
+    public void tileA(double x0,double y0) {
+<span class="fc" id="L37">        double x1=x0+tileSize;</span>
+<span class="fc" id="L38">        double y1=y0+tileSize;</span>
+
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        for(double x=spaceBetweenLines;x&lt;tileSize;x += spaceBetweenLines) {</span>
+<span class="fc" id="L41">            interTile(x0+x,y0,x0,y0+x);</span>
+<span class="fc" id="L42">            interTile(x0+x,y1,x1,y0+x);</span>
+        }
+<span class="fc" id="L44">        interTile(x0,y1,x1,y0);</span>
+<span class="fc" id="L45">    }</span>
+
+    // style=\
+    public void tileB(double x0,double y0) {
+<span class="fc" id="L49">        double x1=x0+tileSize;</span>
+<span class="fc" id="L50">        double y1=y0+tileSize;</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        for(double x=spaceBetweenLines;x&lt;tileSize;x += spaceBetweenLines) {</span>
+<span class="fc" id="L53">            interTile(x0+x,y0,x1,y1-x);</span>
+<span class="fc" id="L54">            interTile(x0+x,y1,x0,y1-x);</span>
+        }
+<span class="fc" id="L56">        interTile(x0,y0,x1,y1);</span>
+<span class="fc" id="L57">    }</span>
+
+    // Interpolate from (x0,y0) to (x1,y1) in steps of length iterSize.
+    private void interTile(double x0,double y0,double x1,double y1) {
+<span class="fc" id="L61">        turtle.penUp();</span>
+<span class="fc" id="L62">        turtle.moveTo(x0,y0);</span>
+<span class="fc" id="L63">        turtle.penDown();</span>
+<span class="fc" id="L64">        turtle.moveTo(x1,y1);</span>
+<span class="fc" id="L65">    }</span>
+
+    public int getType() {
+<span class="nc" id="L68">        return type;</span>
+    }
+
+    public void setType(int type) {
+<span class="pc bpc" id="L72" title="2 of 4 branches missed.">        if(type&lt;0 || type &gt;=MAX_TYPES) throw new IllegalArgumentException(&quot;Invalid type&quot;);</span>
+<span class="fc" id="L73">        this.type = type;</span>
+<span class="fc" id="L74">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

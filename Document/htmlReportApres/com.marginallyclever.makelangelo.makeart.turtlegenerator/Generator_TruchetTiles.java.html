@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_TruchetTiles.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator</a> &gt; <span class="el_source">Generator_TruchetTiles.java</span></div><h1>Generator_TruchetTiles.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.tools.CropTurtle;
+import com.marginallyclever.makelangelo.makeart.truchet.*;
+import com.marginallyclever.makelangelo.select.SelectBoolean;
+import com.marginallyclever.makelangelo.select.SelectRandomSeed;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * Generate random Truchet tiles using the {@link TruchetTileFactory} as a menu of available tiles.
+ * @author Dan Royer
+ * @since 7.48.0
+ */
+public class Generator_TruchetTiles extends TurtleGenerator {
+<span class="fc" id="L25">	private static final Logger logger = LoggerFactory.getLogger(Generator_TruchetTiles.class);</span>
+	private final SelectSlider lineSpacing;
+	private final SelectSlider linesPerTile;
+<span class="fc" id="L28">	private static int spaceBetweenLines = 10;</span>
+<span class="fc" id="L29">	private static int linesPerTileCount = 10;</span>
+<span class="fc" id="L30">	private static int seed=0;</span>
+<span class="fc" id="L31">	private static final Random random = new Random();</span>
+
+<span class="fc" id="L33">	private final List&lt;Boolean&gt; allowedTiles = new ArrayList&lt;&gt;();</span>
+
+	public Generator_TruchetTiles() {
+<span class="fc" id="L36">		super();</span>
+
+<span class="fc" id="L38">		SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;,Translator.get(&quot;Generator.randomSeed&quot;),seed);</span>
+<span class="fc" id="L39">		add(selectRandomSeed);</span>
+<span class="fc" id="L40">		selectRandomSeed.addSelectListener((evt)-&gt;{</span>
+<span class="nc" id="L41">			seed = (int)evt.getNewValue();</span>
+<span class="nc" id="L42">			random.setSeed(seed);</span>
+<span class="nc" id="L43">			generate();</span>
+<span class="nc" id="L44">		});</span>
+
+<span class="fc" id="L46">		List&lt;String&gt; names = TruchetTileFactory.getNames();</span>
+		// first time
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">		if(allowedTiles.size() != names.size()) {</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">			for(String name : names) {</span>
+<span class="fc" id="L50">				allowedTiles.add(true);</span>
+<span class="fc" id="L51">			}</span>
+		}
+
+<span class="fc bfc" id="L54" title="All 2 branches covered.">		for(int i=0;i&lt;names.size();++i) {</span>
+<span class="fc" id="L55">			SelectBoolean allow = new SelectBoolean(&quot;allow&quot;+i,Translator.get(&quot;Generator_TruchetTiles.allow&quot;,new String[]{names.get(i)}),allowedTiles.get(i));</span>
+<span class="fc" id="L56">			add(allow);</span>
+<span class="fc" id="L57">			int finalI = i;</span>
+<span class="fc" id="L58">			allow.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L59">				allowedTiles.set(finalI,allow.isSelected());</span>
+<span class="nc" id="L60">					generate();</span>
+<span class="nc" id="L61">			});</span>
+		}
+
+<span class="fc" id="L64">		add(lineSpacing = new SelectSlider(&quot;lineSpacing&quot;,Translator.get(&quot;Generator_TruchetTiles.LineSpacing&quot;),20,2,Generator_TruchetTiles.getSpacing()));</span>
+<span class="pc" id="L65">		lineSpacing.addSelectListener(evt-&gt;generate());</span>
+<span class="fc" id="L66">		add(linesPerTile = new SelectSlider(&quot;linesPerTile&quot;,Translator.get(&quot;Generator_TruchetTiles.LinesPerTile&quot;),15,1,Generator_TruchetTiles.getLinesPerTile()));</span>
+<span class="pc" id="L67">		linesPerTile.addSelectListener(evt-&gt;generate());</span>
+<span class="fc" id="L68">		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href='https://en.wikipedia.org/wiki/Truchet_tiles'&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</span>
+<span class="fc" id="L69">	}</span>
+
+	private static int getSpacing() {
+<span class="fc" id="L72">		return spaceBetweenLines;</span>
+	}
+
+	private static int getLinesPerTile() {
+<span class="fc" id="L76">		return linesPerTileCount;</span>
+	}
+
+	@Override
+	public String getName() {
+<span class="fc" id="L81">		return Translator.get(&quot;Generator_TruchetTiles.Name&quot;);</span>
+	}
+
+	@Override
+	public void generate() {
+<span class="fc" id="L86">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="fc" id="L87">		double yMin = rect.getMinY();</span>
+<span class="fc" id="L88">		double yMax = rect.getMaxY();</span>
+<span class="fc" id="L89">		double xMin = rect.getMinX();</span>
+<span class="fc" id="L90">		double xMax = rect.getMaxX();</span>
+
+<span class="fc" id="L92">		spaceBetweenLines = lineSpacing.getValue();</span>
+<span class="fc" id="L93">		linesPerTileCount = linesPerTile.getValue();</span>
+
+<span class="fc" id="L95">		int tileSize = spaceBetweenLines * linesPerTileCount;</span>
+
+<span class="fc" id="L97">		Turtle turtle = new Turtle();</span>
+
+<span class="fc" id="L99">		List&lt;TruchetTile&gt; ttgList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">		for(int i=0;i&lt;allowedTiles.size();++i) {</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">			if(allowedTiles.get(i)) {</span>
+<span class="fc" id="L102">				ttgList.add(TruchetTileFactory.getTile(i,turtle,spaceBetweenLines,linesPerTileCount));</span>
+			}
+		}
+
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">		if(!ttgList.isEmpty()) {</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">			for(double y=yMin;y&lt;yMax;y+= tileSize) {</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">				for(double x=xMin;x&lt;xMax;x+= tileSize) {</span>
+<span class="fc" id="L109">					int v = (int)(random.nextDouble()* ttgList.size());</span>
+<span class="fc" id="L110">					ttgList.get(v).drawTile(x,y);</span>
+				}
+			}
+		}
+
+<span class="fc" id="L115">		CropTurtle.run(turtle,myPaper.getMarginRectangle());</span>
+<span class="fc" id="L116">		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</span>
+
+<span class="fc" id="L118">		notifyListeners(turtle);</span>
+<span class="fc" id="L119">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

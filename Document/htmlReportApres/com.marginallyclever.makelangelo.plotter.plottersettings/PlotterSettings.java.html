@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlotterSettings.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottersettings</a> &gt; <span class="el_source">PlotterSettings.java</span></div><h1>PlotterSettings.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottersettings;
+
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.plotter.plotterrenderer.PlotterRendererFactory;
+import com.marginallyclever.util.PreferencesHelper;
+import org.json.JSONObject;
+
+import java.awt.*;
+import java.util.Arrays;
+import java.util.prefs.Preferences;
+
+/**
+ * {@link PlotterSettings} stores the physical settings for a single {@link com.marginallyclever.makelangelo.plotter.Plotter}.
+ * Not to be confused with the dynamic state of a {@link com.marginallyclever.makelangelo.plotter.Plotter}.
+ * @author Dan Royer
+ */
+public class PlotterSettings {
+	public static final String ANCESTOR = &quot;ancestor&quot;;
+	/**
+	 * mm/s/s
+	 */
+	public static final String MAX_ACCELERATION = &quot;acceleration&quot;;
+	/**
+	 * int
+	 */
+	public static final String BLOCK_BUFFER_SIZE = &quot;blockBufferSize&quot;;
+	/**
+	 * double
+	 */
+	public static final String DIAMETER = &quot;diameter&quot;;
+	/**
+	 * double
+	 */
+	public static final String FEED_RATE_TRAVEL = &quot;feed_rate&quot;;
+	/**
+	 * double
+	 */
+	public static final String FEED_RATE_DRAW = &quot;feed_rate_current&quot;;
+	/**
+	 * boolean
+	 */
+	public static final String HANDLE_SMALL_SEGMENTS = &quot;handleSmallSegments&quot;;
+	/**
+	 * boolean.  if we wanted to test for Marginally Clever brand Makelangelo robots
+	 */
+	public static final String IS_REGISTERED = &quot;isRegistered&quot;;
+	/**
+	 * double
+	 */
+	public static final String LIMIT_BOTTOM = &quot;limit_bottom&quot;;
+	/**
+	 * double
+	 */
+	public static final String LIMIT_LEFT = &quot;limit_left&quot;;
+	/**
+	 * double
+	 */
+	public static final String LIMIT_RIGHT = &quot;limit_right&quot;;
+	/**
+	 * double
+	 */
+	public static final String LIMIT_TOP = &quot;limit_top&quot;;
+	/**
+	 * array of doubles
+	 */
+	public static final String MAX_JERK = &quot;maxJerk&quot;;
+	/**
+	 * double
+	 */
+	public static final String MINIMUM_PLANNER_SPEED = &quot;minimumPlannerSpeed&quot;;
+	/**
+	 * double
+	 */
+	public static final String MIN_ACCELERATION = &quot;minAcceleration&quot;;
+	/**
+	 * double
+	 */
+	public static final String MIN_SEGMENT_LENGTH = &quot;minSegmentLength&quot;;
+	public static final String MIN_SEG_TIME = &quot;minSegTime&quot;;
+	/**
+	 * color
+	 */
+	public static final String PAPER_COLOR = &quot;paperColor&quot;;
+	/**
+	 * color
+	 */
+	public static final String PEN_DOWN_COLOR = &quot;penDownColor&quot;;
+	/**
+	 * color
+	 */
+	public static final String PEN_DOWN_COLOR_DEFAULT = &quot;penDownColorDefault&quot;;
+	/**
+	 * color
+	 */
+	public static final String PEN_UP_COLOR = &quot;penUpColor&quot;;
+	/**
+	 * integer
+	 */
+	public static final String SEGMENTS_PER_SECOND = &quot;segmentsPerSecond&quot;;
+	/**
+	 * integer.
+	 * &lt;pre&gt;
+	 * {
+	 * 	&amp;#64;code
+	 * 	private String[] startingStrings = { &quot;Top Left&quot;, &quot;Top Center&quot;, &quot;Top Right&quot;, &quot;Left&quot;, &quot;Center&quot;, &quot;Right&quot;,
+	 * 			&quot;Bottom Left&quot;, &quot;Bottom Center&quot;, &quot;Bottom Right&quot; };
+	 * }
+	 * &lt;/pre&gt;
+	 */
+	public static final String STARTING_POS_INDEX = &quot;startingPosIndex&quot;;
+	/**
+	 * double
+	 */
+	public static final String PEN_ANGLE_UP = &quot;z_off&quot;;
+	/**
+	 * double
+	 */
+	public static final String PEN_ANGLE_DOWN = &quot;z_on&quot;;
+	/**
+	 * double.
+	 * The milliseconds delay to raise the pen.  Marlin firmware will send intermediate values to the servo
+	 * to approximate the slow movement, but it may cause the servo to jitter.  Use with care.
+	 */
+	public static final String PEN_ANGLE_UP_TIME = &quot;z_rate_up&quot;;
+	/**
+	 * double.
+	 * The milliseconds delay to lower the pen.  Marlin firmware will send intermediate values to the servo
+	 * to approximate the slow movement, but it may cause the servo to jitter.  Use with care.
+	 */
+	public static final String PEN_ANGLE_DOWN_TIME = &quot;z_rate&quot;;
+	/**
+	 * String
+	 */
+	public static final String USER_GENERAL_END_GCODE = &quot;userGeneralEndGcode&quot;;
+	/**
+	 * String
+	 */
+	public static final String USER_GENERAL_START_GCODE = &quot;userGeneralStartGcode&quot;;
+	/**
+	 * integer
+	 */
+	public static final String Z_MOTOR_TYPE = &quot;zMotorType&quot;;
+	/**
+	 * String
+	 */
+	public static final String STYLE = &quot;style&quot;;
+
+	public static final int Z_MOTOR_TYPE_SERVO = 1;
+	public static final int Z_MOTOR_TYPE_STEPPER = 2;
+
+<span class="fc" id="L151">	private final JSONObject json = new JSONObject();</span>
+<span class="fc" id="L152">	private String robotUID = &quot;0&quot;;</span>
+
+	public PlotterSettings() {
+<span class="fc" id="L155">		super();</span>
+<span class="fc" id="L156">		setDefaults();</span>
+<span class="fc" id="L157">	}</span>
+
+	private void setDefaults() {
+<span class="fc" id="L160">		json.put(IS_REGISTERED, 			false);</span>
+<span class="fc" id="L161">		json.put(HANDLE_SMALL_SEGMENTS, 	false);</span>
+<span class="fc" id="L162">		json.put(MIN_SEGMENT_LENGTH, 		0.5);	// mm</span>
+<span class="fc" id="L163">		json.put(MAX_ACCELERATION, 			100);	// mm/s/s</span>
+<span class="fc" id="L164">		json.put(MIN_ACCELERATION, 			0.0);	// mm/s/s</span>
+<span class="fc" id="L165">		json.put(MINIMUM_PLANNER_SPEED, 	0.05);	// mm/s</span>
+<span class="fc" id="L166">		json.put(LIMIT_LEFT, 				-325);	// mm</span>
+<span class="fc" id="L167">		json.put(LIMIT_RIGHT, 				325);	// mm</span>
+<span class="fc" id="L168">		json.put(LIMIT_BOTTOM,				-500);	// mm</span>
+<span class="fc" id="L169">		json.put(LIMIT_TOP, 				500);		// mm</span>
+<span class="fc" id="L170">		json.put(DIAMETER, 					0.8);	// mm, &gt;0</span>
+<span class="fc" id="L171">		json.put(PEN_ANGLE_UP, 				90);	// servo angle (degrees,0...180)</span>
+<span class="fc" id="L172">		json.put(PEN_ANGLE_DOWN, 			25);	// servo angle (degrees,0...180)</span>
+<span class="fc" id="L173">		json.put(PEN_ANGLE_UP_TIME, 		250);</span>
+<span class="fc" id="L174">		json.put(PEN_ANGLE_DOWN_TIME, 		150);</span>
+<span class="fc" id="L175">		json.put(FEED_RATE_TRAVEL, 			3000);	// mm/min.  3000 = 50 mm/s</span>
+<span class="fc" id="L176">		json.put(FEED_RATE_DRAW, 			3000);	// mm/min.  3000 = 50 mm/s</span>
+<span class="fc" id="L177">		json.put(BLOCK_BUFFER_SIZE, 		16);</span>
+<span class="fc" id="L178">		json.put(SEGMENTS_PER_SECOND, 		5);</span>
+<span class="fc" id="L179">		json.put(MIN_SEG_TIME, 				20000);		// us</span>
+<span class="fc" id="L180">		json.put(STARTING_POS_INDEX, 		4);</span>
+<span class="fc" id="L181">		json.put(Z_MOTOR_TYPE, 				PlotterSettings.Z_MOTOR_TYPE_SERVO);</span>
+<span class="fc" id="L182">		json.put(ANCESTOR,					&quot;&quot;);</span>
+<span class="fc" id="L183">		json.put(USER_GENERAL_START_GCODE, 	&quot;&quot;);</span>
+<span class="fc" id="L184">		json.put(USER_GENERAL_END_GCODE, 	&quot;&quot;);</span>
+<span class="fc" id="L185">		json.put(STYLE,         			 PlotterRendererFactory.MAKELANGELO_5.getName());</span>
+<span class="fc" id="L186">		json.put(PAPER_COLOR,		 		(Color.WHITE.hashCode()));</span>
+<span class="fc" id="L187">		json.put(PEN_DOWN_COLOR_DEFAULT, 	(Color.BLACK.hashCode()));</span>
+<span class="fc" id="L188">		json.put(PEN_DOWN_COLOR, 			(Color.BLACK.hashCode()));</span>
+<span class="fc" id="L189">		json.put(PEN_UP_COLOR, 				(Color.GREEN.hashCode()));</span>
+<span class="fc" id="L190">		json.put(MAX_JERK,           		&quot;[10,10,3]&quot;);</span>
+<span class="fc" id="L191">	}</span>
+
+	public PlotterSettings(String UID) {
+<span class="fc" id="L194">		super();</span>
+<span class="fc" id="L195">		load(UID);</span>
+<span class="fc" id="L196">	}</span>
+
+	public String getUID() {
+<span class="fc" id="L199">		return robotUID;</span>
+	}
+
+	protected void setRobotUID(String robotUID) {
+<span class="fc" id="L203">		this.robotUID = robotUID;</span>
+<span class="fc" id="L204">		json.put(&quot;robotUID&quot;, robotUID);</span>
+<span class="fc" id="L205">	}</span>
+
+	/**
+	 * @param key the key to look up
+	 * @return the value of the key
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public double getDouble(String key) throws NullPointerException, IllegalStateException {
+<span class="fc" id="L214">		return json.getDouble(key);</span>
+	}
+
+	/**
+	 * @param key the key to look up
+	 * @return the value of the key
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public int getInteger(String key) throws NullPointerException, IllegalStateException {
+<span class="fc" id="L224">		return json.getInt(key);</span>
+	}
+
+	/**
+	 * @param key the key to look up
+	 * @return the value of the key
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public String getString(String key) throws NullPointerException, IllegalStateException {
+<span class="fc" id="L234">		return json.getString(key);</span>
+	}
+
+	/**
+	 * @param key the key to look up
+	 * @return the value of the key
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public boolean getBoolean(String key) throws NullPointerException, IllegalStateException {
+<span class="nc" id="L244">		return json.getBoolean(key);</span>
+	}
+
+	/**
+	 * @param key the key to look up
+	 * @return the value of the key
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public Color getColor(String key) throws NullPointerException, IllegalStateException {
+<span class="nc" id="L254">		int v = getInteger(key);</span>
+<span class="nc" id="L255">		return new Color(v);</span>
+	}
+
+	/**
+	 * @param key the key to look up
+	 * @return the value of the key
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public double [] getDoubleArray(String key) throws NullPointerException, IllegalStateException {
+<span class="nc" id="L265">		String s = getString(key);</span>
+<span class="nc" id="L266">		String [] parts = s.substring(1,s.length()-1).split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		if(parts.length==0) return new double[0];</span>
+		try {
+<span class="nc" id="L269">			double[] result = new double[parts.length];</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">			for (int i = 0; i &lt; parts.length; ++i) {</span>
+<span class="nc" id="L271">				result[i] = Double.parseDouble(parts[i].trim());</span>
+			}
+<span class="nc" id="L273">			return result;</span>
+<span class="nc" id="L274">		} catch(Exception e) {</span>
+<span class="nc" id="L275">			return new double[0];</span>
+		}
+	}
+
+	/**
+	 * @param key the key to look up
+	 * @param value the value to set
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public void setDouble(String key,double value) throws NullPointerException, IllegalStateException {
+<span class="fc" id="L286">		json.put(key, value);</span>
+<span class="fc" id="L287">	}</span>
+
+	/**
+	 * @param key the key to look up
+	 * @param value the value to set
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public void setInteger(String key,int value) throws NullPointerException, IllegalStateException {
+<span class="fc" id="L296">		json.put(key,value);</span>
+<span class="fc" id="L297">	}</span>
+
+	/**
+	 * @param key the key to look up
+	 * @param value the value to set
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public void setString(String key,String value) throws NullPointerException, IllegalStateException {
+<span class="fc" id="L306">		json.put(key, value);</span>
+<span class="fc" id="L307">	}</span>
+
+	/**
+	 * @param key the key to look up
+	 * @param value the value to set
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public void setBoolean(String key,boolean value) throws NullPointerException, IllegalStateException {
+<span class="fc" id="L316">		json.put(key, value);</span>
+<span class="fc" id="L317">	}</span>
+
+	/**
+	 * @param key the key to look up
+	 * @param value the value to set
+	 * @throws NullPointerException key does not exist
+	 * @throws IllegalStateException profile does not exist.
+	 */
+	public void setColor(String key,Color value) throws NullPointerException, IllegalStateException {
+<span class="fc" id="L326">		setInteger(key,value.hashCode());</span>
+<span class="fc" id="L327">	}</span>
+
+	public void setDoubleArray(String key,double [] values) throws NullPointerException, IllegalStateException {
+<span class="fc" id="L330">		setString(key,Arrays.toString(values));</span>
+<span class="fc" id="L331">	}</span>
+
+	public Point2D getHome() {
+<span class="nc" id="L334">		return new Point2D(0,0);</span>
+	}
+
+	/**
+	 * Load the machine configuration from {@link Preferences}.
+	 * @param uid the unique id of the robot to be loaded
+	 */
+	public void load(String uid) {
+<span class="fc" id="L342">		robotUID = uid;</span>
+<span class="fc" id="L343">		Preferences allMachinesNode = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.MACHINES);</span>
+<span class="fc" id="L344">		Preferences thisMachineNode = allMachinesNode.node(robotUID);</span>
+
+<span class="fc" id="L346">		json.put(&quot;robotUID&quot;, robotUID);</span>
+<span class="fc" id="L347">		json.put(IS_REGISTERED, 			thisMachineNode.getBoolean(IS_REGISTERED,false));</span>
+<span class="fc" id="L348">		json.put(HANDLE_SMALL_SEGMENTS, 	thisMachineNode.getBoolean(HANDLE_SMALL_SEGMENTS,false));</span>
+<span class="fc" id="L349">		json.put(MIN_SEGMENT_LENGTH, 		thisMachineNode.getDouble(MIN_SEGMENT_LENGTH,0.5));	// mm</span>
+<span class="fc" id="L350">		json.put(MAX_ACCELERATION, 			thisMachineNode.getDouble(MAX_ACCELERATION,100));	// mm/s/s</span>
+<span class="fc" id="L351">		json.put(MIN_ACCELERATION, 			thisMachineNode.getDouble(MIN_ACCELERATION,0.0));	// mm/s/s</span>
+<span class="fc" id="L352">		json.put(MINIMUM_PLANNER_SPEED, 	thisMachineNode.getDouble(MINIMUM_PLANNER_SPEED,0.05));	// mm/s</span>
+<span class="fc" id="L353">		json.put(LIMIT_LEFT, 				thisMachineNode.getDouble(LIMIT_LEFT,-325));	// mm</span>
+<span class="fc" id="L354">		json.put(LIMIT_RIGHT, 				thisMachineNode.getDouble(LIMIT_RIGHT,325));	// mm</span>
+<span class="fc" id="L355">		json.put(LIMIT_BOTTOM,				thisMachineNode.getDouble(LIMIT_BOTTOM,-500));	// mm</span>
+<span class="fc" id="L356">		json.put(LIMIT_TOP, 				thisMachineNode.getDouble(LIMIT_TOP,500));		// mm</span>
+<span class="fc" id="L357">		json.put(DIAMETER, 					thisMachineNode.getDouble(DIAMETER,0.8));	// mm, &gt;0</span>
+<span class="fc" id="L358">		json.put(PEN_ANGLE_UP, 				thisMachineNode.getDouble(PEN_ANGLE_UP,90));	// servo angle (degrees,0...180)</span>
+<span class="fc" id="L359">		json.put(PEN_ANGLE_DOWN, 			thisMachineNode.getDouble(PEN_ANGLE_DOWN,25));	// servo angle (degrees,0...180)</span>
+<span class="fc" id="L360">		json.put(PEN_ANGLE_UP_TIME, 		thisMachineNode.getDouble(PEN_ANGLE_UP_TIME,250));</span>
+<span class="fc" id="L361">		json.put(PEN_ANGLE_DOWN_TIME, 		thisMachineNode.getDouble(PEN_ANGLE_DOWN_TIME,150));</span>
+<span class="fc" id="L362">		json.put(FEED_RATE_TRAVEL, 			thisMachineNode.getDouble(FEED_RATE_TRAVEL,3000));	// mm/min.  3000 = 50 mm/s</span>
+<span class="fc" id="L363">		json.put(FEED_RATE_DRAW, 			thisMachineNode.getDouble(FEED_RATE_DRAW,3000));	// mm/min.  3000 = 50 mm/s</span>
+<span class="fc" id="L364">		json.put(BLOCK_BUFFER_SIZE, 		thisMachineNode.getInt(BLOCK_BUFFER_SIZE,16));</span>
+<span class="fc" id="L365">		json.put(SEGMENTS_PER_SECOND, 		thisMachineNode.getInt(SEGMENTS_PER_SECOND,5));</span>
+<span class="fc" id="L366">		json.put(MIN_SEG_TIME, 				thisMachineNode.getInt(MIN_SEG_TIME,20000));		// us</span>
+<span class="fc" id="L367">		json.put(STARTING_POS_INDEX, 		thisMachineNode.getInt(STARTING_POS_INDEX,4));</span>
+<span class="fc" id="L368">		json.put(Z_MOTOR_TYPE, 				thisMachineNode.getInt(Z_MOTOR_TYPE,PlotterSettings.Z_MOTOR_TYPE_SERVO));</span>
+<span class="fc" id="L369">		json.put(ANCESTOR,					thisMachineNode.get(ANCESTOR,&quot;&quot;));</span>
+<span class="fc" id="L370">		json.put(USER_GENERAL_START_GCODE, 	thisMachineNode.get(USER_GENERAL_START_GCODE,&quot;&quot;));</span>
+<span class="fc" id="L371">		json.put(USER_GENERAL_END_GCODE, 	thisMachineNode.get(USER_GENERAL_END_GCODE,&quot;&quot;));</span>
+<span class="fc" id="L372">		json.put(STYLE,         			thisMachineNode.get(STYLE, PlotterRendererFactory.MAKELANGELO_5.getName()));</span>
+<span class="fc" id="L373">		json.put(PAPER_COLOR,		 		thisMachineNode.getInt(PAPER_COLOR,(Color.WHITE.hashCode())));</span>
+<span class="fc" id="L374">		json.put(PEN_DOWN_COLOR_DEFAULT, 	thisMachineNode.getInt(PEN_DOWN_COLOR_DEFAULT,(Color.BLACK.hashCode())));</span>
+<span class="fc" id="L375">		json.put(PEN_DOWN_COLOR, 			thisMachineNode.getInt(PEN_DOWN_COLOR,(Color.BLACK.hashCode())));</span>
+<span class="fc" id="L376">		json.put(PEN_UP_COLOR, 				thisMachineNode.getInt(PEN_UP_COLOR,(Color.GREEN.hashCode())));</span>
+<span class="fc" id="L377">		json.put(MAX_JERK,           		thisMachineNode.get(MAX_JERK,&quot;[10,10,3]&quot;));</span>
+<span class="fc" id="L378">	}</span>
+
+	/**
+	 * Save the machine configuration to {@link Preferences}.  The preference node will be the unique id of the robot.
+	 * Preferences save every time a value is changed, so save() does nothing.
+	 */
+	public void save() {
+<span class="fc" id="L385">		Preferences allMachinesNode = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.MACHINES);</span>
+<span class="fc" id="L386">		Preferences thisMachineNode = allMachinesNode.node(robotUID);</span>
+
+<span class="fc" id="L388">		thisMachineNode.put(&quot;robotUID&quot;, robotUID);</span>
+<span class="fc" id="L389">		thisMachineNode.putBoolean(IS_REGISTERED, 			json.getBoolean(IS_REGISTERED));</span>
+<span class="fc" id="L390">		thisMachineNode.putBoolean(HANDLE_SMALL_SEGMENTS, 	json.getBoolean(HANDLE_SMALL_SEGMENTS));</span>
+<span class="fc" id="L391">		thisMachineNode.putDouble(MIN_SEGMENT_LENGTH, 		json.getDouble(MIN_SEGMENT_LENGTH));</span>
+<span class="fc" id="L392">		thisMachineNode.putDouble(MAX_ACCELERATION, 		json.getDouble(MAX_ACCELERATION));</span>
+<span class="fc" id="L393">		thisMachineNode.putDouble(MIN_ACCELERATION, 		json.getDouble(MIN_ACCELERATION));</span>
+<span class="fc" id="L394">		thisMachineNode.putDouble(MINIMUM_PLANNER_SPEED, 	json.getDouble(MINIMUM_PLANNER_SPEED));</span>
+<span class="fc" id="L395">		thisMachineNode.putDouble(LIMIT_LEFT, 				json.getDouble(LIMIT_LEFT));</span>
+<span class="fc" id="L396">		thisMachineNode.putDouble(LIMIT_RIGHT, 				json.getDouble(LIMIT_RIGHT));</span>
+<span class="fc" id="L397">		thisMachineNode.putDouble(LIMIT_BOTTOM, 			json.getDouble(LIMIT_BOTTOM));</span>
+<span class="fc" id="L398">		thisMachineNode.putDouble(LIMIT_TOP, 				json.getDouble(LIMIT_TOP));</span>
+<span class="fc" id="L399">		thisMachineNode.putDouble(DIAMETER, 				json.getDouble(DIAMETER));</span>
+<span class="fc" id="L400">		thisMachineNode.putDouble(PEN_ANGLE_UP, 			json.getDouble(PEN_ANGLE_UP));</span>
+<span class="fc" id="L401">		thisMachineNode.putDouble(PEN_ANGLE_DOWN, 			json.getDouble(PEN_ANGLE_DOWN));</span>
+<span class="fc" id="L402">		thisMachineNode.putDouble(PEN_ANGLE_UP_TIME, 		json.getDouble(PEN_ANGLE_UP_TIME));</span>
+<span class="fc" id="L403">		thisMachineNode.putDouble(PEN_ANGLE_DOWN_TIME, 		json.getDouble(PEN_ANGLE_DOWN_TIME));</span>
+<span class="fc" id="L404">		thisMachineNode.putDouble(FEED_RATE_TRAVEL, 		json.getDouble(FEED_RATE_TRAVEL));</span>
+<span class="fc" id="L405">		thisMachineNode.putDouble(FEED_RATE_DRAW, 			json.getDouble(FEED_RATE_DRAW));</span>
+<span class="fc" id="L406">		thisMachineNode.putInt(BLOCK_BUFFER_SIZE, 			json.getInt(BLOCK_BUFFER_SIZE));</span>
+<span class="fc" id="L407">		thisMachineNode.putInt(SEGMENTS_PER_SECOND, 		json.getInt(SEGMENTS_PER_SECOND));</span>
+<span class="fc" id="L408">		thisMachineNode.putInt(MIN_SEG_TIME, 				json.getInt(MIN_SEG_TIME));</span>
+<span class="fc" id="L409">		thisMachineNode.putInt(STARTING_POS_INDEX, 			json.getInt(STARTING_POS_INDEX));</span>
+<span class="fc" id="L410">		thisMachineNode.putInt(Z_MOTOR_TYPE, 				json.getInt(Z_MOTOR_TYPE));</span>
+<span class="fc" id="L411">		thisMachineNode.put(ANCESTOR, 						json.getString(ANCESTOR));</span>
+<span class="fc" id="L412">		thisMachineNode.put(USER_GENERAL_START_GCODE, 		json.getString(USER_GENERAL_START_GCODE));</span>
+<span class="fc" id="L413">		thisMachineNode.put(USER_GENERAL_END_GCODE, 		json.getString(USER_GENERAL_END_GCODE));</span>
+<span class="fc" id="L414">		thisMachineNode.put(STYLE, 							json.getString(STYLE));</span>
+<span class="fc" id="L415">		thisMachineNode.putInt(PAPER_COLOR, 				json.getInt(PAPER_COLOR));</span>
+<span class="fc" id="L416">		thisMachineNode.putInt(PEN_DOWN_COLOR_DEFAULT, 		json.getInt(PEN_DOWN_COLOR_DEFAULT));</span>
+<span class="fc" id="L417">		thisMachineNode.putInt(PEN_DOWN_COLOR, 				json.getInt(PEN_DOWN_COLOR));</span>
+<span class="fc" id="L418">		thisMachineNode.putInt(PEN_UP_COLOR, 				json.getInt(PEN_UP_COLOR));</span>
+<span class="fc" id="L419">		thisMachineNode.put(MAX_JERK, 						json.getString(MAX_JERK));</span>
+<span class="fc" id="L420">	}</span>
+
+	/**
+	 * Reset the machine configuration to the value of the progenitor (original ancestor).
+	 */
+	public void reset() {
+		// TODO finish me?
+<span class="nc" id="L427">	}</span>
+
+	/**
+	 * Sets the machine limits.
+	 * @param width mm
+	 * @param height mm
+	 */
+	public void setMachineSize(double width, double height) {
+<span class="fc" id="L435">		setDouble(PlotterSettings.LIMIT_LEFT,-width / 2.0);</span>
+<span class="fc" id="L436">		setDouble(PlotterSettings.LIMIT_RIGHT,width / 2.0);</span>
+<span class="fc" id="L437">		setDouble(PlotterSettings.LIMIT_BOTTOM,-height / 2.0);</span>
+<span class="fc" id="L438">		setDouble(PlotterSettings.LIMIT_TOP,height / 2.0);</span>
+<span class="fc" id="L439">	}</span>
+
+	@Override
+	public String toString() {
+<span class="fc" id="L443">		return json.toString();</span>
+	}
+
+	/**
+	 * @param key the key to look up
+	 * @return true if the value of this key is the same as the value of the previous ancestor.
+	 */
+	public boolean isDefaultValue(String key) {
+<span class="nc" id="L451">		String progenitor = getProgenitor();</span>
+<span class="nc bnc" id="L452" title="All 2 branches missed.">		if(progenitor.equals(getUID())) return true;</span>
+<span class="nc" id="L453">		PlotterSettings ancestor = new PlotterSettings(progenitor);</span>
+<span class="nc" id="L454">		return ancestor.getString(key).equals(getString(key));</span>
+	}
+
+	/**
+	 * Walk up the chain of ancestors to find the progenitor, the original.
+	 * @return the name of the progenitor.
+	 */
+	public String getProgenitor() {
+<span class="fc" id="L462">		PlotterSettings trace = this;</span>
+<span class="fc bfc" id="L463" title="All 2 branches covered.">		while(!trace.isMostAncestral()) {</span>
+<span class="fc" id="L464">			trace = new PlotterSettings(trace.getString(ANCESTOR));</span>
+		}
+<span class="fc" id="L466">		return trace.getUID();</span>
+	}
+
+	/**
+	 * @return true if this profile has no ancestors.
+	 */
+	public boolean isMostAncestral() {
+<span class="fc" id="L473">		String ancestorName = getString(ANCESTOR);</span>
+<span class="pc bpc" id="L474" title="1 of 4 branches missed.">		return ancestorName==null || ancestorName.isEmpty();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,596 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RangeSliderUI.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.rangeslider</a> &gt; <span class="el_source">RangeSliderUI.java</span></div><h1>RangeSliderUI.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.rangeslider;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Ellipse2D;
+
+import javax.swing.JComponent;
+import javax.swing.JSlider;
+import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.BasicSliderUI;
+
+/**
+ * UI delegate for the RangeSlider component.  RangeSliderUI paints two thumbs,
+ * one for the lower value and one for the upper value.
+ */
+class RangeSliderUI extends BasicSliderUI {
+
+    /** Color of selected range. */
+<span class="nc" id="L27">    private Color rangeColor = Color.GREEN;</span>
+    
+    /** Location and size of thumb for upper value. */
+    private Rectangle upperThumbRect;
+    /** Indicator that determines whether upper thumb is selected. */
+    private boolean upperThumbSelected;
+    
+    /** Indicator that determines whether lower thumb is being dragged. */
+    private transient boolean lowerDragging;
+    /** Indicator that determines whether upper thumb is being dragged. */
+    private transient boolean upperDragging;
+    
+    /**
+     * Constructs a RangeSliderUI for the specified slider component.
+     * @param b RangeSlider
+     */
+    public RangeSliderUI(RangeSlider b) {
+<span class="nc" id="L44">        super(b);</span>
+<span class="nc" id="L45">    }</span>
+    
+    /**
+     * Installs this UI delegate on the specified component. 
+     */
+    @Override
+    public void installUI(JComponent c) {
+<span class="nc" id="L52">        upperThumbRect = new Rectangle();</span>
+<span class="nc" id="L53">        super.installUI(c);</span>
+<span class="nc" id="L54">    }</span>
+
+    /**
+     * Creates a listener to handle track events in the specified slider.
+     */
+    @Override
+    protected TrackListener createTrackListener(JSlider slider) {
+<span class="nc" id="L61">        return new RangeTrackListener();</span>
+    }
+
+    /**
+     * Creates a listener to handle change events in the specified slider.
+     */
+    @Override
+    protected ChangeListener createChangeListener(JSlider slider) {
+<span class="nc" id="L69">        return new ChangeHandler();</span>
+    }
+    
+    /**
+     * Updates the dimensions for both thumbs. 
+     */
+    @Override
+    protected void calculateThumbSize() {
+        // Call superclass method for lower thumb size.
+<span class="nc" id="L78">        super.calculateThumbSize();</span>
+        
+        // Set upper thumb size.
+<span class="nc" id="L81">        upperThumbRect.setSize(thumbRect.width, thumbRect.height);</span>
+<span class="nc" id="L82">    }</span>
+    
+    /**
+     * Updates the locations for both thumbs.
+     */
+    @Override
+    protected void calculateThumbLocation() {
+        // Call superclass method for lower thumb location.
+<span class="nc" id="L90">        super.calculateThumbLocation();</span>
+        
+        // Adjust upper value to snap to ticks if necessary.
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (slider.getSnapToTicks()) {</span>
+<span class="nc" id="L94">            int upperValue = slider.getValue() + slider.getExtent();</span>
+<span class="nc" id="L95">            int snappedValue = upperValue; </span>
+<span class="nc" id="L96">            int majorTickSpacing = slider.getMajorTickSpacing();</span>
+<span class="nc" id="L97">            int minorTickSpacing = slider.getMinorTickSpacing();</span>
+<span class="nc" id="L98">            int tickSpacing = 0;</span>
+            
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            if (minorTickSpacing &gt; 0) {</span>
+<span class="nc" id="L101">                tickSpacing = minorTickSpacing;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            } else if (majorTickSpacing &gt; 0) {</span>
+<span class="nc" id="L103">                tickSpacing = majorTickSpacing;</span>
+            }
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if (tickSpacing != 0) {</span>
+                // If it's not on a tick, change the value
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                if ((upperValue - slider.getMinimum()) % tickSpacing != 0) {</span>
+<span class="nc" id="L109">                    float temp = (float)(upperValue - slider.getMinimum()) / (float)tickSpacing;</span>
+<span class="nc" id="L110">                    int whichTick = Math.round(temp);</span>
+<span class="nc" id="L111">                    snappedValue = slider.getMinimum() + (whichTick * tickSpacing);</span>
+                }
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                if (snappedValue != upperValue) { </span>
+<span class="nc" id="L115">                    slider.setExtent(snappedValue - slider.getValue());</span>
+                }
+            }
+        }
+        
+        // Calculate upper thumb location.  The thumb is centered over its 
+        // value on the track.
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (slider.getOrientation() == JSlider.HORIZONTAL) {</span>
+<span class="nc" id="L123">            int upperPosition = xPositionForValue(slider.getValue() + slider.getExtent());</span>
+<span class="nc" id="L124">            upperThumbRect.x = upperPosition - (upperThumbRect.width / 2);</span>
+<span class="nc" id="L125">            upperThumbRect.y = trackRect.y;</span>
+            
+<span class="nc" id="L127">        } else {</span>
+<span class="nc" id="L128">            int upperPosition = yPositionForValue(slider.getValue() + slider.getExtent());</span>
+<span class="nc" id="L129">            upperThumbRect.x = trackRect.x;</span>
+<span class="nc" id="L130">            upperThumbRect.y = upperPosition - (upperThumbRect.height / 2);</span>
+        }
+<span class="nc" id="L132">    }</span>
+    
+    /**
+     * Returns the size of a thumb.
+     */
+    @Override
+    protected Dimension getThumbSize() {
+<span class="nc" id="L139">        return new Dimension(12, 12);</span>
+    }
+
+    /**
+     * Paints the slider.  The selected thumb is always painted on top of the
+     * other thumb.
+     */
+    @Override
+    public void paint(Graphics g, JComponent c) {
+<span class="nc" id="L148">        super.paint(g, c);</span>
+        
+<span class="nc" id="L150">        Rectangle clipRect = g.getClipBounds();</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">        if (upperThumbSelected) {</span>
+            // Paint lower thumb first, then upper thumb.
+<span class="nc bnc" id="L153" title="All 2 branches missed.">            if (clipRect.intersects(thumbRect)) {</span>
+<span class="nc" id="L154">                paintLowerThumb(g);</span>
+            }
+<span class="nc bnc" id="L156" title="All 2 branches missed.">            if (clipRect.intersects(upperThumbRect)) {</span>
+<span class="nc" id="L157">                paintUpperThumb(g);</span>
+            }
+            
+        } else {
+            // Paint upper thumb first, then lower thumb.
+<span class="nc bnc" id="L162" title="All 2 branches missed.">            if (clipRect.intersects(upperThumbRect)) {</span>
+<span class="nc" id="L163">                paintUpperThumb(g);</span>
+            }
+<span class="nc bnc" id="L165" title="All 2 branches missed.">            if (clipRect.intersects(thumbRect)) {</span>
+<span class="nc" id="L166">                paintLowerThumb(g);</span>
+            }
+        }
+<span class="nc" id="L169">    }</span>
+    
+    /**
+     * Paints the track.
+     */
+    @Override
+    public void paintTrack(Graphics g) {
+        // Draw track.
+<span class="nc" id="L177">        super.paintTrack(g);</span>
+        
+<span class="nc" id="L179">        Rectangle trackBounds = trackRect;</span>
+        
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (slider.getOrientation() == JSlider.HORIZONTAL) {</span>
+            // Determine position of selected range by moving from the middle
+            // of one thumb to the other.
+<span class="nc" id="L184">            int lowerX = thumbRect.x + (thumbRect.width / 2);</span>
+<span class="nc" id="L185">            int upperX = upperThumbRect.x + (upperThumbRect.width / 2);</span>
+            
+            // Determine track position.
+<span class="nc" id="L188">            int cy = (trackBounds.height / 2) - 2;</span>
+
+            // Save color and shift position.
+<span class="nc" id="L191">            Color oldColor = g.getColor();</span>
+<span class="nc" id="L192">            g.translate(trackBounds.x, trackBounds.y + cy);</span>
+            
+            // Draw selected range.
+<span class="nc" id="L195">            g.setColor(rangeColor);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            for (int y = 0; y &lt;= 3; y++) {</span>
+<span class="nc" id="L197">                g.drawLine(lowerX - trackBounds.x, y, upperX - trackBounds.x, y);</span>
+            }
+
+            // Restore position and color.
+<span class="nc" id="L201">            g.translate(-trackBounds.x, -(trackBounds.y + cy));</span>
+<span class="nc" id="L202">            g.setColor(oldColor);</span>
+            
+<span class="nc" id="L204">        } else {</span>
+            // Determine position of selected range by moving from the middle
+            // of one thumb to the other.
+<span class="nc" id="L207">            int lowerY = thumbRect.x + (thumbRect.width / 2);</span>
+<span class="nc" id="L208">            int upperY = upperThumbRect.x + (upperThumbRect.width / 2);</span>
+            
+            // Determine track position.
+<span class="nc" id="L211">            int cx = (trackBounds.width / 2) - 2;</span>
+
+            // Save color and shift position.
+<span class="nc" id="L214">            Color oldColor = g.getColor();</span>
+<span class="nc" id="L215">            g.translate(trackBounds.x + cx, trackBounds.y);</span>
+
+            // Draw selected range.
+<span class="nc" id="L218">            g.setColor(rangeColor);</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">            for (int x = 0; x &lt;= 3; x++) {</span>
+<span class="nc" id="L220">                g.drawLine(x, lowerY - trackBounds.y, x, upperY - trackBounds.y);</span>
+            }
+            
+            // Restore position and color.
+<span class="nc" id="L224">            g.translate(-(trackBounds.x + cx), -trackBounds.y);</span>
+<span class="nc" id="L225">            g.setColor(oldColor);</span>
+        }
+<span class="nc" id="L227">    }</span>
+    
+    /**
+     * Overrides superclass method to do nothing.  Thumb painting is handled
+     * within the &lt;code&gt;paint()&lt;/code&gt; method.
+     */
+    @Override
+    public void paintThumb(Graphics g) {
+        // Do nothing.
+<span class="nc" id="L236">    }</span>
+
+    /**
+     * Paints the thumb for the lower value using the specified graphics object.
+     */
+    private void paintLowerThumb(Graphics g) {
+<span class="nc" id="L242">        Rectangle knobBounds = thumbRect;</span>
+<span class="nc" id="L243">        int w = knobBounds.width;</span>
+<span class="nc" id="L244">        int h = knobBounds.height;      </span>
+        
+        // Create graphics copy.
+<span class="nc" id="L247">        Graphics2D g2d = (Graphics2D) g.create();</span>
+
+        // Create default thumb shape.
+<span class="nc" id="L250">        Shape thumbShape = createThumbShape(w - 1, h - 1);</span>
+
+        // Draw thumb.
+<span class="nc" id="L253">        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,</span>
+            RenderingHints.VALUE_ANTIALIAS_ON);
+<span class="nc" id="L255">        g2d.translate(knobBounds.x, knobBounds.y);</span>
+
+<span class="nc" id="L257">        g2d.setColor(Color.CYAN);</span>
+<span class="nc" id="L258">        g2d.fill(thumbShape);</span>
+
+<span class="nc" id="L260">        g2d.setColor(Color.BLUE);</span>
+<span class="nc" id="L261">        g2d.draw(thumbShape);</span>
+        
+        // Dispose graphics.
+<span class="nc" id="L264">        g2d.dispose();</span>
+<span class="nc" id="L265">    }</span>
+    
+    /**
+     * Paints the thumb for the upper value using the specified graphics object.
+     */
+    private void paintUpperThumb(Graphics g) {
+<span class="nc" id="L271">        Rectangle knobBounds = upperThumbRect;</span>
+<span class="nc" id="L272">        int w = knobBounds.width;</span>
+<span class="nc" id="L273">        int h = knobBounds.height;      </span>
+        
+        // Create graphics copy.
+<span class="nc" id="L276">        Graphics2D g2d = (Graphics2D) g.create();</span>
+
+        // Create default thumb shape.
+<span class="nc" id="L279">        Shape thumbShape = createThumbShape(w - 1, h - 1);</span>
+
+        // Draw thumb.
+<span class="nc" id="L282">        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,</span>
+            RenderingHints.VALUE_ANTIALIAS_ON);
+<span class="nc" id="L284">        g2d.translate(knobBounds.x, knobBounds.y);</span>
+
+<span class="nc" id="L286">        g2d.setColor(Color.PINK);</span>
+<span class="nc" id="L287">        g2d.fill(thumbShape);</span>
+
+<span class="nc" id="L289">        g2d.setColor(Color.RED);</span>
+<span class="nc" id="L290">        g2d.draw(thumbShape);</span>
+
+        // Dispose graphics.
+<span class="nc" id="L293">        g2d.dispose();</span>
+<span class="nc" id="L294">    }</span>
+
+    /**
+     * Returns a Shape representing a thumb.
+     */
+    private Shape createThumbShape(int width, int height) {
+        // Use circular shape.
+<span class="nc" id="L301">        Ellipse2D shape = new Ellipse2D.Double(0, 0, width, height);</span>
+<span class="nc" id="L302">        return shape;</span>
+    }
+    
+    /** 
+     * Sets the location of the upper thumb, and repaints the slider.  This is
+     * called when the upper thumb is dragged to repaint the slider.  The
+     * &lt;code&gt;setThumbLocation()&lt;/code&gt; method performs the same task for the
+     * lower thumb.
+     */
+    private void setUpperThumbLocation(int x, int y) {
+<span class="nc" id="L312">        Rectangle upperUnionRect = new Rectangle();</span>
+<span class="nc" id="L313">        upperUnionRect.setBounds(upperThumbRect);</span>
+
+<span class="nc" id="L315">        upperThumbRect.setLocation(x, y);</span>
+
+<span class="nc" id="L317">        SwingUtilities.computeUnion(upperThumbRect.x, upperThumbRect.y, upperThumbRect.width, upperThumbRect.height, upperUnionRect);</span>
+<span class="nc" id="L318">        slider.repaint(upperUnionRect.x, upperUnionRect.y, upperUnionRect.width, upperUnionRect.height);</span>
+<span class="nc" id="L319">    }</span>
+    
+    /**
+     * Moves the selected thumb in the specified direction by a block increment.
+     * This method is called when the user presses the Page Up or Down keys.
+     */
+    public void scrollByBlock(int direction) {
+<span class="nc" id="L326">        synchronized (slider) {</span>
+<span class="nc" id="L327">            int blockIncrement = (slider.getMaximum() - slider.getMinimum()) / 10;</span>
+<span class="nc bnc" id="L328" title="All 4 branches missed.">            if (blockIncrement &lt;= 0 &amp;&amp; slider.getMaximum() &gt; slider.getMinimum()) {</span>
+<span class="nc" id="L329">                blockIncrement = 1;</span>
+            }
+<span class="nc bnc" id="L331" title="All 2 branches missed.">            int delta = blockIncrement * ((direction &gt; 0) ? POSITIVE_SCROLL : NEGATIVE_SCROLL);</span>
+            
+<span class="nc bnc" id="L333" title="All 2 branches missed.">            if (upperThumbSelected) {</span>
+<span class="nc" id="L334">                int oldValue = ((RangeSlider) slider).getUpperValue();</span>
+<span class="nc" id="L335">                ((RangeSlider) slider).setUpperValue(oldValue + delta);</span>
+<span class="nc" id="L336">            } else {</span>
+<span class="nc" id="L337">                int oldValue = slider.getValue();</span>
+<span class="nc" id="L338">                slider.setValue(oldValue + delta);</span>
+            }
+<span class="nc" id="L340">        }</span>
+<span class="nc" id="L341">    }</span>
+    
+    /**
+     * Moves the selected thumb in the specified direction by a unit increment.
+     * This method is called when the user presses one of the arrow keys.
+     */
+    public void scrollByUnit(int direction) {
+<span class="nc" id="L348">        synchronized (slider) {</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">            int delta = 1 * ((direction &gt; 0) ? POSITIVE_SCROLL : NEGATIVE_SCROLL);</span>
+            
+<span class="nc bnc" id="L351" title="All 2 branches missed.">            if (upperThumbSelected) {</span>
+<span class="nc" id="L352">                int oldValue = ((RangeSlider) slider).getUpperValue();</span>
+<span class="nc" id="L353">                ((RangeSlider) slider).setUpperValue(oldValue + delta);</span>
+<span class="nc" id="L354">            } else {</span>
+<span class="nc" id="L355">                int oldValue = slider.getValue();</span>
+<span class="nc" id="L356">                slider.setValue(oldValue + delta);</span>
+            }
+<span class="nc" id="L358">        }       </span>
+<span class="nc" id="L359">    }</span>
+    
+    /**
+     * Listener to handle model change events.  This calculates the thumb 
+     * locations and repaints the slider if the value change is not caused by
+     * dragging a thumb.
+     */
+<span class="nc" id="L366">    public class ChangeHandler implements ChangeListener {</span>
+        public void stateChanged(ChangeEvent arg0) {
+<span class="nc bnc" id="L368" title="All 4 branches missed.">            if (!lowerDragging &amp;&amp; !upperDragging) {</span>
+<span class="nc" id="L369">                calculateThumbLocation();</span>
+<span class="nc" id="L370">                slider.repaint();</span>
+            }
+<span class="nc" id="L372">        }</span>
+    }
+    
+    /**
+     * Listener to handle mouse movements in the slider track.
+     */
+<span class="nc" id="L378">    public class RangeTrackListener extends TrackListener {</span>
+        
+        @Override
+        public void mousePressed(MouseEvent e) {
+<span class="nc bnc" id="L382" title="All 2 branches missed.">            if (!slider.isEnabled()) {</span>
+<span class="nc" id="L383">                return;</span>
+            }
+
+<span class="nc" id="L386">            currentMouseX = e.getX();</span>
+<span class="nc" id="L387">            currentMouseY = e.getY();</span>
+
+<span class="nc bnc" id="L389" title="All 2 branches missed.">            if (slider.isRequestFocusEnabled()) {</span>
+<span class="nc" id="L390">                slider.requestFocus();</span>
+            }
+            
+            // Determine which thumb is pressed.  If the upper thumb is 
+            // selected (last one dragged), then check its position first;
+            // otherwise check the position of the lower thumb first.
+<span class="nc" id="L396">            boolean lowerPressed = false;</span>
+<span class="nc" id="L397">            boolean upperPressed = false;</span>
+<span class="nc bnc" id="L398" title="All 4 branches missed.">            if (upperThumbSelected || slider.getMinimum() == slider.getValue()) {</span>
+<span class="nc bnc" id="L399" title="All 2 branches missed.">                if (upperThumbRect.contains(currentMouseX, currentMouseY)) {</span>
+<span class="nc" id="L400">                    upperPressed = true;</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">                } else if (thumbRect.contains(currentMouseX, currentMouseY)) {</span>
+<span class="nc" id="L402">                    lowerPressed = true;</span>
+                }
+            } else {
+<span class="nc bnc" id="L405" title="All 2 branches missed.">                if (thumbRect.contains(currentMouseX, currentMouseY)) {</span>
+<span class="nc" id="L406">                    lowerPressed = true;</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">                } else if (upperThumbRect.contains(currentMouseX, currentMouseY)) {</span>
+<span class="nc" id="L408">                    upperPressed = true;</span>
+                }
+            }
+
+            // Handle lower thumb pressed.
+<span class="nc bnc" id="L413" title="All 2 branches missed.">            if (lowerPressed) {</span>
+<span class="nc bnc" id="L414" title="All 3 branches missed.">                switch (slider.getOrientation()) {</span>
+                case JSlider.VERTICAL:
+<span class="nc" id="L416">                    offset = currentMouseY - thumbRect.y;</span>
+<span class="nc" id="L417">                    break;</span>
+                case JSlider.HORIZONTAL:
+<span class="nc" id="L419">                    offset = currentMouseX - thumbRect.x;</span>
+                    break;
+                }
+<span class="nc" id="L422">                upperThumbSelected = false;</span>
+<span class="nc" id="L423">                lowerDragging = true;</span>
+<span class="nc" id="L424">                return;</span>
+            }
+<span class="nc" id="L426">            lowerDragging = false;</span>
+            
+            // Handle upper thumb pressed.
+<span class="nc bnc" id="L429" title="All 2 branches missed.">            if (upperPressed) {</span>
+<span class="nc bnc" id="L430" title="All 3 branches missed.">                switch (slider.getOrientation()) {</span>
+                case JSlider.VERTICAL:
+<span class="nc" id="L432">                    offset = currentMouseY - upperThumbRect.y;</span>
+<span class="nc" id="L433">                    break;</span>
+                case JSlider.HORIZONTAL:
+<span class="nc" id="L435">                    offset = currentMouseX - upperThumbRect.x;</span>
+                    break;
+                }
+<span class="nc" id="L438">                upperThumbSelected = true;</span>
+<span class="nc" id="L439">                upperDragging = true;</span>
+<span class="nc" id="L440">                return;</span>
+            }
+<span class="nc" id="L442">            upperDragging = false;</span>
+<span class="nc" id="L443">        }</span>
+        
+        @Override
+        public void mouseReleased(MouseEvent e) {
+<span class="nc" id="L447">            lowerDragging = false;</span>
+<span class="nc" id="L448">            upperDragging = false;</span>
+<span class="nc" id="L449">            slider.setValueIsAdjusting(false);</span>
+<span class="nc" id="L450">            super.mouseReleased(e);</span>
+<span class="nc" id="L451">        }</span>
+        
+        @Override
+        public void mouseDragged(MouseEvent e) {
+<span class="nc bnc" id="L455" title="All 2 branches missed.">            if (!slider.isEnabled()) {</span>
+<span class="nc" id="L456">                return;</span>
+            }
+
+<span class="nc" id="L459">            currentMouseX = e.getX();</span>
+<span class="nc" id="L460">            currentMouseY = e.getY();</span>
+
+<span class="nc bnc" id="L462" title="All 2 branches missed.">            if (lowerDragging) {</span>
+<span class="nc" id="L463">                slider.setValueIsAdjusting(true);</span>
+<span class="nc" id="L464">                moveLowerThumb();</span>
+                
+<span class="nc bnc" id="L466" title="All 2 branches missed.">            } else if (upperDragging) {</span>
+<span class="nc" id="L467">                slider.setValueIsAdjusting(true);</span>
+<span class="nc" id="L468">                moveUpperThumb();</span>
+            }
+<span class="nc" id="L470">        }</span>
+        
+        @Override
+        public boolean shouldScroll(int direction) {
+<span class="nc" id="L474">            return false;</span>
+        }
+
+        /**
+         * Moves the location of the lower thumb, and sets its corresponding 
+         * value in the slider.
+         */
+        private void moveLowerThumb() {
+<span class="nc" id="L482">            int thumbMiddle = 0;</span>
+            
+<span class="nc bnc" id="L484" title="All 3 branches missed.">            switch (slider.getOrientation()) {</span>
+            case JSlider.VERTICAL:      
+<span class="nc" id="L486">                int halfThumbHeight = thumbRect.height / 2;</span>
+<span class="nc" id="L487">                int thumbTop = currentMouseY - offset;</span>
+<span class="nc" id="L488">                int trackTop = trackRect.y;</span>
+<span class="nc" id="L489">                int trackBottom = trackRect.y + (trackRect.height - 1);</span>
+<span class="nc" id="L490">                int vMax = yPositionForValue(slider.getValue() + slider.getExtent());</span>
+
+                // Apply bounds to thumb position.
+<span class="nc bnc" id="L493" title="All 2 branches missed.">                if (drawInverted()) {</span>
+<span class="nc" id="L494">                    trackBottom = vMax;</span>
+                } else {
+<span class="nc" id="L496">                    trackTop = vMax;</span>
+                }
+<span class="nc" id="L498">                thumbTop = Math.max(thumbTop, trackTop - halfThumbHeight);</span>
+<span class="nc" id="L499">                thumbTop = Math.min(thumbTop, trackBottom - halfThumbHeight);</span>
+
+<span class="nc" id="L501">                setThumbLocation(thumbRect.x, thumbTop);</span>
+
+                // Update slider value.
+<span class="nc" id="L504">                thumbMiddle = thumbTop + halfThumbHeight;</span>
+<span class="nc" id="L505">                slider.setValue(valueForYPosition(thumbMiddle));</span>
+<span class="nc" id="L506">                break;</span>
+                
+            case JSlider.HORIZONTAL:
+<span class="nc" id="L509">                int halfThumbWidth = thumbRect.width / 2;</span>
+<span class="nc" id="L510">                int thumbLeft = currentMouseX - offset;</span>
+<span class="nc" id="L511">                int trackLeft = trackRect.x;</span>
+<span class="nc" id="L512">                int trackRight = trackRect.x + (trackRect.width - 1);</span>
+<span class="nc" id="L513">                int hMax = xPositionForValue(slider.getValue() + slider.getExtent());</span>
+
+                // Apply bounds to thumb position.
+<span class="nc bnc" id="L516" title="All 2 branches missed.">                if (drawInverted()) {</span>
+<span class="nc" id="L517">                    trackLeft = hMax;</span>
+                } else {
+<span class="nc" id="L519">                    trackRight = hMax;</span>
+                }
+<span class="nc" id="L521">                thumbLeft = Math.max(thumbLeft, trackLeft - halfThumbWidth);</span>
+<span class="nc" id="L522">                thumbLeft = Math.min(thumbLeft, trackRight - halfThumbWidth);</span>
+
+<span class="nc" id="L524">                setThumbLocation(thumbLeft, thumbRect.y);</span>
+
+                // Update slider value.
+<span class="nc" id="L527">                thumbMiddle = thumbLeft + halfThumbWidth;</span>
+<span class="nc" id="L528">                slider.setValue(valueForXPosition(thumbMiddle));</span>
+<span class="nc" id="L529">                break;</span>
+                
+            default:
+<span class="nc" id="L532">                return;</span>
+            }
+<span class="nc" id="L534">        }</span>
+
+        /**
+         * Moves the location of the upper thumb, and sets its corresponding 
+         * value in the slider.
+         */
+        private void moveUpperThumb() {
+<span class="nc" id="L541">            int thumbMiddle = 0;</span>
+            
+<span class="nc bnc" id="L543" title="All 3 branches missed.">            switch (slider.getOrientation()) {</span>
+            case JSlider.VERTICAL:      
+<span class="nc" id="L545">                int halfThumbHeight = thumbRect.height / 2;</span>
+<span class="nc" id="L546">                int thumbTop = currentMouseY - offset;</span>
+<span class="nc" id="L547">                int trackTop = trackRect.y;</span>
+<span class="nc" id="L548">                int trackBottom = trackRect.y + (trackRect.height - 1);</span>
+<span class="nc" id="L549">                int vMin = yPositionForValue(slider.getValue());</span>
+
+                // Apply bounds to thumb position.
+<span class="nc bnc" id="L552" title="All 2 branches missed.">                if (drawInverted()) {</span>
+<span class="nc" id="L553">                    trackTop = vMin;</span>
+                } else {
+<span class="nc" id="L555">                    trackBottom = vMin;</span>
+                }
+<span class="nc" id="L557">                thumbTop = Math.max(thumbTop, trackTop - halfThumbHeight);</span>
+<span class="nc" id="L558">                thumbTop = Math.min(thumbTop, trackBottom - halfThumbHeight);</span>
+
+<span class="nc" id="L560">                setUpperThumbLocation(thumbRect.x, thumbTop);</span>
+
+                // Update slider extent.
+<span class="nc" id="L563">                thumbMiddle = thumbTop + halfThumbHeight;</span>
+<span class="nc" id="L564">                slider.setExtent(valueForYPosition(thumbMiddle) - slider.getValue());</span>
+<span class="nc" id="L565">                break;</span>
+                
+            case JSlider.HORIZONTAL:
+<span class="nc" id="L568">                int halfThumbWidth = thumbRect.width / 2;</span>
+<span class="nc" id="L569">                int thumbLeft = currentMouseX - offset;</span>
+<span class="nc" id="L570">                int trackLeft = trackRect.x;</span>
+<span class="nc" id="L571">                int trackRight = trackRect.x + (trackRect.width - 1);</span>
+<span class="nc" id="L572">                int hMin = xPositionForValue(slider.getValue());</span>
+
+                // Apply bounds to thumb position.
+<span class="nc bnc" id="L575" title="All 2 branches missed.">                if (drawInverted()) {</span>
+<span class="nc" id="L576">                    trackRight = hMin;</span>
+                } else {
+<span class="nc" id="L578">                    trackLeft = hMin;</span>
+                }
+<span class="nc" id="L580">                thumbLeft = Math.max(thumbLeft, trackLeft - halfThumbWidth);</span>
+<span class="nc" id="L581">                thumbLeft = Math.min(thumbLeft, trackRight - halfThumbWidth);</span>
+
+<span class="nc" id="L583">                setUpperThumbLocation(thumbLeft, thumbRect.y);</span>
+                
+                // Update slider extent.
+<span class="nc" id="L586">                thumbMiddle = thumbLeft + halfThumbWidth;</span>
+<span class="nc" id="L587">                slider.setExtent(valueForXPosition(thumbMiddle) - slider.getValue());</span>
+<span class="nc" id="L588">                break;</span>
+                
+            default:
+<span class="nc" id="L591">                return;</span>
+            }
+<span class="nc" id="L593">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

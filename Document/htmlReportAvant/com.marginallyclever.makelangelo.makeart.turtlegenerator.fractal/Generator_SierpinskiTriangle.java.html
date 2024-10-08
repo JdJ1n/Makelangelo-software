@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_SierpinskiTriangle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal</a> &gt; <span class="el_source">Generator_SierpinskiTriangle.java</span></div><h1>Generator_SierpinskiTriangle.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+/**
+ * See &lt;a href=&quot;https://en.wikipedia.org/wiki/Sierpi%C5%84ski_arrowhead_curve&quot;&gt;Wikipedia&lt;/a&gt;
+ * @author Dan Royer
+ * @since 2016-12-12
+ */
+public class Generator_SierpinskiTriangle extends TurtleGenerator {
+<span class="fc" id="L17">	private static int order = 4; // controls complexity of curve</span>
+
+	public Generator_SierpinskiTriangle() {
+<span class="fc" id="L20">		super();</span>
+
+		SelectSlider field_order;
+
+<span class="fc" id="L24">		add(field_order = new SelectSlider(&quot;order&quot;,Translator.get(&quot;HilbertCurveOrder&quot;),10,1,Generator_SierpinskiTriangle.getOrder()));</span>
+<span class="fc" id="L25">		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href='https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle'&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</span>
+<span class="fc" id="L26">		field_order.addSelectListener(evt-&gt; {</span>
+<span class="nc" id="L27">			Generator_SierpinskiTriangle.setOrder(Math.max(1, field_order.getValue()));</span>
+<span class="nc" id="L28">			generate();</span>
+<span class="nc" id="L29">		});</span>
+<span class="fc" id="L30">	}</span>
+
+	@Override
+	public String getName() {
+<span class="fc" id="L34">		return Translator.get(&quot;SierpinskiTriangleName&quot;);</span>
+	}
+
+	static public int getOrder() {
+<span class="fc" id="L38">		return order;</span>
+	}
+	static public void setOrder(int order) {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if(order&lt;1) order=1;</span>
+<span class="nc" id="L42">		Generator_SierpinskiTriangle.order = order;</span>
+<span class="nc" id="L43">	}</span>
+
+	@Override
+	public void generate() {
+<span class="nc" id="L47">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L48">		double xMax = rect.getWidth() / 2.0f;</span>
+<span class="nc" id="L49">		double yMax = rect.getHeight() / 2.0f;</span>
+<span class="nc" id="L50">		double xMin = -xMax;</span>
+<span class="nc" id="L51">		double yMin = -yMax;</span>
+
+<span class="nc" id="L53">		Turtle turtle = new Turtle();</span>
+		
+<span class="nc" id="L55">		double xx = xMax - xMin;</span>
+<span class="nc" id="L56">		double yy = yMax - yMin;</span>
+<span class="nc" id="L57">		double maxSize = Math.tan(Math.toRadians(30)) * (Math.min(xx, yy)) * 2;</span>
+<span class="nc" id="L58">		double jj = Math.asin(Math.toRadians(30)) * (Math.min(xx, yy));</span>
+
+		// move to starting position
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if(xMax &gt; yMax) {</span>
+<span class="nc" id="L62">			turtle.moveTo(-jj, yMin);</span>
+		} else {
+<span class="nc" id="L64">			turtle.moveTo(xMax,-jj);</span>
+<span class="nc" id="L65">			turtle.turn(90);</span>
+		}
+<span class="nc" id="L67">		turtle.penDown();</span>
+		// do the curve
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if( (order&amp;1) == 0 ) {</span>
+<span class="nc" id="L70">			drawCurve(turtle,order, maxSize,-60);</span>
+		} else {
+<span class="nc" id="L72">			turtle.turn(60);</span>
+<span class="nc" id="L73">			drawCurve(turtle,order, maxSize,-60);</span>
+		}
+
+<span class="nc" id="L76">		turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</span>
+
+<span class="nc" id="L78">		notifyListeners(turtle);</span>
+<span class="nc" id="L79">	}</span>
+
+
+	private void drawCurve(Turtle turtle,int n, double distance,double angle) {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (n == 0) {</span>
+<span class="nc" id="L84">			turtle.forward(distance);</span>
+<span class="nc" id="L85">			return;</span>
+		}
+		
+<span class="nc" id="L88">		drawCurve(turtle,n-1,distance/2.0f,-angle);</span>
+<span class="nc" id="L89">		turtle.turn(angle);</span>
+<span class="nc" id="L90">		drawCurve(turtle,n-1,distance/2.0f,angle);</span>
+<span class="nc" id="L91">		turtle.turn(angle);</span>
+<span class="nc" id="L92">		drawCurve(turtle,n-1,distance/2.0f,-angle);</span>
+<span class="nc" id="L93">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

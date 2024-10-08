@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimplifyTurtleAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.tools</a> &gt; <span class="el_source">SimplifyTurtleAction.java</span></div><h1>SimplifyTurtleAction.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.tools;
+
+import com.marginallyclever.convenience.LineCollection;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TurtleModifierAction;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+
+/**
+ * Performs &lt;a href=&quot;https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm&quot;&gt;Douglas-Peucker
+ * line simplification&lt;/a&gt;.
+ * @author Dan Royer
+ * @since 7.31.0
+ */
+public class SimplifyTurtleAction extends TurtleModifierAction {
+<span class="fc" id="L19">	private static final Logger logger = LoggerFactory.getLogger(SimplifyTurtleAction.class);</span>
+<span class="fc" id="L20">	private static double distanceTolerance = 1.6;</span>
+	
+	public SimplifyTurtleAction() {
+<span class="fc" id="L23">		super(Translator.get(&quot;Simplify&quot;));</span>
+<span class="fc" id="L24">	}</span>
+	
+	@Override
+	public Turtle run(Turtle turtle) {
+<span class="fc" id="L28">		int os = turtle.history.size();</span>
+<span class="fc" id="L29">		logger.debug(&quot;begin @ {}&quot;, os);</span>
+		
+<span class="fc" id="L31">		LineCollection originalLines = new LineCollection(turtle.getAsLineSegments());</span>
+<span class="fc" id="L32">		int beforeCount = originalLines.size();</span>
+<span class="fc" id="L33">		logger.debug(&quot;  Converted to {} lines.&quot;, beforeCount);</span>
+
+<span class="fc" id="L35">		LineCollection longLines = removeColinearSegments(originalLines);</span>
+<span class="fc" id="L36">		int afterCount = longLines.size();</span>
+<span class="fc" id="L37">		int change = beforeCount - afterCount;</span>
+<span class="fc" id="L38">		logger.debug(&quot;  - {} shorts = {} lines.&quot;, change, afterCount);</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">		if(change&lt;=0) {</span>
+<span class="fc" id="L40">			return turtle;</span>
+		}
+<span class="nc" id="L42">		Turtle t = new Turtle();</span>
+<span class="nc" id="L43">		t.addLineSegments(longLines);</span>
+<span class="nc" id="L44">		int ns = t.history.size();</span>
+<span class="nc" id="L45">		logger.debug(&quot;end @ {}&quot;, ns);</span>
+<span class="nc" id="L46">		return t;</span>
+	}
+
+	/**
+	 * Split the collection by color, then by travel moves to get contiguous blocks in a single color.
+	 * simplify these blocks using Douglas-Peucker method. 
+	 * @param originalLines the lines to simplify
+	 * @return the simplified lines
+	 */
+	private LineCollection removeColinearSegments(LineCollection originalLines) {
+<span class="fc" id="L56">		LineCollection result = new LineCollection();</span>
+
+<span class="fc" id="L58">		ArrayList&lt;LineCollection&gt; byColor = originalLines.splitByColor();</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">		for(LineCollection c : byColor ) {</span>
+<span class="fc" id="L60">			ArrayList&lt;LineCollection&gt; byTravel = c.splitByTravel();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">			for(LineCollection t : byTravel ) {</span>
+<span class="fc" id="L62">				LineCollection after = t.simplify(distanceTolerance);</span>
+<span class="fc" id="L63">				result.addAll(after);</span>
+<span class="fc" id="L64">			}</span>
+<span class="fc" id="L65">		}</span>
+		
+<span class="fc" id="L67">		return result;</span>
+	}
+
+	/**
+	 * Sets the distance tolerance for the simplification. All vertices in the
+	 * simplified line will be within this distance of the original line.
+	 *
+	 * @param distanceTolerance the approximation tolerance to use
+	 */
+	public void setDistanceTolerance(double distanceTolerance) {
+<span class="nc" id="L77">		SimplifyTurtleAction.distanceTolerance = distanceTolerance;</span>
+<span class="nc" id="L78">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

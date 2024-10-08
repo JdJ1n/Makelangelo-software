@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterJumpFlood.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imagefilter</a> &gt; <span class="el_source">FilterJumpFlood.java</span></div><h1>FilterJumpFlood.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imagefilter;
+
+import com.marginallyclever.convenience.ResizableImagePanel;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * Converts an image using the jump flood algorithm.  On a white surface, black pixels will &quot;spread out&quot; creating
+ * an effect like water caustics.
+ * @author Dan Royer
+ */
+public class FilterJumpFlood extends ImageFilter {
+<span class="nc" id="L19">	private final List&lt;Point&gt; points = new ArrayList&lt;&gt;();</span>
+	private int scale;
+	private final TransformedImage img;
+<span class="nc" id="L22">	private static int seed=0;</span>
+
+	public FilterJumpFlood(TransformedImage img) {
+<span class="nc" id="L25">		super();</span>
+<span class="nc" id="L26">		this.img = img;</span>
+<span class="nc" id="L27">	}</span>
+
+	@Override
+	public TransformedImage filter() {
+<span class="nc" id="L31">		BufferedImage src = img.getSourceImage();</span>
+<span class="nc" id="L32">		TransformedImage after = new TransformedImage(img);</span>
+<span class="nc" id="L33">		BufferedImage dest = after.getSourceImage();</span>
+<span class="nc" id="L34">		dest.setData(src.getRaster());</span>
+
+<span class="nc" id="L36">		fillImage(dest);</span>
+
+<span class="nc" id="L38">		return after;</span>
+	}
+
+	public BufferedImage fillImage(BufferedImage image) {
+<span class="nc" id="L42">		points.clear();</span>
+		// Scan the image to find the initial points (black pixels)
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		for (int x = 0; x &lt; image.getWidth(); x++) {</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">			for (int y = 0; y &lt; image.getHeight(); y++) {</span>
+<span class="nc" id="L46">				Color color = new Color(image.getRGB(x, y));</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">				if (color.equals(Color.BLACK)) {</span>
+<span class="nc" id="L48">					points.add(new Point(x, y));</span>
+				}
+			}
+		}
+
+<span class="nc" id="L53">		scale = Math.min(image.getWidth(), image.getHeight()) /2;</span>
+
+		// Run the algorithm
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		for (int x = 0; x &lt; image.getWidth(); x++) {</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">			for (int y = 0; y &lt; image.getHeight(); y++) {</span>
+<span class="nc" id="L58">				updatePixel(image,points,x, y);</span>
+			}
+		}
+
+<span class="nc" id="L62">		return image;</span>
+	}
+
+	private void updatePixel(BufferedImage image,List&lt;Point&gt; points,int x, int y) {
+<span class="nc" id="L66">		int minDistance = Integer.MAX_VALUE;</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		for (Point point : points) {</span>
+<span class="nc" id="L68">			int dx = point.x - x;</span>
+<span class="nc" id="L69">			int dy = point.y - y;</span>
+<span class="nc" id="L70">			int distance = (int)Math.sqrt(dx * dx + dy * dy);</span>
+<span class="nc" id="L71">			minDistance = Math.min(minDistance, distance);</span>
+<span class="nc" id="L72">		}</span>
+
+<span class="nc" id="L74">		int grayLevel = (int) (255.0 * minDistance / scale);</span>
+<span class="nc" id="L75">		grayLevel = Math.max(Math.min(255, grayLevel), 0);</span>
+<span class="nc" id="L76">		image.setRGB(x, y, new Color(grayLevel, grayLevel, grayLevel).getRGB());</span>
+<span class="nc" id="L77">	}</span>
+
+	public static void main(String[] args) throws IOException {
+		//*
+<span class="nc" id="L81">		BufferedImage image = new BufferedImage(400, 500, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		for (int x = 0; x &lt; image.getWidth(); x++) {</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			for (int y = 0; y &lt; image.getHeight(); y++) {</span>
+<span class="nc" id="L84">				image.setRGB(x, y, Color.WHITE.getRGB());</span>
+			}
+		}
+		// some random black pixels
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		for(int i=0;i&lt;25;++i) {</span>
+<span class="nc" id="L89">			image.setRGB((int)(Math.random()*image.getWidth()), (int)(Math.random()*image.getHeight()), Color.BLACK.getRGB());</span>
+		}
+<span class="nc" id="L91">		TransformedImage src = new TransformedImage( image );</span>
+
+<span class="nc" id="L93">		FilterJumpFlood f = new FilterJumpFlood(src);</span>
+<span class="nc" id="L94">		TransformedImage dest = f.filter();</span>
+<span class="nc" id="L95">		ResizableImagePanel.showImage(dest.getSourceImage(), &quot;Filter_JumpFlood&quot; );</span>
+<span class="nc" id="L96">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_EdgeDetection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_EdgeDetection.java</span></div><h1>Converter_EdgeDetection.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterExtendedDifferenceOfGaussians;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterGaussianBlur;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectBoolean;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+/**
+ * Uses &lt;a href=&quot;http://en.wikipedia.org/wiki/Marching_squares&quot;&gt;marching squares&lt;/a&gt; to detect edges.
+ * @author Dan Royer
+ * @since 2022-03-31
+ */
+public class Converter_EdgeDetection extends ImageConverter {
+<span class="nc" id="L22">	private static int passes=5;</span>
+<span class="nc" id="L23">	private static int stepSize=10;</span>
+<span class="nc" id="L24">	private static int sampleSize=2;</span>
+<span class="nc" id="L25">	private static boolean border=false;</span>
+
+	private int edge;
+	private TransformedImage img;
+	private double px,py;
+
+
+	public Converter_EdgeDetection() {
+<span class="nc" id="L33">		super();</span>
+<span class="nc" id="L34">		SelectSlider selectPasses     = new SelectSlider(&quot;passes&quot;, Translator.get(&quot;Converter_EdgeDetection.passes&quot;), 20, 1, (int) (getPasses()));</span>
+<span class="nc" id="L35">		SelectSlider selectStepSize   = new SelectSlider(&quot;stepSize&quot;, Translator.get(&quot;Converter_EdgeDetection.stepSize&quot;), 25, 2, (int) getStepSize());</span>
+<span class="nc" id="L36">		SelectSlider selectSampleSize = new SelectSlider(&quot;sampleSize&quot;, Translator.get(&quot;Converter_EdgeDetection.sampleSize&quot;), 5, 1, (int) getSampleSize());</span>
+<span class="nc" id="L37">		SelectBoolean selectBorder    = new SelectBoolean(&quot;border&quot;, Translator.get(&quot;Converter_EdgeDetection.border&quot;), border);</span>
+
+<span class="nc" id="L39">		add(selectPasses);</span>
+<span class="nc" id="L40">		add(selectStepSize);</span>
+<span class="nc" id="L41">		add(selectSampleSize);</span>
+
+<span class="nc" id="L43">		selectPasses.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L44">			setPasses((int)evt.getNewValue());</span>
+<span class="nc" id="L45">			fireRestart();</span>
+<span class="nc" id="L46">		});</span>
+<span class="nc" id="L47">		selectStepSize.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L48">			setStepSize((int)evt.getNewValue());</span>
+<span class="nc" id="L49">			fireRestart();</span>
+<span class="nc" id="L50">		});</span>
+<span class="nc" id="L51">		selectSampleSize.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L52">			setSampleSize((int)evt.getNewValue());</span>
+<span class="nc" id="L53">			fireRestart();</span>
+<span class="nc" id="L54">		});</span>
+<span class="nc" id="L55">		selectBorder.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L56">			setBorder((boolean)evt.getNewValue());</span>
+<span class="nc" id="L57">			fireRestart();</span>
+<span class="nc" id="L58">		});</span>
+<span class="nc" id="L59">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L63">		return Translator.get(&quot;Converter_EdgeDetection.name&quot;);</span>
+	}
+
+	public int getPasses() {
+<span class="nc" id="L67">		return passes;</span>
+	}
+
+	public int getStepSize() {
+<span class="nc" id="L71">		return stepSize;</span>
+	}
+
+	public int getSampleSize() {
+<span class="nc" id="L75">		return sampleSize;</span>
+	}
+
+	public void setBorder(boolean newValue) {
+<span class="nc" id="L79">		border=newValue;</span>
+<span class="nc" id="L80">	}</span>
+	
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L84">		super.start(paper, image);</span>
+
+<span class="nc" id="L86">		FilterDesaturate desaturates = new FilterDesaturate(myImage);</span>
+<span class="nc" id="L87">		img = desaturates.filter();</span>
+
+<span class="nc" id="L89">		FilterGaussianBlur blur1 = new FilterGaussianBlur(img, 1);</span>
+<span class="nc" id="L90">		FilterGaussianBlur blur2 = new FilterGaussianBlur(img, 4);</span>
+<span class="nc" id="L91">		TransformedImage img1 = blur1.filter();</span>
+<span class="nc" id="L92">		TransformedImage img2 = blur2.filter();</span>
+<span class="nc" id="L93">		FilterExtendedDifferenceOfGaussians dog = new FilterExtendedDifferenceOfGaussians(img1,img2,20);</span>
+<span class="nc" id="L94">		img = dog.filter();</span>
+
+<span class="nc" id="L96">		turtle = new Turtle();</span>
+<span class="nc" id="L97">		px = myPaper.getCenterX();</span>
+<span class="nc" id="L98">		py = myPaper.getCenterY();</span>
+
+<span class="nc" id="L100">		int edgeStep = 255/(passes+1);</span>
+<span class="nc" id="L101">		edge = 255-edgeStep;</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		for(int i=0;i&lt;passes;++i) {</span>
+<span class="nc" id="L104">			marchingSquares();</span>
+<span class="nc" id="L105">			edge -= edgeStep;</span>
+		}
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if(border) {</span>
+			// add border
+<span class="nc" id="L110">			Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L111">			double xLeft   = rect.getMinX();</span>
+<span class="nc" id="L112">			double yBottom = rect.getMinY();</span>
+<span class="nc" id="L113">			double xRight  = rect.getMaxX();</span>
+<span class="nc" id="L114">			double yTop    = rect.getMaxY();</span>
+
+<span class="nc" id="L116">			turtle.jumpTo(px+xLeft, py+yBottom);</span>
+<span class="nc" id="L117">			turtle.moveTo(px+xRight, py+yBottom);</span>
+<span class="nc" id="L118">			turtle.moveTo(px+xRight, py+yTop);</span>
+<span class="nc" id="L119">			turtle.moveTo(px+xLeft, py+yTop);</span>
+<span class="nc" id="L120">			turtle.moveTo(px+xLeft, py+yBottom);</span>
+		}
+
+<span class="nc" id="L123">		fireConversionFinished();</span>
+<span class="nc" id="L124">	}</span>
+
+	void marchingSquares() {
+<span class="nc" id="L127">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L128">		double height  = rect.getHeight();</span>
+<span class="nc" id="L129">		double width   = rect.getWidth();</span>
+
+<span class="nc" id="L131">		int stepsOnY = (int)Math.floor(height / stepSize);</span>
+<span class="nc" id="L132">		int stepsOnX = (int)Math.floor(width / stepSize);</span>
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		for(int y=0;y&lt;stepsOnY;++y) {</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			for(int x=0;x&lt;stepsOnX;++x) {</span>
+<span class="nc" id="L136">				marchSquare((int)rect.getMinX() + x*stepSize,</span>
+<span class="nc" id="L137">						(int)rect.getMinY() + y*stepSize);</span>
+			}
+		}
+<span class="nc" id="L140">	}</span>
+
+	private int brightness(int color) {
+<span class="nc" id="L143">		return color &amp; 0xFF;</span>
+	}
+
+	void marchSquare(int x0,int y0) {
+<span class="nc" id="L147">		int x1 = x0+stepSize;</span>
+<span class="nc" id="L148">		int y1 = y0+stepSize;</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		int in0 = brightness(img.sample(x0,y0,sampleSize)) &gt;= edge ? 1:0;</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		int in1 = brightness(img.sample(x1,y0,sampleSize)) &gt;= edge ? 2:0;</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		int in2 = brightness(img.sample(x1,y1,sampleSize)) &gt;= edge ? 4:0;</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		int in3 = brightness(img.sample(x0,y1,sampleSize)) &gt;= edge ? 8:0;</span>
+<span class="nc" id="L153">		int code = in0 | in1 | in2 | in3;</span>
+
+		// 15 is a mirror of 1 and so on.
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if(code&gt;7) code = 15-code;</span>
+
+<span class="nc bnc" id="L158" title="All 9 branches missed.">		switch(code) {</span>
+<span class="nc" id="L159">			case 0:  break;</span>
+<span class="nc" id="L160">			case 1:  case1(x0,y0);  break;</span>
+<span class="nc" id="L161">			case 2:  case2(x0,y0);  break;</span>
+<span class="nc" id="L162">			case 3:  case3(x0,y0);  break;</span>
+<span class="nc" id="L163">			case 4:  case4(x0,y0);  break;</span>
+<span class="nc" id="L164">			case 5:  case5(x0,y0);  break;</span>
+<span class="nc" id="L165">			case 6:  case6(x0,y0);  break;</span>
+<span class="nc" id="L166">			case 7:  case7(x0,y0);  break;</span>
+		}
+<span class="nc" id="L168">	}</span>
+
+	float lerp(float a,float b,float v) {
+<span class="nc" id="L171">		return a + (b - a) * v;</span>
+	}
+	
+	Point2D lerpEdge(int x0, int y0, int x1, int y1) {
+<span class="nc" id="L175">		float in0 = brightness(img.sample(x0,y0,sampleSize));</span>
+<span class="nc" id="L176">		float in1 = brightness(img.sample(x1,y1,sampleSize));</span>
+
+<span class="nc" id="L178">		float v = (edge-in0) / (in1-in0);</span>
+<span class="nc" id="L179">		v=Math.max(0,Math.min(1,v));</span>
+<span class="nc" id="L180">		float x3 = lerp((float)x0,(float)x1,v);</span>
+<span class="nc" id="L181">		float y3 = lerp((float)y0,(float)y1,v);</span>
+<span class="nc" id="L182">		return new Point2D(x3,y3);</span>
+	}
+
+	void line(Point2D a,Point2D b) {
+<span class="nc" id="L186">		turtle.jumpTo(px+a.x,py+a.y);</span>
+<span class="nc" id="L187">		turtle.moveTo(px+b.x,py+b.y);</span>
+<span class="nc" id="L188">	}</span>
+
+	void case1(int x0,int y0) {
+<span class="nc" id="L191">		int x1 = x0+stepSize;</span>
+<span class="nc" id="L192">		int y1 = y0+stepSize;</span>
+<span class="nc" id="L193">		Point2D a = lerpEdge(x0,y0,x0,y1);</span>
+<span class="nc" id="L194">		Point2D b = lerpEdge(x0,y0,x1,y0);</span>
+<span class="nc" id="L195">		line(a,b);</span>
+<span class="nc" id="L196">	}</span>
+
+	void case2(int x0,int y0) {
+<span class="nc" id="L199">		int x1 = x0+stepSize;</span>
+<span class="nc" id="L200">		int y1 = y0+stepSize;</span>
+<span class="nc" id="L201">		Point2D a = lerpEdge(x1,y0,x0,y0);</span>
+<span class="nc" id="L202">		Point2D b = lerpEdge(x1,y0,x1,y1);</span>
+<span class="nc" id="L203">		line(a,b);</span>
+<span class="nc" id="L204">	}</span>
+
+	// 1 + 2
+	void case3(int x0,int y0) {
+<span class="nc" id="L208">		int x1 = x0+stepSize;</span>
+<span class="nc" id="L209">		int y1 = y0+stepSize;</span>
+<span class="nc" id="L210">		Point2D a = lerpEdge(x0,y0,x0,y1);</span>
+<span class="nc" id="L211">		Point2D b = lerpEdge(x1,y0,x1,y1);</span>
+<span class="nc" id="L212">		line(a,b);</span>
+<span class="nc" id="L213">	}</span>
+
+	void case4(int x0,int y0) {
+<span class="nc" id="L216">		int x1 = x0+stepSize;</span>
+<span class="nc" id="L217">		int y1 = y0+stepSize;</span>
+<span class="nc" id="L218">		Point2D a = lerpEdge(x1,y1,x0,y1);</span>
+<span class="nc" id="L219">		Point2D b = lerpEdge(x1,y1,x1,y0);</span>
+<span class="nc" id="L220">		line(a,b);</span>
+<span class="nc" id="L221">	}</span>
+
+	// 1 + 4
+	void case5(int x0,int y0) {
+<span class="nc" id="L225">		case1(x0,y0);</span>
+<span class="nc" id="L226">		case4(x0,y0);</span>
+<span class="nc" id="L227">	}</span>
+
+	// 2 + 4
+	void case6(int x0,int y0) {
+<span class="nc" id="L231">		int x1 = x0+stepSize;</span>
+<span class="nc" id="L232">		int y1 = y0+stepSize;</span>
+<span class="nc" id="L233">		Point2D a = lerpEdge(x0,y0,x1,y0);</span>
+<span class="nc" id="L234">		Point2D b = lerpEdge(x0,y1,x1,y1);</span>
+<span class="nc" id="L235">		line(a,b);</span>
+<span class="nc" id="L236">	}</span>
+
+	// 1+2+4
+	void case7(int x0,int y0) {
+<span class="nc" id="L240">		int x1 = x0+stepSize;</span>
+<span class="nc" id="L241">		int y1 = y0+stepSize;</span>
+<span class="nc" id="L242">		Point2D a = lerpEdge(x0,y1,x0,y0);</span>
+<span class="nc" id="L243">		Point2D b = lerpEdge(x0,y1,x1,y1);</span>
+<span class="nc" id="L244">		line(a,b);</span>
+<span class="nc" id="L245">	}</span>
+
+	public static void setPasses(int newValue) {
+<span class="nc" id="L248">		Converter_EdgeDetection.passes=newValue;</span>
+<span class="nc" id="L249">	}</span>
+
+	public static void setSampleSize(int sampleSize) {
+<span class="nc" id="L252">		Converter_EdgeDetection.sampleSize = sampleSize;</span>
+<span class="nc" id="L253">	}</span>
+
+	public static void setStepSize(int stepSize) {
+<span class="nc" id="L256">		Converter_EdgeDetection.stepSize = stepSize;</span>
+<span class="nc" id="L257">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterCMYK.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imagefilter</a> &gt; <span class="el_source">FilterCMYK.java</span></div><h1>FilterCMYK.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imagefilter;
+
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/**
+ * Converts an image four color channels: Cyan, Magenta, Yellow, and Black. *
+ * @author Dan Royer
+ */
+public class FilterCMYK extends ImageFilter {
+<span class="nc" id="L18">    private static final Logger logger = LoggerFactory.getLogger(FilterCMYK.class);</span>
+<span class="nc" id="L19">    protected static double levels = 2;</span>
+
+    protected TransformedImage img;
+    protected TransformedImage channelCyan;
+    protected TransformedImage channelMagenta;
+    protected TransformedImage channelYellow;
+    protected TransformedImage channelBlack;
+
+
+    /**
+     * @param img the &lt;code&gt;java.awt.image.BufferedImage&lt;/code&gt; this filter is using as source material.
+     */
+    public FilterCMYK(TransformedImage img) {
+<span class="nc" id="L32">        super();</span>
+<span class="nc" id="L33">        this.img = img;</span>
+<span class="nc" id="L34">    }</span>
+
+
+    public TransformedImage getC() {
+<span class="nc" id="L38">        return channelCyan;</span>
+    }
+
+    public TransformedImage getM() {
+<span class="nc" id="L42">        return channelMagenta;</span>
+    }
+
+    public TransformedImage getY() {
+<span class="nc" id="L46">        return channelYellow;</span>
+    }
+
+    public TransformedImage getK() {
+<span class="nc" id="L50">        return channelBlack;</span>
+    }
+
+
+    /**
+     * Converts an image to 4 greyscale images, one for each channel of CMYK.
+     * See &lt;a href=&quot;http://www.rapidtables.com/convert/color/rgb-to-cmyk.htm&quot;&gt;RGB to CMYK&lt;/a&gt;
+     * @return the original image.
+     */
+    @Override
+    public TransformedImage filter() {
+<span class="nc" id="L61">        int h = img.getSourceImage().getHeight();</span>
+<span class="nc" id="L62">        int w = img.getSourceImage().getWidth();</span>
+        int px, py;
+
+<span class="nc" id="L65">        BufferedImage bi = img.getSourceImage();</span>
+<span class="nc" id="L66">        channelCyan = new TransformedImage(img);</span>
+<span class="nc" id="L67">        channelMagenta = new TransformedImage(img);</span>
+<span class="nc" id="L68">        channelYellow = new TransformedImage(img);</span>
+<span class="nc" id="L69">        channelBlack = new TransformedImage(img);</span>
+
+<span class="nc" id="L71">        BufferedImage cc = channelCyan.getSourceImage();</span>
+<span class="nc" id="L72">        BufferedImage cm = channelMagenta.getSourceImage();</span>
+<span class="nc" id="L73">        BufferedImage cy = channelYellow.getSourceImage();</span>
+<span class="nc" id="L74">        BufferedImage ck = channelBlack.getSourceImage();</span>
+        double r, g, b, k, ik, c, m, y;
+        int pixel;
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        for (py = 0; py &lt; h; ++py) {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            for (px = 0; px &lt; w; ++px) {</span>
+<span class="nc" id="L80">                pixel = bi.getRGB(px, py);</span>
+                //double a = 255-((pixel&gt;&gt;24) &amp; 0xff);
+<span class="nc" id="L82">                r = 1.0 - (double) ((pixel &gt;&gt; 16) &amp; 0xff) / 255.0;</span>
+<span class="nc" id="L83">                g = 1.0 - (double) ((pixel &gt;&gt; 8) &amp; 0xff) / 255.0;</span>
+<span class="nc" id="L84">                b = 1.0 - (double) ((pixel) &amp; 0xff) / 255.0;</span>
+                // now convert to cmyk
+<span class="nc" id="L86">                k = Math.min(Math.min(r, g), b);   // should be Math.max(Math.max(r,g),b) but colors are inverted.</span>
+<span class="nc" id="L87">                ik = 1.0 - k;</span>
+
+                //if(ik&lt;1.0/255.0) {
+                //	c1=m1=y1=0;
+                //} else {
+<span class="nc" id="L92">                c = (r - k) / ik;</span>
+<span class="nc" id="L93">                m = (g - k) / ik;</span>
+<span class="nc" id="L94">                y = (b - k) / ik;</span>
+                //}
+<span class="nc" id="L96">                cc.setRGB(px, py, ImageFilter.encode32bit(255 - (int) (c * 255.0)));</span>
+<span class="nc" id="L97">                cm.setRGB(px, py, ImageFilter.encode32bit(255 - (int) (m * 255.0)));</span>
+<span class="nc" id="L98">                cy.setRGB(px, py, ImageFilter.encode32bit(255 - (int) (y * 255.0)));</span>
+<span class="nc" id="L99">                ck.setRGB(px, py, ImageFilter.encode32bit(255 - (int) (k * 255.0)));</span>
+            }
+        }
+
+<span class="nc" id="L103">        return img;</span>
+    }
+
+    /**
+     * An experimental black &amp;#38; white converter that doesn't just greyscale to 4 levels, it also tries to divide by histogram frequency.
+     * Didn't look good so I left it for the lulz.
+     *
+     * @param img the &lt;code&gt;java.awt.image.BufferedImage&lt;/code&gt; this filter is to process.
+     * @return the altered image
+     */
+    @Deprecated
+    public TransformedImage processViaHistogram(TransformedImage img) {
+<span class="nc" id="L115">        int h = img.getSourceImage().getHeight();</span>
+<span class="nc" id="L116">        int w = img.getSourceImage().getWidth();</span>
+
+        int x, y, i;
+
+<span class="nc" id="L120">        double[] histogram = new double[256];</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        for (i = 0; i &lt; 256; ++i) {</span>
+<span class="nc" id="L123">            histogram[i] = 0;</span>
+        }
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        for (y = 0; y &lt; h; ++y) {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            for (x = 0; x &lt; w; ++x) {</span>
+<span class="nc" id="L128">                i = decode32bit(img.getSourceImage().getRGB(x, y));</span>
+<span class="nc" id="L129">                ++histogram[i];</span>
+            }
+        }
+
+<span class="nc" id="L133">        double histogram_area = 0;</span>
+        //logger.debug(&quot;histogram:&quot;);
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        for (i = 1; i &lt; 255; ++i) {</span>
+<span class="nc" id="L136">            logger.debug(&quot;{}={}&quot;, i, histogram[i]);</span>
+<span class="nc" id="L137">            histogram_area += histogram[i];</span>
+        }
+<span class="nc" id="L139">        double histogram_zone = histogram_area / (double) levels;</span>
+        //logger.debug(&quot;histogram area: &quot;+histogram_area);
+        //logger.debug(&quot;histogram zone: &quot;+histogram_zone);
+
+<span class="nc" id="L143">        double histogram_sum = 0;</span>
+<span class="nc" id="L144">        x = 0;</span>
+<span class="nc" id="L145">        y = 0;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        for (i = 1; i &lt; 255; ++i) {</span>
+<span class="nc" id="L147">            histogram_sum += histogram[i];</span>
+            //logger.debug(&quot;mapping &quot;+i+&quot; to &quot;+x);
+<span class="nc bnc" id="L149" title="All 2 branches missed.">            if (histogram_sum &gt; histogram_zone) {</span>
+                //logger.debug(&quot;level up at &quot;+i+&quot; &quot;+histogram_sum+&quot; vs &quot;+histogram_zone);
+<span class="nc" id="L151">                histogram_sum -= histogram_zone;</span>
+<span class="nc" id="L152">                x += (int) (256.0 / (double) levels);</span>
+<span class="nc" id="L153">                ++y;</span>
+            }
+<span class="nc" id="L155">            histogram[i] = x;</span>
+        }
+
+        //logger.debug(&quot;y=&quot;+y+&quot; x=&quot;+x);
+        int pixel, b;
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        for (y = 0; y &lt; h; ++y) {</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">            for (x = 0; x &lt; w; ++x) {</span>
+<span class="nc" id="L163">                pixel = decode32bit(img.getSourceImage().getRGB(x, y));</span>
+<span class="nc" id="L164">                b = (int) histogram[pixel];</span>
+<span class="nc" id="L165">                img.getSourceImage().setRGB(x, y, ImageFilter.encode32bit(b));</span>
+            }
+        }
+
+<span class="nc" id="L169">        return img;</span>
+    }
+
+    public static void main(String[] args) throws IOException {
+<span class="nc" id="L173">        TransformedImage src = new TransformedImage( ImageIO.read(new FileInputStream(&quot;src/test/resources/mandrill.png&quot;)) );</span>
+<span class="nc" id="L174">        FilterCMYK f = new FilterCMYK(src);</span>
+<span class="nc" id="L175">        f.filter();</span>
+
+<span class="nc" id="L177">        JTabbedPane tabs = new JTabbedPane();</span>
+<span class="nc" id="L178">        tabs.addTab(&quot;Original&quot;, new JLabel(new ImageIcon(src.getSourceImage())));</span>
+<span class="nc" id="L179">        tabs.addTab(&quot;Cyan&quot;, new JLabel(new ImageIcon(f.channelCyan.getSourceImage())));</span>
+<span class="nc" id="L180">        tabs.addTab(&quot;Magenta&quot;, new JLabel(new ImageIcon(f.channelMagenta.getSourceImage())));</span>
+<span class="nc" id="L181">        tabs.addTab(&quot;Yellow&quot;, new JLabel(new ImageIcon(f.channelYellow.getSourceImage())));</span>
+<span class="nc" id="L182">        tabs.addTab(&quot;Black&quot;, new JLabel(new ImageIcon(f.channelBlack.getSourceImage())));</span>
+
+<span class="nc" id="L184">        JFrame frame = new JFrame(&quot;Filter_CMYK&quot;);</span>
+<span class="nc" id="L185">        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L186">        frame.setSize(400, 500);</span>
+<span class="nc" id="L187">        frame.add(tabs);</span>
+<span class="nc" id="L188">        frame.setVisible(true);</span>
+<span class="nc" id="L189">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

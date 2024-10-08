@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Makelangelo5.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plotterrenderer</a> &gt; <span class="el_source">Makelangelo5.java</span></div><h1>Makelangelo5.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plotterrenderer;
+
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.util.texture.Texture;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.plotter.Plotter;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+
+import static com.marginallyclever.convenience.helpers.DrawingHelper.*;
+
+<span class="fc" id="L11">public class Makelangelo5 implements PlotterRenderer {</span>
+	private static Texture textureMainBody;
+	private static Texture textureMotors;
+	private static Texture textureLogo;
+	private static Texture textureWeight;
+	private static Texture textureGondola;
+	private static Texture textureArm;
+
+	@Override
+	public void render(GL2 gl2, Plotter robot) {
+<span class="nc bnc" id="L21" title="All 2 branches missed.">		if (textureMainBody == null) textureMainBody = loadTexture(&quot;/textures/makelangelo5.png&quot;);</span>
+<span class="nc bnc" id="L22" title="All 2 branches missed.">		if (textureMotors == null) textureMotors = loadTexture(&quot;/textures/makelangelo5-motors.png&quot;);</span>
+<span class="nc bnc" id="L23" title="All 2 branches missed.">		if (textureLogo == null) textureLogo = loadTexture(&quot;/logo.png&quot;);</span>
+<span class="nc bnc" id="L24" title="All 2 branches missed.">		if (textureWeight == null) textureWeight = loadTexture(&quot;/textures/weight.png&quot;);</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">		if (textureGondola == null) textureGondola = loadTexture(&quot;/textures/phBody.png&quot;);</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">		if (textureArm == null) textureArm = loadTexture(&quot;/textures/phArm2.png&quot;);</span>
+
+<span class="nc bnc" id="L28" title="All 2 branches missed.">		if (textureMainBody == null) {</span>
+<span class="nc" id="L29">			paintControlBoxPlain(gl2, robot);</span>
+		} else {
+<span class="nc" id="L31">			paintControlBoxFancy(gl2, robot, textureMainBody);</span>
+		}
+
+<span class="nc" id="L34">		Polargraph.paintSafeArea(gl2, robot);</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">		if (robot.getDidFindHome())</span>
+<span class="nc" id="L37">			paintPenHolderToCounterweights(gl2, robot);</span>
+
+<span class="nc bnc" id="L39" title="All 2 branches missed.">		if (textureMotors == null) {</span>
+<span class="nc" id="L40">			Polargraph.paintMotors(gl2, robot);</span>
+		} else {
+<span class="nc" id="L42">			paintControlBoxFancy(gl2, robot, textureMotors);</span>
+		}
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		if (textureLogo == null) {</span>
+			// paintLogo(gl2,robot);
+		} else {
+<span class="nc" id="L48">			paintLogoFancy(gl2, robot);</span>
+		}
+<span class="nc" id="L50">	}</span>
+
+	public void paintPenHolderToCounterweights(GL2 gl2, Plotter robot) {
+<span class="nc" id="L53">		Point2D pos = robot.getPos();</span>
+<span class="nc" id="L54">		double gx = pos.x;</span>
+<span class="nc" id="L55">		double gy = pos.y;</span>
+
+<span class="nc" id="L57">		double top = robot.getSettings().getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L58">		double bottom = robot.getSettings().getDouble(PlotterSettings.LIMIT_BOTTOM);</span>
+<span class="nc" id="L59">		double left = robot.getSettings().getDouble(PlotterSettings.LIMIT_LEFT);</span>
+<span class="nc" id="L60">		double right = robot.getSettings().getDouble(PlotterSettings.LIMIT_RIGHT);</span>
+
+<span class="nc bnc" id="L62" title="All 4 branches missed.">		if (gx &lt; left || gx &gt; right) return;</span>
+<span class="nc bnc" id="L63" title="All 4 branches missed.">		if (gy &gt; top || gy &lt; bottom) return;</span>
+
+<span class="nc" id="L65">		double mw = right - left;</span>
+<span class="nc" id="L66">		double mh = top - bottom;</span>
+<span class="nc" id="L67">		double beltLength = Math.sqrt(mw * mw + mh * mh) + 50;  // TODO replace with robot.getBeltLength()</span>
+
+<span class="nc" id="L69">		double dx = gx - left;</span>
+<span class="nc" id="L70">		double dy = gy - top;</span>
+<span class="nc" id="L71">		double left_a = Math.sqrt(dx * dx + dy * dy);</span>
+<span class="nc" id="L72">		double left_b = (beltLength - left_a) / 2 - 55;</span>
+
+<span class="nc" id="L74">		dx = gx - right;</span>
+<span class="nc" id="L75">		double right_a = Math.sqrt(dx * dx + dy * dy);</span>
+<span class="nc" id="L76">		double right_b = (beltLength - right_a) / 2 - 55;</span>
+
+		// belt from motor to pen holder left
+<span class="nc" id="L79">		drawBeltMinus10(gl2,left,top,gx,gy);</span>
+		// belt from motor to pen holder right
+<span class="nc" id="L81">		drawBeltMinus10(gl2,right,top,gx,gy);</span>
+
+		// belt from motor to counterweight left
+<span class="nc" id="L84">		paintBeltSide(gl2,left,top,left_b);</span>
+		// belt from motor to counterweight right
+<span class="nc" id="L86">		paintBeltSide(gl2,right,top,right_b);</span>
+
+<span class="nc" id="L88">		paintGondola(gl2,gx,gy,robot);</span>
+
+		// left
+<span class="nc" id="L91">		paintCounterweight(gl2,left,top-left_b);</span>
+		// right
+<span class="nc" id="L93">		paintCounterweight(gl2,right,top-right_b);</span>
+<span class="nc" id="L94">	}</span>
+
+	private void drawBeltMinus10(GL2 gl2, double cornerX, double cornerY, double penX, double penY) {
+<span class="nc" id="L97">		double dx = penX - cornerX;</span>
+<span class="nc" id="L98">		double dy = penY - cornerY;</span>
+<span class="nc" id="L99">		double len = Math.sqrt(dx * dx + dy * dy);</span>
+<span class="nc" id="L100">		penX = cornerX + dx * (len-100) / len;</span>
+<span class="nc" id="L101">		penY = cornerY + dy * (len-100) / len;</span>
+
+<span class="nc" id="L103">		gl2.glBegin(GL2.GL_LINES);</span>
+<span class="nc" id="L104">		gl2.glColor3d(0.2, 0.2, 0.2);</span>
+<span class="nc" id="L105">		gl2.glVertex2d(cornerX, cornerY);</span>
+<span class="nc" id="L106">		gl2.glVertex2d(penX, penY);</span>
+<span class="nc" id="L107">		gl2.glEnd();</span>
+<span class="nc" id="L108">	}</span>
+
+	private static void paintBeltSide(GL2 gl2,double x, double y, double length) {
+<span class="nc" id="L111">		gl2.glBegin(GL2.GL_LINES);</span>
+<span class="nc" id="L112">		gl2.glVertex2d(x, y);</span>
+<span class="nc" id="L113">		gl2.glVertex2d(x, y - length);</span>
+<span class="nc" id="L114">		gl2.glEnd();</span>
+<span class="nc" id="L115">	}</span>
+
+	private void paintGondola(GL2 gl2, double gx, double gy,Plotter robot) {
+<span class="nc bnc" id="L118" title="All 4 branches missed.">		if(textureGondola!=null &amp;&amp; textureArm!=null) {</span>
+<span class="nc" id="L119">			paintGondolaFancy(gl2,gx,gy,robot);</span>
+<span class="nc" id="L120">			return;</span>
+		}
+<span class="nc" id="L122">		Polargraph.drawCircle(gl2, gx, gy, Polargraph.PEN_HOLDER_RADIUS_2, 20);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (robot.getPenIsUp()) {</span>
+<span class="nc" id="L124">			Polargraph.drawCircle(gl2, gx, gy, Polargraph.PEN_HOLDER_RADIUS_2 + 5, 20);</span>
+		}
+<span class="nc" id="L126">	}</span>
+
+	private void paintGondolaFancy(GL2 gl2, double gx, double gy,Plotter robot) {
+<span class="nc" id="L129">		double top = robot.getSettings().getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L130">		double left = robot.getSettings().getDouble(PlotterSettings.LIMIT_LEFT);</span>
+<span class="nc" id="L131">		double right = robot.getSettings().getDouble(PlotterSettings.LIMIT_RIGHT);</span>
+		// get angle from top-left to gx,gy
+<span class="nc" id="L133">		double dx = gx - left;</span>
+<span class="nc" id="L134">		double dy = gy - top;</span>
+<span class="nc" id="L135">		double angleLeft = Math.atan2(dy, dx);</span>
+		//get angle from top-right to gx,gy
+<span class="nc" id="L137">		dx = gx - right;</span>
+<span class="nc" id="L138">		double angleRight = Math.atan2(dy, dx);</span>
+
+<span class="nc" id="L140">		gl2.glPushMatrix();</span>
+<span class="nc" id="L141">		gl2.glTranslated(gx,gy,0);</span>
+<span class="nc" id="L142">		gl2.glRotated(Math.toDegrees(angleLeft)+90,0,0,1);</span>
+<span class="nc" id="L143">		paintTexture(gl2,textureArm,-100,-100,200,200);</span>
+<span class="nc" id="L144">		gl2.glPopMatrix();</span>
+
+<span class="nc" id="L146">		gl2.glPushMatrix();</span>
+<span class="nc" id="L147">		gl2.glTranslated(gx,gy,0);</span>
+<span class="nc" id="L148">		gl2.glRotated(Math.toDegrees(angleRight)+90,0,0,1);</span>
+<span class="nc" id="L149">		paintTexture(gl2,textureArm,-100,-100,200,200);</span>
+<span class="nc" id="L150">		gl2.glPopMatrix();</span>
+
+		// paint body last so it's on top
+<span class="nc" id="L153">		paintTexture(gl2,textureGondola,gx-50,gy-50,100,100);</span>
+<span class="nc" id="L154">	}</span>
+
+	private void paintCounterweight(GL2 gl2,double x,double y) {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if(textureWeight==null) {</span>
+<span class="nc" id="L158">			Polargraph.paintCounterweight(gl2,x,y);</span>
+<span class="nc" id="L159">			return;</span>
+		}
+<span class="nc" id="L161">		paintTexture(gl2, textureWeight, x-20, y-74, 40,80);</span>
+<span class="nc" id="L162">	}</span>
+
+	private void paintControlBoxFancy(GL2 gl2, Plotter robot,Texture texture) {
+<span class="nc" id="L165">		double left = robot.getSettings().getDouble(PlotterSettings.LIMIT_LEFT);</span>
+		// double top = robot.getSettings().getDouble(PlotterSettings.LIMIT_TOP);
+
+<span class="nc" id="L168">		final double scale = 650.0 / 811.0; // machine is 650 motor-to-motor. texture is 811. scale accordingly.</span>
+<span class="nc" id="L169">		final double TW = 1024 * scale;</span>
+<span class="nc" id="L170">		final double TH = 1024 * scale;</span>
+<span class="nc" id="L171">		final double ox = left - 106 * scale; // 106 taken from offset in texture map</span>
+<span class="nc" id="L172">		final double oy = -15 - 190 * scale; // 109 taken from offset in texture map. TODO why -15 instead of top?</span>
+
+<span class="nc" id="L174">		paintTexture(gl2, texture, ox, oy, TW, TH);</span>
+<span class="nc" id="L175">	}</span>
+
+	/**
+	 * paint the Marginally Clever Logo
+	 *
+	 * @param gl2   the render context
+	 * @param robot the machine to draw.
+	 */
+	private void paintLogoFancy(GL2 gl2, Plotter robot) {
+<span class="nc" id="L184">		final double scale = 0.5;</span>
+<span class="nc" id="L185">		final double TW = 128 * scale;</span>
+<span class="nc" id="L186">		final double TH = 128 * scale;</span>
+
+<span class="nc" id="L188">		final float LOGO_X = (float)robot.getSettings().getDouble(PlotterSettings.LIMIT_LEFT) - 65; // bottom left corner of safe Area</span>
+<span class="nc" id="L189">		final float LOGO_Y = (float)robot.getSettings().getDouble(PlotterSettings.LIMIT_BOTTOM)+10;</span>
+
+<span class="nc" id="L191">		paintTexture(gl2, textureLogo, LOGO_X, LOGO_Y, TW, TH);</span>
+<span class="nc" id="L192">	}</span>
+
+	/**
+	 * paint the controller and the LCD panel
+	 *
+	 * @param gl2   the render context
+	 * @param robot the machine to draw.
+	 */
+	private void paintControlBoxPlain(GL2 gl2, Plotter robot) {
+<span class="nc" id="L201">		double cy = robot.getSettings().getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L202">		double left = robot.getSettings().getDouble(PlotterSettings.LIMIT_LEFT);</span>
+<span class="nc" id="L203">		double right = robot.getSettings().getDouble(PlotterSettings.LIMIT_RIGHT);</span>
+<span class="nc" id="L204">		double top = robot.getSettings().getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L205">		double cx = 0;</span>
+
+<span class="nc" id="L207">		gl2.glPushMatrix();</span>
+
+<span class="nc" id="L209">		drawSuctionCups(gl2,left,right,top);</span>
+<span class="nc" id="L210">		drawFrame(gl2,left,right,top);</span>
+<span class="nc" id="L211">		gl2.glTranslated(cx, cy, 0);</span>
+<span class="nc" id="L212">		drawWires(gl2,left,right);</span>
+<span class="nc" id="L213">		drawRUMBA(gl2,left,right);</span>
+<span class="nc" id="L214">		renderLCD(gl2,left,right);</span>
+<span class="nc" id="L215">		gl2.glPopMatrix();</span>
+<span class="nc" id="L216">	}</span>
+
+	// RUMBA in v3 (135mm*75mm)
+	private void drawRUMBA(GL2 gl2, double left, double right) {
+<span class="nc" id="L220">		float h = 75f / 2;</span>
+<span class="nc" id="L221">		float w = 135f / 2;</span>
+<span class="nc" id="L222">		gl2.glPushMatrix();</span>
+<span class="nc" id="L223">		gl2.glTranslated(right-650.0/2.0,0,0);</span>
+
+<span class="nc" id="L225">		gl2.glColor3d(0.9, 0.9, 0.9);</span>
+<span class="nc" id="L226">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L227">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L228">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L229">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L230">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L231">		gl2.glEnd();</span>
+<span class="nc" id="L232">		gl2.glPopMatrix();</span>
+<span class="nc" id="L233">	}</span>
+
+	private void drawWires(GL2 gl2, double left, double right) {
+		// wires to each motor
+<span class="nc" id="L237">		gl2.glBegin(GL2.GL_LINES);</span>
+<span class="nc" id="L238">		final float SPACING = 2;</span>
+<span class="nc" id="L239">		float y = SPACING * -1.5f;</span>
+<span class="nc" id="L240">		gl2.glColor3f(1, 0, 0);</span>
+<span class="nc" id="L241">		gl2.glVertex2d(0, y);</span>
+<span class="nc" id="L242">		gl2.glVertex2d(left, y);</span>
+<span class="nc" id="L243">		y += SPACING;</span>
+<span class="nc" id="L244">		gl2.glColor3f(0, 1, 0);</span>
+<span class="nc" id="L245">		gl2.glVertex2d(0, y);</span>
+<span class="nc" id="L246">		gl2.glVertex2d(left, y);</span>
+<span class="nc" id="L247">		y += SPACING;</span>
+<span class="nc" id="L248">		gl2.glColor3f(0, 0, 1);</span>
+<span class="nc" id="L249">		gl2.glVertex2d(0, y);</span>
+<span class="nc" id="L250">		gl2.glVertex2d(left, y);</span>
+<span class="nc" id="L251">		y += SPACING;</span>
+<span class="nc" id="L252">		gl2.glColor3f(1, 1, 0);</span>
+<span class="nc" id="L253">		gl2.glVertex2d(0, y);</span>
+<span class="nc" id="L254">		gl2.glVertex2d(left, y);</span>
+<span class="nc" id="L255">		y += SPACING;</span>
+
+<span class="nc" id="L257">		y = SPACING * -1.5f;</span>
+<span class="nc" id="L258">		gl2.glColor3f(1, 0, 0);</span>
+<span class="nc" id="L259">		gl2.glVertex2d(0, y);</span>
+<span class="nc" id="L260">		gl2.glVertex2d(right, y);</span>
+<span class="nc" id="L261">		y += SPACING;</span>
+<span class="nc" id="L262">		gl2.glColor3f(0, 1, 0);</span>
+<span class="nc" id="L263">		gl2.glVertex2d(0, y);</span>
+<span class="nc" id="L264">		gl2.glVertex2d(right, y);</span>
+<span class="nc" id="L265">		y += SPACING;</span>
+<span class="nc" id="L266">		gl2.glColor3f(0, 0, 1);</span>
+<span class="nc" id="L267">		gl2.glVertex2d(0, y);</span>
+<span class="nc" id="L268">		gl2.glVertex2d(right, y);</span>
+<span class="nc" id="L269">		y += SPACING;</span>
+<span class="nc" id="L270">		gl2.glColor3f(1, 1, 0);</span>
+<span class="nc" id="L271">		gl2.glVertex2d(0, y);</span>
+<span class="nc" id="L272">		gl2.glVertex2d(right, y);</span>
+<span class="nc" id="L273">		y += SPACING;</span>
+<span class="nc" id="L274">		gl2.glEnd();</span>
+<span class="nc" id="L275">	}</span>
+
+	private void drawFrame(GL2 gl2, double left, double right, double top) {
+<span class="nc" id="L278">		final float FRAME_SIZE = 50f; // mm</span>
+<span class="nc" id="L279">		gl2.glColor3d(1, 0.8f, 0.5f);</span>
+<span class="nc" id="L280">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L281">		gl2.glVertex2d(left - FRAME_SIZE, top + FRAME_SIZE);</span>
+<span class="nc" id="L282">		gl2.glVertex2d(right + FRAME_SIZE, top + FRAME_SIZE);</span>
+<span class="nc" id="L283">		gl2.glVertex2d(right + FRAME_SIZE, top - FRAME_SIZE);</span>
+<span class="nc" id="L284">		gl2.glVertex2d(left - FRAME_SIZE, top - FRAME_SIZE);</span>
+<span class="nc" id="L285">		gl2.glEnd();</span>
+<span class="nc" id="L286">	}</span>
+
+	private void drawSuctionCups(GL2 gl2,double left,double right,double top) {
+<span class="nc" id="L289">		final float SUCTION_CUP_Y = 35f;</span>
+<span class="nc" id="L290">		final float SUCTION_CUP_RADIUS = 32.5f; /// mm</span>
+<span class="nc" id="L291">		gl2.glColor3f(1, 1f, 1f); // #color of suction cups</span>
+<span class="nc" id="L292">		drawCircle(gl2, (float) left - SUCTION_CUP_Y, (float) top - SUCTION_CUP_Y, SUCTION_CUP_RADIUS);</span>
+<span class="nc" id="L293">		drawCircle(gl2, (float) left - SUCTION_CUP_Y, (float) top + SUCTION_CUP_Y, SUCTION_CUP_RADIUS);</span>
+<span class="nc" id="L294">		drawCircle(gl2, (float) right + SUCTION_CUP_Y, (float) top - SUCTION_CUP_Y, SUCTION_CUP_RADIUS);</span>
+<span class="nc" id="L295">		drawCircle(gl2, (float) right + SUCTION_CUP_Y, (float) top + SUCTION_CUP_Y, SUCTION_CUP_RADIUS);</span>
+<span class="nc" id="L296">	}</span>
+
+	private void renderLCD(GL2 gl2, double left, double right) {
+		// position
+<span class="nc" id="L300">		gl2.glPushMatrix();</span>
+<span class="nc" id="L301">		gl2.glTranslated(right-(650.0/2.0)-180,0,0);</span>
+
+		// LCD red
+<span class="nc" id="L304">		float w = 150f / 2;</span>
+<span class="nc" id="L305">		float h = 56f / 2;</span>
+<span class="nc" id="L306">		gl2.glColor3f(0.8f, 0.0f, 0.0f);</span>
+<span class="nc" id="L307">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L308">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L309">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L310">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L311">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L312">		gl2.glEnd();</span>
+
+		// LCD green
+<span class="nc" id="L315">		gl2.glPushMatrix();</span>
+<span class="nc" id="L316">		gl2.glTranslated(-(2.6) / 2, -0.771, 0);</span>
+
+<span class="nc" id="L318">		w = 98f / 2;</span>
+<span class="nc" id="L319">		h = 60f / 2;</span>
+<span class="nc" id="L320">		gl2.glColor3f(0, 0.6f, 0.0f);</span>
+<span class="nc" id="L321">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L322">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L323">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L324">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L325">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L326">		gl2.glEnd();</span>
+
+		// LCD black
+<span class="nc" id="L329">		h = 40f / 2;</span>
+<span class="nc" id="L330">		gl2.glColor3f(0, 0, 0);</span>
+<span class="nc" id="L331">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L332">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L333">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L334">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L335">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L336">		gl2.glEnd();</span>
+
+		// LCD blue
+<span class="nc" id="L339">		h = 25f / 2;</span>
+<span class="nc" id="L340">		w = 75f / 2;</span>
+<span class="nc" id="L341">		gl2.glColor3f(0, 0, 0.7f);</span>
+<span class="nc" id="L342">		gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L343">		gl2.glVertex2d(-w, h);</span>
+<span class="nc" id="L344">		gl2.glVertex2d(+w, h);</span>
+<span class="nc" id="L345">		gl2.glVertex2d(+w, -h);</span>
+<span class="nc" id="L346">		gl2.glVertex2d(-w, -h);</span>
+<span class="nc" id="L347">		gl2.glEnd();</span>
+
+<span class="nc" id="L349">		gl2.glPopMatrix();</span>
+
+		// clean up
+<span class="nc" id="L352">		gl2.glPopMatrix();</span>
+<span class="nc" id="L353">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

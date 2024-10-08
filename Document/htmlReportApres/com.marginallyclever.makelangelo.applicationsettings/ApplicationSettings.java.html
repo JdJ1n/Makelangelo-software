@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApplicationSettings.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.applicationsettings</a> &gt; <span class="el_source">ApplicationSettings.java</span></div><h1>ApplicationSettings.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.applicationsettings;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.InvalidPreferencesFormatException;
+import java.util.prefs.Preferences;
+
+/**
+ * Application settings
+ * @author Dan Royer
+ */
+public class ApplicationSettings {
+<span class="nc" id="L20">	private static final Logger logger = LoggerFactory.getLogger(ApplicationSettings.class);</span>
+	
+	public ApplicationSettings() {
+<span class="nc" id="L23">		super();</span>
+<span class="nc" id="L24">	}</span>
+	
+	public void run(Component parentComponent) {
+<span class="nc" id="L27">		JPanel panel = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L28">		panel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));</span>
+
+<span class="nc" id="L30">		JPanel top = new JPanel(new FlowLayout());</span>
+<span class="nc" id="L31">		top.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);</span>
+<span class="nc" id="L32">		JButton buttonImport = new JButton(Translator.get(&quot;Import&quot;));</span>
+<span class="nc" id="L33">		top.add(buttonImport);</span>
+<span class="nc" id="L34">		buttonImport.addActionListener(e -&gt; importPreferences(parentComponent));</span>
+
+<span class="nc" id="L36">		JButton buttonExport = new JButton(Translator.get(&quot;Export&quot;));</span>
+<span class="nc" id="L37">		top.add(buttonExport);</span>
+<span class="nc" id="L38">		buttonExport.addActionListener(e -&gt; exportPreferences(parentComponent));</span>
+
+<span class="nc" id="L40">		JButton buttonReset = new JButton(Translator.get(&quot;Reset&quot;));</span>
+<span class="nc" id="L41">		top.add(buttonReset);</span>
+<span class="nc" id="L42">		buttonReset.addActionListener(e -&gt; resetPreferences(parentComponent));</span>
+
+<span class="nc" id="L44">		panel.add(top,BorderLayout.NORTH);</span>
+
+<span class="nc" id="L46">		JTabbedPane pane = new JTabbedPane();</span>
+<span class="nc" id="L47">		pane.add(Translator.get(&quot;SoundPreferences.Title&quot;), SoundPreferences.buildPanel());</span>
+<span class="nc" id="L48">		pane.add(Translator.get(&quot;GFXPreferences.Title&quot;), GFXPreferences.buildPanel());</span>
+<span class="nc" id="L49">		pane.add(Translator.get(&quot;LanguagePreferences.Title&quot;), LanguagePreferences.buildPanel());</span>
+<span class="nc" id="L50">		pane.add(Translator.get(&quot;MetricsPreferences.Title&quot;), MetricsPreferences.buildPanel());</span>
+<span class="nc" id="L51">		panel.add(pane,BorderLayout.CENTER);</span>
+
+<span class="nc" id="L53">		int result = JOptionPane.showConfirmDialog(parentComponent, panel, Translator.get(&quot;ApplicationSettings.title&quot;), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (result == JOptionPane.OK_OPTION) {</span>
+<span class="nc" id="L55">			SoundPreferences.save();</span>
+<span class="nc" id="L56">			GFXPreferences.save();</span>
+<span class="nc" id="L57">			LanguagePreferences.save();</span>
+<span class="nc" id="L58">			MetricsPreferences.save();</span>
+		}
+<span class="nc" id="L60">	}</span>
+
+	private void exportPreferences(Component parentComponent) {
+<span class="nc" id="L63">		final JFileChooser fc = new JFileChooser();</span>
+<span class="nc" id="L64">		int returnVal = fc.showSaveDialog(parentComponent);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if(returnVal == JFileChooser.APPROVE_OPTION) {</span>
+<span class="nc" id="L66">			final File file = fc.getSelectedFile();</span>
+<span class="nc" id="L67">			try (final OutputStream fileOutputStream = new FileOutputStream(file)) {</span>
+<span class="nc" id="L68">				Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LEGACY_MAKELANGELO_ROOT);</span>
+<span class="nc" id="L69">				prefs.exportSubtree(fileOutputStream);</span>
+<span class="nc" id="L70">			} catch (IOException | BackingStoreException e) {</span>
+<span class="nc" id="L71">				logger.error(&quot;Failed to export preferences to {}&quot;, file, e);</span>
+<span class="nc" id="L72">			}</span>
+		}
+<span class="nc" id="L74">	}</span>
+	
+	private void importPreferences(Component parentComponent) {
+<span class="nc" id="L77">		final JFileChooser fc = new JFileChooser();</span>
+<span class="nc" id="L78">		int returnVal = fc.showOpenDialog(parentComponent);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if(returnVal == JFileChooser.APPROVE_OPTION) {</span>
+<span class="nc" id="L80">			final File file = fc.getSelectedFile();</span>
+<span class="nc" id="L81">			try (final InputStream fileInputStream = new FileInputStream(file)) {</span>
+<span class="nc" id="L82">				Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LEGACY_MAKELANGELO_ROOT);</span>
+<span class="nc" id="L83">				prefs.flush();</span>
+<span class="nc" id="L84">				Preferences.importPreferences(fileInputStream);</span>
+<span class="nc" id="L85">				prefs.flush();</span>
+<span class="nc" id="L86">			} catch (IOException | InvalidPreferencesFormatException | BackingStoreException e) {</span>
+<span class="nc" id="L87">				logger.error(&quot;Failed to import preferences from {}&quot;, file, e);</span>
+<span class="nc" id="L88">			}</span>
+		}
+<span class="nc" id="L90">	}</span>
+
+	private void resetPreferences(Component parentComponent) {
+<span class="nc" id="L93">		int dialogResult = JOptionPane.showConfirmDialog(parentComponent, Translator.get(&quot;MenuResetMachinePreferencesWarning&quot;), Translator.get(&quot;QuestionTitle&quot;), JOptionPane.YES_NO_OPTION);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if(dialogResult == JOptionPane.YES_OPTION){</span>
+			try {
+<span class="nc" id="L96">				Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LEGACY_MAKELANGELO_ROOT);</span>
+<span class="nc" id="L97">				prefs.removeNode();</span>
+<span class="nc" id="L98">				Preferences.userRoot().flush();</span>
+<span class="nc" id="L99">				PreferencesHelper.start();</span>
+<span class="nc" id="L100">			} catch (BackingStoreException e) {</span>
+<span class="nc" id="L101">				logger.error(&quot;Failed to reset preferences&quot;, e);</span>
+<span class="nc" id="L102">			}</span>
+		}
+<span class="nc" id="L104">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

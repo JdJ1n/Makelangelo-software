@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RecentFiles.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">RecentFiles.java</span></div><h1>RecentFiles.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo;
+
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.prefs.Preferences;
+
+public final class RecentFiles extends JMenu {
+<span class="nc" id="L13">	private static final Logger logger = LoggerFactory.getLogger(RecentFiles.class);</span>
+
+<span class="nc" id="L15">	public final int MAX_FILES = 10;</span>
+
+<span class="nc" id="L17">	@SuppressWarnings(&quot;deprecation&quot;)</span>
+	private Preferences prefs = PreferencesHelper
+<span class="nc" id="L19">			.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LEGACY_MAKELANGELO_ROOT);</span>
+
+<span class="nc" id="L21">	private ArrayList&lt;String&gt; fileList = new ArrayList&lt;&gt;();</span>
+	private ActionListener submenuListener;
+
+	// Load recent files from prefs
+	public RecentFiles(String label) {
+<span class="nc" id="L26">		super(label);</span>
+		
+<span class="nc" id="L28">		loadFromStorage();</span>
+<span class="nc" id="L29">		updateLists();</span>
+<span class="nc" id="L30">	}</span>
+
+	/**
+	 * changes the order of the recent files list in the File submenu, saves the
+	 * updated prefs, and refreshes the menus.
+	 *
+	 * @param filename the file to push to the top of the list.
+	 */
+	public void addFilename(String filename) {
+<span class="nc bnc" id="L39" title="All 4 branches missed.">		if(filename==null || filename.trim().isEmpty()) return;</span>
+		
+<span class="nc" id="L41">		int i = getIndexOf(filename);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		if(i==-1) {</span>
+<span class="nc" id="L43">			fileList.add(0,filename);</span>
+		} else {
+			// bump to the head of the list
+<span class="nc" id="L46">			fileList.add(0,fileList.remove(i));</span>
+		}
+<span class="nc" id="L48">		updateLists();</span>
+<span class="nc" id="L49">	}</span>
+	
+	private int getIndexOf(String filename) {
+<span class="nc" id="L52">		int i=0;</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		for( String j : fileList ) {</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">			if(j.contentEquals(filename)) {</span>
+<span class="nc" id="L55">				return i;</span>
+			}
+<span class="nc" id="L57">			++i;</span>
+<span class="nc" id="L58">		}</span>
+<span class="nc" id="L59">		return -1;</span>
+	}
+
+	public int getMaxFiles() {
+<span class="nc" id="L63">		return MAX_FILES;</span>
+	}
+
+	public String getFile(int index) {
+<span class="nc" id="L67">		return fileList.get(index);</span>
+	}
+
+	public void removeFilename(String filename) {
+<span class="nc" id="L71">		int i = getIndexOf(filename);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if(i==-1) return;</span>
+		
+<span class="nc" id="L74">		fileList.remove(i);</span>
+<span class="nc" id="L75">		updateLists();</span>
+<span class="nc" id="L76">	}</span>
+
+	private void updateLists() {
+<span class="nc" id="L79">		this.removeAll();</span>
+
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		for(int i=0;i&lt;MAX_FILES;++i) {</span>
+<span class="nc" id="L82">			prefs.remove(getNodeName(i));</span>
+		}
+		
+<span class="nc" id="L85">		int i=0;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		for( String f : fileList ) {</span>
+<span class="nc" id="L87">			prefs.put(getNodeName(i++), f);</span>
+<span class="nc" id="L88">			JMenuItem item = new JMenuItem(f);</span>
+<span class="nc" id="L89">			this.add(item);</span>
+<span class="nc" id="L90">			item.addActionListener(submenuListener);</span>
+<span class="nc" id="L91">		}</span>
+		
+<span class="nc" id="L93">	}</span>
+		
+	private void loadFromStorage() {
+<span class="nc" id="L96">		logger.debug(&quot;loading recent files&quot;);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		for (int i=0; i&lt;MAX_FILES; ++i) {</span>
+<span class="nc" id="L98">			String name = getNodeName(i);</span>
+<span class="nc" id="L99">			String value = prefs.get(name, &quot;&quot;);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			if (!value.trim().isEmpty()) {</span>
+<span class="nc" id="L101">				logger.trace(&quot;...{}&quot;, value);</span>
+<span class="nc" id="L102">				fileList.add(value);</span>
+			}
+		}
+<span class="nc" id="L105">	}</span>
+	
+	private String getNodeName(int i) {
+<span class="nc" id="L108">		return &quot;recent-files-&quot;+i;</span>
+	}
+
+	public void addSubmenuListener(ActionListener object) {
+<span class="nc" id="L112">		submenuListener = object;</span>
+<span class="nc" id="L113">		updateLists();</span>
+<span class="nc" id="L114">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

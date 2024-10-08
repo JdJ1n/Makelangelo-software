@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlotterRendererFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plotterrenderer</a> &gt; <span class="el_source">PlotterRendererFactory.java</span></div><h1>PlotterRendererFactory.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plotterrenderer;
+
+import java.util.Arrays;
+
+/**
+ * {@link PlotterRendererFactory} is a Factory pattern for {@link PlotterRenderer} instances, written
+ * as an enum so that it does extra checks at compile time.
+ * 
+ * @author coliss86
+ */
+<span class="fc" id="L11">public enum PlotterRendererFactory {</span>
+	// name must match enum label for PlotterRendererFactory.valueOf() to work.
+<span class="fc" id="L13">	MAKELANGELO_5(&quot;MAKELANGELO_5&quot;, new Makelangelo5()),</span>
+<span class="fc" id="L14">	MAKELANGELO_5_HUGE(&quot;MAKELANGELO_5_HUGE&quot;, new Makelangelo5Huge()),</span>
+<span class="fc" id="L15">	MAKELANGELO_3_3(&quot;MAKELANGELO_3_3&quot;, new Makelangelo3_3()),</span>
+<span class="fc" id="L16">	MAKELANGELO_CUSTOM(&quot;MAKELANGELO_CUSTOM&quot;, new MakelangeloCustom()),</span>
+<span class="fc" id="L17">	CARTESIAN(&quot;CARTESIAN&quot;, new Cartesian()),</span>
+<span class="fc" id="L18">	ZARPLOTTER(&quot;ZARPLOTTER&quot;, new Zarplotter());</span>
+
+	private final PlotterRenderer plotterRenderer;
+
+	private final String name;
+
+<span class="fc" id="L24">	PlotterRendererFactory(String name, PlotterRenderer plotterRenderer) {</span>
+<span class="fc" id="L25">		this.name = name;</span>
+<span class="fc" id="L26">		this.plotterRenderer = plotterRenderer;</span>
+<span class="fc" id="L27">	}</span>
+
+	public PlotterRenderer getPlotterRenderer() {
+<span class="nc" id="L30">		return plotterRenderer;</span>
+	}
+
+	public String getName() {
+<span class="fc" id="L34">		return name;</span>
+	}
+
+	public static PlotterRendererFactory findByName(String name) {
+<span class="nc" id="L38">		return Arrays.stream(values())</span>
+<span class="nc" id="L39">				.filter(enumValue -&gt; enumValue.getName().contains(name))</span>
+<span class="nc" id="L40">				.findFirst()</span>
+<span class="nc" id="L41">				.orElseThrow();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

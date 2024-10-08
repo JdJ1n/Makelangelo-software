@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SaveDXF.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.io</a> &gt; <span class="el_source">SaveDXF.java</span></div><h1>SaveDXF.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.io;
+
+import com.marginallyclever.convenience.helpers.MathHelper;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.geom.Rectangle2D;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+
+/**
+ * @author Dan Royer
+ * see http://paulbourke.net/dataformats/dxf/min3d.html for details
+ */
+<span class="fc" id="L19">public class SaveDXF implements TurtleSaver {</span>
+<span class="fc" id="L20">	private static final Logger logger = LoggerFactory.getLogger(SaveDXF.class);</span>
+<span class="fc" id="L21">	private static final FileNameExtensionFilter filter = new FileNameExtensionFilter(&quot;DXF R12&quot;, &quot;dxf&quot;);</span>
+		
+	@Override
+	public FileNameExtensionFilter getFileNameFilter() {
+<span class="fc" id="L25">		return filter;</span>
+	}
+
+	@Override
+	public boolean save(OutputStream outputStream,Turtle turtle, PlotterSettings settings) throws Exception {
+<span class="fc" id="L30">		logger.debug(&quot;saving...&quot;);</span>
+		
+<span class="fc" id="L32">		Rectangle2D.Double box = turtle.getBounds();</span>
+<span class="fc" id="L33">		OutputStreamWriter out = new OutputStreamWriter(outputStream);</span>
+		// header
+<span class="fc" id="L35">		out.write(&quot;999\nDXF created by Makelangelo software (http://makelangelo.com)\n&quot;);</span>
+<span class="fc" id="L36">		out.write(&quot;0\nSECTION\n&quot;);</span>
+<span class="fc" id="L37">		out.write(&quot;2\nHEADER\n&quot;);</span>
+<span class="fc" id="L38">		out.write(&quot;9\n$ACADVER\n1\nAC1006\n&quot;);</span>
+<span class="fc" id="L39">		out.write(&quot;9\n$INSBASE\n&quot;);</span>
+<span class="fc" id="L40">		out.write(&quot;10\n&quot;+box.x+&quot;\n&quot;);</span>
+<span class="fc" id="L41">		out.write(&quot;20\n&quot;+box.y+&quot;\n&quot;);</span>
+<span class="fc" id="L42">		out.write(&quot;30\n0.0\n&quot;);</span>
+<span class="fc" id="L43">		out.write(&quot;9\n$EXTMIN\n&quot;);</span>
+<span class="fc" id="L44">		out.write(&quot;10\n&quot;+box.x+&quot;\n&quot;);</span>
+<span class="fc" id="L45">		out.write(&quot;20\n&quot;+box.y+&quot;\n&quot;);</span>
+<span class="fc" id="L46">		out.write(&quot;30\n0.0\n&quot;);</span>
+<span class="fc" id="L47">		out.write(&quot;9\n$EXTMAX\n&quot;);</span>
+<span class="fc" id="L48">		out.write(&quot;10\n&quot;+(box.x+box.width)+&quot;\n&quot;);</span>
+<span class="fc" id="L49">		out.write(&quot;20\n&quot;+(box.y+box.height)+&quot;\n&quot;);</span>
+<span class="fc" id="L50">		out.write(&quot;30\n0.0\n&quot;);</span>
+<span class="fc" id="L51">		out.write(&quot;0\nENDSEC\n&quot;);</span>
+
+		// tables section
+<span class="fc" id="L54">		out.write(&quot;0\nSECTION\n&quot;);</span>
+<span class="fc" id="L55">		out.write(&quot;2\nTABLES\n&quot;);</span>
+		// line type
+<span class="fc" id="L57">		out.write(&quot;0\nTABLE\n&quot;);</span>
+<span class="fc" id="L58">		out.write(&quot;2\nLTYPE\n&quot;);</span>
+<span class="fc" id="L59">		out.write(&quot;70\n1\n&quot;);</span>
+<span class="fc" id="L60">		out.write(&quot;0\nLTYPE\n&quot;);</span>
+<span class="fc" id="L61">		out.write(&quot;2\nCONTINUOUS\n&quot;);</span>
+<span class="fc" id="L62">		out.write(&quot;70\n64\n&quot;);</span>
+<span class="fc" id="L63">		out.write(&quot;3\nSolid line\n&quot;);</span>
+<span class="fc" id="L64">		out.write(&quot;72\n65\n&quot;);</span>
+<span class="fc" id="L65">		out.write(&quot;73\n0\n&quot;);</span>
+<span class="fc" id="L66">		out.write(&quot;40\n0.000\n&quot;);</span>
+<span class="fc" id="L67">		out.write(&quot;0\nENDTAB\n&quot;);</span>
+		// layers
+<span class="fc" id="L69">		out.write(&quot;0\nTABLE\n&quot;);</span>
+<span class="fc" id="L70">		out.write(&quot;2\nLAYER\n&quot;);</span>
+<span class="fc" id="L71">		out.write(&quot;70\n6\n&quot;);</span>
+<span class="fc" id="L72">		out.write(&quot;0\nLAYER\n&quot;);</span>
+<span class="fc" id="L73">		out.write(&quot;2\n1\n&quot;);</span>
+<span class="fc" id="L74">		out.write(&quot;70\n64\n&quot;);</span>
+<span class="fc" id="L75">		out.write(&quot;62\n7\n&quot;);</span>
+<span class="fc" id="L76">		out.write(&quot;6\nCONTINUOUS\n&quot;);</span>
+<span class="fc" id="L77">		out.write(&quot;0\nLAYER\n&quot;);</span>
+<span class="fc" id="L78">		out.write(&quot;2\n2\n&quot;);</span>
+<span class="fc" id="L79">		out.write(&quot;70\n64\n&quot;);</span>
+<span class="fc" id="L80">		out.write(&quot;62\n7\n&quot;);</span>
+<span class="fc" id="L81">		out.write(&quot;6\nCONTINUOUS\n&quot;);</span>
+<span class="fc" id="L82">		out.write(&quot;0\nENDTAB\n&quot;);</span>
+<span class="fc" id="L83">		out.write(&quot;0\nTABLE\n&quot;);</span>
+<span class="fc" id="L84">		out.write(&quot;2\nSTYLE\n&quot;);</span>
+<span class="fc" id="L85">		out.write(&quot;70\n0\n&quot;);</span>
+<span class="fc" id="L86">		out.write(&quot;0\nENDTAB\n&quot;);</span>
+		// end tables
+<span class="fc" id="L88">		out.write(&quot;0\nENDSEC\n&quot;);</span>
+
+		// empty blocks section (good form?)
+<span class="fc" id="L91">		out.write(&quot;0\nSECTION\n&quot;);</span>
+<span class="fc" id="L92">		out.write(&quot;0\nBLOCKS\n&quot;);</span>
+<span class="fc" id="L93">		out.write(&quot;0\nENDSEC\n&quot;);</span>
+		// now the lines
+<span class="fc" id="L95">		out.write(&quot;0\nSECTION\n&quot;);</span>
+<span class="fc" id="L96">		out.write(&quot;2\nENTITIES\n&quot;);</span>
+
+<span class="fc" id="L98">		boolean isUp=true;</span>
+<span class="fc" id="L99">		double x0 = turtle.history.get(0).x;</span>
+<span class="fc" id="L100">		double y0 = turtle.history.get(0).y;</span>
+				
+<span class="fc bfc" id="L102" title="All 2 branches covered.">		for( TurtleMove m : turtle.history ) {</span>
+<span class="fc bfc" id="L103" title="All 3 branches covered.">			switch(m.type) {</span>
+			case TRAVEL:
+<span class="fc" id="L105">				isUp=true;</span>
+<span class="fc" id="L106">				x0=m.x;</span>
+<span class="fc" id="L107">				y0=m.y;</span>
+<span class="fc" id="L108">				break;</span>
+			case DRAW_LINE:
+<span class="fc bfc" id="L110" title="All 2 branches covered.">				if(isUp) isUp=false;</span>
+<span class="fc" id="L111">				out.write(&quot;0\nLINE\n&quot;);</span>
+<span class="fc" id="L112">				out.write(&quot;8\n1\n&quot;);  // layer 1</span>
+<span class="fc" id="L113">				out.write(&quot;10\n&quot;+MathHelper.roundOff3(x0)+&quot;\n&quot;);</span>
+<span class="fc" id="L114">				out.write(&quot;20\n&quot;+MathHelper.roundOff3(y0)+&quot;\n&quot;);</span>
+<span class="fc" id="L115">				out.write(&quot;11\n&quot;+MathHelper.roundOff3(m.x)+&quot;\n&quot;);</span>
+<span class="fc" id="L116">				out.write(&quot;21\n&quot;+MathHelper.roundOff3(m.y)+&quot;\n&quot;);</span>
+<span class="fc" id="L117">				x0=m.x;</span>
+<span class="fc" id="L118">				y0=m.y;</span>
+				
+<span class="fc" id="L120">				break;</span>
+			case TOOL_CHANGE:
+				// TODO write out DXF layer using  m.getColor()
+				break;
+			}
+<span class="fc" id="L125">		}</span>
+		// wrap it up
+<span class="fc" id="L127">		out.write(&quot;0\nENDSEC\n&quot;);</span>
+<span class="fc" id="L128">		out.write(&quot;0\nEOF\n&quot;);</span>
+<span class="fc" id="L129">		out.flush();</span>
+		
+<span class="fc" id="L131">		logger.debug(&quot;done.&quot;);</span>
+<span class="fc" id="L132">		return true;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

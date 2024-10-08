@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_IntensityToHeight.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_IntensityToHeight.java</span></div><h1>Converter_IntensityToHeight.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+
+/**
+ * Horizontal lines.  The height of each line is determined by the average intensity of the pixels in that line.
+ * Masks the lines in the &quot;back&quot; by the lines in the &quot;front&quot; using a height buffer.
+ * @author Dan Royer
+ * @since 7.40.3
+ */
+public class Converter_IntensityToHeight extends ImageConverter {
+	// vertical distance between lines
+<span class="nc" id="L25">	private static int spacing = 2;</span>
+	// horizontal distance between samples.  more samples = more detail.
+<span class="nc" id="L27">	private static int sampleRate = 5;</span>
+	// max height of the wave will be +/-(waveIntensity/2)
+<span class="nc" id="L29">	private static int waveIntensity = 30;</span>
+	// track the height of each line as they are added.  Use this to mask the later lines.
+<span class="nc" id="L31">	private final List&lt;Double&gt; heights = new ArrayList&lt;&gt;();</span>
+
+	public Converter_IntensityToHeight() {
+<span class="nc" id="L34">		super();</span>
+
+<span class="nc" id="L36">		SelectSlider selectSize = new SelectSlider(&quot;size&quot;,Translator.get(&quot;Converter_IntensityToHeight.spacing&quot;), 20,1,getSpacing());</span>
+<span class="nc" id="L37">		SelectSlider selectSampleRate = new SelectSlider(&quot;sampleRate&quot;,Translator.get(&quot;Converter_IntensityToHeight.sampleRate&quot;),20,1,getSampleRate());</span>
+<span class="nc" id="L38">		SelectSlider selectWaveIntensity = new SelectSlider(&quot;waveIntensity&quot;,Translator.get(&quot;Converter_IntensityToHeight.waveIntensity&quot;),50,-50,getWaveIntensity());</span>
+
+<span class="nc" id="L40">		add(selectSize);</span>
+<span class="nc" id="L41">		add(selectSampleRate);</span>
+<span class="nc" id="L42">		add(selectWaveIntensity);</span>
+
+<span class="nc" id="L44">		selectSize.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L45">			setSpacing((int) evt.getNewValue());</span>
+<span class="nc" id="L46">			fireRestart();</span>
+<span class="nc" id="L47">		});</span>
+<span class="nc" id="L48">		selectSampleRate.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L49">			setSampleRate((int) evt.getNewValue());</span>
+<span class="nc" id="L50">			fireRestart();</span>
+<span class="nc" id="L51">		});</span>
+<span class="nc" id="L52">		selectWaveIntensity.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L53">			setWaveIntensity((int) evt.getNewValue());</span>
+<span class="nc" id="L54">			fireRestart();</span>
+<span class="nc" id="L55">		});</span>
+<span class="nc" id="L56">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L60">		return Translator.get(&quot;Converter_IntensityToHeight.name&quot;);</span>
+	}
+
+	public int getSpacing() {
+<span class="nc" id="L64">		return spacing;</span>
+	}
+	public void setSpacing(int value) {
+<span class="nc" id="L67">		spacing = Math.max(1,value);</span>
+<span class="nc" id="L68">	}</span>
+
+	public int getSampleRate() {
+<span class="nc" id="L71">		return sampleRate;</span>
+	}
+	public void setSampleRate(int value) {
+<span class="nc" id="L74">		sampleRate = Math.max(1,value);</span>
+<span class="nc" id="L75">	}</span>
+
+	public int getWaveIntensity(){
+<span class="nc" id="L78">		return waveIntensity;</span>
+	}
+	public void setWaveIntensity(int value){
+<span class="nc" id="L81">		waveIntensity = value;</span>
+<span class="nc" id="L82">	}</span>
+
+	/**
+	 * Travel from a to b, sampling the image at regular intervals.  Move the turtle in the y-axis by the sampled height.
+	 * @param a start point
+	 * @param b end point
+	 * @param img the image to sample
+	 * @param numSamples how many samples to take
+	 * @param sampleRadius how far to move the turtle in the y-axis
+	 * @return a list of points
+	 */
+	protected List&lt;Point2D&gt; convertLine(TransformedImage img, Point2D a, Point2D b, int numSamples, double sampleRadius) {
+<span class="nc" id="L94">		List&lt;Point2D&gt; points = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L96">		Point2D dir = new Point2D(b.x-a.x,b.y-a.y);</span>
+<span class="nc" id="L97">		double len = dir.length();</span>
+<span class="nc" id="L98">		dir.scale(1.0/len);</span>
+
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		for(double p = 0; p &lt;= numSamples; ++p) {</span>
+<span class="nc" id="L102">			double fraction = p * len / numSamples;</span>
+<span class="nc" id="L103">			double x = a.x + dir.x * fraction;</span>
+<span class="nc" id="L104">			double y = a.y + dir.y * fraction;</span>
+			// sample the image and scale the result.
+<span class="nc" id="L106">			double z = 1.0 - img.sample( x, y, sampleRadius ) / 255.0f;</span>
+			//z *= z;  // quadratic curve
+<span class="nc" id="L108">			double py = y + waveIntensity * z - waveIntensity/2.0f;</span>
+<span class="nc" id="L109">			points.add(new Point2D(x,py));</span>
+		}
+<span class="nc" id="L111">		return points;</span>
+	}
+
+	/**
+	 * Converts images into zigzags in paper space instead of image space
+	 */
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L119">		super.start(paper, image);</span>
+
+<span class="nc" id="L121">		FilterDesaturate bw = new FilterDesaturate(myImage);</span>
+<span class="nc" id="L122">		TransformedImage img = bw.filter();</span>
+
+<span class="nc" id="L124">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L125">		double xLeft   = rect.getMinX();</span>
+<span class="nc" id="L126">		double yBottom = rect.getMinY();</span>
+<span class="nc" id="L127">		double xRight  = rect.getMaxX();</span>
+<span class="nc" id="L128">		double yTop    = rect.getMaxY();</span>
+<span class="nc" id="L129">		double px = myPaper.getCenterX();</span>
+<span class="nc" id="L130">		double py = myPaper.getCenterY();</span>
+
+		// from bottom to top of the image...
+<span class="nc" id="L133">		int i=0;</span>
+<span class="nc" id="L134">		Point2D lineStart = new Point2D();</span>
+<span class="nc" id="L135">		Point2D lineEnd = new Point2D();</span>
+		
+<span class="nc" id="L137">		turtle = new Turtle();</span>
+
+<span class="nc" id="L139">		heights.clear();</span>
+		// heights should contain (xRight-xLeft) / sampleRate values
+<span class="nc" id="L141">		int numSamples = (int)Math.ceil(Math.abs(xRight-xLeft)/sampleRate);</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		for(int j=0;j&lt;=numSamples;++j) {</span>
+<span class="nc" id="L143">			heights.add(yBottom-1);</span>
+		}
+
+		// horizontal
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		for (double y = yBottom; y &lt; yTop; y += spacing) {</span>
+			// flip the direction of the line so the pen makes a zigzag
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			if ((++i % 2) == 0) {</span>
+<span class="nc" id="L150">				lineStart.set(xLeft,y);</span>
+<span class="nc" id="L151">				lineEnd.set(xRight,y);</span>
+			} else {
+<span class="nc" id="L153">				lineStart.set(xRight,y);</span>
+<span class="nc" id="L154">				lineEnd.set(xLeft,y);</span>
+			}
+			// because the line direction is flipped every turn, the height buffer must also be flipped every turn.
+<span class="nc" id="L157">			Collections.reverse(heights);</span>
+
+			// sample the image along the line
+<span class="nc" id="L160">			List&lt;Point2D&gt; points = convertLine(img,lineStart,lineEnd,numSamples,sampleRate);</span>
+
+<span class="nc" id="L162">			boolean first=true;</span>
+			// mask the line using the heights values and update heights as we go
+<span class="nc bnc" id="L164" title="All 2 branches missed.">			for(int j=0;j&lt;=numSamples;++j) {</span>
+<span class="nc" id="L165">				Point2D p = points.get(j);</span>
+<span class="nc" id="L166">				double x = p.x;</span>
+<span class="nc" id="L167">				double heightNew = p.y;</span>
+<span class="nc" id="L168">				double heightOld = heights.get(j);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">				if(heightNew &lt; heightOld) {</span>
+<span class="nc" id="L170">					heightNew = heightOld;</span>
+				}
+<span class="nc" id="L172">				heights.set(j,heightNew);</span>
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">				if(first) {</span>
+<span class="nc" id="L175">					turtle.jumpTo(px+x, py+heightNew);</span>
+<span class="nc" id="L176">					first = false;</span>
+				} else {
+<span class="nc" id="L178">					turtle.moveTo(px+x, py+heightNew);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L183">		fireConversionFinished();</span>
+<span class="nc" id="L184">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

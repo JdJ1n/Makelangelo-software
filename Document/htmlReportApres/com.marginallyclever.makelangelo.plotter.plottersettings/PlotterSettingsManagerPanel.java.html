@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlotterSettingsManagerPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottersettings</a> &gt; <span class="el_source">PlotterSettingsManagerPanel.java</span></div><h1>PlotterSettingsManagerPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottersettings;
+
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.convenience.log.Log;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.plotter.Plotter;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import java.awt.*;
+import java.util.Collection;
+
+/**
+ * {@link PlotterSettingsManagerPanel} manages the list of available machine configurations.
+ * A single machine configuration must be loaded into the active {@link Plotter} at any given time. 
+ * @author Dan Royer
+ */
+public class PlotterSettingsManagerPanel extends JPanel {
+<span class="nc" id="L22">	private static final Logger logger = LoggerFactory.getLogger(PlotterSettingsManagerPanel.class);</span>
+
+	private final PlotterSettingsManager plotterSettingsManager;
+<span class="nc" id="L25">	private final DefaultComboBoxModel&lt;String&gt; model = new DefaultComboBoxModel&lt;&gt;();</span>
+<span class="nc" id="L26">	private final JComboBox&lt;String&gt; configurationList = new JComboBox&lt;&gt;(model);</span>
+<span class="nc" id="L27">	private final JPanel container = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L28">	private PlotterSettingsPanel plotterSettingsPanel = null;</span>
+	private PlotterSettingsListener listener;
+
+	public PlotterSettingsManagerPanel(PlotterSettingsManager plotterSettingsManager) {
+<span class="nc" id="L32">		super(new BorderLayout());</span>
+<span class="nc" id="L33">		this.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));</span>
+<span class="nc" id="L34">		this.plotterSettingsManager = plotterSettingsManager;</span>
+
+<span class="nc" id="L36">		model.addAll(plotterSettingsManager.getProfileNames());</span>
+
+<span class="nc" id="L38">		Component topButtons = createTopButtons();</span>
+<span class="nc" id="L39">		this.add(topButtons,BorderLayout.NORTH);</span>
+<span class="nc" id="L40">		this.add(container,BorderLayout.CENTER);</span>
+<span class="nc" id="L41">		container.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));</span>
+
+<span class="nc" id="L43">		configurationList.setName(&quot;configurationList&quot;);</span>
+<span class="nc" id="L44">		configurationList.addActionListener((e)-&gt;changeProfile());</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		if(model.getSize()&gt;0) {</span>
+<span class="nc" id="L46">			PlotterSettings lastSelectedProfile = plotterSettingsManager.getLastSelectedProfile();</span>
+<span class="nc" id="L47">			model.setSelectedItem(lastSelectedProfile.getUID());</span>
+		}
+<span class="nc" id="L49">	}</span>
+
+	private Component createTopButtons() {
+<span class="nc" id="L52">		JPanel topButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));</span>
+<span class="nc" id="L53">		topButtons.add(configurationList);</span>
+<span class="nc" id="L54">		JButton add = new JButton(new AbstractAction(Translator.get(&quot;PlotterSettingsManagerPanel.AddProfile&quot;)) {</span>
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+				// copy the current profile and rename the new instance.
+<span class="nc" id="L58">				runRenameProfileDialog((String)model.getSelectedItem());</span>
+<span class="nc" id="L59">			}</span>
+		});
+<span class="nc" id="L61">		add.setName(&quot;addProfile&quot;);</span>
+<span class="nc" id="L62">		topButtons.add(add);</span>
+
+<span class="nc" id="L64">		JButton remove = new JButton(new AbstractAction(Translator.get(&quot;PlotterSettingsManagerPanel.RemoveProfile&quot;)) {</span>
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+<span class="nc" id="L67">				deleteProfile((String)model.getSelectedItem());</span>
+<span class="nc" id="L68">			}</span>
+		});
+<span class="nc" id="L70">		add.setName(&quot;removeProfile&quot;);</span>
+<span class="nc" id="L71">		topButtons.add(remove);</span>
+
+<span class="nc" id="L73">		return topButtons;</span>
+	}
+
+	private void runRenameProfileDialog(String uid) {
+		boolean goAgain;
+
+		do {
+<span class="nc" id="L80">			String newUID = JOptionPane.showInputDialog(this, Translator.get(&quot;PlotterSettingsManagerPanel.NewProfileName&quot;), uid);</span>
+<span class="nc bnc" id="L81" title="All 4 branches missed.">			if( newUID.isEmpty() || newUID.isBlank() ) {</span>
+<span class="nc" id="L82">				JOptionPane.showMessageDialog(this, Translator.get(&quot;PlotterSettingsManagerPanel.NewProfileNameCannotBeBlank&quot;));</span>
+<span class="nc" id="L83">				goAgain = true;</span>
+			}
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			if( nameIsTaken(newUID) ) {</span>
+<span class="nc" id="L86">				JOptionPane.showMessageDialog(this, Translator.get(&quot;PlotterSettingsManagerPanel.NewProfileNameAlreadyExists&quot;));</span>
+<span class="nc" id="L87">				goAgain = true;</span>
+			} else {
+				// found a unique name.  try to update the backing store.
+<span class="nc" id="L90">				goAgain = copyAndRenameProfile(uid,newUID);</span>
+			}
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		} while(goAgain);</span>
+<span class="nc" id="L93">	}</span>
+
+	/**
+	 * Creates a copy of the current profile, changes the RobotUID, and saves it as a new instance.  Does not change the
+	 * old profile.
+	 *
+	 * @param oldUID the name of the profile to copy
+	 * @param newUID the name of the new profile
+	 * @return true if there was a problem.
+	 */
+	private boolean copyAndRenameProfile(String oldUID, String newUID) {
+<span class="nc" id="L104">		plotterSettingsManager.saveAs(oldUID,newUID);</span>
+		// in with the new
+<span class="nc" id="L106">		model.addElement(newUID);</span>
+<span class="nc" id="L107">		model.setSelectedItem(newUID);</span>
+<span class="nc" id="L108">		return false;</span>
+	}
+
+	/**
+	 * Checks if the given name is already in use.
+	 * @param newUID the name to check
+	 * @return true if the name is already in use.
+	 */
+	private boolean nameIsTaken(String newUID) {
+<span class="nc" id="L117">		Collection&lt;String&gt; list = plotterSettingsManager.getProfileNames();</span>
+<span class="nc" id="L118">		return list.contains(newUID);</span>
+	}
+
+	private void deleteProfile(String uid) {
+<span class="nc" id="L122">		PlotterSettings me = new PlotterSettings(uid);</span>
+<span class="nc" id="L123">		String ancestorName = me.getString(PlotterSettings.ANCESTOR);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if(!plotterSettingsManager.deleteProfile(uid)) {</span>
+<span class="nc" id="L125">			model.removeElement(uid);</span>
+<span class="nc" id="L126">			model.setSelectedItem(ancestorName);</span>
+		}
+<span class="nc" id="L128">	}</span>
+
+	/**
+	 * Swap the active profile.
+	 */
+	private void changeProfile() {
+<span class="nc" id="L134">		String name = (String)configurationList.getSelectedItem();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if(name!=null) {</span>
+<span class="nc" id="L136">			logger.debug(&quot;changing profile to {}&quot;,name);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if(plotterSettingsPanel!=null) {</span>
+<span class="nc" id="L138">				this.remove(plotterSettingsPanel);</span>
+			}
+<span class="nc" id="L140">			plotterSettingsManager.setLastSelectedProfile(name);</span>
+<span class="nc" id="L141">			PlotterSettings plotterSettings = new PlotterSettings(name);</span>
+<span class="nc" id="L142">			plotterSettingsPanel = new PlotterSettingsPanel(plotterSettings);</span>
+<span class="nc" id="L143">			container.add(plotterSettingsPanel,BorderLayout.CENTER);</span>
+<span class="nc" id="L144">			this.revalidate();</span>
+<span class="nc" id="L145">			plotterSettingsPanel.addListener(this::firePlotterSettingsChanged);</span>
+<span class="nc" id="L146">			firePlotterSettingsChanged(plotterSettings);</span>
+		}
+<span class="nc" id="L148">	}</span>
+
+	/**
+	 * Add a listener to be notified when the settings change.
+	 * @param listener the listener to add
+	 */
+	public void addListener(PlotterSettingsListener listener) {
+<span class="nc" id="L155">		this.listener = listener;</span>
+<span class="nc" id="L156">	}</span>
+
+	/**
+	 * Fire a settings changed event.
+	 * @param settings the new settings
+	 */
+	private void firePlotterSettingsChanged(PlotterSettings settings) {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if(listener!=null) {</span>
+<span class="nc" id="L164">			listener.settingsChangedEvent(settings);</span>
+		}
+<span class="nc" id="L166">	}</span>
+
+	/**
+	 * Test the PlotterSettingsManagerPanel
+	 * @param args not used
+	 */
+	public static void main(String[] args) {
+<span class="nc" id="L173">		Log.start();</span>
+<span class="nc" id="L174">		PreferencesHelper.start();</span>
+<span class="nc" id="L175">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L176">		Translator.start();</span>
+
+		try {
+<span class="nc" id="L179">			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());</span>
+<span class="nc" id="L180">		} catch (Exception ex) {</span>
+<span class="nc" id="L181">			logger.warn(&quot;failed to set native look and feel.&quot;, ex);</span>
+<span class="nc" id="L182">		}</span>
+
+<span class="nc" id="L184">		JFrame frame = new JFrame(PlotterSettingsManagerPanel.class.getSimpleName());</span>
+<span class="nc" id="L185">		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L186">		frame.add(new PlotterSettingsManagerPanel(new PlotterSettingsManager()));</span>
+<span class="nc" id="L187">		frame.setMinimumSize(new Dimension(350,300));</span>
+<span class="nc" id="L188">		frame.pack();</span>
+<span class="nc" id="L189">		frame.setVisible(true);</span>
+<span class="nc" id="L190">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

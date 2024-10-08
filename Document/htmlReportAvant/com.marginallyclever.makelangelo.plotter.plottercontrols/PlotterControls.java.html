@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlotterControls.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols</a> &gt; <span class="el_source">PlotterControls.java</span></div><h1>PlotterControls.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols;
+
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+import com.marginallyclever.communications.NetworkSessionEvent;
+import com.marginallyclever.convenience.ButtonIcon;
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.makelangelo.CollapsiblePanel;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.plotter.Plotter;
+import com.marginallyclever.makelangelo.plotter.PlotterEvent;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+import com.marginallyclever.makelangelo.turtle.MovementType;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+import com.marginallyclever.util.PreferencesHelper;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.*;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * {@link PlotterControls} brings together three separate panels and wraps all
+ * the lower level features in a human friendly, intuitive interface. - The
+ * {@link MarlinPanel}, which manages the two way network connection to a
+ * robot running Marlin firmware. - The {@link JogPanel}, which is a
+ * human-friendly way to drive a {@link Plotter} - The {@link ProgramPanel},
+ * which is a buffer for queueing commands to a {@link Plotter}
+ *
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class PlotterControls extends JPanel {
+	public static final int DIMENSION_PANEL_WIDTH = 850;
+	public static final int DIMENSION_PANEL_HEIGHT = 510;
+	private static final int DIMENSION_COLLAPSIBLE_HEIGHT = 570;
+	private final Plotter myPlotter;
+	private final Turtle myTurtle;
+	private final JogPanel jogPanel;
+	private final MarlinPlotterPanel marlinInterface;
+	private final ProgramPanel programPanel;
+
+<span class="nc" id="L45">	private final ChooseConnection chooseConnection = new ChooseConnection();</span>
+	private ButtonIcon bFindHome;
+	private ButtonIcon bRewind;
+	private ButtonIcon bStart;
+	private ButtonIcon bStep;
+	private ButtonIcon bPause;
+	private ButtonIcon bEmergencyStop;
+<span class="nc" id="L52">	private final JProgressBar progress = new JProgressBar(0, 100);</span>
+
+<span class="nc" id="L54">	private boolean isRunning = false;</span>
+<span class="nc" id="L55">	private boolean penIsUpBeforePause = false;</span>
+<span class="nc" id="L56">	private boolean isErrorAlreadyDisplayed = false;</span>
+
+	public PlotterControls(Plotter plotter, Turtle turtle, Window parentWindow) {
+<span class="nc" id="L59">		super();</span>
+<span class="nc" id="L60">		myPlotter = plotter;</span>
+<span class="nc" id="L61">		myTurtle = turtle;</span>
+
+<span class="nc" id="L63">		jogPanel = new JogPanel(plotter);</span>
+<span class="nc" id="L64">		marlinInterface = new MarlinPlotterPanel(plotter, chooseConnection);</span>
+<span class="nc" id="L65">		programPanel = new ProgramPanel(plotter, turtle);</span>
+
+<span class="nc" id="L67">		JTabbedPane tabbedPane = new JTabbedPane();</span>
+<span class="nc" id="L68">		tabbedPane.addTab(Translator.get(&quot;PlotterControls.JogTab&quot;), jogPanel);</span>
+<span class="nc" id="L69">		tabbedPane.addTab(Translator.get(&quot;PlotterControls.MarlinTab&quot;), marlinInterface);</span>
+<span class="nc" id="L70">		tabbedPane.addTab(Translator.get(&quot;PlotterControls.ProgramTab&quot;), programPanel);</span>
+
+<span class="nc" id="L72">		CollapsiblePanel collapsiblePanel = new CollapsiblePanel(parentWindow, Translator.get(&quot;PlotterControls.AdvancedControls&quot;), DIMENSION_COLLAPSIBLE_HEIGHT, false);</span>
+<span class="nc" id="L73">		collapsiblePanel.add(tabbedPane);</span>
+
+<span class="nc" id="L75">		this.setLayout(new BorderLayout());</span>
+<span class="nc" id="L76">		this.add(collapsiblePanel, BorderLayout.CENTER);</span>
+<span class="nc" id="L77">		this.add(getButtonsPanels(), BorderLayout.NORTH);</span>
+<span class="nc" id="L78">		this.add(progress, BorderLayout.SOUTH);</span>
+
+<span class="nc" id="L80">		marlinInterface.addListener(this::onMarlinEvent);</span>
+
+<span class="nc" id="L82">		myPlotter.addPlotterEventListener((e)-&gt; {</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			if (e.type == PlotterEvent.HOME_FOUND) {</span>
+<span class="nc" id="L84">				updateButtonStatusConnected();</span>
+			}
+<span class="nc" id="L86">		});</span>
+<span class="nc" id="L87">	}</span>
+  
+	private void onMarlinEvent(MarlinPanelEvent e) {
+<span class="nc bnc" id="L90" title="All 4 branches missed.">		switch (e.getID()) {</span>
+			case MarlinPanelEvent.IDLE -&gt; {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">					if (isRunning) step();</span>
+				}
+			case MarlinPanelEvent.ERROR,
+				MarlinPanelEvent.DID_NOT_FIND,
+				MarlinPanelEvent.COMMUNICATION_FAILURE -&gt; {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">					if (!isErrorAlreadyDisplayed) {</span>
+						String message;
+
+<span class="nc bnc" id="L100" title="All 4 branches missed.">						switch(e.getActionCommand()) {</span>
+<span class="nc" id="L101">							case &quot;communicationFailure&quot; -&gt; message = Translator.get(&quot;PlotterControls.communicationFailure&quot;);</span>
+<span class="nc" id="L102">							case &quot;didNotFind&quot; -&gt; message = Translator.get(&quot;PlotterControls.didNotFind&quot;);</span>
+<span class="nc" id="L103">							case &quot;Printed halted&quot; -&gt; message = Translator.get(&quot;PlotterControls.halted&quot;);</span>
+<span class="nc" id="L104">							default -&gt; message = e.getActionCommand();</span>
+						}
+						/* TODO Source of dialog box titled &quot;Error&quot; that says &quot;PlotterControls.null&quot;.
+						 *      Caused by robot being turned off while COM port is connected.
+						 */
+<span class="nc" id="L109">						JOptionPane.showMessageDialog(this,</span>
+								message,
+<span class="nc" id="L111">								Translator.get(&quot;ErrorTitle&quot;),</span>
+								JOptionPane.ERROR_MESSAGE);
+<span class="nc" id="L113">						isErrorAlreadyDisplayed = true;</span>
+<span class="nc" id="L114">					}</span>
+				}
+			case MarlinPanelEvent.HOME_XY_FIRST -&gt;
+<span class="nc" id="L117">					JOptionPane.showMessageDialog(this,</span>
+<span class="nc" id="L118">							Translator.get(&quot;PlotterControls.homeXYFirst&quot;),</span>
+<span class="nc" id="L119">							Translator.get(&quot;InfoTitle&quot;),</span>
+							JOptionPane.WARNING_MESSAGE);
+		}
+<span class="nc" id="L122">		updateProgressBar();</span>
+<span class="nc" id="L123">	}</span>
+
+	private JPanel getButtonsPanels() {
+<span class="nc" id="L126">		JPanel panel = new JPanel();</span>
+<span class="nc" id="L127">		panel.setLayout(new BorderLayout());</span>
+<span class="nc" id="L128">		panel.add(getConnectPanel(), BorderLayout.NORTH);</span>
+<span class="nc" id="L129">		panel.add(getDrawPanel(), BorderLayout.CENTER);</span>
+<span class="nc" id="L130">		return panel;</span>
+	}
+
+	private JPanel getConnectPanel() {
+<span class="nc" id="L134">		JPanel panel = new JPanel();</span>
+<span class="nc" id="L135">		Border border = BorderFactory.createTitledBorder(Translator.get(&quot;PlotterControls.ConnectControls&quot;));</span>
+<span class="nc" id="L136">		panel.setBorder(border);</span>
+<span class="nc" id="L137">		panel.add(chooseConnection);</span>
+<span class="nc" id="L138">		chooseConnection.addListener(e -&gt; {</span>
+<span class="nc bnc" id="L139" title="All 3 branches missed.">			switch (e.flag) {</span>
+<span class="nc" id="L140">				case NetworkSessionEvent.CONNECTION_OPENED -&gt; onConnect();</span>
+<span class="nc" id="L141">				case NetworkSessionEvent.CONNECTION_CLOSED -&gt; onDisconnect();</span>
+			}
+<span class="nc" id="L143">		});</span>
+
+<span class="nc" id="L145">		return panel;</span>
+	}
+
+	private JPanel getDrawPanel() {
+<span class="nc" id="L149">		JPanel panel = new JPanel();</span>
+<span class="nc" id="L150">		Border border = BorderFactory.createTitledBorder(Translator.get(&quot;PlotterControls.DrawControls&quot;));</span>
+<span class="nc" id="L151">		panel.setBorder(border);</span>
+
+<span class="nc" id="L153">		bFindHome = new ButtonIcon( Translator.get(&quot;PlotterControls.FindHome&quot;), &quot;/images/house.png&quot;);</span>
+<span class="nc" id="L154">		bRewind = new ButtonIcon( Translator.get(&quot;PlotterControls.Rewind&quot;), &quot;/images/control_start_blue.png&quot;);</span>
+<span class="nc" id="L155">		bStart = new ButtonIcon( Translator.get(&quot;PlotterControls.Play&quot;), &quot;/images/control_play_blue.png&quot;);</span>
+<span class="nc" id="L156">		bStep = new ButtonIcon( Translator.get(&quot;PlotterControls.Step&quot;), &quot;/images/control_fastforward_blue.png&quot;);</span>
+<span class="nc" id="L157">		bPause = new ButtonIcon( Translator.get(&quot;PlotterControls.Pause&quot;), &quot;/images/control_pause_blue.png&quot;);</span>
+<span class="nc" id="L158">		bEmergencyStop = new ButtonIcon( Translator.get(&quot;PlotterControls.EmergencyStop&quot;), &quot;/images/stop.png&quot;);</span>
+<span class="nc" id="L159">		bEmergencyStop.setForeground(Color.RED);</span>
+
+<span class="nc" id="L161">		panel.add(bFindHome);</span>
+<span class="nc" id="L162">		panel.add(bRewind);</span>
+<span class="nc" id="L163">		panel.add(bStart);</span>
+<span class="nc" id="L164">		panel.add(bPause);</span>
+<span class="nc" id="L165">		panel.add(bStep);</span>
+<span class="nc" id="L166">		panel.add(bEmergencyStop);</span>
+
+<span class="nc" id="L168">		bFindHome.addActionListener(e -&gt; findHome());</span>
+<span class="nc" id="L169">		bRewind.addActionListener(e -&gt; rewind());</span>
+<span class="nc" id="L170">		bStart.addActionListener(e -&gt; play());</span>
+<span class="nc" id="L171">		bPause.addActionListener(e -&gt; pause());</span>
+<span class="nc" id="L172">		bStep.addActionListener(e -&gt; step());</span>
+<span class="nc" id="L173">		bEmergencyStop.addActionListener(e -&gt;</span>
+		{
+<span class="nc" id="L175">			marlinInterface.sendESTOP();</span>
+<span class="nc" id="L176">			chooseConnection.closeConnection();</span>
+<span class="nc" id="L177">		});</span>
+
+<span class="nc" id="L179">		onDisconnect();</span>
+
+<span class="nc" id="L181">		return panel;</span>
+	}
+
+	private void findHome() {
+<span class="nc" id="L185">		jogPanel.findHome();</span>
+<span class="nc" id="L186">		updateButtonStatusConnected();</span>
+<span class="nc" id="L187">	}</span>
+
+	private void step() {
+<span class="nc" id="L190">		programPanel.step();</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		if (programPanel.getLineNumber() == -1) {</span>
+			// done
+<span class="nc" id="L193">			addUserEndGCODE();</span>
+<span class="nc" id="L194">			pause();</span>
+		}
+<span class="nc" id="L196">	}</span>
+
+	public void startAt(int lineNumber) {
+<span class="nc" id="L199">		int count = programPanel.getMoveCount();</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (lineNumber &gt;= count)</span>
+<span class="nc" id="L201">			lineNumber = count;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (lineNumber &lt; 0)</span>
+<span class="nc" id="L203">			lineNumber = 0;</span>
+
+<span class="nc" id="L205">		programPanel.setLineNumber(lineNumber);</span>
+<span class="nc" id="L206">		play();</span>
+<span class="nc" id="L207">	}</span>
+
+	private void updateProgressBar() {
+<span class="nc" id="L210">		progress.setValue((int) (100.0 * programPanel.getLineNumber() / programPanel.getMoveCount()));</span>
+<span class="nc" id="L211">	}</span>
+
+	private void rewind() {
+<span class="nc" id="L214">		programPanel.rewind();</span>
+<span class="nc" id="L215">		progress.setValue(0);</span>
+<span class="nc" id="L216">	}</span>
+
+	private void play() {
+<span class="nc" id="L219">		isRunning = true;</span>
+<span class="nc" id="L220">		updateButtonStatusConnected();</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (!penIsUpBeforePause)</span>
+<span class="nc" id="L222">			myPlotter.lowerPen();</span>
+<span class="nc" id="L223">		rewindIfNoProgramLineSelected();</span>
+<span class="nc" id="L224">		addUserStartGCODE();</span>
+<span class="nc" id="L225">		step();</span>
+<span class="nc" id="L226">	}</span>
+
+	private void rewindIfNoProgramLineSelected() {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		if (programPanel.getLineNumber() == -1) {</span>
+<span class="nc" id="L230">			programPanel.rewind();</span>
+		}
+<span class="nc" id="L232">	}</span>
+
+	private void pause() {
+<span class="nc" id="L235">		isRunning = false;</span>
+<span class="nc" id="L236">		updateButtonStatusConnected();</span>
+<span class="nc" id="L237">		penIsUpBeforePause = myPlotter.getPenIsUp();</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		if (!penIsUpBeforePause)</span>
+<span class="nc" id="L239">			myPlotter.raisePen();</span>
+<span class="nc" id="L240">	}</span>
+
+	public boolean isRunning() {
+<span class="nc" id="L243">		return isRunning;</span>
+	}
+
+	private void updateButtonStatusConnected() {
+<span class="nc" id="L247">		boolean isHomed = myPlotter.getDidFindHome();</span>
+<span class="nc bnc" id="L248" title="All 4 branches missed.">		bRewind.setEnabled(isHomed &amp;&amp; !isRunning);</span>
+<span class="nc bnc" id="L249" title="All 4 branches missed.">		bStart.setEnabled(isHomed &amp;&amp; !isRunning);</span>
+<span class="nc bnc" id="L250" title="All 4 branches missed.">		bPause.setEnabled(isHomed &amp;&amp; isRunning);</span>
+<span class="nc bnc" id="L251" title="All 4 branches missed.">		bStep.setEnabled(isHomed &amp;&amp; !isRunning);</span>
+<span class="nc" id="L252">	}</span>
+
+	private void onConnect() {
+<span class="nc" id="L255">		myPlotter.reInit();</span>
+<span class="nc" id="L256">		bFindHome.setEnabled(true);</span>
+<span class="nc" id="L257">		bEmergencyStop.setEnabled(true);</span>
+<span class="nc" id="L258">		isRunning = false;</span>
+<span class="nc" id="L259">		updateButtonStatusConnected();</span>
+<span class="nc" id="L260">		jogPanel.onNetworkConnect();</span>
+<span class="nc" id="L261">		isErrorAlreadyDisplayed = false;</span>
+<span class="nc" id="L262">	}</span>
+
+	private void onDisconnect() {
+<span class="nc" id="L265">		myPlotter.reInit();</span>
+<span class="nc" id="L266">		bFindHome.setEnabled(false);</span>
+<span class="nc" id="L267">		bEmergencyStop.setEnabled(false);</span>
+<span class="nc" id="L268">		bRewind.setEnabled(false);</span>
+<span class="nc" id="L269">		bStart.setEnabled(false);</span>
+<span class="nc" id="L270">		bPause.setEnabled(false);</span>
+<span class="nc" id="L271">		bStep.setEnabled(false);</span>
+<span class="nc" id="L272">		jogPanel.onNetworkDisconnect();</span>
+<span class="nc" id="L273">	}</span>
+
+	@SuppressWarnings(&quot;unused&quot;)
+	private int findLastPenUpBefore(int startAtLine) {
+<span class="nc" id="L277">		List&lt;TurtleMove&gt; history = myTurtle.history;</span>
+<span class="nc" id="L278">		int total = history.size();</span>
+<span class="nc" id="L279">		int x = startAtLine;</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (x &gt;= total)</span>
+<span class="nc" id="L281">			x = total - 1;</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">		if (x &lt; 0)</span>
+<span class="nc" id="L283">			return 0;</span>
+
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		while (x &gt; 1) {</span>
+<span class="nc" id="L286">			TurtleMove m = history.get(x);</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">			if (m.type == MovementType.TRAVEL)</span>
+<span class="nc" id="L288">				return x;</span>
+<span class="nc" id="L289">			--x;</span>
+<span class="nc" id="L290">		}</span>
+
+<span class="nc" id="L292">		return x;</span>
+	}
+
+	private void addUserStartGCODE() {
+<span class="nc" id="L296">		String gcode = myPlotter.getSettings().getString(PlotterSettings.USER_GENERAL_START_GCODE);</span>
+<span class="nc" id="L297">		Arrays.asList(gcode.split(System.getProperty(&quot;line.separator&quot;)).clone())</span>
+<span class="nc" id="L298">				.forEach(marlinInterface::queueAndSendCommand);</span>
+<span class="nc" id="L299">	}</span>
+
+	private void addUserEndGCODE() {
+<span class="nc" id="L302">		String gcode = myPlotter.getSettings().getString(PlotterSettings.USER_GENERAL_END_GCODE);</span>
+<span class="nc" id="L303">		Arrays.asList(gcode.split(System.getProperty(&quot;line.separator&quot;)).clone())</span>
+<span class="nc" id="L304">				.forEach(marlinInterface::queueAndSendCommand);</span>
+<span class="nc" id="L305">	}</span>
+
+	/**
+	 * Called from windowAdapter::windowClosing() to clean up resources.
+	 */
+	public void onDialogClosing() {
+		// make sure to close the connection when the dialog is closed.
+<span class="nc" id="L312">		chooseConnection.closeConnection();</span>
+		// make sure to unregister listeners
+<span class="nc" id="L314">		marlinInterface.stopListeningToPlotter();</span>
+<span class="nc" id="L315">	}</span>
+
+	// TEST
+
+	public static void main(String[] args) throws UnsupportedLookAndFeelException {
+<span class="nc" id="L320">		PreferencesHelper.start();</span>
+<span class="nc" id="L321">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L322">		Translator.start();</span>
+<span class="nc" id="L323">		FlatLaf.registerCustomDefaultsSource( &quot;com.marginallyclever.makelangelo&quot; );</span>
+<span class="nc" id="L324">		UIManager.setLookAndFeel( new FlatLightLaf() );</span>
+
+<span class="nc" id="L326">		JFrame frame = new JFrame(Translator.get(&quot;PlotterControls.Title&quot;));</span>
+<span class="nc" id="L327">		frame.setPreferredSize(new Dimension(DIMENSION_PANEL_WIDTH, DIMENSION_PANEL_HEIGHT));</span>
+<span class="nc" id="L328">		frame.setMinimumSize(new Dimension(DIMENSION_PANEL_WIDTH, DIMENSION_PANEL_HEIGHT));</span>
+<span class="nc" id="L329">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L330">		frame.add(new PlotterControls(new Plotter(), new Turtle(), frame));</span>
+<span class="nc" id="L331">		frame.pack();</span>
+<span class="nc" id="L332">		frame.setVisible(true);</span>
+<span class="nc" id="L333">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

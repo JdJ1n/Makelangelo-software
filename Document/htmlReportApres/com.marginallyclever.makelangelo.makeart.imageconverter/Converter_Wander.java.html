@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_Wander.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_Wander.java</span></div><h1>Converter_Wander.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterCMYK;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectBoolean;
+import com.marginallyclever.makelangelo.select.SelectInteger;
+import com.marginallyclever.makelangelo.select.SelectRandomSeed;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.LinkedList;
+import java.util.Random;
+
+
+/**
+ * create random lines across the image.  Raise and lower the pen to darken the appropriate areas
+ * @author Dan Royer
+ */
+public class Converter_Wander extends ImageConverter {
+<span class="nc" id="L28">	private static final Logger logger = LoggerFactory.getLogger(Converter_Wander.class);</span>
+	
+<span class="nc" id="L30">	static private int numLines = 9000;</span>
+<span class="nc" id="L31">	static private boolean isCMYK = false;</span>
+<span class="nc" id="L32">	static private double stepSize = 5.0;</span>
+<span class="nc" id="L33">	private static int seed=0;</span>
+<span class="nc" id="L34">	private static final Random random = new Random();</span>
+	
+	private static class Bucket {
+		public Point2D a,b;
+		public LinkedList&lt;Point2D&gt; unsortedPoints;
+		public LinkedList&lt;Point2D&gt; sortedPoints;
+		
+<span class="nc" id="L41">		public Bucket() {</span>
+<span class="nc" id="L42">			a = new Point2D.Double();</span>
+<span class="nc" id="L43">			b = new Point2D.Double();</span>
+<span class="nc" id="L44">			unsortedPoints = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L45">			sortedPoints = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L46">		}</span>
+	}
+
+	public Converter_Wander() {
+<span class="nc" id="L50">		super();</span>
+<span class="nc" id="L51">		SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;,Translator.get(&quot;Generator.randomSeed&quot;),seed);</span>
+<span class="nc" id="L52">		add(selectRandomSeed);</span>
+<span class="nc" id="L53">		selectRandomSeed.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L54">			seed = (int)evt.getNewValue();</span>
+<span class="nc" id="L55">			random.setSeed(seed);</span>
+<span class="nc" id="L56">			fireRestart();</span>
+<span class="nc" id="L57">		});</span>
+
+<span class="nc" id="L59">		SelectInteger selectCount = new SelectInteger(&quot;count&quot;,Translator.get(&quot;ConverterWanderLineCount&quot;),getLineCount());</span>
+<span class="nc" id="L60">		add(selectCount);</span>
+<span class="nc" id="L61">		selectCount.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L62">			setLineCount((int)evt.getNewValue());</span>
+<span class="nc" id="L63">			fireRestart();</span>
+<span class="nc" id="L64">		});</span>
+<span class="nc" id="L65">		SelectBoolean selectCmyk = new SelectBoolean(&quot;cmyk&quot;,Translator.get(&quot;ConverterWanderCMYK&quot;),isCMYK());</span>
+<span class="nc" id="L66">		add(selectCmyk);</span>
+<span class="nc" id="L67">		selectCmyk.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L68">			setCMYK((boolean)evt.getNewValue());</span>
+<span class="nc" id="L69">			fireRestart();</span>
+<span class="nc" id="L70">		});</span>
+<span class="nc" id="L71">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="nc" id="L75">		return Translator.get(&quot;ConverterWanderName&quot;);</span>
+	}
+
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L80">		super.start(paper, image);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if(isCMYK) {</span>
+<span class="nc" id="L82">			finishCMYK();</span>
+		} else {
+<span class="nc" id="L84">			finishBlackAndWhite();</span>
+		}
+
+<span class="nc" id="L87">		fireConversionFinished();</span>
+<span class="nc" id="L88">	}</span>
+
+	protected void outputChannel(TransformedImage img, Color newColor, int pointsPerChannel, double cutoff) {
+<span class="nc" id="L91">		stepSize = Math.max(1,stepSize);</span>
+<span class="nc" id="L92">		double halfStep = stepSize/2;</span>
+
+		// Color values are from 0...255 inclusive.  255 is white, 0 is black.
+		// Lift the pen any time the color value is &gt; cutoff.
+
+		// from top to bottom of the margin area...
+<span class="nc" id="L98">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L99">		double xLeft   = rect.getMinX();</span>
+<span class="nc" id="L100">		double xRight  = rect.getMaxX();</span>
+<span class="nc" id="L101">		double yBottom = rect.getMinY();</span>
+<span class="nc" id="L102">		double yTop    = rect.getMaxY();</span>
+<span class="nc" id="L103">		double px = myPaper.getCenterX();</span>
+<span class="nc" id="L104">		double py = myPaper.getCenterY();</span>
+
+		// find numLines number of random points darker than the cutoff value
+<span class="nc" id="L107">		double height = yTop - yBottom-1;</span>
+<span class="nc" id="L108">		double width = xRight - xLeft-1;</span>
+		
+		//logger.debug(&quot;Creating buckets in a Z pattern...&quot;);
+<span class="nc" id="L111">		LinkedList&lt;Bucket&gt; buckets = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L112">		int actualPoints=0;</span>
+<span class="nc" id="L113">		double wMod = width/5.0;</span>
+<span class="nc" id="L114">		double hMod = height/10.0;</span>
+		double by,bx;
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		for(by=0;by&lt;height;by+=hMod) {</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			for(bx=0;bx&lt;width;bx+=wMod) {</span>
+<span class="nc" id="L118">				Bucket b = new Bucket();</span>
+<span class="nc" id="L119">				b.a.setLocation(xLeft+bx     , yBottom+by     );</span>
+<span class="nc" id="L120">				b.b.setLocation(xLeft+bx+wMod, yBottom+by+hMod);</span>
+<span class="nc" id="L121">				buckets.push(b);</span>
+			}
+<span class="nc" id="L123">			by+=hMod;</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			for(bx=width-wMod;bx&gt;=-1;bx-=wMod) {</span>
+<span class="nc" id="L125">				Bucket b = new Bucket();</span>
+<span class="nc" id="L126">				b.a.setLocation(xLeft+bx     , yBottom+by     );</span>
+<span class="nc" id="L127">				b.b.setLocation(xLeft+bx+wMod, yBottom+by+hMod);</span>
+<span class="nc" id="L128">				buckets.push(b);</span>
+			}
+		}
+
+		//logger.debug(&quot;Finding points...&quot;);
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		for(int i=0;i&lt;pointsPerChannel;++i) {</span>
+<span class="nc" id="L134">			int v, tries=0;</span>
+			double endPX,endPY; 
+			do {
+<span class="nc" id="L137">				endPX = xLeft   + (random.nextDouble() * width)+0.5; </span>
+<span class="nc" id="L138">				endPY = yBottom + (random.nextDouble() * height)+0.5; </span>
+<span class="nc" id="L139">				v = img.sample(</span>
+						endPX - halfStep, endPY - halfStep, 
+						endPX + halfStep, endPY + halfStep);
+<span class="nc" id="L142">				++tries;</span>
+<span class="nc bnc" id="L143" title="All 4 branches missed.">			} while(v&gt;cutoff &amp;&amp; tries&lt;1000);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if(tries==1000) break;  // ran out of points to try?</span>
+
+			int j;
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			for(j=0; j&lt; buckets.size(); ++j) {</span>
+<span class="nc" id="L148">				Bucket b = buckets.get(j);</span>
+<span class="nc bnc" id="L149" title="All 4 branches missed.">				if( b.a.getX()&lt;=endPX &amp;&amp; b.b.getX()&gt;endPX &amp;&amp; </span>
+<span class="nc bnc" id="L150" title="All 4 branches missed.">				    b.a.getY()&lt;=endPY &amp;&amp; b.b.getY()&gt;endPY ) {</span>
+<span class="nc" id="L151">					b.unsortedPoints.addLast(new Point2D.Double(endPX,endPY));</span>
+<span class="nc" id="L152">					++actualPoints;</span>
+<span class="nc" id="L153">					break;</span>
+				}
+			}
+		}
+
+		// sort the points by nearest neighbor first.
+<span class="nc" id="L159">		logger.debug(&quot;Sorting {} points...&quot;, actualPoints);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		for (Bucket bucket : buckets) {</span>
+			//logger.debug(j+&quot; of &quot;+buckets.size()+ &quot; has &quot;+buckets.get(j).unsortedPoints.size()+&quot; points&quot;);
+
+			// assume we start at the center of the image, for those machines with no pen up option.
+<span class="nc" id="L164">			Point2D a = new Point2D.Double(0, 0);</span>
+
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (!bucket.unsortedPoints.isEmpty()) {</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">				while (!bucket.unsortedPoints.isEmpty()) {</span>
+<span class="nc" id="L168">					double bestLen = Double.MAX_VALUE;</span>
+<span class="nc" id="L169">					int bestI = 0;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">					for (int i = 0; i &lt; bucket.unsortedPoints.size(); ++i) {</span>
+<span class="nc" id="L171">						double len = a.distanceSq(bucket.unsortedPoints.get(i));</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">						if (bestLen &gt; len) {</span>
+<span class="nc" id="L173">							bestLen = len;</span>
+<span class="nc" id="L174">							bestI = i;</span>
+						}
+					}
+<span class="nc" id="L177">					a = bucket.unsortedPoints.remove(bestI);</span>
+<span class="nc" id="L178">					bucket.sortedPoints.addLast(a);</span>
+<span class="nc" id="L179">				}</span>
+			}
+<span class="nc" id="L181">		}</span>
+		
+		
+		// draw the sorted list of points.
+<span class="nc" id="L185">		logger.debug(&quot;Drawing points...&quot;);	</span>
+<span class="nc" id="L186">		turtle.setColor(newColor);</span>
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">		for (Bucket bucket : buckets) {</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			while (!bucket.sortedPoints.isEmpty()) {</span>
+<span class="nc" id="L190">				Point2D a = bucket.sortedPoints.pop();</span>
+<span class="nc" id="L191">				turtle.moveTo(px+a.getX(), py+a.getY());</span>
+<span class="nc" id="L192">				turtle.penDown();</span>
+<span class="nc" id="L193">			}</span>
+<span class="nc" id="L194">		}</span>
+<span class="nc" id="L195">	}</span>
+	
+	protected void finishCMYK() {
+<span class="nc" id="L198">		FilterCMYK cmyk = new FilterCMYK(myImage);</span>
+<span class="nc" id="L199">		cmyk.filter();</span>
+		
+<span class="nc" id="L201">		turtle = new Turtle();</span>
+		
+<span class="nc" id="L203">		logger.debug(&quot;Yellow...&quot;);		outputChannel(cmyk.getY(),Color.YELLOW,numLines,255.0*3.0/4.0);</span>
+<span class="nc" id="L204">		logger.debug(&quot;Cyan...&quot;);		outputChannel(cmyk.getC(),Color.CYAN,numLines,128.0);</span>
+<span class="nc" id="L205">		logger.debug(&quot;Magenta...&quot;);		outputChannel(cmyk.getM(),Color.MAGENTA,numLines,128.0);</span>
+<span class="nc" id="L206">		logger.debug(&quot;Black...&quot;);		outputChannel(cmyk.getK(),Color.BLACK,numLines,128.0);</span>
+<span class="nc" id="L207">		logger.debug(&quot;Finishing...&quot;);</span>
+<span class="nc" id="L208">	}</span>
+	
+	protected void finishBlackAndWhite() {
+		// The picture might be in color.  Smash it to 255 shades of grey.
+<span class="nc" id="L212">		FilterDesaturate bw = new FilterDesaturate(myImage);</span>
+<span class="nc" id="L213">		TransformedImage img = bw.filter();</span>
+		
+<span class="nc" id="L215">		turtle = new Turtle();</span>
+		
+<span class="nc" id="L217">		outputChannel(img,Color.BLACK,numLines,255.0/4.0);</span>
+<span class="nc" id="L218">	}</span>
+	
+
+	public int getLineCount() {
+<span class="nc" id="L222">		return numLines;</span>
+	}
+
+	public void setLineCount(int value) {
+<span class="nc bnc" id="L226" title="All 2 branches missed.">		if(value&lt;1) value=1;</span>
+<span class="nc" id="L227">		numLines = value;</span>
+<span class="nc" id="L228">	}</span>
+	
+	public boolean isCMYK() {
+<span class="nc" id="L231">		return isCMYK;</span>
+	}
+	
+	public void setCMYK(boolean arg0) {
+<span class="nc" id="L235">		isCMYK = arg0;</span>
+<span class="nc" id="L236">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

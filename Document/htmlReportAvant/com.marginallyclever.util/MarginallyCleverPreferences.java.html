@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MarginallyCleverPreferences.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.util</a> &gt; <span class="el_source">MarginallyCleverPreferences.java</span></div><h1>MarginallyCleverPreferences.java</h1><pre class="source lang-java linenums">package com.marginallyclever.util;
+
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.prefs.AbstractPreferences;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
+
+/**
+ * Created on 6/7/15.
+ *
+ * @author Peter Colapietro
+ * See &lt;a href=&quot;http://www.davidc.net/programming/java/java-preferences-using-file-backing-store&quot;&gt;Java Preferences using a file as the backing store&lt;/a&gt;
+ * See &lt;a href=&quot;http://stackoverflow.com/a/25548386&quot;&gt;SO answer to: How to synchronize file access in a Java servlet?&lt;/a&gt;
+ * @since v7.1.4
+ */
+public class MarginallyCleverPreferences extends AbstractPreferences implements Ancestryable {
+<span class="nc" id="L23">  private static final Logger logger = LoggerFactory.getLogger(MarginallyCleverPreferences.class);</span>
+  
+  /**
+   *
+   */
+  private final Map&lt;String, String&gt; root;
+
+  /**
+   *
+   */
+  private final Map&lt;String, Preferences&gt; children;
+
+  /**
+   *
+   */
+  private boolean thisIsRemoved;
+
+  /**
+   *
+   */
+<span class="nc" id="L43">  private final Object mutex = new Object();</span>
+
+  /**
+   * Creates a preference node with the specified parent and the specified
+   * name relative to its parent.
+   *
+   * @param parent the parent of this preference node, or null if this
+   *               is the root.
+   * @param name   the name of this preference node, relative to its parent,
+   *               or &amp;lg;tt&amp;gt;&quot;&quot;&amp;lg;/tt&amp;gt; if this is the root.
+   * @throws IllegalArgumentException if &amp;lg;tt&amp;gt;name&amp;lg;/tt&amp;gt; contains a slash
+   *                                  (&amp;lg;tt&amp;gt;'/'&amp;lg;/tt&amp;gt;),  or &amp;lg;tt&amp;gt;parent&amp;lg;/tt&amp;gt; is &amp;lg;tt&amp;gt;null&amp;lg;/tt&amp;gt; and
+   *                                  name isn't &amp;lg;tt&amp;gt;&quot;&quot;&amp;lg;/tt&amp;gt;.
+   */
+  public MarginallyCleverPreferences(AbstractPreferences parent, String name) {
+<span class="nc" id="L58">    super(parent, name);</span>
+<span class="nc" id="L59">    logger.debug(&quot;Instantiating node {}&quot;, name);</span>
+<span class="nc" id="L60">    root = new TreeMap&lt;String, String&gt;();</span>
+<span class="nc" id="L61">    children = new TreeMap&lt;String, Preferences&gt;();</span>
+    try {
+<span class="nc" id="L63">      sync();</span>
+<span class="nc" id="L64">    } catch (BackingStoreException e) {</span>
+<span class="nc" id="L65">      logger.error(&quot;Unable to sync on creation of node {}.&quot;, name, e);</span>
+<span class="nc" id="L66">    }</span>
+<span class="nc" id="L67">  }</span>
+
+  @Override
+  protected void putSpi(@NotNull String key, String value) {
+<span class="nc" id="L71">    root.put(key, value);</span>
+    try {
+<span class="nc" id="L73">      flush();</span>
+<span class="nc" id="L74">    } catch (BackingStoreException e) {</span>
+<span class="nc" id="L75">    	logger.error(&quot;Unable to flush after putting {}.&quot;, key, e);</span>
+<span class="nc" id="L76">    }</span>
+<span class="nc" id="L77">  }</span>
+
+  @Override
+  protected String getSpi(@NotNull String key) {
+<span class="nc" id="L81">    return root.get(key);</span>
+  }
+
+  @Override
+  protected void removeSpi(@NotNull String key) {
+<span class="nc" id="L86">    root.remove(key);</span>
+    try {
+<span class="nc" id="L88">      flush();</span>
+<span class="nc" id="L89">    } catch (BackingStoreException e) {</span>
+<span class="nc" id="L90">    	logger.error(&quot;Unable to flush after removing {}.&quot;, key, e);</span>
+<span class="nc" id="L91">    }</span>
+<span class="nc" id="L92">  }</span>
+
+  @Override
+  protected void removeNodeSpi() throws BackingStoreException {
+<span class="nc" id="L96">    flush();</span>
+<span class="nc" id="L97">    thisIsRemoved = true;</span>
+<span class="nc" id="L98">  }</span>
+
+  @NotNull
+  @Override
+  protected String[] keysSpi() {
+<span class="nc" id="L103">    final Set&lt;String&gt; keySet = root.keySet();</span>
+<span class="nc" id="L104">    return keySet.toArray(new String[keySet.size()]);</span>
+  }
+
+  @NotNull
+  @Override
+  protected String[] childrenNamesSpi() {
+<span class="nc" id="L110">    final Set&lt;String&gt; childrenNames = children.keySet();</span>
+<span class="nc" id="L111">    return childrenNames.toArray(new String[childrenNames.size()]);</span>
+  }
+
+  /**
+   * http://stackoverflow.com/a/24249709
+   *
+   * @param name
+   * @return preferences
+   */
+  @NotNull
+  @Override
+  protected AbstractPreferences childSpi(@NotNull String name) {
+<span class="nc" id="L123">	AbstractPreferences childPreferenceNode = (AbstractPreferences) children.get(name);</span>
+<span class="nc" id="L124">    boolean isChildRemoved = false;</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">    if (childPreferenceNode != null) {</span>
+      try {
+<span class="nc" id="L127">        isChildRemoved = getIsRemoved(childPreferenceNode);</span>
+<span class="nc" id="L128">      } catch (ReflectiveOperationException e) {</span>
+<span class="nc" id="L129">        logger.error( e.getMessage() );</span>
+<span class="nc" id="L130">      }</span>
+    }
+<span class="nc bnc" id="L132" title="All 4 branches missed.">    if (childPreferenceNode == null || isChildRemoved) {</span>
+<span class="nc" id="L133">      final AbstractPreferences castedPreferences = new MarginallyCleverPreferences(this, name);</span>
+<span class="nc" id="L134">      childPreferenceNode = castedPreferences;</span>
+<span class="nc" id="L135">      children.put(name, childPreferenceNode);</span>
+    }
+<span class="nc" id="L137">    return childPreferenceNode;</span>
+  }
+
+  /**
+   * FIXME - Pure hack to get around erasure.
+   *
+   * @param abstractPreference
+   * @return
+   * @throws ReflectiveOperationException
+   */
+  private boolean getIsRemoved(AbstractPreferences abstractPreference) throws ReflectiveOperationException {
+<span class="nc" id="L148">    logger.debug( abstractPreference.toString() );</span>
+<span class="nc" id="L149">    final Method declaredMethod = AbstractPreferences.class.getDeclaredMethod(&quot;isRemoved&quot;);</span>
+<span class="nc" id="L150">    declaredMethod.setAccessible(true);</span>
+<span class="nc" id="L151">    Object isRemoved = declaredMethod.invoke(abstractPreference, new Object[]{null});</span>
+<span class="nc" id="L152">    return (Boolean) isRemoved;</span>
+  }
+
+  @Override
+  protected void syncSpi() throws BackingStoreException {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">    if (isRemoved()) {</span>
+<span class="nc" id="L158">      return;</span>
+    }
+<span class="nc" id="L160">    final File propertiesPreferencesFile = MarginallyCleverPreferencesFileFactory.getPropertiesPreferencesFile();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">    if (!propertiesPreferencesFile.exists()) {</span>
+<span class="nc" id="L162">      return;</span>
+    }
+<span class="nc" id="L164">    synchronized (mutex) {</span>
+<span class="nc" id="L165">      final Properties p = new Properties();</span>
+      try {
+<span class="nc" id="L167">        try (final InputStream inStream = new FileInputStream(propertiesPreferencesFile)) {</span>
+<span class="nc" id="L168">          p.load(inStream);</span>
+        }
+
+<span class="nc" id="L171">        final StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L172">        getPath(sb);</span>
+<span class="nc" id="L173">        final String path = sb.toString();</span>
+
+<span class="nc" id="L175">        final Enumeration&lt;?&gt; propertyNames = p.propertyNames();</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        while (propertyNames.hasMoreElements()) {</span>
+<span class="nc" id="L177">          final String propKey = (String) propertyNames.nextElement();</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">          if (propKey.startsWith(path)) {</span>
+<span class="nc" id="L179">            final String subKey = propKey.substring(path.length());</span>
+            // Only load immediate descendants
+<span class="nc bnc" id="L181" title="All 2 branches missed.">            if (subKey.indexOf('.') == -1) {</span>
+<span class="nc" id="L182">              root.put(subKey, p.getProperty(propKey));</span>
+            }
+          }
+<span class="nc" id="L185">        }</span>
+<span class="nc" id="L186">      } catch (IOException e) {</span>
+<span class="nc" id="L187">        throw new BackingStoreException(e);</span>
+<span class="nc" id="L188">      }</span>
+<span class="nc" id="L189">    }</span>
+<span class="nc" id="L190">  }</span>
+
+  @Override
+  protected void flushSpi() throws BackingStoreException {
+<span class="nc" id="L194">    final File xmlPreferencesFile = MarginallyCleverPreferencesFileFactory.getXmlPreferencesFile();</span>
+<span class="nc" id="L195">    final File file = MarginallyCleverPreferencesFileFactory.getPropertiesPreferencesFile();</span>
+<span class="nc" id="L196">    synchronized (mutex) {</span>
+      try {
+<span class="nc" id="L198">        final Properties p = new Properties();</span>
+<span class="nc" id="L199">        final StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L200">        getPath(sb);</span>
+<span class="nc" id="L201">        final String path = sb.toString();</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        if (file.exists()) {</span>
+<span class="nc" id="L203">          try (final InputStream fileInputStream = new FileInputStream(file)) {</span>
+<span class="nc" id="L204">            p.load(fileInputStream);</span>
+          }
+
+<span class="nc" id="L207">          final List&lt;String&gt; toRemove = new ArrayList&lt;String&gt;();</span>
+
+          // Make a list of all direct children of this node to be removed
+<span class="nc" id="L210">          final Enumeration&lt;?&gt; pnen = p.propertyNames();</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">          while (pnen.hasMoreElements()) {</span>
+<span class="nc" id="L212">            final String propKey = (String) pnen.nextElement();</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">            if (propKey.startsWith(path)) {</span>
+<span class="nc" id="L214">              final String subKey = propKey.substring(path.length());</span>
+              // Only do immediate descendants
+<span class="nc bnc" id="L216" title="All 2 branches missed.">              if (subKey.indexOf('.') == -1) {</span>
+<span class="nc" id="L217">                toRemove.add(propKey);</span>
+              }
+            }
+<span class="nc" id="L220">          }</span>
+
+          // Remove them now that the enumeration is done with
+<span class="nc bnc" id="L223" title="All 2 branches missed.">          for (String propKey : toRemove) {</span>
+<span class="nc" id="L224">            p.remove(propKey);</span>
+<span class="nc" id="L225">          }</span>
+        }
+        // If this node hasn't been removed, add back in any values
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        if (!thisIsRemoved) {</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">          for (String s : root.keySet()) {</span>
+<span class="nc" id="L230">            p.setProperty(path + s, root.get(s));</span>
+<span class="nc" id="L231">          }</span>
+<span class="nc" id="L232">          storePreferencesInFile(file, p);</span>
+<span class="nc" id="L233">          storeNodeInFile(xmlPreferencesFile);</span>
+        }
+<span class="nc" id="L235">      } catch (IOException e) {</span>
+<span class="nc" id="L236">        throw new BackingStoreException(e);</span>
+<span class="nc" id="L237">      }</span>
+<span class="nc" id="L238">    }</span>
+<span class="nc" id="L239">  }</span>
+
+  private void storeNodeInFile(File file) throws IOException, BackingStoreException {
+<span class="nc bnc" id="L242" title="All 2 branches missed.">    final Preferences parent = recursiveGetParent(this.parent() != null ? this.parent() : this);</span>
+<span class="nc" id="L243">    try (final OutputStream fileOutputStream = new FileOutputStream(file)) {</span>
+<span class="nc" id="L244">      parent.exportNode(fileOutputStream);</span>
+    }
+<span class="nc" id="L246">  }</span>
+
+  private Preferences recursiveGetParent(Preferences node) {
+<span class="nc" id="L249">    Preferences parent = node.parent();</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">    if (parent == null) {</span>
+<span class="nc" id="L251">      node = parent;</span>
+    } else {
+<span class="nc" id="L253">      recursiveGetParent(parent);</span>
+    }
+<span class="nc" id="L255">    return node;</span>
+  }
+
+  /**
+   * @param file
+   * @param p
+   * @throws IOException
+   */
+  private void storePreferencesInFile(File file, Properties p) throws IOException, BackingStoreException {
+<span class="nc" id="L264">    final String marginallyCleverPreferencesFileComments = &quot;MarginallyCleverPreferences&quot;;</span>
+<span class="nc" id="L265">    try (final OutputStream fileOutputStream = new FileOutputStream(file)) {</span>
+<span class="nc" id="L266">      p.store(fileOutputStream, marginallyCleverPreferencesFileComments);</span>
+    }
+<span class="nc" id="L268">  }</span>
+
+  /**
+   * @param sb String builder
+   */
+  private void getPath(StringBuilder sb) {
+<span class="nc" id="L274">    MarginallyCleverPreferences parent = null;</span>
+    try {
+<span class="nc" id="L276">      parent = (MarginallyCleverPreferences) parent();</span>
+<span class="nc" id="L277">    } catch (ClassCastException e) {</span>
+      //logger.info(&quot;NOOP&quot;);
+<span class="nc" id="L279">    }</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">    if (parent == null) {</span>
+<span class="nc" id="L281">      return;</span>
+    }
+<span class="nc" id="L283">    parent.getPath(sb);</span>
+<span class="nc" id="L284">    sb.append(name()).append('.');</span>
+<span class="nc" id="L285">  }</span>
+
+  /**
+   * @return children
+   */
+  @Override
+  public Map&lt;String, Preferences&gt; getChildren() {
+<span class="nc" id="L292">    return new TreeMap&lt;String, Preferences&gt;(children);</span>
+  }
+
+  /**
+   * @return root
+   */
+  @Override
+  public Map&lt;String, String&gt; getRoot() {
+<span class="nc" id="L300">    return new TreeMap&lt;String, String&gt;(root);</span>
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

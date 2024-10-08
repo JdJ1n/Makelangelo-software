@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DrawingHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience.helpers</a> &gt; <span class="el_source">DrawingHelper.java</span></div><h1>DrawingHelper.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience.helpers;
+
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.util.texture.Texture;
+import com.jogamp.opengl.util.texture.TextureIO;
+import com.marginallyclever.convenience.FileAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+
+<span class="nc" id="L13">public class DrawingHelper {</span>
+<span class="nc" id="L14">    private static final Logger logger = LoggerFactory.getLogger(DrawingHelper.class);</span>
+
+    /**
+     * Draw a circle
+     * @param gl2 the render context
+     * @param x x center coordinate
+     * @param y y center coordinate
+     * @param radius radius
+     */
+    public static void drawCircle(GL2 gl2, float x, float y, float radius) {
+<span class="nc" id="L24">        gl2.glTranslatef(x, y, 0);</span>
+<span class="nc" id="L25">        gl2.glBegin(GL2.GL_LINE_LOOP);</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        for (float f = 0; f &lt; 2.0 * Math.PI; f += 0.3f) {</span>
+<span class="nc" id="L27">            gl2.glVertex2d(</span>
+<span class="nc" id="L28">                    Math.cos(f) * radius,</span>
+<span class="nc" id="L29">                    Math.sin(f) * radius);</span>
+        }
+<span class="nc" id="L31">        gl2.glEnd();</span>
+<span class="nc" id="L32">        gl2.glTranslatef(-x, -y, 0);</span>
+<span class="nc" id="L33">    }</span>
+
+    /**
+     * Draw an arc
+     * @param gl2 the render context
+     * @param x x center coordinate
+     * @param y y center coordinate
+     * @param radius radius
+     * @param a1 start angle
+     * @param a2 end angle
+     */
+    public static void drawArc(GL2 gl2, float x, float y, float radius, float a1, float a2) {
+<span class="nc" id="L45">        gl2.glTranslatef(x, y, 0);</span>
+<span class="nc" id="L46">        gl2.glBegin(GL2.GL_LINES);</span>
+<span class="nc" id="L47">        int steps = 10;</span>
+<span class="nc" id="L48">        float delta = (a2 - a1) / (float) steps;</span>
+<span class="nc" id="L49">        float f = a1;</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        for (int i = 0; i &lt; steps; i++) {</span>
+<span class="nc" id="L51">            gl2.glVertex2d(Math.cos(f) * radius, Math.sin(f) * radius);</span>
+<span class="nc" id="L52">            gl2.glVertex2d(Math.cos(f + delta) * radius, Math.sin(f + delta) * radius);</span>
+<span class="nc" id="L53">            f += delta;</span>
+        }
+<span class="nc" id="L55">        gl2.glEnd();</span>
+<span class="nc" id="L56">        gl2.glTranslatef(-x, -y, 0);</span>
+<span class="nc" id="L57">    }</span>
+
+    /**
+     * Draw a rectangle
+     * @param gl2 the render context
+     * @param top top coordinate
+     * @param right right coordinate
+     * @param bottom bottom coordinate
+     * @param left left coordinate
+     */
+    public static void drawRectangle(GL2 gl2, double top, double right, double bottom, double left) {
+<span class="nc" id="L68">        gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L69">        gl2.glVertex2d(left, top);</span>
+<span class="nc" id="L70">        gl2.glVertex2d(right, top);</span>
+<span class="nc" id="L71">        gl2.glVertex2d(right, bottom);</span>
+<span class="nc" id="L72">        gl2.glVertex2d(left, bottom);</span>
+<span class="nc" id="L73">        gl2.glEnd();</span>
+<span class="nc" id="L74">    }</span>
+
+    /**
+     * Load the given file from the classpath. Make sure the size of the picture is a power of 2
+     * @param name filename
+     * @return a texture
+     */
+    public static Texture loadTexture(String name) {
+<span class="nc" id="L82">        Texture tex = null;</span>
+<span class="nc" id="L83">        try (BufferedInputStream bis = FileAccess.open(name)) {</span>
+<span class="nc" id="L84">            tex = TextureIO.newTexture(bis, false, name.substring(name.lastIndexOf('.') + 1));</span>
+<span class="nc" id="L85">        } catch (IOException e) {</span>
+<span class="nc" id="L86">            logger.warn(&quot;Can't load {}&quot;, name, e);</span>
+<span class="nc" id="L87">        }</span>
+<span class="nc" id="L88">        return tex;</span>
+    }
+
+    /**
+     * Paint a quad with the given texture
+     * @param gl2 the render context
+     * @param x x center coordinate
+     * @param y y center coordinate
+     * @param width with of the texture
+     * @param height height of the texture
+     */
+    public static void paintTexture(GL2 gl2, Texture texture, double x, double y, double width, double height) {
+<span class="nc" id="L100">        texture.bind(gl2);</span>
+<span class="nc" id="L101">        gl2.glColor4d(1, 1, 1, 1);</span>
+<span class="nc" id="L102">        gl2.glEnable(GL2.GL_TEXTURE_2D);</span>
+<span class="nc" id="L103">        gl2.glBegin(GL2.GL_QUADS);</span>
+<span class="nc" id="L104">        gl2.glTexCoord2d(0, 0);</span>
+<span class="nc" id="L105">        gl2.glVertex2d(x, y);</span>
+<span class="nc" id="L106">        gl2.glTexCoord2d(1, 0);</span>
+<span class="nc" id="L107">        gl2.glVertex2d(x + width, y);</span>
+<span class="nc" id="L108">        gl2.glTexCoord2d(1, 1);</span>
+<span class="nc" id="L109">        gl2.glVertex2d(x + width, y + height);</span>
+<span class="nc" id="L110">        gl2.glTexCoord2d(0, 1);</span>
+<span class="nc" id="L111">        gl2.glVertex2d(x, y + height);</span>
+<span class="nc" id="L112">        gl2.glEnd();</span>
+<span class="nc" id="L113">        gl2.glDisable(GL2.GL_TEXTURE_2D);</span>
+<span class="nc" id="L114">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

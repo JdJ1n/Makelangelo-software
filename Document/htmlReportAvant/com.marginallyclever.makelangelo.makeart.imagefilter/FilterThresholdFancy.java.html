@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterThresholdFancy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imagefilter</a> &gt; <span class="el_source">FilterThresholdFancy.java</span></div><h1>FilterThresholdFancy.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imagefilter;
+
+import com.marginallyclever.convenience.ColorRGB;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+
+import java.awt.image.BufferedImage;
+
+/**
+ * For any pixel u 0...1,&lt;br&gt;
+ * &lt;ul&gt;
+ *     &lt;li&gt;if u &gt;= e, then v = 1&lt;/li&gt;
+ *     &lt;li&gt;if u &lt;  e, then v = 1 + tanh(phi*(u-e))&lt;/li&gt;
+ * &lt;/ul&gt;
+ * @author Dan Royer
+ * @since 7.46.0
+ */
+public class FilterThresholdFancy extends ImageFilter {
+    private final TransformedImage a;
+    private final int threshold;
+    private final double phi;
+
+    /**
+     * @param a source image
+     * @param threshold 0...255
+     * @param phi &gt;=0
+     */
+<span class="fc" id="L27">    public FilterThresholdFancy(TransformedImage a, int threshold, double phi) {</span>
+<span class="fc" id="L28">        this.a = a;</span>
+<span class="fc" id="L29">        this.threshold = threshold;</span>
+<span class="fc" id="L30">        this.phi = phi;</span>
+<span class="fc" id="L31">    }</span>
+
+    @Override
+    public TransformedImage filter() {
+<span class="nc" id="L35">        TransformedImage result = new TransformedImage(a);</span>
+<span class="nc" id="L36">        int w = a.getSourceImage().getWidth();</span>
+<span class="nc" id="L37">        int h = a.getSourceImage().getHeight();</span>
+
+<span class="nc" id="L39">        BufferedImage aa = a.getSourceImage();</span>
+<span class="nc" id="L40">        BufferedImage rr = result.getSourceImage();</span>
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        for (int y = 0; y &lt; h; ++y) {</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">            for (int x = 0; x &lt; w; ++x) {</span>
+<span class="nc" id="L44">                ColorRGB diff = new ColorRGB(aa.getRGB(x, y));</span>
+<span class="nc" id="L45">                diff.red   = modify(diff.red  );</span>
+<span class="nc" id="L46">                diff.green = modify(diff.green);</span>
+<span class="nc" id="L47">                diff.blue  = modify(diff.blue );</span>
+<span class="nc" id="L48">                rr.setRGB(x, y, diff.toInt());</span>
+            }
+        }
+
+<span class="nc" id="L52">        return result;</span>
+    }
+
+    int modify(double input) {
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if(input &gt;= threshold) return 255;</span>
+        // diff will always be &lt;0
+<span class="fc" id="L58">        double diff = input - threshold;</span>
+<span class="fc" id="L59">        double diffUnit = diff / 255.0;</span>
+<span class="fc" id="L60">        double temp = phi * diffUnit;</span>
+        // if tau&gt;=0 then tanh will always be -1...0
+<span class="fc" id="L62">        double vUnit = 1.0 + Math.tanh(temp);</span>
+<span class="fc" id="L63">        double v = vUnit * 255.0;</span>
+<span class="fc" id="L64">        return (int)Math.max( 0, Math.min(255,v) );</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

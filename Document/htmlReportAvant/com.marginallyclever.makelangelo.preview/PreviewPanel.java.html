@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PreviewPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.preview</a> &gt; <span class="el_source">PreviewPanel.java</span></div><h1>PreviewPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.preview;
+
+import com.jogamp.opengl.*;
+import com.jogamp.opengl.awt.GLJPanel;
+import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.util.FPSAnimator;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.vecmath.Vector2d;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.prefs.Preferences;
+
+/**
+ * OpenGL hardware accelerated WYSIWYG view.
+ * @author Dan Royer
+ *
+ */
+public class PreviewPanel extends GLJPanel implements GLEventListener {
+<span class="nc" id="L28">	private static final Logger logger = LoggerFactory.getLogger(PreviewPanel.class);</span>
+	
+	// Use debug pipeline?
+	private static final boolean DEBUG_GL_ON = false;
+	private static final boolean TRACE_GL_ON = false;
+
+<span class="nc" id="L34">	private final List&lt;PreviewListener&gt; previewListeners = new ArrayList&lt;&gt;();</span>
+	
+	private Camera camera;
+
+<span class="nc" id="L38">	public Color backgroundColor = new Color(255-67,255-67,255-67);</span>
+
+	/**
+	 * button state tracking
+	 */
+<span class="nc" id="L43">	private int buttonPressed = MouseEvent.NOBUTTON;</span>
+
+	/**
+	 * previous mouse position
+	 */
+	private int mouseOldX, mouseOldY;
+	private int mouseX,mouseY;
+
+	/**
+	 * mouseLastZoomDirection is used to prevent reverse zooming on track pads, bug #559.
+	 */
+<span class="nc" id="L54">	private int mouseLastZoomDirection = 0;</span>
+
+	// OpenGL stuff
+	private GLU glu;
+	private FPSAnimator animator;
+
+	public PreviewPanel() {
+<span class="nc" id="L61">		super();</span>
+		
+		try {
+<span class="nc" id="L64">			logger.debug(&quot;  get GL capabilities...&quot;);</span>
+<span class="nc" id="L65">			GLProfile glProfile = GLProfile.getDefault();</span>
+<span class="nc" id="L66">			GLCapabilities caps = new GLCapabilities(glProfile);</span>
+			// caps.setSampleBuffers(true);
+			// caps.setHardwareAccelerated(true);
+			// caps.setNumSamples(4);
+<span class="nc" id="L70">			setRequestedGLCapabilities(caps);</span>
+<span class="nc" id="L71">		} catch(GLException e) {</span>
+<span class="nc" id="L72">			logger.error(&quot;I failed the very first call to OpenGL.  Are your native libraries missing?&quot;, e);</span>
+<span class="nc" id="L73">			System.exit(1);</span>
+<span class="nc" id="L74">		}</span>
+
+<span class="nc" id="L76">		addGLEventListener(this);</span>
+
+<span class="nc" id="L78">		final JPanel me = this;</span>
+
+		// scroll the mouse wheel to zoom
+<span class="nc" id="L81">		addMouseWheelListener(new MouseAdapter() {</span>
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+<span class="nc" id="L84">				int notches = e.getWheelRotation();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">				if (notches == 0) return;</span>
+
+<span class="nc" id="L87">				Point2D p = new Point2D(e.getPoint().x,e.getPoint().y);</span>
+<span class="nc" id="L88">				Rectangle r = me.getBounds();</span>
+<span class="nc" id="L89">				p.x -= r.getCenterX();</span>
+<span class="nc" id="L90">				p.y -= r.getCenterY();</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">				if (notches &lt; 0) {</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">					if (mouseLastZoomDirection == -1) camera.zoom(-1,p);</span>
+<span class="nc" id="L94">					mouseLastZoomDirection = -1;</span>
+				} else {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">					if (mouseLastZoomDirection == 1) camera.zoom(1,p);</span>
+<span class="nc" id="L97">					mouseLastZoomDirection = 1;</span>
+				}
+<span class="nc" id="L99">				repaint();</span>
+<span class="nc" id="L100">			}</span>
+		});
+		
+		// remember button states for when we need them.
+<span class="nc" id="L104">		addMouseListener(new MouseAdapter() {</span>
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+<span class="nc" id="L108">				buttonPressed = e.getButton();</span>
+<span class="nc" id="L109">				mouseOldX = e.getX();</span>
+<span class="nc" id="L110">				mouseOldY = e.getY();</span>
+<span class="nc" id="L111">			}</span>
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+<span class="nc" id="L115">				buttonPressed = MouseEvent.NOBUTTON;</span>
+<span class="nc" id="L116">			}</span>
+		});
+		
+		
+		// left click + drag to move the camera around.
+<span class="nc" id="L121">		addMouseMotionListener(new MouseAdapter() {</span>
+			@Override
+			public void mouseDragged(MouseEvent e) {
+<span class="nc" id="L124">				int x = e.getX();</span>
+<span class="nc" id="L125">				int y = e.getY();</span>
+<span class="nc" id="L126">				mouseX = x;</span>
+<span class="nc" id="L127">				mouseY = y;</span>
+<span class="nc" id="L128">				setTipXY();</span>
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">				if (buttonPressed == MouseEvent.BUTTON1) {</span>
+<span class="nc" id="L131">					int dx = x - mouseOldX;</span>
+<span class="nc" id="L132">					int dy = y - mouseOldY;</span>
+<span class="nc" id="L133">					mouseOldX = x;</span>
+<span class="nc" id="L134">					mouseOldY = y;</span>
+<span class="nc" id="L135">					camera.moveRelative(-dx, -dy);</span>
+<span class="nc" id="L136">					repaint();</span>
+				}
+<span class="nc" id="L138">			}</span>
+
+			@Override
+			public void mouseMoved(MouseEvent e) {
+<span class="nc" id="L142">				int x = e.getX();</span>
+<span class="nc" id="L143">				int y = e.getY();</span>
+<span class="nc" id="L144">				mouseOldX = x;</span>
+<span class="nc" id="L145">				mouseOldY = y;</span>
+<span class="nc" id="L146">				mouseX = x;</span>
+<span class="nc" id="L147">				mouseY = y;</span>
+<span class="nc" id="L148">				setTipXY();</span>
+<span class="nc" id="L149">			}</span>
+		});
+		
+		// start animation system
+<span class="nc" id="L153">		logger.debug(&quot;  starting animator...&quot;);</span>
+<span class="nc" id="L154">		animator = new FPSAnimator(1);</span>
+<span class="nc" id="L155">		animator.add(this);</span>
+<span class="nc" id="L156">		animator.start();</span>
+<span class="nc" id="L157">	}</span>
+
+	public void addListener(PreviewListener arg0) {
+<span class="nc" id="L160">		previewListeners.add(arg0);</span>
+<span class="nc" id="L161">	}</span>
+	
+	public void removeListener(PreviewListener arg0) {
+<span class="nc" id="L164">		previewListeners.remove(arg0);</span>
+<span class="nc" id="L165">	}</span>
+	
+	/**
+	 * Set up the correct projection so the image appears in the right location and aspect ratio.
+	 */
+	@Override
+	public void reshape(GLAutoDrawable glautodrawable, int x, int y, int width, int height) {
+<span class="nc" id="L172">		GL2 gl2 = glautodrawable.getGL().getGL2();</span>
+		
+<span class="nc" id="L174">		camera.setWidth(width);</span>
+<span class="nc" id="L175">		camera.setHeight(height);</span>
+
+<span class="nc" id="L177">		gl2.glMatrixMode(GL2.GL_PROJECTION);</span>
+<span class="nc" id="L178">		gl2.glLoadIdentity();</span>
+		// orthographic projection
+<span class="nc" id="L180">		float w2 = width/2.0f;</span>
+<span class="nc" id="L181">		float h2 = height/2.0f;</span>
+<span class="nc" id="L182">		glu.gluOrtho2D(-w2, w2, -h2, h2);</span>
+<span class="nc" id="L183">	}</span>
+
+	public Vector2d getMousePositionInWorld() {
+<span class="nc" id="L186">		double w2 = camera.getWidth()/2.0;</span>
+<span class="nc" id="L187">		double h2 = camera.getHeight()/2.0;</span>
+<span class="nc" id="L188">		double z = camera.getZoom();</span>
+<span class="nc" id="L189">		Vector2d cursorInSpace = new Vector2d(mouseX-w2, mouseY-h2);</span>
+<span class="nc" id="L190">		cursorInSpace.scale(1.0/z);</span>
+<span class="nc" id="L191">		return new Vector2d(camera.getX()+cursorInSpace.x,</span>
+<span class="nc" id="L192">							-(camera.getY()+cursorInSpace.y));</span>
+	}
+
+	private void setTipXY() {
+<span class="nc" id="L196">		Vector2d p = getMousePositionInWorld();</span>
+<span class="nc" id="L197">		this.setToolTipText((int)p.x + &quot;, &quot; + (int)p.y);</span>
+<span class="nc" id="L198">	}</span>
+
+	/**
+	 * Startup OpenGL.  Turn on debug pipeline(s) if needed.
+	 */
+	@Override
+	public void init(GLAutoDrawable glautodrawable) {
+<span class="nc" id="L205">		GL gl = glautodrawable.getGL();</span>
+
+		if (DEBUG_GL_ON) {
+			try {
+				// Debug ..
+				gl = gl.getContext().setGL(GLPipelineFactory.create(&quot;com.jogamp.opengl.Debug&quot;, null, gl, null));
+			} catch (Exception e) {
+				logger.error(&quot;Failed to init OpenGL debug pipeline&quot;, e);
+			}
+		}
+
+		if (TRACE_GL_ON) {
+			try {
+				// Trace ..
+				gl = gl.getContext().setGL(
+						GLPipelineFactory.create(&quot;com.jogamp.opengl.Trace&quot;, null, gl, new Object[] { System.err }));
+			} catch (Exception e) {
+				logger.error(&quot;Failed to init OpenGL trace&quot;, e);
+			}
+		}
+		
+<span class="nc" id="L226">		glu = GLU.createGLU(gl);</span>
+<span class="nc" id="L227">	}</span>
+
+	@Override
+<span class="nc" id="L230">	public void dispose(GLAutoDrawable glautodrawable) {}</span>
+
+	/**
+	 * Refresh the image in the view.  This is where drawing begins.
+	 */
+	@Override
+	public void display(GLAutoDrawable glautodrawable) {
+		// draw the world
+<span class="nc" id="L238">		GL2 gl2 = glautodrawable.getGL().getGL2();</span>
+
+		// set some render quality options
+<span class="nc" id="L241">		Preferences prefs = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.GRAPHICS);</span>
+<span class="nc bnc" id="L242" title="All 4 branches missed.">		if(prefs != null &amp;&amp; prefs.getBoolean(&quot;antialias&quot;, true)) {</span>
+<span class="nc" id="L243">			gl2.glEnable(GL2.GL_LINE_SMOOTH);</span>
+<span class="nc" id="L244">			gl2.glEnable(GL2.GL_POLYGON_SMOOTH);</span>
+<span class="nc" id="L245">			gl2.glHint(GL2.GL_POLYGON_SMOOTH_HINT, GL2.GL_NICEST);</span>
+		} else {
+<span class="nc" id="L247">			gl2.glDisable(GL2.GL_LINE_SMOOTH);</span>
+<span class="nc" id="L248">			gl2.glDisable(GL2.GL_POLYGON_SMOOTH);</span>
+<span class="nc" id="L249">			gl2.glHint(GL2.GL_POLYGON_SMOOTH_HINT, GL2.GL_FASTEST);</span>
+		}
+		
+		// turn on blending
+<span class="nc" id="L253">		gl2.glEnable(GL2.GL_BLEND);</span>
+<span class="nc" id="L254">		gl2.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);</span>
+		
+<span class="nc" id="L256">		paintBackground(gl2);</span>
+<span class="nc" id="L257">		paintCamera(gl2);</span>
+
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		for( PreviewListener p : previewListeners ) {</span>
+<span class="nc" id="L260">			gl2.glPushMatrix();</span>
+<span class="nc" id="L261">			p.render(gl2);</span>
+<span class="nc" id="L262">			gl2.glPopMatrix();</span>
+<span class="nc" id="L263">		}</span>
+<span class="nc" id="L264">	}</span>
+
+	/**
+	 * Set up the correct modelview so the robot appears where it should.
+	 *
+	 * @param gl2 OpenGL context
+	 */
+	private void paintCamera(GL2 gl2) {
+<span class="nc" id="L272">		gl2.glMatrixMode(GL2.GL_MODELVIEW);</span>
+<span class="nc" id="L273">		gl2.glLoadIdentity();</span>
+<span class="nc" id="L274">		gl2.glScaled(camera.getZoom(),camera.getZoom(),1);</span>
+<span class="nc" id="L275">		gl2.glTranslated(-camera.getX(), camera.getY(),0);</span>
+<span class="nc" id="L276">	}</span>
+
+	/**
+	 * Clear the panel
+	 *
+	 * @param gl2 OpenGL context
+	 */
+	private void paintBackground(GL2 gl2) {
+		// Clear The Screen And The Depth Buffer
+<span class="nc" id="L285">		gl2.glClearColor(</span>
+<span class="nc" id="L286">				(float)backgroundColor.getRed()/255.0f,</span>
+<span class="nc" id="L287">				(float)backgroundColor.getGreen()/255.0f,</span>
+<span class="nc" id="L288">				(float)backgroundColor.getBlue()/255.0f,</span>
+				0.0f);
+
+		// Special handling for the case where the GLJPanel is translucent
+		// and wants to be composited with other Java 2D content
+<span class="nc bnc" id="L293" title="All 2 branches missed.">		if (GLProfile.isAWTAvailable()</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">				&amp;&amp; !isOpaque()</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">				&amp;&amp; shouldPreserveColorBufferIfTranslucent()) {</span>
+<span class="nc" id="L296">			gl2.glClear(GL2.GL_DEPTH_BUFFER_BIT);</span>
+		} else {
+<span class="nc" id="L298">			gl2.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);</span>
+		}
+<span class="nc" id="L300">	}</span>
+
+	public void stop() {
+<span class="nc" id="L303">		animator.stop();</span>
+<span class="nc" id="L304">	}</span>
+
+	public void setCamera(Camera camera) {
+<span class="nc" id="L307">		this.camera = camera;</span>
+<span class="nc" id="L308">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

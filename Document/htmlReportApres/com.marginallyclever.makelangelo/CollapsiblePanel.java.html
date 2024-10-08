@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CollapsiblePanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">CollapsiblePanel.java</span></div><h1>CollapsiblePanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo;
+
+import com.marginallyclever.makelangelo.select.*;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
+import java.awt.event.*;
+
+/**
+ * The user-triggered collapsable panel containing the component (trigger) in the titled border
+ */
+public class CollapsiblePanel extends JPanel {
+	private String title;
+    private final TitledBorder border;
+    private final JPanel innerPanel;
+    private final Window parentWindow;
+    private Dimension previousDimension;
+    private final int heightCollapsibleComponent;
+    private Dimension initialDimension;
+    private final boolean collapsedByDefault;
+
+<span class="nc" id="L23">    public CollapsiblePanel(Window parentWindow, String title, int heightCollapsibleComponent, boolean collapsedByDefault) {</span>
+<span class="nc" id="L24">        this.parentWindow = parentWindow;</span>
+<span class="nc" id="L25">        this.title = title;</span>
+<span class="nc" id="L26">        border = BorderFactory.createTitledBorder(title);</span>
+<span class="nc" id="L27">        setBorder(border);</span>
+<span class="nc" id="L28">        BorderLayout borderLayout = new BorderLayout();</span>
+<span class="nc" id="L29">        setLayout(borderLayout);</span>
+<span class="nc" id="L30">        addMouseListener(mouseListener);</span>
+<span class="nc" id="L31">        innerPanel = new JPanel(new GridLayout(1, 1), false);</span>
+<span class="nc" id="L32">        parentWindow.addComponentListener(contentComponentListener);</span>
+<span class="nc" id="L33">        super.add(innerPanel);</span>
+<span class="nc" id="L34">        this.heightCollapsibleComponent = heightCollapsibleComponent;</span>
+<span class="nc" id="L35">        this.collapsedByDefault = collapsedByDefault;</span>
+<span class="nc" id="L36">        toggleVisibility(false);</span>
+<span class="nc" id="L37">    }</span>
+
+<span class="nc" id="L39">    MouseListener mouseListener = new MouseAdapter() {</span>
+        @Override
+        public void mouseClicked(MouseEvent e) {
+<span class="nc" id="L42">            toggleVisibility();</span>
+<span class="nc" id="L43">        }</span>
+    };
+
+<span class="nc" id="L46">    ComponentListener contentComponentListener = new ComponentAdapter() {</span>
+        @Override
+        public void componentShown(ComponentEvent e) {
+<span class="nc" id="L49">            updateBorderTitle();</span>
+<span class="nc" id="L50">        }</span>
+
+        @Override
+        public void componentHidden(ComponentEvent e) {
+<span class="nc" id="L54">            updateBorderTitle();</span>
+<span class="nc" id="L55">        }</span>
+    };
+
+    public String getTitle() {
+<span class="nc" id="L59">        return title;</span>
+    }
+
+    public void setTitle(String title) {
+<span class="nc" id="L63">        firePropertyChange(&quot;title&quot;, this.title, this.title = title);</span>
+<span class="nc" id="L64">    }</span>
+
+    @Override
+    public Component add(Component comp) {
+<span class="nc" id="L68">        comp.addComponentListener(contentComponentListener);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        comp.setVisible(!collapsedByDefault);</span>
+<span class="nc" id="L70">        Component r = innerPanel.add(comp);</span>
+<span class="nc" id="L71">        updateBorderTitle();</span>
+<span class="nc" id="L72">        return r;</span>
+    }
+
+    @Override
+    public Component add(String name, Component comp) {
+<span class="nc" id="L77">        comp.addComponentListener(contentComponentListener);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        comp.setVisible(!collapsedByDefault);</span>
+<span class="nc" id="L79">        Component r = innerPanel.add(name, comp);</span>
+<span class="nc" id="L80">        updateBorderTitle();</span>
+<span class="nc" id="L81">        return r;</span>
+    }
+
+    @Override
+    public Component add(Component comp, int index) {
+<span class="nc" id="L86">        comp.addComponentListener(contentComponentListener);</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        comp.setVisible(!collapsedByDefault);</span>
+<span class="nc" id="L88">        Component r = innerPanel.add(comp, index);</span>
+<span class="nc" id="L89">        updateBorderTitle();</span>
+<span class="nc" id="L90">        return r;</span>
+    }
+
+    @Override
+    public void add(Component comp, Object constraints) {
+<span class="nc" id="L95">        comp.addComponentListener(contentComponentListener);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        comp.setVisible(!collapsedByDefault);</span>
+<span class="nc" id="L97">        innerPanel.add(comp, constraints);</span>
+<span class="nc" id="L98">        updateBorderTitle();</span>
+<span class="nc" id="L99">    }</span>
+
+    @Override
+    public void add(Component comp, Object constraints, int index) {
+<span class="nc" id="L103">        comp.addComponentListener(contentComponentListener);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        comp.setVisible(!collapsedByDefault);</span>
+<span class="nc" id="L105">        innerPanel.add(comp, constraints, index);</span>
+<span class="nc" id="L106">        updateBorderTitle();</span>
+<span class="nc" id="L107">    }</span>
+
+    @Override
+    public void remove(int index) {
+<span class="nc" id="L111">        Component comp = innerPanel.getComponent(index);</span>
+<span class="nc" id="L112">        comp.removeComponentListener(contentComponentListener);</span>
+<span class="nc" id="L113">        innerPanel.remove(index);</span>
+<span class="nc" id="L114">    }</span>
+
+    @Override
+    public void remove(Component comp) {
+<span class="nc" id="L118">        comp.removeComponentListener(contentComponentListener);</span>
+<span class="nc" id="L119">        innerPanel.remove(comp);</span>
+<span class="nc" id="L120">    }</span>
+
+    @Override
+    public void removeAll() {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        for (Component c : getComponents()) {</span>
+<span class="nc" id="L125">            c.removeComponentListener(contentComponentListener);</span>
+        }
+<span class="nc" id="L127">        innerPanel.removeAll();</span>
+<span class="nc" id="L128">    }</span>
+
+    protected void toggleVisibility() {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        toggleVisibility(!hasVisibleComponent());</span>
+<span class="nc" id="L132">    }</span>
+
+    protected void toggleVisibility(boolean visible) {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        for (Component c : innerPanel.getComponents()) {</span>
+<span class="nc" id="L136">            c.setVisible(visible);</span>
+        }
+<span class="nc" id="L138">        updateBorderTitle();</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        if (initialDimension == null) {</span>
+<span class="nc" id="L140">            initialDimension = new Dimension(parentWindow.getSize());</span>
+        }
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (visible) {</span>
+            // expands all elements
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            int height = previousDimension == null ? heightCollapsibleComponent: previousDimension.height;</span>
+<span class="nc" id="L146">            Dimension toggle = new Dimension(parentWindow.getWidth(), height);</span>
+<span class="nc" id="L147">            parentWindow.setPreferredSize(toggle);</span>
+<span class="nc" id="L148">            parentWindow.setMinimumSize(new Dimension(initialDimension.width, heightCollapsibleComponent));</span>
+<span class="nc" id="L149">            parentWindow.setMaximumSize(null);</span>
+<span class="nc" id="L150">        } else {</span>
+            // collapse all elements
+<span class="nc" id="L152">            previousDimension = parentWindow.getSize();</span>
+<span class="nc" id="L153">            int height = previousDimension.height - innerPanel.getHeight();</span>
+<span class="nc" id="L154">            Dimension toggle = new Dimension(previousDimension.width, height);</span>
+<span class="nc" id="L155">            parentWindow.setPreferredSize(toggle);</span>
+<span class="nc" id="L156">            parentWindow.setMinimumSize(initialDimension);</span>
+<span class="nc" id="L157">            parentWindow.setMaximumSize(new Dimension(previousDimension.width, initialDimension.height));</span>
+        }
+<span class="nc" id="L159">        parentWindow.validate();</span>
+<span class="nc" id="L160">        parentWindow.repaint();</span>
+<span class="nc" id="L161">        parentWindow.pack();</span>
+<span class="nc" id="L162">        repaint();</span>
+<span class="nc" id="L163">    }</span>
+
+    private void updateBorderTitle() {
+<span class="nc" id="L166">        String arrow = &quot;&quot;;</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        if (innerPanel.getComponentCount() &gt; 0) {</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            arrow = (hasVisibleComponent() ? &quot;-&quot; : &quot;+&quot;);</span>
+        }
+<span class="nc" id="L170">        border.setTitle(title + &quot; &quot; + arrow + &quot; &quot;);</span>
+<span class="nc" id="L171">    }</span>
+
+    private boolean hasVisibleComponent() {
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        for (Component c : innerPanel.getComponents()) {</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            if (c.isVisible()) {</span>
+<span class="nc" id="L176">                return true;</span>
+            }
+        }
+<span class="nc" id="L179">        return false;</span>
+    }
+
+    // TEST
+
+    public static void main(String[] args) {
+<span class="nc" id="L185">        JFrame frame = new JFrame(&quot;Collapsible Panel&quot;);</span>
+<span class="nc" id="L186">        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+
+<span class="nc" id="L188">        JPanel jPanel = new JPanel();</span>
+<span class="nc" id="L189">        jPanel.setLayout(new BorderLayout());</span>
+<span class="nc" id="L190">        SelectBoolean a = new SelectBoolean(&quot;A&quot;, &quot;AAAAAAAAAAA&quot;, false);</span>
+<span class="nc" id="L191">        jPanel.add(a, BorderLayout.NORTH);</span>
+
+<span class="nc" id="L193">        CollapsiblePanel cpanel = new CollapsiblePanel(frame, &quot;lot of buttons&quot;, 400, true);</span>
+<span class="nc" id="L194">        jPanel.add(cpanel, BorderLayout.CENTER);</span>
+
+<span class="nc" id="L196">        SelectButton b = new SelectButton(&quot;B&quot;, &quot;B&quot;);</span>
+<span class="nc" id="L197">        SelectColor c = new SelectColor(&quot;C&quot;, &quot;CCCCCC&quot;, Color.BLACK, frame);</span>
+<span class="nc" id="L198">        SelectFile d = new SelectFile(&quot;D&quot;, &quot;D&quot;, null);</span>
+<span class="nc" id="L199">        SelectDouble e = new SelectDouble(&quot;E&quot;, &quot;E&quot;, 0.0f);</span>
+<span class="nc" id="L200">        SelectInteger f = new SelectInteger(&quot;F&quot;, &quot;FFF&quot;, 0);</span>
+<span class="nc" id="L201">        String[] list = {&quot;cars&quot;, &quot;trains&quot;, &quot;planes&quot;, &quot;boats&quot;, &quot;rockets&quot;};</span>
+<span class="nc" id="L202">        SelectOneOfMany g = new SelectOneOfMany(&quot;G&quot;, &quot;G&quot;, list, 0);</span>
+<span class="nc" id="L203">        String ipsum = &quot;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&quot;;</span>
+<span class="nc" id="L204">        SelectReadOnlyText h = new SelectReadOnlyText(&quot;H&quot;, &quot;H &quot; + ipsum);</span>
+<span class="nc" id="L205">        SelectSlider i = new SelectSlider(&quot;I&quot;, &quot;I&quot;, 200, 0, 100);</span>
+<span class="nc" id="L206">        SelectTextArea j = new SelectTextArea(&quot;J&quot;, &quot;J&quot;, ipsum);</span>
+
+<span class="nc" id="L208">        cpanel.add(b);</span>
+<span class="nc" id="L209">        cpanel.add(c);</span>
+<span class="nc" id="L210">        cpanel.add(d);</span>
+<span class="nc" id="L211">        cpanel.add(e);</span>
+<span class="nc" id="L212">        cpanel.add(f);</span>
+<span class="nc" id="L213">        cpanel.add(g);</span>
+<span class="nc" id="L214">        cpanel.add(h);</span>
+<span class="nc" id="L215">        cpanel.add(i);</span>
+<span class="nc" id="L216">        cpanel.add(j);</span>
+
+<span class="nc" id="L218">        frame.setPreferredSize(new Dimension(600, 90));</span>
+<span class="nc" id="L219">        frame.add(jPanel);</span>
+<span class="nc" id="L220">        frame.pack();</span>
+<span class="nc" id="L221">        frame.setVisible(true);</span>
+<span class="nc" id="L222">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

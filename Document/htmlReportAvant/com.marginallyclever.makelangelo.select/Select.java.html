@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Select.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.select</a> &gt; <span class="el_source">Select.java</span></div><h1>Select.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.select;
+
+import javax.swing.*;
+import javax.swing.event.EventListenerList;
+import java.awt.*;
+
+/**
+ * Base class for all Select.  A Select is a UI panel item the user can control.
+ * This system provides consistent look and behavior across all elements in the app.
+ * @author Dan Royer
+ * @since 7.24.0
+ */
+public abstract class Select extends JPanel {
+<span class="fc" id="L14">	private final EventListenerList listeners = new EventListenerList();</span>
+
+	protected Select(String name) {
+<span class="fc" id="L17">		super(new BorderLayout(2,0));</span>
+<span class="fc" id="L18">		setName(name);</span>
+<span class="fc" id="L19">	}</span>
+
+	public void addSelectListener(SelectListener listener) {
+<span class="fc" id="L22">		listeners.add(SelectListener.class,listener);</span>
+<span class="fc" id="L23">	}</span>
+
+	public void removeSelectListener(SelectListener listener) {
+<span class="nc" id="L26">		listeners.remove(SelectListener.class,listener);</span>
+<span class="nc" id="L27">	}</span>
+
+	protected void fireSelectEvent(Object oldValue,Object newValue) {
+<span class="fc" id="L30">		SelectEvent evt = new SelectEvent(this,oldValue,newValue);</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">		for(SelectListener listener : listeners.getListeners(SelectListener.class)) {</span>
+<span class="fc" id="L32">			listener.selectEvent(evt);</span>
+		}
+<span class="fc" id="L34">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

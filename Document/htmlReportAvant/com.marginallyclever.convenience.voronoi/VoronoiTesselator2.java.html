@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VoronoiTesselator2.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience.voronoi</a> &gt; <span class="el_source">VoronoiTesselator2.java</span></div><h1>VoronoiTesselator2.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience.voronoi;
+
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.triangulate.VoronoiDiagramBuilder;
+
+import java.awt.geom.Rectangle2D;
+import java.util.List;
+
+/**
+ * VoronoiTesselator2 uses the locationtech.jts library to generate a voronoi diagram.
+ * @author Dan
+ * @since 2022-04-08
+ */
+<span class="nc" id="L14">public class VoronoiTesselator2 {</span>
+<span class="nc" id="L15">    private final GeometryFactory geometryFactory = new GeometryFactory();</span>
+    private Coordinate[] coordinates;
+    private Geometry diagram;
+
+    public void setNumHulls(int numHulls) {
+<span class="nc" id="L20">        coordinates = new Coordinate[numHulls];</span>
+<span class="nc" id="L21">    }</span>
+
+    public void tessellate(List&lt;VoronoiCell&gt; points, Rectangle2D bounds, double tolerance) {
+<span class="nc bnc" id="L24" title="All 4 branches missed.">        if(coordinates==null || points.size()!=coordinates.length) setNumHulls(points.size());</span>
+
+<span class="nc" id="L26">        int i=0;</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        for(VoronoiCell cell : points) {</span>
+<span class="nc" id="L28">            coordinates[i++] = cell.center;</span>
+<span class="nc" id="L29">        }</span>
+<span class="nc" id="L30">        MultiPoint multiPoint = geometryFactory.createMultiPointFromCoords(coordinates);</span>
+
+<span class="nc" id="L32">        VoronoiDiagramBuilder builder = new VoronoiDiagramBuilder();</span>
+<span class="nc" id="L33">        builder.setSites(multiPoint);</span>
+<span class="nc" id="L34">        builder.setClipEnvelope(new Envelope(bounds.getMinX(),bounds.getMaxX(),bounds.getMinY(),bounds.getMaxY()));</span>
+<span class="nc" id="L35">        builder.setTolerance(tolerance);</span>
+
+<span class="nc" id="L37">        diagram = builder.getDiagram(multiPoint.getFactory());</span>
+<span class="nc" id="L38">    }</span>
+
+    public int getNumHulls() {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        return (diagram==null) ? 0 : diagram.getNumGeometries();</span>
+    }
+
+    public Polygon getHull(int i) {
+<span class="nc" id="L45">        return (Polygon)diagram.getGeometryN(i);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

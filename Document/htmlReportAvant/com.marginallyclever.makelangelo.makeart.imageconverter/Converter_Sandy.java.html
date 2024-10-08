@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_Sandy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_Sandy.java</span></div><h1>Converter_Sandy.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterDesaturate;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectOneOfMany;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.geom.Rectangle2D;
+
+
+/**
+ * based on polagraph style by Sandy Noble.
+ * @author Dan Royer
+ */
+public class Converter_Sandy extends ImageConverter {
+<span class="nc" id="L21">	private static final Logger logger = LoggerFactory.getLogger(Converter_Sandy.class);</span>
+<span class="nc" id="L22">	private static int blockScale=150;</span>
+<span class="nc" id="L23">	private static int direction=0;</span>
+<span class="nc" id="L24">	private final String [] directionChoices = new String[] {</span>
+<span class="nc" id="L25">		Translator.get(&quot;top right&quot;),</span>
+<span class="nc" id="L26">		Translator.get(&quot;top left&quot;), </span>
+<span class="nc" id="L27">		Translator.get(&quot;bottom left&quot;), </span>
+<span class="nc" id="L28">		Translator.get(&quot;bottom right&quot;), </span>
+<span class="nc" id="L29">		Translator.get(&quot;center&quot;)</span>
+	};
+
+	public Converter_Sandy() {
+<span class="nc" id="L33">		super();</span>
+<span class="nc" id="L34">		SelectSlider selectRings = new SelectSlider(&quot;rings&quot;,Translator.get(&quot;SandyNoble.rings&quot;),300,10,getScale());</span>
+<span class="nc" id="L35">		add(selectRings);</span>
+<span class="nc" id="L36">		selectRings.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L37">			setScale((int)evt.getNewValue());</span>
+<span class="nc" id="L38">			fireRestart();</span>
+<span class="nc" id="L39">		});</span>
+<span class="nc" id="L40">		SelectOneOfMany selectDirection = new SelectOneOfMany(&quot;direction&quot;,Translator.get(&quot;SandyNoble.center&quot;),getDirections(),getDirectionIndex());</span>
+<span class="nc" id="L41">		add(selectDirection);</span>
+<span class="nc" id="L42">		selectDirection.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L43">			setDirection((int)evt.getNewValue());</span>
+<span class="nc" id="L44">			fireRestart();</span>
+<span class="nc" id="L45">		});</span>
+<span class="nc" id="L46">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="nc" id="L50">		return Translator.get(&quot;SandyNoble.title&quot;);</span>
+	}
+
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L55">		super.start(paper, image);</span>
+
+<span class="nc" id="L57">		FilterDesaturate bw = new FilterDesaturate(myImage);</span>
+<span class="nc" id="L58">		TransformedImage img = bw.filter();</span>
+
+		// if the image were projected on the paper, where would the top left corner of the image be in paper space?
+		// image(0,0) is (-paperWidth/2,-paperHeight/2)*paperMargin
+
+<span class="nc" id="L63">		double yBottom = myPaper.getPaperBottom();</span>
+<span class="nc" id="L64">		double yTop    = myPaper.getPaperTop();</span>
+<span class="nc" id="L65">		double xLeft   = myPaper.getPaperLeft();</span>
+<span class="nc" id="L66">		double xRight  = myPaper.getPaperRight();</span>
+
+<span class="nc" id="L68">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L69">		double pLeft   = rect.getMinX() +1.0;</span>
+<span class="nc" id="L70">		double pBottom = rect.getMinY() +1.0;</span>
+<span class="nc" id="L71">		double pRight  = rect.getMaxX() -1.0;</span>
+<span class="nc" id="L72">		double pTop    = rect.getMaxY() -1.0;</span>
+
+		double cx,cy;
+<span class="nc" id="L75">		double last_x=0,last_y=0;</span>
+
+<span class="nc" id="L77">		boolean wasDrawing=false;</span>
+
+<span class="nc bnc" id="L79" title="All 5 branches missed.">		switch (direction) {</span>
+			case 0 -&gt; {
+<span class="nc" id="L81">				cx = xRight;</span>
+<span class="nc" id="L82">				cy = yTop;</span>
+<span class="nc" id="L83">				last_x = pRight;</span>
+<span class="nc" id="L84">				last_y = pTop;</span>
+<span class="nc" id="L85">			}</span>
+			case 1 -&gt; {
+<span class="nc" id="L87">				cx = xLeft;</span>
+<span class="nc" id="L88">				cy = yTop;</span>
+<span class="nc" id="L89">				last_x = pLeft;</span>
+<span class="nc" id="L90">				last_y = pTop;</span>
+<span class="nc" id="L91">			}</span>
+			case 2 -&gt; {
+<span class="nc" id="L93">				cx = xLeft;</span>
+<span class="nc" id="L94">				cy = yBottom;</span>
+<span class="nc" id="L95">				last_x = pLeft;</span>
+<span class="nc" id="L96">				last_y = pBottom;</span>
+<span class="nc" id="L97">			}</span>
+			case 3 -&gt; {
+<span class="nc" id="L99">				cx = xRight;</span>
+<span class="nc" id="L100">				cy = yBottom;</span>
+<span class="nc" id="L101">				last_x = pRight;</span>
+<span class="nc" id="L102">				last_y = pBottom;</span>
+<span class="nc" id="L103">			}</span>
+			default -&gt; {
+<span class="nc" id="L105">				cx = 0;</span>
+<span class="nc" id="L106">				cy = 0;</span>
+<span class="nc" id="L107">				last_x = 0;</span>
+<span class="nc" id="L108">				last_y = 0;</span>
+			}
+		}
+
+		double x, y, z, scaleZ;
+
+<span class="nc" id="L114">		double dx = xRight - xLeft; </span>
+<span class="nc" id="L115">		double dy = yTop - yBottom;</span>
+<span class="nc" id="L116">		double rMax = Math.sqrt(dx*dx+dy*dy);</span>
+<span class="nc" id="L117">		double rMin = 0;</span>
+
+<span class="nc" id="L119">		double rStep = (rMax-rMin)/(double)blockScale;</span>
+		double r;
+<span class="nc" id="L121">		double t_dir=1;</span>
+<span class="nc" id="L122">		double pulseFlip=1;</span>
+		double t,t_step;
+		double flipSum;
+<span class="nc" id="L125">		double pulseSize = rStep*0.5 - 0.5;//r_step * 0.6 * scale_z;</span>
+
+<span class="nc" id="L127">		turtle = new Turtle();</span>
+<span class="nc" id="L128">		logger.debug(&quot;Sandy started.&quot;);</span>
+		//Thread.dumpStack();
+<span class="nc" id="L130">		double px = myPaper.getCenterX();</span>
+<span class="nc" id="L131">		double py = myPaper.getCenterY();</span>
+
+<span class="nc" id="L133">		turtle.lock();</span>
+		try {
+			// make concentric circles that get bigger and bigger.
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			for(r=rMin;r&lt;rMax;r+=rStep) {</span>
+				// go around in a circle
+<span class="nc" id="L138">				t=0;</span>
+<span class="nc" id="L139">				t_step = 1.0/r;</span>
+<span class="nc" id="L140">				flipSum=0;</span>
+				// go around the circle
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				for(t=0;t&lt;Math.PI*2;t+=t_step) {</span>
+<span class="nc" id="L143">					dx = Math.cos(t_dir *t);</span>
+<span class="nc" id="L144">					dy = Math.sin(t_dir *t);</span>
+<span class="nc" id="L145">					x = cx + dx * r;</span>
+<span class="nc" id="L146">					y = cy + dy * r;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">					if(!rect.contains(x,y)) {</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">						if(wasDrawing) {</span>
+<span class="nc" id="L149">							turtle.jumpTo(px+last_x,py+last_y);</span>
+<span class="nc" id="L150">							wasDrawing=false;</span>
+						}
+						continue;
+					}
+	
+<span class="nc" id="L155">					last_x=x;</span>
+<span class="nc" id="L156">					last_y=y;</span>
+					// read a block of the image and find the average intensity in this block
+<span class="nc" id="L158">					z = img.sample( x-pulseSize/2.0, y-pulseSize/2.0,x+pulseSize/2.0,y +pulseSize/2.0 );</span>
+					// scale the intensity value
+<span class="nc bnc" id="L160" title="All 2 branches missed.">					if(z&lt;0) z=0;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">					if(z&gt;255) z=255;</span>
+<span class="nc" id="L162">					scaleZ = (255.0 -  z) / 255.0;</span>
+	
+<span class="nc bnc" id="L164" title="All 2 branches missed.">					if(!wasDrawing) {</span>
+<span class="nc" id="L165">						turtle.jumpTo(px+last_x,py+last_y);</span>
+<span class="nc" id="L166">						wasDrawing=true;</span>
+					}
+	
+<span class="nc" id="L169">					turtle.moveTo(	px + x + dx * pulseSize*pulseFlip,</span>
+									py + y + dy * pulseSize*pulseFlip);
+					
+<span class="nc" id="L172">					flipSum+=scaleZ;</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">					if(flipSum &gt;= 1) {</span>
+<span class="nc" id="L174">						flipSum-=1;</span>
+<span class="nc" id="L175">						pulseFlip = -pulseFlip;</span>
+<span class="nc" id="L176">						turtle.moveTo(	px + x + dx * pulseSize*pulseFlip,</span>
+										py + y + dy * pulseSize*pulseFlip);
+					}
+				}
+<span class="nc" id="L180">				t_dir=-t_dir;</span>
+			}
+<span class="nc" id="L182">		} catch(Exception e) {</span>
+<span class="nc" id="L183">			logger.error(&quot;Sandy failed&quot;, e);</span>
+		} finally {
+<span class="nc" id="L185">			turtle.unlock();</span>
+<span class="nc" id="L186">			logger.debug(&quot;Sandy finished.&quot;);</span>
+		}
+
+<span class="nc" id="L189">		fireConversionFinished();</span>
+<span class="nc" id="L190">	}</span>
+
+	public int getScale() {
+<span class="nc" id="L193">		return blockScale;</span>
+	}
+	public void setScale(int value) {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		if(value&lt;1) value=1;</span>
+<span class="nc" id="L197">		blockScale=value;</span>
+<span class="nc" id="L198">	}</span>
+	public String [] getDirections() {
+<span class="nc" id="L200">		return directionChoices;</span>
+	}
+	public int getDirectionIndex() {
+<span class="nc" id="L203">		return direction;</span>
+	}
+	public void setDirection(int value) {
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		if(value&lt;0) value=0;</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if(value&gt;=directionChoices.length) value = directionChoices.length-1;</span>
+<span class="nc" id="L208">		direction = value;</span>
+<span class="nc" id="L209">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

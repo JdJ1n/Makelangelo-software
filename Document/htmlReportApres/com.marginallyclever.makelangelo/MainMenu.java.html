@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainMenu.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">MainMenu.java</span></div><h1>MainMenu.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo;
+
+import com.hopding.jrpicam.exceptions.FailedToRunRaspistillException;
+import com.marginallyclever.convenience.helpers.StringHelper;
+import com.marginallyclever.convenience.log.Log;
+import com.marginallyclever.convenience.log.LogPanel;
+import com.marginallyclever.makelangelo.firmwareuploader.FirmwareUploaderPanel;
+import com.marginallyclever.makelangelo.makeart.TurtleModifierAction;
+import com.marginallyclever.makelangelo.makeart.io.OpenFileChooser;
+import com.marginallyclever.makelangelo.makeart.tools.*;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGeneratorFactory;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGeneratorPanel;
+import com.marginallyclever.makelangelo.applicationsettings.GFXPreferences;
+import com.marginallyclever.makelangelo.applicationsettings.ApplicationSettings;
+import com.marginallyclever.makelangelo.paper.PaperSettingsPanel;
+import com.marginallyclever.makelangelo.plotter.PiCaptureAction;
+import com.marginallyclever.makelangelo.plotter.marlinsimulation.MarlinSimulation;
+import com.marginallyclever.makelangelo.plotter.plottercontrols.PlotterControls;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettingsManagerPanel;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.turtlerenderer.TurtleRenderFactory;
+import com.marginallyclever.makelangelo.turtle.turtlerenderer.TurtleRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Objects;
+
+public class MainMenu extends JMenuBar {
+<span class="nc" id="L37">    private static final Logger logger = LoggerFactory.getLogger(MainMenu.class);</span>
+<span class="nc" id="L38">    private static int SHORTCUT_CTRL = InputEvent.CTRL_DOWN_MASK;</span>
+<span class="nc" id="L39">    private static int SHORTCUT_ALT = InputEvent.ALT_DOWN_MASK;</span>
+    private final Makelangelo app;
+<span class="nc" id="L41">    private final SaveDialog saveDialog = new SaveDialog();</span>
+    private RecentFiles recentFiles;
+<span class="nc" id="L43">    private final ApplicationSettings myPreferencesPanel = new ApplicationSettings();</span>
+<span class="nc" id="L44">    private boolean isMacOS = false;</span>
+
+    public MainMenu(Makelangelo app) {
+<span class="nc" id="L47">        super();</span>
+<span class="nc" id="L48">        this.app = app;</span>
+<span class="nc" id="L49">        setSystemLookAndFeelForMacos();</span>
+<span class="nc" id="L50">        add(createFileMenu());</span>
+<span class="nc" id="L51">        add(createSettingsMenu());</span>
+<span class="nc" id="L52">        add(createGenerateMenu());</span>
+<span class="nc" id="L53">        add(createToolsMenu());</span>
+<span class="nc" id="L54">        add(createViewMenu());</span>
+<span class="nc" id="L55">        add(createRobotMenu());</span>
+<span class="nc" id="L56">        add(createHelpMenu());</span>
+<span class="nc" id="L57">        updateUI();</span>
+
+<span class="nc" id="L59">    }</span>
+
+    private void setSystemLookAndFeelForMacos() {
+<span class="nc" id="L62">        String os = System.getProperty(&quot;os.name&quot;).toLowerCase(Locale.ENGLISH);</span>
+<span class="nc bnc" id="L63" title="All 4 branches missed.">        if ((os.contains(&quot;mac&quot;)) || (os.contains(&quot;darwin&quot;))) {</span>
+<span class="nc" id="L64">            isMacOS=true;</span>
+<span class="nc" id="L65">            System.setProperty(&quot;apple.laf.useScreenMenuBar&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L66">            SHORTCUT_CTRL = InputEvent.META_DOWN_MASK;</span>
+<span class="nc" id="L67">            SHORTCUT_ALT = InputEvent.META_DOWN_MASK;</span>
+        }
+<span class="nc" id="L69">    }</span>
+
+    private JMenu createFileMenu() {
+<span class="nc" id="L72">        JMenu menu = new JMenu(Translator.get(&quot;MenuMakelangelo&quot;));</span>
+<span class="nc" id="L73">        menu.setMnemonic('f');</span>
+
+<span class="nc" id="L75">        JMenuItem buttonNewFile = new JMenuItem(Translator.get(&quot;MenuNewFile&quot;));</span>
+<span class="nc" id="L76">        buttonNewFile.addActionListener((e) -&gt; newFile());</span>
+<span class="nc" id="L77">        buttonNewFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, SHORTCUT_CTRL));//&quot;ctrl N&quot;</span>
+<span class="nc" id="L78">        buttonNewFile.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-new-16.png&quot;))));</span>
+<span class="nc" id="L79">        menu.add(buttonNewFile);</span>
+
+<span class="nc" id="L81">        JMenuItem buttonOpenFile = new JMenuItem(Translator.get(&quot;MenuOpenFile&quot;));</span>
+<span class="nc" id="L82">        buttonOpenFile.addActionListener((e) -&gt; openLoadFile());</span>
+<span class="nc" id="L83">        buttonOpenFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, SHORTCUT_CTRL));//&quot;ctrl O&quot;</span>
+<span class="nc" id="L84">        buttonOpenFile.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-load-16.png&quot;))));</span>
+<span class="nc" id="L85">        menu.add(buttonOpenFile);</span>
+
+<span class="nc" id="L87">        recentFiles = new RecentFiles(Translator.get(&quot;MenuReopenFile&quot;));</span>
+<span class="nc" id="L88">        recentFiles.addSubmenuListener((e)-&gt; app.openFile(((JMenuItem)e.getSource()).getText()));</span>
+<span class="nc" id="L89">        menu.add(recentFiles);</span>
+
+<span class="nc" id="L91">        JMenuItem buttonImportFile = new JMenuItem(Translator.get(&quot;MenuImportFile&quot;));</span>
+<span class="nc" id="L92">        buttonImportFile.addActionListener((e) -&gt; app.importFile());</span>
+<span class="nc" id="L93">        buttonImportFile.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-import-16.png&quot;))));</span>
+<span class="nc" id="L94">        menu.add(buttonImportFile);</span>
+
+<span class="nc" id="L96">        JMenuItem buttonSaveFile = new JMenuItem(Translator.get(&quot;MenuSaveFile&quot;));</span>
+<span class="nc" id="L97">        buttonSaveFile.addActionListener((e) -&gt; saveFile());</span>
+<span class="nc" id="L98">        buttonSaveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, SHORTCUT_CTRL));//&quot;ctrl S&quot;</span>
+<span class="nc" id="L99">        buttonSaveFile.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-save-16.png&quot;))));</span>
+<span class="nc" id="L100">        menu.add(buttonSaveFile);</span>
+
+<span class="nc" id="L102">        menu.addSeparator();</span>
+
+<span class="nc" id="L104">        JMenuItem buttonAdjustPreferences = new JMenuItem(Translator.get(&quot;ApplicationSettings.title&quot;));</span>
+<span class="nc" id="L105">        buttonAdjustPreferences.addActionListener((e)-&gt; myPreferencesPanel.run(SwingUtilities.getWindowAncestor(this)));</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (isMacOS) {</span>
+<span class="nc" id="L107">            buttonAdjustPreferences.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, SHORTCUT_CTRL));//&quot;cmd ,&quot;</span>
+        } else {
+<span class="nc" id="L109">            buttonAdjustPreferences.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, SHORTCUT_ALT));//&quot;alt P&quot;</span>
+        }
+<span class="nc" id="L111">        buttonAdjustPreferences.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-settings-16.png&quot;))));</span>
+<span class="nc" id="L112">        menu.add(buttonAdjustPreferences);</span>
+
+<span class="nc" id="L114">        JMenuItem buttonFirmwareUpdate = new JMenuItem(Translator.get(&quot;FirmwareUpdate&quot;));</span>
+<span class="nc" id="L115">        buttonFirmwareUpdate.addActionListener((e) -&gt; runFirmwareUpdate());</span>
+<span class="nc" id="L116">        buttonFirmwareUpdate.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-install-16.png&quot;))));</span>
+<span class="nc" id="L117">        menu.add(buttonFirmwareUpdate);</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        if (!isMacOS) {</span>
+<span class="nc" id="L120">            menu.addSeparator();</span>
+
+<span class="nc" id="L122">            JMenuItem buttonExit = new JMenuItem(Translator.get(&quot;MenuQuit&quot;));</span>
+<span class="nc" id="L123">            buttonExit.addActionListener((e) -&gt; {</span>
+<span class="nc" id="L124">                WindowEvent windowClosing = new WindowEvent(SwingUtilities.getWindowAncestor(this), WindowEvent.WINDOW_CLOSING);</span>
+<span class="nc" id="L125">                Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(windowClosing);</span>
+<span class="nc" id="L126">            });</span>
+<span class="nc" id="L127">            buttonExit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, SHORTCUT_CTRL));//&quot;ctrl Q&quot;</span>
+<span class="nc" id="L128">            buttonExit.setMnemonic('Q');</span>
+<span class="nc" id="L129">            buttonExit.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-stop-16.png&quot;))));</span>
+<span class="nc" id="L130">            menu.add(buttonExit);</span>
+        }
+<span class="nc" id="L132">        return menu;</span>
+    }
+
+    private void newFile() {
+<span class="nc" id="L136">        app.setTurtle(new Turtle());</span>
+<span class="nc" id="L137">        app.setMainTitle(&quot;&quot;);</span>
+<span class="nc" id="L138">    }</span>
+
+    public void openLoadFile() {
+<span class="nc" id="L141">        logger.debug(&quot;Open file...&quot;);</span>
+
+<span class="nc" id="L143">        OpenFileChooser openFileChooser = new OpenFileChooser(SwingUtilities.getWindowAncestor(this));</span>
+<span class="nc" id="L144">        openFileChooser.setOpenListener(app::openFile);</span>
+<span class="nc" id="L145">        openFileChooser.chooseFile();</span>
+<span class="nc" id="L146">    }</span>
+
+    private JMenu createViewMenu() {
+<span class="nc" id="L149">        JMenu menu = new JMenu(Translator.get(&quot;MenuView&quot;));</span>
+<span class="nc" id="L150">        menu.setMnemonic('V');</span>
+
+<span class="nc" id="L152">        JMenuItem buttonZoomOut = new JMenuItem(Translator.get(&quot;MenuView.zoomOut&quot;), KeyEvent.VK_MINUS);</span>
+<span class="nc" id="L153">        buttonZoomOut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, SHORTCUT_CTRL));</span>
+<span class="nc" id="L154">        buttonZoomOut.addActionListener((e) -&gt; app.getCamera().zoom(1));</span>
+<span class="nc" id="L155">        buttonZoomOut.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-zoom-out-16.png&quot;))));</span>
+<span class="nc" id="L156">        menu.add(buttonZoomOut);</span>
+
+<span class="nc" id="L158">        JMenuItem buttonZoomIn = new JMenuItem(Translator.get(&quot;MenuView.zoomIn&quot;), KeyEvent.VK_EQUALS);</span>
+<span class="nc" id="L159">        buttonZoomIn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, SHORTCUT_CTRL));</span>
+<span class="nc" id="L160">        buttonZoomIn.addActionListener((e) -&gt; app.getCamera().zoom(-1));</span>
+<span class="nc" id="L161">        buttonZoomIn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-zoom-in-16.png&quot;))));</span>
+<span class="nc" id="L162">        menu.add(buttonZoomIn);</span>
+
+<span class="nc" id="L164">        JMenuItem buttonZoomToFit = new JMenuItem(Translator.get(&quot;MenuView.zoomFit&quot;), KeyEvent.VK_0);</span>
+<span class="nc" id="L165">        buttonZoomToFit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, SHORTCUT_CTRL));</span>
+<span class="nc" id="L166">        buttonZoomToFit.addActionListener((e) -&gt; app.getCamera().zoomToFit(app.getPaper().getPaperWidth(),app.getPaper().getPaperHeight()));</span>
+<span class="nc" id="L167">        menu.add(buttonZoomToFit);</span>
+
+<span class="nc" id="L169">        JCheckBoxMenuItem checkboxShowPenUpMoves = new JCheckBoxMenuItem(Translator.get(&quot;GFXPreferences.showPenUp&quot;), GFXPreferences.getShowPenUp());</span>
+<span class="nc" id="L170">        checkboxShowPenUpMoves.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_M, SHORTCUT_CTRL));//&quot;ctrl M&quot;</span>
+<span class="nc" id="L171">        checkboxShowPenUpMoves.addActionListener((e) -&gt; {</span>
+<span class="nc" id="L172">            boolean b = GFXPreferences.getShowPenUp();</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">            GFXPreferences.setShowPenUp(!b);</span>
+<span class="nc" id="L174">        });</span>
+<span class="nc" id="L175">        GFXPreferences.addListener((e)-&gt;{</span>
+<span class="nc" id="L176">            checkboxShowPenUpMoves.setSelected ((boolean)e.getNewValue());</span>
+<span class="nc" id="L177">        });</span>
+<span class="nc" id="L178">        checkboxShowPenUpMoves.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-plane-16.png&quot;))));</span>
+<span class="nc" id="L179">        menu.add(checkboxShowPenUpMoves);</span>
+
+<span class="nc" id="L181">        menu.add(createRenderStyleMenu());</span>
+
+<span class="nc" id="L183">        return menu;</span>
+    }
+
+    private JMenu createHelpMenu() {
+<span class="nc" id="L187">        JMenu menu = new JMenu(Translator.get(&quot;Help&quot;));</span>
+<span class="nc" id="L188">        menu.setMnemonic('H');</span>
+
+<span class="nc" id="L190">        JMenuItem buttonViewLog = new JMenuItem(Translator.get(&quot;ShowLog&quot;));</span>
+<span class="nc" id="L191">        buttonViewLog.addActionListener((e) -&gt; runLogPanel());</span>
+<span class="nc" id="L192">        buttonViewLog.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, SHORTCUT_CTRL));//&quot;ctrl L&quot;</span>
+<span class="nc" id="L193">        menu.add(buttonViewLog);</span>
+
+<span class="nc" id="L195">        JMenuItem buttonLogFolder = new JMenuItem(Translator.get(&quot;OpenLogFolder&quot;));</span>
+<span class="nc" id="L196">        buttonLogFolder.addActionListener((e) -&gt; openLogDirectory());</span>
+<span class="nc" id="L197">        buttonLogFolder.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-folder-16.png&quot;))));</span>
+<span class="nc" id="L198">        menu.add(buttonLogFolder);</span>
+
+<span class="nc" id="L200">        JMenuItem buttonReportBug = createMenuItemBrowse(Translator.get(&quot;ReportBug&quot;),&quot;https://github.com/MarginallyClever/Makelangelo-Software/issues&quot;);</span>
+<span class="nc" id="L201">        buttonReportBug.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;icons8-bug-16.png&quot;))));</span>
+<span class="nc" id="L202">        menu.add(buttonReportBug);</span>
+
+<span class="nc" id="L204">        JMenuItem buttonManual = createMenuItemBrowse(Translator.get(&quot;MenuManual&quot;), &quot;https://mcr.dozuki.com/c/Makelangelo_3_and_5_Guide&quot;);</span>
+<span class="nc" id="L205">        buttonManual.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-open-book-16.png&quot;))));</span>
+<span class="nc" id="L206">        menu.add(buttonManual);</span>
+
+<span class="nc" id="L208">        JMenuItem buttonForums = createMenuItemBrowse(Translator.get(&quot;MenuForums&quot;), &quot;https://discord.gg/Q5TZFmB&quot;);</span>
+<span class="nc" id="L209">        buttonForums.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-discord-16.png&quot;))));</span>
+<span class="nc" id="L210">        menu.add(buttonForums);</span>
+
+<span class="nc" id="L212">        JMenuItem buttonDonation = createMenuItemBrowse(Translator.get(&quot;MenuItemPayPalDonation&quot;), &quot;https://www.marginallyclever.com/products/makelangelo-software/&quot;);</span>
+<span class="nc" id="L213">        menu.add(buttonDonation);</span>
+
+<span class="nc" id="L215">        JMenuItem buttonCheckForUpdate = new JMenuItem(Translator.get(&quot;MenuUpdate&quot;));</span>
+<span class="nc" id="L216">        buttonCheckForUpdate.addActionListener((e) -&gt; app.checkForUpdate(true));</span>
+        //buttonCheckForUpdate.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-update-16.png&quot;))));
+<span class="nc" id="L218">        menu.add(buttonCheckForUpdate);</span>
+
+<span class="nc" id="L220">        menu.addSeparator();</span>
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">        if (!isMacOS) {</span>
+<span class="nc" id="L223">            JMenuItem buttonAbout = new JMenuItem(Translator.get(&quot;MenuAbout&quot;));</span>
+<span class="nc" id="L224">            buttonAbout.addActionListener((e) -&gt; app.onDialogAbout());</span>
+<span class="nc" id="L225">            menu.add(buttonAbout);</span>
+        }
+
+<span class="nc" id="L228">        return menu;</span>
+    }
+
+    private void openLogDirectory() {
+        try {
+<span class="nc" id="L233">            Desktop.getDesktop().open(Log.logDir);</span>
+<span class="nc" id="L234">        } catch (IOException e1) {</span>
+<span class="nc" id="L235">            logger.error(&quot;Can't open log folder&quot;, e1);</span>
+<span class="nc" id="L236">        }</span>
+<span class="nc" id="L237">    }</span>
+
+    public JMenuItem createMenuItemBrowse(String menuLabelAlreadyTranslated, String urlAsString) {
+<span class="nc" id="L240">        JMenuItem jmi = new JMenuItem(menuLabelAlreadyTranslated);</span>
+<span class="nc" id="L241">        jmi.setToolTipText(urlAsString);</span>
+<span class="nc" id="L242">        jmi.addActionListener((e) -&gt; {</span>
+            try {
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                if (Desktop.isDesktopSupported()) {</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">                    if (Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {</span>
+<span class="nc" id="L246">                        java.awt.Desktop.getDesktop().browse(URI.create(urlAsString));</span>
+                    } else {
+<span class="nc" id="L248">                        logger.error(&quot;Desktop.Action.BROWSE not supported. Can't open the browser to &quot; + urlAsString);</span>
+                    }
+                } else {
+<span class="nc" id="L251">                    logger.error(&quot;Desktop not supported. Can't open the browser to &quot; + urlAsString);</span>
+                }
+
+<span class="nc" id="L254">            } catch (IOException ioe) {</span>
+<span class="nc" id="L255">                logger.error(&quot;Can't open the browser to &quot;+urlAsString, ioe);</span>
+<span class="nc" id="L256">            }</span>
+<span class="nc" id="L257">        });</span>
+<span class="nc" id="L258">        return jmi;</span>
+    }
+
+    private void runLogPanel() {
+<span class="nc" id="L262">        LogPanel.runAsDialog(SwingUtilities.getWindowAncestor(this));</span>
+<span class="nc" id="L263">    }</span>
+
+    private void saveFile() {
+<span class="nc" id="L266">        logger.debug(&quot;Saving vector file...&quot;);</span>
+        try {
+<span class="nc" id="L268">            saveDialog.run(app.getTurtle(), SwingUtilities.getWindowAncestor(this),app.getPlotter().getSettings());</span>
+<span class="nc" id="L269">        } catch(Exception e) {</span>
+<span class="nc" id="L270">            logger.error(&quot;Error while saving the vector file&quot;, e);</span>
+<span class="nc" id="L271">            JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this), Translator.get(&quot;SaveError&quot;) + e.getLocalizedMessage(), Translator.get(&quot;ErrorTitle&quot;), JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L272">        }</span>
+<span class="nc" id="L273">    }</span>
+
+    private void runFirmwareUpdate() {
+<span class="nc" id="L276">        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this),&quot;Firmware Update&quot;);</span>
+<span class="nc" id="L277">        dialog.add(new FirmwareUploaderPanel());</span>
+<span class="nc" id="L278">        dialog.pack();</span>
+<span class="nc" id="L279">        dialog.setLocationRelativeTo(SwingUtilities.getWindowAncestor(this));</span>
+
+<span class="nc" id="L281">        app.enableMenuBar(false);</span>
+<span class="nc" id="L282">        dialog.addWindowListener(new WindowAdapter() {</span>
+            @Override
+            public void windowClosing(WindowEvent e) {
+<span class="nc" id="L285">                app.enableMenuBar(true);</span>
+<span class="nc" id="L286">            }</span>
+        });
+
+<span class="nc" id="L289">        dialog.setVisible(true);</span>
+<span class="nc" id="L290">    }</span>
+
+    private JMenu createGenerateMenu() {
+<span class="nc" id="L293">        return createGeneratorMenuFromTree(TurtleGeneratorFactory.available);</span>
+    }
+
+    private JMenu createGeneratorMenuFromTree(TurtleGeneratorFactory.TurtleGeneratorNode root) {
+<span class="nc" id="L297">        JMenu menu = new JMenu(root.getName());</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">        for (TurtleGeneratorFactory.TurtleGeneratorNode child : root.getChildren()) {</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">            if (child.getChildren().isEmpty()) {</span>
+<span class="nc" id="L300">                JMenuItem menuItem = new JMenuItem(child.getName());</span>
+<span class="nc" id="L301">                menu.add(menuItem);</span>
+<span class="nc" id="L302">                menuItem.addActionListener((e) -&gt; runGeneratorDialog(child.getGenerator()));</span>
+<span class="nc" id="L303">            } else {</span>
+<span class="nc" id="L304">                JMenu subMenu = createGeneratorMenuFromTree(child);</span>
+<span class="nc" id="L305">                menu.add(subMenu);</span>
+            }
+<span class="nc" id="L307">        }</span>
+<span class="nc" id="L308">        return menu;</span>
+    }
+
+    private void runGeneratorDialog(TurtleGenerator turtleGenerator) {
+<span class="nc" id="L312">        turtleGenerator.setPaper(app.getPaper());</span>
+<span class="nc" id="L313">        turtleGenerator.addListener(app::setTurtle);</span>
+<span class="nc" id="L314">        turtleGenerator.setTurtle(app.getTurtle());</span>
+<span class="nc" id="L315">        turtleGenerator.generate();</span>
+
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        if(turtleGenerator.getPanelElements().isEmpty()) {</span>
+<span class="nc" id="L318">            return;</span>
+        }
+
+<span class="nc" id="L321">        app.setMainTitle(turtleGenerator.getName());</span>
+<span class="nc" id="L322">        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), turtleGenerator.getName());</span>
+<span class="nc" id="L323">        TurtleGeneratorPanel panel = new TurtleGeneratorPanel(turtleGenerator);</span>
+<span class="nc" id="L324">        dialog.add(panel);</span>
+<span class="nc" id="L325">        dialog.setLocationRelativeTo(SwingUtilities.getWindowAncestor(this));</span>
+<span class="nc" id="L326">        dialog.setMinimumSize(new Dimension(300,300));</span>
+<span class="nc" id="L327">        dialog.pack();</span>
+
+
+<span class="nc" id="L330">        app.enableMenuBar(false);</span>
+<span class="nc" id="L331">        dialog.addWindowListener(new WindowAdapter() {</span>
+            @Override
+            public void windowClosing(WindowEvent e) {
+<span class="nc" id="L334">                app.enableMenuBar(true);</span>
+<span class="nc" id="L335">                app.getPaper().setRotationRef(0);</span>
+<span class="nc" id="L336">                logger.debug(&quot;Generation finished&quot;);</span>
+<span class="nc" id="L337">            }</span>
+        });
+
+<span class="nc" id="L340">        dialog.setVisible(true);</span>
+<span class="nc" id="L341">    }</span>
+
+    private JMenu createToolsMenu() {
+<span class="nc" id="L344">        JMenu menu = new JMenu(Translator.get(&quot;Art Pipeline&quot;));</span>
+<span class="nc" id="L345">        menu.setMnemonic('T');</span>
+
+        try {
+<span class="nc" id="L348">            PiCaptureAction pc = new PiCaptureAction();</span>
+
+<span class="nc" id="L350">            JButton bCapture = new JButton(Translator.get(&quot;MenuCaptureImage&quot;));</span>
+<span class="nc" id="L351">            bCapture.addActionListener((e)-&gt; pc.run((Frame)SwingUtilities.getWindowAncestor(this),app.getPaper()));</span>
+<span class="nc" id="L352">            bCapture.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-camera-16.png&quot;))));</span>
+<span class="nc" id="L353">            menu.add(bCapture);</span>
+<span class="nc" id="L354">            menu.addSeparator();</span>
+<span class="nc" id="L355">        } catch (FailedToRunRaspistillException e) {</span>
+<span class="nc" id="L356">            logger.debug(&quot;PiCaptureAction unavailable.&quot;);</span>
+<span class="nc" id="L357">        }</span>
+
+<span class="nc" id="L359">        menu.add(createActionMenuItem(new ResizeTurtleToPaperAction(app.getPaper(),false,Translator.get(&quot;ConvertImagePaperFit&quot;))));</span>
+<span class="nc" id="L360">        menu.add(createActionMenuItem(new ResizeTurtleToPaperAction(app.getPaper(),true,Translator.get(&quot;ConvertImagePaperFill&quot;))));</span>
+<span class="nc" id="L361">        menu.add(createActionMenuItem(new CenterTurtleToPaperAction(Translator.get(&quot;ConvertImagePaperCenter&quot;))));</span>
+
+<span class="nc" id="L363">        menu.add(createMover(Translator.get(&quot;Translate&quot;),&quot;/com/marginallyclever/makelangelo/icons8-move-16.png&quot;,(e)-&gt;runTranslatePanel()));</span>
+<span class="nc" id="L364">        menu.add(createMover(Translator.get(&quot;Scale&quot;),&quot;/com/marginallyclever/makelangelo/icons8-resize-16.png&quot;,(e)-&gt;runScalePanel()));</span>
+<span class="nc" id="L365">        menu.add(createMover(Translator.get(&quot;Rotate&quot;),&quot;/com/marginallyclever/makelangelo/icons8-rotate-16.png&quot;,(e)-&gt;runRotatePanel()));</span>
+
+<span class="nc" id="L367">        menu.addSeparator();</span>
+
+<span class="nc" id="L369">        TurtleModifierAction a4 = new FlipTurtleAction(1,-1,Translator.get(&quot;FlipV&quot;));</span>
+<span class="nc" id="L370">        a4.putValue(Action.SMALL_ICON, new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-flip-horizontal-16.png&quot;))));</span>
+<span class="nc" id="L371">        a4.setSource(app);</span>
+<span class="nc" id="L372">        a4.addModifierListener(app::setTurtle);</span>
+<span class="nc" id="L373">        menu.add(a4);</span>
+
+<span class="nc" id="L375">        TurtleModifierAction a5 = new FlipTurtleAction(-1,1,Translator.get(&quot;FlipH&quot;));</span>
+<span class="nc" id="L376">        a5.putValue(Action.SMALL_ICON, new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-flip-vertical-16.png&quot;))));</span>
+<span class="nc" id="L377">        a5.setSource(app);</span>
+<span class="nc" id="L378">        a5.addModifierListener(app::setTurtle);</span>
+<span class="nc" id="L379">        menu.add(a5);</span>
+
+<span class="nc" id="L381">        menu.addSeparator();</span>
+
+<span class="nc" id="L383">        TurtleModifierAction a1 = createModifier(new SimplifyTurtleAction(),null);</span>
+<span class="nc" id="L384">        a1.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Y, SHORTCUT_CTRL));//&quot;ctrl Y&quot;</span>
+        //a1.putValue(Action.SMALL_ICON,new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-simplify-16.png&quot;))));
+<span class="nc" id="L386">        menu.add(a1);</span>
+
+<span class="nc" id="L388">        TurtleModifierAction a2 = createModifier(new ReorderTurtleAction(),&quot;/com/marginallyclever/makelangelo/icons8-sort-16.png&quot;);</span>
+<span class="nc" id="L389">        a2.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, SHORTCUT_CTRL));//&quot;ctrl R&quot;</span>
+<span class="nc" id="L390">        menu.add(a2);</span>
+
+<span class="nc" id="L392">        TurtleModifierAction a3 = createModifier(new InfillTurtleAction(), &quot;/com/marginallyclever/makelangelo/icons8-fill-color-16.png&quot;);</span>
+<span class="nc" id="L393">        a3.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_I, SHORTCUT_CTRL));//&quot;ctrl I&quot;</span>
+<span class="nc" id="L394">        menu.add(a3);</span>
+
+<span class="nc" id="L396">        return menu;</span>
+    }
+
+    private TurtleModifierAction createModifier(TurtleModifierAction action, String resource) {
+<span class="nc bnc" id="L400" title="All 2 branches missed.">        if(resource!=null) {</span>
+<span class="nc" id="L401">            action.putValue(Action.SMALL_ICON, new ImageIcon(Objects.requireNonNull(getClass().getResource(resource))));</span>
+        }
+<span class="nc" id="L403">        action.setSource(app);</span>
+<span class="nc" id="L404">        action.addModifierListener(app::setTurtle);</span>
+
+<span class="nc" id="L406">        return action;</span>
+    }
+
+    private JMenuItem createMover(String label, String resource, ActionListener listener) {
+<span class="nc" id="L410">        JMenuItem menuItem = new JMenuItem(label);</span>
+<span class="nc" id="L411">        menuItem.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(resource))));</span>
+<span class="nc" id="L412">        menuItem.addActionListener(listener);</span>
+<span class="nc" id="L413">        return menuItem;</span>
+    }
+
+    private TurtleModifierAction createActionMenuItem(TurtleModifierAction action) {
+<span class="nc" id="L417">        action.setSource(app);</span>
+<span class="nc" id="L418">        action.addModifierListener(app::setTurtle);</span>
+<span class="nc" id="L419">        return action;</span>
+    }
+
+    private void runRotatePanel() {
+<span class="nc" id="L423">        RotateTurtlePanel.runAsDialog(SwingUtilities.getWindowAncestor(this), app.getTurtle());</span>
+<span class="nc" id="L424">    }</span>
+
+    private void runScalePanel() {
+<span class="nc" id="L427">        ScaleTurtlePanel.runAsDialog(SwingUtilities.getWindowAncestor(this), app.getTurtle());</span>
+<span class="nc" id="L428">    }</span>
+
+    private void runTranslatePanel() {
+<span class="nc" id="L431">        TranslateTurtlePanel.runAsDialog(SwingUtilities.getWindowAncestor(this), app.getTurtle());</span>
+<span class="nc" id="L432">    }</span>
+  
+    private JMenu createRobotMenu() {
+<span class="nc" id="L435">        JMenu menu = new JMenu(Translator.get(&quot;Robot&quot;));</span>
+<span class="nc" id="L436">        menu.setMnemonic('k');</span>
+
+<span class="nc" id="L438">        JMenuItem bEstimate = new JMenuItem(Translator.get(&quot;RobotMenu.GetTimeEstimate&quot;));</span>
+<span class="nc" id="L439">        bEstimate.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, SHORTCUT_CTRL));</span>
+<span class="nc" id="L440">        bEstimate.addActionListener((e)-&gt; estimateTime());</span>
+<span class="nc" id="L441">        bEstimate.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-stopwatch-16.png&quot;))));</span>
+<span class="nc" id="L442">        menu.add(bEstimate);</span>
+
+<span class="nc" id="L444">        JMenuItem bSaveToSD = new JMenuItem(Translator.get(&quot;RobotMenu.SaveGCode&quot;));</span>
+<span class="nc" id="L445">        bSaveToSD.addActionListener((e)-&gt; app.saveGCode());</span>
+<span class="nc" id="L446">        bSaveToSD.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, SHORTCUT_CTRL));</span>
+<span class="nc" id="L447">        bSaveToSD.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-export-16.png&quot;))));</span>
+<span class="nc" id="L448">        menu.add(bSaveToSD);</span>
+
+<span class="nc" id="L450">        JMenuItem bOpenControls = new JMenuItem(Translator.get(&quot;RobotMenu.OpenControls&quot;));</span>
+<span class="nc" id="L451">        bOpenControls.addActionListener((e)-&gt; openPlotterControls());</span>
+<span class="nc" id="L452">        bOpenControls.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, SHORTCUT_CTRL));</span>
+<span class="nc" id="L453">        bOpenControls.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/com/marginallyclever/makelangelo/icons8-joystick-16.png&quot;))));</span>
+<span class="nc" id="L454">        menu.add(bOpenControls);</span>
+
+<span class="nc" id="L456">        return menu;</span>
+    }
+
+    private JMenuItem createRenderStyleMenu() {
+<span class="nc" id="L460">        JMenu menu = new JMenu(Translator.get(&quot;RobotMenu.RenderStyle&quot;));</span>
+
+<span class="nc" id="L462">        ButtonGroup group = new ButtonGroup();</span>
+
+<span class="nc" id="L464">        Arrays.stream(TurtleRenderFactory.values())</span>
+<span class="nc" id="L465">                .forEach(iter -&gt; {</span>
+<span class="nc" id="L466">                    TurtleRenderer renderer = iter.getTurtleRenderer();</span>
+<span class="nc" id="L467">                    String name = iter.getName();</span>
+<span class="nc" id="L468">                    JRadioButtonMenuItem button = new JRadioButtonMenuItem(renderer.getTranslatedName());</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">                    if (app.getTurtleRenderer() == renderer) button.setSelected(true);</span>
+<span class="nc" id="L470">                    button.addActionListener((e)-&gt; onTurtleRenderChange(name));</span>
+<span class="nc" id="L471">                    menu.add(button);</span>
+<span class="nc" id="L472">                    group.add(button);</span>
+<span class="nc" id="L473">                });</span>
+
+<span class="nc" id="L475">        return menu;</span>
+    }
+
+    private void onTurtleRenderChange(String name) {
+<span class="nc" id="L479">        logger.debug(&quot;Switching to render style '{}'&quot;, name);</span>
+<span class="nc" id="L480">        TurtleRenderer renderer = TurtleRenderFactory.findByName(name).getTurtleRenderer();</span>
+<span class="nc" id="L481">        app.setTurtleRenderer(renderer);</span>
+<span class="nc" id="L482">    }</span>
+
+    private void estimateTime() {
+<span class="nc" id="L485">        MarlinSimulation ms = new MarlinSimulation(app.getPlotter().getSettings());</span>
+<span class="nc" id="L486">        int estimatedSeconds = (int)Math.ceil(ms.getTimeEstimate(app.getTurtle()));</span>
+<span class="nc" id="L487">        String timeAsString = StringHelper.getElapsedTime(estimatedSeconds);</span>
+<span class="nc" id="L488">        String message = Translator.get(&quot;EstimatedTimeIs&quot;,new String[]{timeAsString});</span>
+<span class="nc" id="L489">        JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this), message, Translator.get(&quot;RobotMenu.GetTimeEstimate&quot;), JOptionPane.INFORMATION_MESSAGE);</span>
+<span class="nc" id="L490">    }</span>
+
+    private void openPlotterControls() {
+<span class="nc" id="L493">        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), Translator.get(&quot;PlotterControls.Title&quot;));</span>
+<span class="nc" id="L494">        dialog.setPreferredSize(new Dimension(PlotterControls.DIMENSION_PANEL_WIDTH, PlotterControls.DIMENSION_PANEL_HEIGHT));</span>
+<span class="nc" id="L495">        dialog.setMinimumSize(new Dimension(PlotterControls.DIMENSION_PANEL_WIDTH, PlotterControls.DIMENSION_PANEL_HEIGHT));</span>
+<span class="nc" id="L496">        PlotterControls plotterControls = new PlotterControls(app.getPlotter(),app.getTurtle(), dialog);</span>
+<span class="nc" id="L497">        dialog.add(plotterControls);</span>
+<span class="nc" id="L498">        dialog.pack();</span>
+
+<span class="nc" id="L500">        app.enableMenuBar(false);</span>
+<span class="nc" id="L501">        dialog.addWindowListener(new WindowAdapter() {</span>
+            @Override
+            public void windowClosing(WindowEvent e) {
+<span class="nc" id="L504">                plotterControls.onDialogClosing();</span>
+<span class="nc" id="L505">                app.enableMenuBar(true);</span>
+<span class="nc" id="L506">            }</span>
+        });
+
+<span class="nc" id="L509">        dialog.setLocationRelativeTo(SwingUtilities.getWindowAncestor(this));</span>
+<span class="nc" id="L510">        dialog.setVisible(true);</span>
+<span class="nc" id="L511">    }</span>
+
+    private JMenu createSettingsMenu() {
+<span class="nc" id="L514">        JMenu menu = new JMenu(Translator.get(&quot;MenuSettings&quot;));</span>
+<span class="nc" id="L515">        menu.setMnemonic('S');</span>
+
+<span class="nc" id="L517">        JMenuItem bOpenPaperSettings = new JMenuItem(Translator.get(&quot;OpenPaperSettings&quot;));</span>
+<span class="nc" id="L518">        bOpenPaperSettings.addActionListener((e)-&gt; openPaperSettings());</span>
+<span class="nc" id="L519">        menu.add(bOpenPaperSettings);</span>
+
+<span class="nc" id="L521">        JMenuItem bOpenPlotterSettings = new JMenuItem(Translator.get(&quot;OpenPlotterSettings&quot;));</span>
+<span class="nc" id="L522">        bOpenPlotterSettings.addActionListener((e)-&gt; openPlotterSettings());</span>
+<span class="nc" id="L523">        bOpenPlotterSettings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, SHORTCUT_CTRL));//&quot;ctrl P&quot;</span>
+<span class="nc" id="L524">        menu.add(bOpenPlotterSettings);</span>
+
+<span class="nc" id="L526">        return menu;</span>
+    }
+
+    private void openPlotterSettings() {
+<span class="nc" id="L530">        PlotterSettingsManagerPanel plotterSettingsPanel = new PlotterSettingsManagerPanel(app.getPlotterSettingsManager());</span>
+<span class="nc" id="L531">        plotterSettingsPanel.addListener(app::onPlotterSettingsUpdate);</span>
+
+<span class="nc" id="L533">        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this),Translator.get(&quot;PlotterSettingsPanel.Title&quot;));</span>
+<span class="nc" id="L534">        dialog.add(plotterSettingsPanel);</span>
+<span class="nc" id="L535">        dialog.setMinimumSize(new Dimension(350,300));</span>
+<span class="nc" id="L536">        dialog.setResizable(false);</span>
+<span class="nc" id="L537">        dialog.pack();</span>
+
+<span class="nc" id="L539">        app.enableMenuBar(false);</span>
+<span class="nc" id="L540">        dialog.addWindowListener(new WindowAdapter() {</span>
+            @Override
+            public void windowClosing(WindowEvent e) {
+<span class="nc" id="L543">                app.onPlotterSettingsUpdate(app.getPlotterSettingsManager().getLastSelectedProfile());</span>
+<span class="nc" id="L544">                app.enableMenuBar(true);</span>
+<span class="nc" id="L545">            }</span>
+        });
+
+<span class="nc" id="L548">        dialog.setLocationRelativeTo(SwingUtilities.getWindowAncestor(this));</span>
+<span class="nc" id="L549">        dialog.setVisible(true);</span>
+<span class="nc" id="L550">    }</span>
+
+    private void openPaperSettings() {
+<span class="nc" id="L553">        PaperSettingsPanel settings = new PaperSettingsPanel(app.getPaper());</span>
+<span class="nc" id="L554">        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this),Translator.get(&quot;PaperSettings.Title&quot;));</span>
+<span class="nc" id="L555">        dialog.add(settings);</span>
+<span class="nc" id="L556">        dialog.setMinimumSize(new Dimension(300,300));</span>
+<span class="nc" id="L557">        dialog.pack();</span>
+
+<span class="nc" id="L559">        app.enableMenuBar(false);</span>
+<span class="nc" id="L560">        dialog.addWindowListener(new WindowAdapter() {</span>
+            @Override
+            public void windowClosing(WindowEvent e) {
+<span class="nc" id="L563">                settings.save();</span>
+<span class="nc" id="L564">                app.enableMenuBar(true);</span>
+<span class="nc" id="L565">            }</span>
+        });
+
+<span class="nc" id="L568">        dialog.setLocationRelativeTo(SwingUtilities.getWindowAncestor(this));</span>
+<span class="nc" id="L569">        dialog.setVisible(true);</span>
+<span class="nc" id="L570">    }</span>
+
+    public RecentFiles getRecentFiles() {
+<span class="nc" id="L573">        return recentFiles;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

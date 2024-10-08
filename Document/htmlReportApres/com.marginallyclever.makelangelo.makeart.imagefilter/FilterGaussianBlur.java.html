@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterGaussianBlur.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imagefilter</a> &gt; <span class="el_source">FilterGaussianBlur.java</span></div><h1>FilterGaussianBlur.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imagefilter;
+
+import com.marginallyclever.convenience.ResizableImagePanel;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+
+/**
+ * Converts an image to N shades of grey.
+ *
+ * @author Dan
+ */
+<span class="nc" id="L21">public class FilterGaussianBlur extends ImageFilter {</span>
+	private final TransformedImage img;
+	private final int radius;
+
+	public FilterGaussianBlur(TransformedImage img, int radius) {
+<span class="nc" id="L26">		super();</span>
+<span class="nc" id="L27">		this.img = img;</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">		assert (radius &gt;= 1);</span>
+<span class="nc" id="L29">		this.radius = radius;</span>
+<span class="nc" id="L30">	}</span>
+
+	@Override
+	public TransformedImage filter() {
+<span class="nc" id="L34">	    TransformedImage after = new TransformedImage(img);</span>
+<span class="nc" id="L35">		BufferedImage src = img.getSourceImage();</span>
+<span class="nc" id="L36">		BufferedImage dest = after.getSourceImage();</span>
+<span class="nc" id="L37">		BufferedImage inter = new BufferedImage(src.getWidth(), src.getHeight(), src.getType());</span>
+<span class="nc" id="L38">		getGaussianBlurFilter(true).filter(src,inter);</span>
+<span class="nc" id="L39">		getGaussianBlurFilter(false).filter(inter,dest);</span>
+
+<span class="nc" id="L41">		return after;</span>
+	}
+
+	public ConvolveOp getGaussianBlurFilter(boolean horizontal) {
+<span class="nc" id="L45">		int size = radius * 2 + 1;</span>
+<span class="nc" id="L46">		float[] data = new float[size];</span>
+
+		// sigma here is the lowercase σ, not the uppercase Σ.
+<span class="nc" id="L49">		float sigma = radius / 3.0f;</span>
+<span class="nc" id="L50">		float twoSigmaSquare = 2.0f * sigma * sigma;</span>
+<span class="nc" id="L51">		float sigmaRoot = (float) Math.sqrt(twoSigmaSquare * Math.PI);</span>
+<span class="nc" id="L52">		float total = 0.0f;</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		for (int i = -radius; i &lt;= radius; i++) {</span>
+<span class="nc" id="L55">			float distance = i * i;</span>
+<span class="nc" id="L56">			int index = i + radius;</span>
+<span class="nc" id="L57">			data[index] = (float) Math.exp(-distance / twoSigmaSquare) / sigmaRoot;</span>
+<span class="nc" id="L58">			total += data[index];</span>
+		}
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		for (int i = 0; i &lt; data.length; i++) {</span>
+<span class="nc" id="L62">			data[i] /= total;</span>
+		}
+
+<span class="nc" id="L65">		Kernel kernel = null;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (horizontal) {</span>
+<span class="nc" id="L67">			kernel = new Kernel(size, 1, data);</span>
+		} else {
+<span class="nc" id="L69">			kernel = new Kernel(1, size, data);</span>
+		}
+<span class="nc" id="L71">		return new ConvolveOp(kernel, ConvolveOp.EDGE_NO_OP, null);</span>
+	}
+
+	public static void main(String[] args) throws IOException {
+<span class="nc" id="L75">		TransformedImage src = new TransformedImage( ImageIO.read(new FileInputStream(&quot;src/test/resources/mandrill.png&quot;)) );</span>
+<span class="nc" id="L76">		JPanel panel = new JPanel();</span>
+<span class="nc" id="L77">		panel.setLayout(new BorderLayout());</span>
+
+<span class="nc" id="L79">		final JSlider slider = new JSlider(1,20);</span>
+<span class="nc" id="L80">		slider.setValue(1);</span>
+<span class="nc" id="L81">		panel.add(slider,BorderLayout.NORTH);</span>
+
+<span class="nc" id="L83">		slider.addChangeListener(e-&gt;{</span>
+<span class="nc" id="L84">			FilterGaussianBlur f = new FilterGaussianBlur(src,slider.getValue());</span>
+<span class="nc" id="L85">			TransformedImage dest = f.filter();</span>
+<span class="nc" id="L86">			ResizableImagePanel rip = new ResizableImagePanel(dest.getSourceImage());</span>
+<span class="nc" id="L87">			BorderLayout layout = (BorderLayout)panel.getLayout();</span>
+<span class="nc" id="L88">			Component c = layout.getLayoutComponent(BorderLayout.CENTER);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if(c!=null) panel.remove(c);</span>
+<span class="nc" id="L90">			panel.add(rip,BorderLayout.CENTER);</span>
+<span class="nc" id="L91">			rip.revalidate();</span>
+<span class="nc" id="L92">			rip.repaint();</span>
+<span class="nc" id="L93">		});</span>
+
+<span class="nc" id="L95">		JFrame frame = new JFrame(&quot;Filter_GaussianBlur&quot;);</span>
+<span class="nc" id="L96">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L97">		frame.setSize(400, 500);</span>
+<span class="nc" id="L98">		frame.add(panel);</span>
+<span class="nc" id="L99">		frame.setVisible(true);</span>
+<span class="nc" id="L100">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

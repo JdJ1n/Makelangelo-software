@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TurtleGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator</a> &gt; <span class="el_source">TurtleGenerator.java</span></div><h1>TurtleGenerator.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+
+import com.jogamp.opengl.GL2;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.Select;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import javax.swing.event.EventListenerList;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Generators create gcode from user input.  Fractals might be one example.
+ * @author dan royer
+ */
+<span class="fc" id="L16">public abstract class TurtleGenerator {</span>
+	protected Paper myPaper;
+	protected Turtle previousTurtle;
+
+<span class="fc" id="L20">	private final List&lt;Select&gt; panelElements = new ArrayList&lt;&gt;();</span>
+	
+	abstract public String getName();
+	
+	/**
+	 * generate
+	 */
+	abstract public void generate();
+
+	public void setPaper(Paper paper) {
+<span class="fc" id="L30">		myPaper = paper;</span>
+<span class="fc" id="L31">	}</span>
+
+	public void add(Select element) {
+<span class="fc" id="L34">		panelElements.add(element);</span>
+<span class="fc" id="L35">	}</span>
+
+	public List&lt;Select&gt; getPanelElements() {
+<span class="fc" id="L38">		return panelElements;</span>
+	}
+
+	/**
+	 * live preview as the system is generating.
+	 * draw the results as the calculation is being performed.
+	 */
+<span class="nc" id="L45">	public void render(GL2 gl2) {}</span>
+	
+	// OBSERVER PATTERN
+
+<span class="fc" id="L49">	private final EventListenerList listeners = new EventListenerList();</span>
+	public void addListener(TurtleGeneratorListener a) {
+<span class="fc" id="L51">		listeners.add(TurtleGeneratorListener.class, a);</span>
+<span class="fc" id="L52">	}</span>
+	
+	public void removeListener(TurtleGeneratorListener a) {
+<span class="nc" id="L55">		listeners.remove(TurtleGeneratorListener.class, a);</span>
+<span class="nc" id="L56">	}</span>
+	
+	protected void notifyListeners(Turtle turtle) {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">		for( TurtleGeneratorListener a : listeners.getListeners(TurtleGeneratorListener.class) ) {</span>
+<span class="fc" id="L60">			a.turtleReady(turtle);</span>
+		}
+<span class="fc" id="L62">	}</span>
+
+	public void setTurtle(Turtle turtle) {
+<span class="nc" id="L65">		previousTurtle = turtle;</span>
+<span class="nc" id="L66">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

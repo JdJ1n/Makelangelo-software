@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PiCaptureAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter</a> &gt; <span class="el_source">PiCaptureAction.java</span></div><h1>PiCaptureAction.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter;
+
+import com.hopding.jrpicam.RPiCamera;
+import com.hopding.jrpicam.enums.AWB;
+import com.hopding.jrpicam.enums.DRC;
+import com.hopding.jrpicam.enums.Encoding;
+import com.hopding.jrpicam.enums.Exposure;
+import com.hopding.jrpicam.exceptions.FailedToRunRaspistillException;
+import com.marginallyclever.makelangelo.Makelangelo;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.paper.Paper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+/**
+ * Raspi camera capture to file for image processing
+ */
+public class PiCaptureAction {
+    private static final int BUTTON_HEIGHT = 25;
+<span class="nc" id="L29">	private static final Logger logger = LoggerFactory.getLogger(PiCaptureAction.class);</span>
+<span class="nc" id="L30">	private RPiCamera piCamera = new RPiCamera(&quot;/home/pi/Pictures&quot;);</span>
+	
+	// picam controls
+	private JButton	buttonCaptureImage, buttonUseCapture, buttonCancelCapture;
+	private Makelangelo makelangeloApp;
+	private BufferedImage buffImg;
+	private boolean useImage;
+<span class="nc" id="L37">	private int awb=1;</span>
+<span class="nc" id="L38">	private int drc=1;</span>
+<span class="nc" id="L39">	private int exp=11;</span>
+<span class="nc" id="L40">	private int contrast = 0;</span>
+<span class="nc" id="L41">	private int quality = 75;</span>
+<span class="nc" id="L42">	private int sharpness = 0;</span>
+	
+	public PiCaptureAction() throws FailedToRunRaspistillException {
+<span class="nc" id="L45">		super();</span>
+<span class="nc" id="L46">	}</span>
+	
+	public void run(Frame mainFrame, Paper myPaper) {
+        // let's make the image the correct width and height for the paper
+<span class="nc" id="L50">		useImage = false;</span>
+<span class="nc" id="L51">        double aspectRatio = myPaper.getPaperWidth() / myPaper.getPaperHeight();</span>
+<span class="nc" id="L52">		final int captureH = 650;</span>
+<span class="nc" id="L53">        final int captureW = (int) ((double) captureH * aspectRatio);</span>
+
+<span class="nc" id="L55">		final JDialog dialog = new JDialog(mainFrame,Translator.get(&quot;CaptureImageTitle&quot;), true);</span>
+<span class="nc" id="L56">        dialog.setLocation(mainFrame.getLocation());</span>
+
+<span class="nc" id="L58">        JPanel panel = new JPanel();</span>
+<span class="nc" id="L59">        panel.setLayout(new GridBagLayout());</span>
+<span class="nc" id="L60">		final GridBagConstraints cMain = new GridBagConstraints();</span>
+<span class="nc" id="L61">		cMain.fill=GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L62">		cMain.anchor=GridBagConstraints.NORTH;</span>
+<span class="nc" id="L63">		cMain.gridx=0;</span>
+<span class="nc" id="L64">		cMain.gridy=0;</span>
+<span class="nc" id="L65">        cMain.gridheight = 1;</span>
+<span class="nc" id="L66">        cMain.gridwidth = 1;</span>
+
+		// create a frame to adjust the image
+
+<span class="nc" id="L70">		panel.setBounds(1024, 100, 700, captureH);</span>
+
+        // if you add more things to the right side, you must increase this.
+<span class="nc" id="L73">        cMain.gridheight = 16;</span>
+<span class="nc" id="L74">        final JLabel imageLabel = new JLabel();</span>
+<span class="nc" id="L75">        imageLabel.setPreferredSize(new Dimension(captureW, captureH));</span>
+<span class="nc" id="L76">  		panel.add(imageLabel, cMain);</span>
+<span class="nc" id="L77">        cMain.gridheight = 1;</span>
+
+        // all controls to the right
+<span class="nc" id="L80">		cMain.gridx++;</span>
+
+<span class="nc" id="L82">		JLabel label = new JLabel(Translator.get(&quot;AWB&quot;));</span>
+<span class="nc" id="L83">		label.setPreferredSize(new Dimension(100,BUTTON_HEIGHT));</span>
+<span class="nc" id="L84">		panel.add(label, cMain);</span>
+<span class="nc" id="L85">		cMain.gridy++;</span>
+
+<span class="nc" id="L87">		String[] awbComboBoxChoices = {</span>
+<span class="nc" id="L88">		        Translator.get(&quot;Off&quot;),</span>
+<span class="nc" id="L89">                Translator.get(&quot;Auto&quot;),</span>
+<span class="nc" id="L90">                Translator.get(&quot;Sun&quot;),</span>
+<span class="nc" id="L91">                Translator.get(&quot;Cloud&quot;),</span>
+<span class="nc" id="L92">                Translator.get(&quot;Shade&quot;),</span>
+<span class="nc" id="L93">                Translator.get(&quot;Tungsten&quot;),</span>
+<span class="nc" id="L94">                Translator.get(&quot;Fluorescent&quot;),</span>
+<span class="nc" id="L95">                Translator.get(&quot;Incandescent&quot;),</span>
+<span class="nc" id="L96">                Translator.get(&quot;Flash&quot;),</span>
+<span class="nc" id="L97">                Translator.get(&quot;Horizon&quot;) };</span>
+<span class="nc" id="L98">		final JComboBox&lt;String&gt; awbComboBox = new JComboBox&lt;String&gt;(awbComboBoxChoices);</span>
+<span class="nc" id="L99">		awbComboBox.setPreferredSize(new Dimension(100,BUTTON_HEIGHT));</span>
+<span class="nc" id="L100">		awbComboBox.setSelectedIndex(awb);</span>
+<span class="nc" id="L101">		panel.add(awbComboBox, cMain);</span>
+<span class="nc" id="L102">		cMain.gridy++;</span>
+
+<span class="nc" id="L104">		JLabel lblNewLabel = new JLabel(Translator.get(&quot;DRC&quot;));</span>
+<span class="nc" id="L105">		lblNewLabel.setPreferredSize(new Dimension(100,BUTTON_HEIGHT));</span>
+<span class="nc" id="L106">		panel.add(lblNewLabel, cMain);</span>
+<span class="nc" id="L107">		cMain.gridy++;</span>
+
+<span class="nc" id="L109">		String[] drcComboBoxChoices = {</span>
+<span class="nc" id="L110">                Translator.get(&quot;Off&quot;),</span>
+<span class="nc" id="L111">                Translator.get(&quot;High&quot;),</span>
+<span class="nc" id="L112">                Translator.get(&quot;Medium&quot;),</span>
+<span class="nc" id="L113">                Translator.get(&quot;Low&quot;) };</span>
+<span class="nc" id="L114">		final JComboBox&lt;String&gt; drcComboBox = new JComboBox&lt;String&gt;(drcComboBoxChoices);</span>
+<span class="nc" id="L115">		drcComboBox.setPreferredSize(new Dimension(100,BUTTON_HEIGHT));</span>
+<span class="nc" id="L116">		drcComboBox.setSelectedIndex(drc);</span>
+<span class="nc" id="L117">		panel.add(drcComboBox, cMain);</span>
+<span class="nc" id="L118">		cMain.gridy++;</span>
+
+<span class="nc" id="L120">		JLabel label_1 = new JLabel(Translator.get(&quot;Exposure&quot;));</span>
+<span class="nc" id="L121">		label_1.setPreferredSize(new Dimension(100,BUTTON_HEIGHT));</span>
+<span class="nc" id="L122">		panel.add(label_1, cMain);</span>
+<span class="nc" id="L123">		cMain.gridy++;</span>
+
+<span class="nc" id="L125">		String[] expComboBoxChoices = {</span>
+<span class="nc" id="L126">                Translator.get(&quot;Antishake&quot;),</span>
+<span class="nc" id="L127">                Translator.get(&quot;Auto&quot;),</span>
+<span class="nc" id="L128">                Translator.get(&quot;Backlight&quot;),</span>
+<span class="nc" id="L129">                Translator.get(&quot;Beach&quot;),</span>
+<span class="nc" id="L130">                Translator.get(&quot;Fireworks&quot;),</span>
+<span class="nc" id="L131">                Translator.get(&quot;FixedFPS&quot;),</span>
+<span class="nc" id="L132">                Translator.get(&quot;Night&quot;),</span>
+<span class="nc" id="L133">                Translator.get(&quot;NightPreview&quot;),</span>
+<span class="nc" id="L134">                Translator.get(&quot;Snow&quot;),</span>
+<span class="nc" id="L135">                Translator.get(&quot;Sports&quot;),</span>
+<span class="nc" id="L136">                Translator.get(&quot;Spotlight&quot;),</span>
+<span class="nc" id="L137">                Translator.get(&quot;Verylong&quot;) };</span>
+<span class="nc" id="L138">		final JComboBox&lt;String&gt; expComboBox = new JComboBox&lt;String&gt;(expComboBoxChoices);</span>
+//		expComboBox.setBounds(584, 362, 90, 20);
+<span class="nc" id="L140">		expComboBox.setPreferredSize(new Dimension(100,BUTTON_HEIGHT));</span>
+<span class="nc" id="L141">		expComboBox.setSelectedIndex(exp);</span>
+<span class="nc" id="L142">		panel.add(expComboBox, cMain);</span>
+<span class="nc" id="L143">		cMain.gridy++;</span>
+
+<span class="nc" id="L145">		JLabel lblContrast = new JLabel(Translator.get(&quot;Contrast&quot;));</span>
+//		lblContrast.setBounds(588, 393, 67, 14);
+<span class="nc" id="L147">		lblContrast.setPreferredSize(new Dimension(100,BUTTON_HEIGHT));</span>
+<span class="nc" id="L148">		panel.add(lblContrast, cMain);</span>
+<span class="nc" id="L149">		cMain.gridy++;</span>
+
+<span class="nc" id="L151">		final JSlider contrastSlider = new JSlider();</span>
+<span class="nc" id="L152">		contrastSlider.setMinimum(-100);</span>
+//		contrastSlider.setBounds(588, 418, 90, 23);
+<span class="nc" id="L154">		contrastSlider.setValue(contrast);</span>
+<span class="nc" id="L155">		panel.add(contrastSlider, cMain);</span>
+<span class="nc" id="L156">		cMain.gridy++;</span>
+
+<span class="nc" id="L158">		JLabel lblQuality = new JLabel(Translator.get(&quot;Quality&quot;));</span>
+//		lblQuality.setBounds(588, 452, 46, 14);
+<span class="nc" id="L160">		lblQuality.setPreferredSize(new Dimension(100,BUTTON_HEIGHT));</span>
+<span class="nc" id="L161">		panel.add(lblQuality, cMain);</span>
+<span class="nc" id="L162">		cMain.gridy++;</span>
+
+<span class="nc" id="L164">		final JSlider qualitySlider = new JSlider();</span>
+<span class="nc" id="L165">		qualitySlider.setValue(quality);</span>
+//		qualitySlider.setBounds(584, 477, 90, 29);
+<span class="nc" id="L167">		panel.add(qualitySlider, cMain);</span>
+<span class="nc" id="L168">		cMain.gridy++;</span>
+
+<span class="nc" id="L170">		JLabel lblSharpness = new JLabel(Translator.get(&quot;Sharpness&quot;));</span>
+//		lblSharpness.setBounds(585, 517, 66, 14);
+<span class="nc" id="L172">		lblSharpness.setPreferredSize(new Dimension(100,BUTTON_HEIGHT));</span>
+<span class="nc" id="L173">		panel.add(lblSharpness, cMain);</span>
+<span class="nc" id="L174">		cMain.gridy++;</span>
+
+<span class="nc" id="L176">		final JSlider sharpnessSlider = new JSlider();</span>
+<span class="nc" id="L177">		sharpnessSlider.setMinimum(-100);</span>
+<span class="nc" id="L178">		sharpnessSlider.setValue(sharpness);</span>
+//		sharpnessSlider.setBounds(588, 542, 90, 23);
+<span class="nc" id="L180">		panel.add(sharpnessSlider, cMain);</span>
+<span class="nc" id="L181">		cMain.gridy++;</span>
+
+		// I need 3 buttons one for Capture and one for Use if we have captured an image and one to just Cancel
+
+        // a little space between everything else
+<span class="nc" id="L186">        cMain.insets = new Insets(10,0,0,0);  //top padding</span>
+
+<span class="nc" id="L188">        buttonCaptureImage = new JButton(Translator.get(&quot;CaptureImage&quot;));</span>
+<span class="nc" id="L189">		buttonCaptureImage.addActionListener((arg0)-&gt;{</span>
+			try {
+<span class="nc" id="L191">				piCamera.turnOnPreview(</span>
+<span class="nc" id="L192">						mainFrame.getLocationOnScreen().x + 50,</span>
+<span class="nc" id="L193">						mainFrame.getLocationOnScreen().y + 100,</span>
+						captureW,
+						captureH);
+<span class="nc" id="L196">				piCamera.setAWB(AWB.valueOf(((String)awbComboBox.getSelectedItem()).toUpperCase()));</span>
+<span class="nc" id="L197">				piCamera.setDRC(DRC.valueOf(((String)drcComboBox.getSelectedItem()).toUpperCase()));</span>
+<span class="nc" id="L198">				piCamera.setExposure(Exposure.valueOf(((String)expComboBox.getSelectedItem()).toUpperCase()));</span>
+<span class="nc" id="L199">				piCamera.setEncoding(Encoding.JPG);</span>
+<span class="nc" id="L200">				piCamera.setWidth(captureW);</span>
+<span class="nc" id="L201">				piCamera.setHeight(captureH);</span>
+<span class="nc" id="L202">				piCamera.setContrast(contrastSlider.getValue());</span>
+<span class="nc" id="L203">				piCamera.setQuality(qualitySlider.getValue());</span>
+<span class="nc" id="L204">				piCamera.setSharpness(sharpnessSlider.getValue());</span>
+<span class="nc" id="L205">				piCamera.setTimeout(3000);</span>
+<span class="nc" id="L206">				buffImg = piCamera.takeBufferedStill();</span>
+<span class="nc" id="L207">				logger.debug(&quot;Executed this command:\n\t{}&quot;, piCamera.getPrevCommand());</span>
+<span class="nc" id="L208">				ImageIcon icon = new ImageIcon(buffImg);</span>
+<span class="nc" id="L209">				imageLabel.setIcon(icon);</span>
+<span class="nc" id="L210">				buttonUseCapture.setEnabled(true);</span>
+<span class="nc" id="L211">			} catch (Exception e) {</span>
+<span class="nc" id="L212">				logger.error(&quot;PiCaptureAction: &quot;, e);</span>
+<span class="nc" id="L213">				JOptionPane.showMessageDialog(mainFrame, e.getLocalizedMessage(), Translator.get(&quot;ErrorTitle&quot;), JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L214">			}</span>
+<span class="nc" id="L215">		});</span>
+<span class="nc" id="L216">		buttonCaptureImage.setPreferredSize(new Dimension(89, BUTTON_HEIGHT));</span>
+<span class="nc" id="L217">		panel.add(buttonCaptureImage, cMain);</span>
+<span class="nc" id="L218">		cMain.gridy++;</span>
+<span class="nc" id="L219">        cMain.insets = new Insets(2,0,0,0);  //top padding</span>
+
+<span class="nc" id="L221">		buttonUseCapture = new JButton(Translator.get(&quot;UseCapture&quot;));</span>
+<span class="nc" id="L222">		buttonUseCapture.addActionListener(new ActionListener() {</span>
+        	@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// we like this image, save off the parameters used.
+<span class="nc" id="L226">				awb = awbComboBox.getSelectedIndex();</span>
+<span class="nc" id="L227">				drc = drcComboBox.getSelectedIndex();</span>
+<span class="nc" id="L228">				exp = expComboBox.getSelectedIndex();</span>
+<span class="nc" id="L229">				contrast = contrastSlider.getValue();</span>
+<span class="nc" id="L230">				quality = qualitySlider.getValue();</span>
+<span class="nc" id="L231">				sharpness = sharpnessSlider.getValue();</span>
+
+<span class="nc" id="L233">				File saveFile = new File(&quot;/home/pi/Pictures/capture.jpg&quot;);</span>
+				try {
+<span class="nc" id="L235">					ImageIO.write(buffImg, &quot;jpg&quot;, saveFile);</span>
+<span class="nc" id="L236">					useImage = true;</span>
+<span class="nc" id="L237">				} catch (IOException e) {</span>
+<span class="nc" id="L238">					logger.error(&quot;Error while saving {}&quot;, saveFile, e);</span>
+<span class="nc" id="L239">				}</span>
+
+<span class="nc" id="L241">				dialog.dispose();</span>
+<span class="nc" id="L242">			};</span>
+		});
+<span class="nc" id="L244">		buttonUseCapture.setPreferredSize(new Dimension(89, BUTTON_HEIGHT));</span>
+<span class="nc" id="L245">		buttonUseCapture.setEnabled(false);</span>
+<span class="nc" id="L246">		panel.add(buttonUseCapture, cMain);</span>
+<span class="nc" id="L247">		cMain.gridy++;</span>
+
+<span class="nc" id="L249">		buttonCancelCapture = new JButton(Translator.get(&quot;CancelCapture&quot;));</span>
+<span class="nc" id="L250">		buttonCancelCapture.addActionListener(new ActionListener() {</span>
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L252">				dialog.dispose();</span>
+<span class="nc" id="L253">				useImage = false;</span>
+<span class="nc" id="L254">			};</span>
+		});
+<span class="nc" id="L256">		buttonCancelCapture.setPreferredSize(new Dimension(89, BUTTON_HEIGHT));</span>
+<span class="nc" id="L257">		buttonCancelCapture.setEnabled(true);</span>
+<span class="nc" id="L258">		panel.add(buttonCancelCapture, cMain);</span>
+
+//		piCamera.setAWB(AWB.AUTO);	    // Change Automatic White Balance setting to automatic
+//		piCamera.setDRC(DRC.OFF); 			// Turn off Dynamic Range Compression
+//		piCamera.setContrast(100); 			// Set maximum contrast
+//		piCamera.setSharpness(100);		    // Set maximum sharpness
+//		piCamera.setQuality(100); 		    // Set maximum quality
+//		piCamera.setTimeout(10000);		    // Wait 1 second to take the image
+//		piCamera.turnOnPreview(200, 200, captureW, captureH);            // Turn on image preview
+//		piCamera.setEncoding(Encoding.JPG); // Change encoding of images to PNG
+
+		// Take a still image and save it as &quot;/home/pi/Pictures/cameraCapture.jpg&quot;
+
+<span class="nc" id="L271">		logger.debug(&quot;We are about to display dialog\n&quot;);</span>
+<span class="nc" id="L272">		dialog.add(panel);</span>
+<span class="nc" id="L273">		dialog.pack();</span>
+<span class="nc" id="L274">		dialog.setVisible(true);</span>
+//			logger.debug(&quot;We are about to take a still image\n&quot;);
+//			File image = piCamera.takeStill(&quot;cameraCapture.jpg&quot;, captureW, captureH);
+//			logger.debug(&quot;New JPG capture saved to:\n\t&quot; + image.getAbsolutePath());
+//			piCamera.turnOffPreview();
+		// setup for reopen
+
+<span class="nc bnc" id="L281" title="All 2 branches missed.">		if (useImage) {</span>
+			// process the image
+<span class="nc" id="L283">			makelangeloApp.openFile(&quot;/home/pi/Pictures/capture.jpg&quot;);</span>
+		}
+<span class="nc" id="L285">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

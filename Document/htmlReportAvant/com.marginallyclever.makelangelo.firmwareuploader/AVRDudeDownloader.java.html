@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AVRDudeDownloader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.firmwareuploader</a> &gt; <span class="el_source">AVRDudeDownloader.java</span></div><h1>AVRDudeDownloader.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.firmwareuploader;
+
+import com.marginallyclever.convenience.helpers.OSHelper;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+<span class="nc" id="L27">public class AVRDudeDownloader {</span>
+<span class="nc" id="L28">    private static final Logger logger = LoggerFactory.getLogger(AVRDudeDownloader.class);</span>
+    public static final String WINDOWS = &quot;mingw&quot;;
+    public static final String LINUX = &quot;linux&quot;;
+    public static final String MACOS = &quot;apple&quot;;
+    private static final String ARDUINO_PACKAGE_INDEX = &quot;https://downloads.arduino.cc/packages/package_index.json&quot;;
+
+    public static void main(String[] args) throws IOException {
+<span class="nc" id="L35">        downloadAVRDude(getArch());</span>
+<span class="nc" id="L36">    }</span>
+
+    /**
+     * Download AVRDude for the current OS architecture.
+     * @return the path to the extracted avrdude executable.
+     * @throws IOException if the download fails.
+     */
+    public static String downloadAVRDude() throws IOException {
+<span class="nc" id="L44">        return downloadAVRDude(getArch());</span>
+    }
+
+    /**
+     * Download AVRDude for the given OS architecture.
+     * @param arch one of WINDOWS, LINUX, MACOS
+     * @return the path to the extracted avrdude executable.
+     * @throws IOException if the download fails.
+     */
+    public static String downloadAVRDude(String arch) throws IOException {
+<span class="nc" id="L54">        String url = getURLforOS(arch);</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (url != null) {</span>
+            try {
+<span class="nc" id="L57">                return downloadAndExtract(url);</span>
+<span class="nc" id="L58">            } catch (IOException e) {</span>
+<span class="nc" id="L59">                logger.error(&quot;Error downloading avrdude&quot;, e);</span>
+<span class="nc" id="L60">                throw e;</span>
+            }
+        }
+<span class="nc" id="L63">        return null;</span>
+    }
+
+    public static String getArch() {
+<span class="nc" id="L67">        String arch = LINUX;</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (OSHelper.isWindows()) arch = WINDOWS;</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (OSHelper.isOSX()) arch = MACOS;</span>
+<span class="nc" id="L70">        return arch;</span>
+    }
+
+    /**
+     * @param arch one of WINDOWS, LINUX, MACOS
+     * @return URL to download the latest avrdude package for the given OS.
+     * @throws IOException
+     */
+    public static String getURLforOS(String arch) throws IOException {
+<span class="nc" id="L79">        JSONObject jsonObject = getJSONFromURL(ARDUINO_PACKAGE_INDEX);</span>
+<span class="nc" id="L80">        JSONObject arduinoPackage = getPackageNamedArduino(jsonObject);</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if (arduinoPackage != null) {</span>
+<span class="nc" id="L83">            JSONObject avrdudeTool = getLastToolNamedAVRDude(arduinoPackage);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">            if (avrdudeTool != null) {</span>
+<span class="nc" id="L85">                JSONObject system = getSystemForHost(avrdudeTool, arch);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                if (system != null) {</span>
+<span class="nc" id="L87">                    return system.getString(&quot;url&quot;);</span>
+                }
+            }
+        }
+<span class="nc" id="L91">        return null;</span>
+    }
+
+    /**
+     * Search the systems list for the one where host contains the given architecture.
+     * @param jsonObject the avrdude tool object
+     * @param arch the architecture to search for
+     * @return the system object that matches the given architecture
+     */
+    private static JSONObject getSystemForHost(JSONObject jsonObject, String arch) {
+<span class="nc" id="L101">        JSONArray systems = jsonObject.getJSONArray(&quot;systems&quot;);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        for (int i = 0; i &lt; systems.length(); i++) {</span>
+<span class="nc" id="L103">            JSONObject systemObject = systems.getJSONObject(i);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            if (systemObject.getString(&quot;host&quot;).contains(arch)) {</span>
+<span class="nc" id="L105">                return systemObject;</span>
+            }
+        }
+<span class="nc" id="L108">        return null;</span>
+    }
+
+    /**
+     * Search the arduinoPackage for element with name=avrdude.  the last item is the latest release.
+     * @param arduinoPackage the package to search
+     * @return the last item in the tools list with name=avrdude
+     */
+    private static JSONObject getLastToolNamedAVRDude(JSONObject arduinoPackage) {
+<span class="nc" id="L117">        JSONArray tools = arduinoPackage.getJSONArray(&quot;tools&quot;);</span>
+<span class="nc" id="L118">        JSONObject avrdudeTool = null;</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        for (int i = 0; i &lt; tools.length(); i++) {</span>
+<span class="nc" id="L120">            JSONObject toolObject = tools.getJSONObject(i);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            if (toolObject.getString(&quot;name&quot;).equals(&quot;avrdude&quot;)) {</span>
+<span class="nc" id="L122">                avrdudeTool = toolObject;</span>
+            }
+        }
+<span class="nc" id="L125">        return avrdudeTool;</span>
+    }
+
+    // find the element in packages with name=arduino
+    private static JSONObject getPackageNamedArduino(JSONObject jsonObject) {
+<span class="nc" id="L130">        JSONArray packages = jsonObject.getJSONArray(&quot;packages&quot;);</span>
+<span class="nc" id="L131">        JSONObject arduinoPackage = null;</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        for (int i = 0; i &lt; packages.length(); i++) {</span>
+<span class="nc" id="L133">            JSONObject packageObject = packages.getJSONObject(i);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            if (packageObject.getString(&quot;name&quot;).equals(&quot;arduino&quot;)) {</span>
+<span class="nc" id="L135">                arduinoPackage = packageObject;</span>
+<span class="nc" id="L136">                break;</span>
+            }
+        }
+<span class="nc" id="L139">        return arduinoPackage;</span>
+    }
+
+    private static JSONObject getJSONFromURL(String url) throws IOException {
+<span class="nc" id="L143">        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {</span>
+<span class="nc" id="L144">            HttpGet httpGet = new HttpGet(url);</span>
+<span class="nc" id="L145">            HttpResponse httpResponse = httpClient.execute(httpGet);</span>
+<span class="nc" id="L146">            String json = EntityUtils.toString(httpResponse.getEntity());</span>
+<span class="nc" id="L147">            return new JSONObject(json);</span>
+        }
+    }
+
+    public static String downloadAndExtract(String urlStr) throws IOException {
+<span class="nc" id="L152">        File toDeleteLater = downloadFileToTemp(urlStr);</span>
+<span class="nc" id="L153">        String path = extractFile(toDeleteLater, urlStr);</span>
+<span class="nc" id="L154">        logger.info(&quot;new path: &quot;+path);</span>
+<span class="nc" id="L155">        makeExecutable(path);</span>
+
+<span class="nc" id="L157">        return path;</span>
+    }
+
+    private static void makeExecutable(String targetPath) throws IOException {
+<span class="nc" id="L161">        String app = &quot;avrdude&quot;;</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        if(OSHelper.isWindows()) app+=&quot;.exe&quot;;</span>
+
+<span class="nc" id="L164">        File avrDudeFile = tryPath(Paths.get(targetPath, app));</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if(!avrDudeFile.exists()) avrDudeFile = tryPath(Paths.get(targetPath, &quot;bin&quot;, app));</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if(!avrDudeFile.exists()) {</span>
+<span class="nc" id="L167">            throw new IOException(&quot;File &quot; + app + &quot; does not exist&quot;);</span>
+        }
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        if(!avrDudeFile.setExecutable(true)) {</span>
+<span class="nc" id="L170">            throw new IOException(&quot;Could not set executable permissions for &quot; + avrDudeFile.getAbsolutePath());</span>
+        }
+<span class="nc" id="L172">    }</span>
+
+    private static File tryPath(Path avrdudePath) {
+<span class="nc" id="L175">        logger.info(&quot;trying path: &quot; + avrdudePath.toAbsolutePath());</span>
+<span class="nc" id="L176">        return avrdudePath.toFile();</span>
+    }
+
+    private static File downloadFileToTemp(String urlStr) throws IOException {
+<span class="nc" id="L180">        logger.info(&quot;download from: &quot; + urlStr);</span>
+<span class="nc" id="L181">        URL url = new URL(urlStr);</span>
+<span class="nc" id="L182">        String fileExtension = getFileExtension(url.getPath());</span>
+<span class="nc" id="L183">        File toDeleteLater = File.createTempFile(&quot;download&quot;, fileExtension);</span>
+<span class="nc" id="L184">        toDeleteLater.deleteOnExit();</span>
+<span class="nc" id="L185">        Path tempFile = toDeleteLater.toPath();</span>
+<span class="nc" id="L186">        logger.info(&quot;temp file: &quot; + tempFile);</span>
+
+<span class="nc" id="L188">        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {</span>
+<span class="nc" id="L189">            HttpGet httpGet = new HttpGet(urlStr);</span>
+<span class="nc" id="L190">            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {</span>
+<span class="nc" id="L191">                try (InputStream inputStream = response.getEntity().getContent();</span>
+<span class="nc" id="L192">                     OutputStream outputStream = new FileOutputStream(tempFile.toFile())) {</span>
+<span class="nc" id="L193">                    byte[] buffer = new byte[4096];</span>
+                    int len;
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                    while ((len = inputStream.read(buffer)) != -1) {</span>
+<span class="nc" id="L196">                        outputStream.write(buffer, 0, len);</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L201">        return toDeleteLater;</span>
+    }
+
+    private static String extractFile(File toDeleteLater, String urlStr) throws IOException {
+<span class="nc" id="L205">        String targetDirStr = System.getProperty(&quot;user.home&quot;) + File.separator + &quot;.makelangelo&quot; + File.separator;</span>
+<span class="nc" id="L206">        String newFolderName = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        if (urlStr.endsWith(&quot;.zip&quot;)) {</span>
+<span class="nc" id="L209">            logger.info(&quot;Extracting zip file&quot;);</span>
+<span class="nc" id="L210">            newFolderName = extractZipFile(toDeleteLater, targetDirStr);</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">        } else if (urlStr.endsWith(&quot;.tar.bz2&quot;)) {</span>
+<span class="nc" id="L212">            logger.info(&quot;Extracting tar.bz2 file&quot;);</span>
+<span class="nc" id="L213">            newFolderName = extractTarBz2File(toDeleteLater, targetDirStr);</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        } else if (urlStr.endsWith(&quot;.bz2&quot;)) {</span>
+<span class="nc" id="L215">            logger.info(&quot;Extracting bz2 file&quot;);</span>
+<span class="nc" id="L216">            newFolderName = extractBz2File(toDeleteLater, targetDirStr);</span>
+        }
+
+<span class="nc bnc" id="L219" title="All 2 branches missed.">        if(!newFolderName.isEmpty()) {</span>
+<span class="nc" id="L220">            newFolderName = targetDirStr + newFolderName;</span>
+        }
+
+<span class="nc" id="L223">        return newFolderName;</span>
+    }
+
+    private static String getFileExtension(String fileName) {
+<span class="nc" id="L227">        int dotIndex = fileName.lastIndexOf('.');</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        return (dotIndex == -1) ? &quot;&quot; : fileName.substring(dotIndex);</span>
+    }
+
+    private static String extractZipFile(File file, String targetDirStr) throws IOException {
+<span class="nc" id="L232">        try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(file))) {</span>
+<span class="nc" id="L233">            ZipEntry entry = zipIn.getNextEntry();</span>
+<span class="nc" id="L234">            String newFolderName = &quot;&quot;;</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">            while (entry != null) {</span>
+<span class="nc" id="L236">                Path filePath = Paths.get(targetDirStr, entry.getName());</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">                if (entry.isDirectory()) {</span>
+<span class="nc" id="L238">                    Files.createDirectories(filePath);</span>
+                } else {
+<span class="nc" id="L240">                    Files.createDirectories(filePath.getParent());</span>
+<span class="nc" id="L241">                    try (OutputStream outputStream = new FileOutputStream(filePath.toFile())) {</span>
+<span class="nc" id="L242">                        byte[] buffer = new byte[4096];</span>
+                        int len;
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                        while ((len = zipIn.read(buffer)) &gt; -1) {</span>
+<span class="nc" id="L245">                            outputStream.write(buffer, 0, len);</span>
+                        }
+                    }
+                }
+<span class="nc" id="L249">                zipIn.closeEntry();</span>
+<span class="nc bnc" id="L250" title="All 4 branches missed.">                if (newFolderName.isEmpty() &amp;&amp; entry.isDirectory()) {</span>
+<span class="nc" id="L251">                    newFolderName = entry.getName();</span>
+                }
+<span class="nc" id="L253">                entry = zipIn.getNextEntry();</span>
+<span class="nc" id="L254">            }</span>
+<span class="nc" id="L255">            return newFolderName;</span>
+        }
+    }
+
+    private static String extractBz2File(File file, String targetDirStr) throws IOException {
+<span class="nc" id="L260">        try (BZip2CompressorInputStream bzIn = new BZip2CompressorInputStream(new FileInputStream(file))) {</span>
+<span class="nc" id="L261">            Path targetFilePath = Paths.get(targetDirStr, file.getName().replace(&quot;.bz2&quot;, &quot;&quot;));</span>
+<span class="nc" id="L262">            Files.createDirectories(targetFilePath.getParent());</span>
+<span class="nc" id="L263">            try (OutputStream outputStream = new FileOutputStream(targetFilePath.toFile())) {</span>
+<span class="nc" id="L264">                byte[] buffer = new byte[4096];</span>
+                int len;
+<span class="nc bnc" id="L266" title="All 2 branches missed.">                while ((len = bzIn.read(buffer)) &gt; -1) {</span>
+<span class="nc" id="L267">                    outputStream.write(buffer, 0, len);</span>
+                }
+            }
+<span class="nc" id="L270">            return targetFilePath.getFileName().toString();</span>
+        }
+    }
+
+    private static String extractTarBz2File(File file, String targetDirStr) throws IOException {
+<span class="nc" id="L275">        try (BZip2CompressorInputStream bzIn = new BZip2CompressorInputStream(new FileInputStream(file));</span>
+<span class="nc" id="L276">             TarArchiveInputStream tarIn = new TarArchiveInputStream(bzIn)) {</span>
+            TarArchiveEntry entry;
+<span class="nc" id="L278">            String newFolderName = &quot;&quot;;</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">            while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {</span>
+<span class="nc" id="L280">                Path filePath = Paths.get(targetDirStr, entry.getName());</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">                if (entry.isDirectory()) {</span>
+<span class="nc" id="L282">                    Files.createDirectories(filePath);</span>
+                } else {
+<span class="nc" id="L284">                    Files.createDirectories(filePath.getParent());</span>
+<span class="nc" id="L285">                    try (OutputStream outputStream = new FileOutputStream(filePath.toFile())) {</span>
+<span class="nc" id="L286">                        byte[] buffer = new byte[4096];</span>
+                        int len;
+<span class="nc bnc" id="L288" title="All 2 branches missed.">                        while ((len = tarIn.read(buffer)) &gt; -1) {</span>
+<span class="nc" id="L289">                            outputStream.write(buffer, 0, len);</span>
+                        }
+                    }
+                }
+<span class="nc bnc" id="L293" title="All 2 branches missed.">                if (newFolderName.isEmpty()) {</span>
+<span class="nc" id="L294">                    newFolderName = getFolderNameFromEntry(entry.getName());</span>
+                }
+<span class="nc" id="L296">            }</span>
+<span class="nc" id="L297">            return newFolderName;</span>
+        }
+    }
+
+    private static String getFolderNameFromEntry(String entryName) {
+<span class="nc" id="L302">        String[] parts = entryName.split(&quot;/&quot;);</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">        if (parts.length &gt; 1) {</span>
+<span class="nc" id="L304">            return String.join(File.separator, Arrays.copyOfRange(parts, 0, parts.length - 1)) + File.separator;</span>
+        } else {
+<span class="nc" id="L306">            return parts[0];</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

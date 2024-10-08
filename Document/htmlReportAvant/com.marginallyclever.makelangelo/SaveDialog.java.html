@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SaveDialog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">SaveDialog.java</span></div><h1>SaveDialog.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo;
+
+import com.marginallyclever.makelangelo.makeart.io.TurtleFactory;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.io.File;
+
+public class SaveDialog {
+<span class="nc" id="L16">	private static final Logger logger = LoggerFactory.getLogger(SaveDialog.class);</span>
+	
+<span class="nc" id="L18">	private static final JFileChooser fc = new JFileChooser();</span>
+	
+<span class="nc" id="L20">	public SaveDialog() {</span>
+<span class="nc bnc" id="L21" title="All 2 branches missed.">		for( FileNameExtensionFilter ff : TurtleFactory.getSaveExtensions() ) {</span>
+<span class="nc" id="L22">			fc.addChoosableFileFilter(ff);</span>
+<span class="nc" id="L23">		}</span>
+		// do not allow wild card (*.*) file extensions
+<span class="nc" id="L25">		fc.setAcceptAllFileFilterUsed(false);</span>
+<span class="nc" id="L26">	}</span>
+	
+	public void run(Turtle t, Window parent, PlotterSettings settings) throws Exception {
+<span class="nc bnc" id="L29" title="All 2 branches missed.">		if (fc.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {</span>
+<span class="nc" id="L30">			String selectedFile = fc.getSelectedFile().getAbsolutePath();</span>
+<span class="nc" id="L31">			String withExtension = addExtension(selectedFile,((FileNameExtensionFilter)fc.getFileFilter()).getExtensions());</span>
+<span class="nc" id="L32">			logger.debug(&quot;File selected by user: {}&quot;, withExtension);</span>
+<span class="nc" id="L33">			TurtleFactory.save(t,withExtension,settings);</span>
+		}
+<span class="nc" id="L35">	}</span>
+
+	private String addExtension(String name, String [] extensions) {
+<span class="nc bnc" id="L38" title="All 2 branches missed.">		for( String e : extensions ) {</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">			if(FilenameUtils.getExtension(name).equalsIgnoreCase(e)) return name;</span>
+		}
+		
+<span class="nc" id="L42">		return name + &quot;.&quot; + extensions[0];</span>
+	}
+
+	public static String getLastPath() {
+<span class="nc" id="L46">		return fc.getCurrentDirectory().toString();</span>
+	}
+	
+	public static void setLastPath(String lastPath) {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		fc.setCurrentDirectory((lastPath==null?null : new File(lastPath)));</span>
+<span class="nc" id="L51">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

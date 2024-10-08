@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ButtonIcon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">ButtonIcon.java</span></div><h1>ButtonIcon.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.io.Serial;
+
+/**
+ * A button with an icon and a translation key.
+ * @author Dan Royer
+ */
+public class ButtonIcon extends JButton {
+<span class="fc" id="L14">	private static final Logger logger = LoggerFactory.getLogger(ButtonIcon.class);</span>
+
+    public ButtonIcon(String translation, String iconPath) {
+<span class="fc" id="L17">        super();</span>
+<span class="fc" id="L18">        setText(translation);</span>
+<span class="fc" id="L19">        setIcon(createImageIcon(iconPath));</span>
+<span class="fc" id="L20">    }</span>
+
+    public void replaceIcon(String iconPath) {
+<span class="nc" id="L23">        setIcon(createImageIcon(iconPath));</span>
+<span class="nc" id="L24">    }</span>
+
+    /**
+     * @return an ImageIcon, or null if the path was invalid.
+     */ 
+    private ImageIcon createImageIcon(String path) {
+<span class="fc" id="L30">        java.net.URL imgURL = getClass().getResource(path);</span>
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">        if (imgURL != null) {</span>
+<span class="fc" id="L32">            return new ImageIcon(imgURL);</span>
+        } else {
+<span class="nc" id="L34">            logger.warn(&quot;Failed to load icon {}&quot;, path);</span>
+<span class="nc" id="L35">            return null;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

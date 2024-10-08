@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_PulseCMYK.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_PulseCMYK.java</span></div><h1>Converter_PulseCMYK.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterCMYK;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectDouble;
+import com.marginallyclever.makelangelo.select.SelectOneOfMany;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+
+
+/**
+ * straight lines pulsing like a heartbeat.  height and density of pulse vary with image intensity.
+ * @author Dan Royer
+ */
+public class Converter_PulseCMYK extends ImageConverter {
+<span class="nc" id="L22">	private static double blockScale = 4.0f;</span>
+<span class="nc" id="L23">	private static int direction = 0;</span>
+<span class="nc" id="L24">	private final String[] directionChoices = new String[]{Translator.get(&quot;horizontal&quot;), Translator.get(&quot;vertical&quot;) };</span>
+<span class="nc" id="L25">	private int cutOff = 16;</span>
+<span class="nc" id="L26">	private double sampleRate = 0.2;</span>
+
+	public Converter_PulseCMYK() {
+<span class="nc" id="L29">		super();</span>
+
+<span class="nc" id="L31">		SelectDouble    selectSize = new SelectDouble(&quot;size&quot;,Translator.get(&quot;HilbertCurveSize&quot;),getScale());</span>
+<span class="nc" id="L32">		SelectOneOfMany selectDirection = new SelectOneOfMany(&quot;direction&quot;,Translator.get(&quot;Direction&quot;),getDirections(),getDirectionIndex());</span>
+<span class="nc" id="L33">		SelectSlider    selectCutoff = new SelectSlider(&quot;cutoff&quot;,Translator.get(&quot;Converter_VoronoiStippling.Cutoff&quot;),255,0,getCutoff());</span>
+<span class="nc" id="L34">		SelectDouble    selectSampleRate = new SelectDouble(&quot;sampleRate&quot;,Translator.get(&quot;Converter_PulseCMYK.SampleRate&quot;),sampleRate);</span>
+
+<span class="nc" id="L36">		add(selectSize);</span>
+<span class="nc" id="L37">		add(selectDirection);</span>
+<span class="nc" id="L38">		add(selectCutoff);</span>
+<span class="nc" id="L39">		add(selectSampleRate);</span>
+
+<span class="nc" id="L41">		selectSize.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L42">			setScale((double) evt.getNewValue());</span>
+<span class="nc" id="L43">			fireRestart();</span>
+<span class="nc" id="L44">		});</span>
+<span class="nc" id="L45">		selectDirection.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L46">			setDirectionIndex((int) evt.getNewValue());</span>
+<span class="nc" id="L47">			fireRestart();</span>
+<span class="nc" id="L48">		});</span>
+<span class="nc" id="L49">		selectCutoff.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L50">			setCutoff((int) evt.getNewValue());</span>
+<span class="nc" id="L51">			fireRestart();</span>
+<span class="nc" id="L52">		});</span>
+<span class="nc" id="L53">		selectSampleRate.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L54">			sampleRate = (double) evt.getNewValue();</span>
+<span class="nc" id="L55">			fireRestart();</span>
+<span class="nc" id="L56">		});</span>
+<span class="nc" id="L57">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L61">		return Translator.get(&quot;Converter_PulseCMYK.Name&quot;);</span>
+	}
+
+	public double getScale() {
+<span class="nc" id="L65">		return blockScale;</span>
+	}
+
+	public void setScale(double value) {
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if(value&lt;1) value=1;</span>
+<span class="nc" id="L70">		blockScale = value;</span>
+<span class="nc" id="L71">	}</span>
+
+	public String[] getDirections() {
+<span class="nc" id="L74">		return directionChoices;</span>
+	}
+
+	public int getDirectionIndex() {
+<span class="nc" id="L78">		return direction;</span>
+	}
+
+	public void setDirectionIndex(int value) {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if(value&lt;0) value=0;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if(value&gt;=directionChoices.length) value=directionChoices.length-1;</span>
+<span class="nc" id="L84">		direction = value;</span>
+<span class="nc" id="L85">	}</span>
+
+	/**
+	 * Convert a line of the image into a pulse line.
+	 * @param img the source image to sample from
+	 * @param halfLineHeight the width of the pulse line.
+	 * @param a the start of the line
+	 * @param b the end of the line
+	 */
+	protected void convertLine(TransformedImage img, double halfLineHeight, Point2D a, Point2D b) {
+<span class="nc" id="L95">		Point2D normal = new Point2D(b.x-a.x,b.y-a.y);</span>
+<span class="nc" id="L96">		double len = normal.length();</span>
+<span class="nc" id="L97">		normal.scale(1.0/len);</span>
+
+<span class="nc" id="L99">		Point2D orthogonal = new Point2D(-normal.y,normal.x);</span>
+
+<span class="nc" id="L101">		double cx = myPaper.getCenterX();</span>
+<span class="nc" id="L102">		double cy = myPaper.getCenterY();</span>
+<span class="nc" id="L103">		turtle.jumpTo(</span>
+				cx+a.x + orthogonal.x*halfLineHeight,
+				cy+a.y + orthogonal.y*halfLineHeight
+		);
+
+<span class="nc" id="L108">		double sum=0;</span>
+		//double previous=0;
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		for (double p = 0; p &lt;= len; p += sampleRate*2) {</span>
+<span class="nc" id="L111">			double x = a.x + normal.x * p;</span>
+<span class="nc" id="L112">			double y = a.y + normal.y * p;</span>
+			// read a block of the image and find the average intensity in this block
+<span class="nc" id="L114">			double z = (255.0f - img.sample( x - sampleRate, y - sampleRate, x + sampleRate, y + sampleRate));</span>
+
+			// if the is too high, the sum will refuse to update.
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			if(z&lt;cutOff) {</span>
+				// the image intensity controls the rate of change.
+<span class="nc" id="L119">				sum += z/255.0 * Math.PI * 0.5;</span>
+			}
+
+			// the sum controls the height of the pulse.
+<span class="nc" id="L123">			var h = Math.cos(sum) * halfLineHeight;</span>
+<span class="nc" id="L124">			double px = cx + x + orthogonal.x * h;</span>
+<span class="nc" id="L125">			double py = cy + y + orthogonal.y * h;</span>
+<span class="nc" id="L126">			turtle.moveTo(px,py);</span>
+		}
+<span class="nc" id="L128">	}</span>
+
+	/**
+	 * Converts images into zigzags in paper space instead of image space
+	 */
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L135">		super.start(paper, image);</span>
+
+<span class="nc" id="L137">		FilterCMYK cmyk = new FilterCMYK(myImage);</span>
+<span class="nc" id="L138">		cmyk.filter();</span>
+
+<span class="nc" id="L140">		turtle = new Turtle();</span>
+
+<span class="nc" id="L142">		outputChannel(cmyk.getY(),Color.YELLOW);</span>
+<span class="nc" id="L143">		outputChannel(cmyk.getC(),Color.CYAN);</span>
+<span class="nc" id="L144">		outputChannel(cmyk.getM(),Color.MAGENTA);</span>
+<span class="nc" id="L145">		outputChannel(cmyk.getK(),Color.BLACK);</span>
+
+<span class="nc" id="L147">		fireConversionFinished();</span>
+<span class="nc" id="L148">	}</span>
+
+	protected void outputChannel(TransformedImage img,Color channel) {
+<span class="nc" id="L151">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L152">		double xLeft   = rect.getMinX();</span>
+<span class="nc" id="L153">		double yBottom = rect.getMinY();</span>
+<span class="nc" id="L154">		double xRight  = rect.getMaxX();</span>
+<span class="nc" id="L155">		double yTop    = rect.getMaxY();</span>
+		
+		// figure out how many lines we're going to have on this image.
+<span class="nc" id="L158">		double lineHeight = blockScale;</span>
+<span class="nc" id="L159">		double halfLineHeight = lineHeight / 2.0f;</span>
+
+		// from top to bottom of the image...
+<span class="nc" id="L162">		double x, y = 0;</span>
+<span class="nc" id="L163">		int i=0;</span>
+
+<span class="nc" id="L165">		Point2D a = new Point2D();</span>
+<span class="nc" id="L166">		Point2D b = new Point2D();</span>
+
+<span class="nc" id="L168">		turtle.setColor(channel);</span>
+		
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (direction == 0) {</span>
+			// horizontal
+<span class="nc bnc" id="L172" title="All 2 branches missed.">			for (y = yBottom; y &lt; yTop; y += lineHeight) {</span>
+<span class="nc" id="L173">				++i;</span>
+
+<span class="nc bnc" id="L175" title="All 2 branches missed.">				if ((i % 2) == 0) {</span>
+<span class="nc" id="L176">					a.set(xLeft,y);</span>
+<span class="nc" id="L177">					b.set(xRight,y);</span>
+<span class="nc" id="L178">					convertLine(img,halfLineHeight,a,b);</span>
+				} else {
+<span class="nc" id="L180">					a.set(xRight,y);</span>
+<span class="nc" id="L181">					b.set(xLeft,y);</span>
+<span class="nc" id="L182">					convertLine(img,halfLineHeight,a,b);</span>
+				}
+			}
+		} else {
+			// vertical
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			for (x = xLeft; x &lt; xRight; x += lineHeight) {</span>
+<span class="nc" id="L188">				++i;</span>
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">				if ((i % 2) == 0) {</span>
+<span class="nc" id="L191">					a.set(x,yBottom);</span>
+<span class="nc" id="L192">					b.set(x,yTop);</span>
+<span class="nc" id="L193">					convertLine(img,halfLineHeight,a,b);</span>
+				} else {
+<span class="nc" id="L195">					a.set(x,yTop);</span>
+<span class="nc" id="L196">					b.set(x,yBottom);</span>
+<span class="nc" id="L197">					convertLine(img,halfLineHeight,a,b);</span>
+				}
+			}
+		}
+<span class="nc" id="L201">	}</span>
+
+    public int getCutoff() {
+<span class="nc" id="L204">		return cutOff;</span>
+    }
+
+	public void setCutoff(int value) {
+<span class="nc" id="L208">		cutOff=value;</span>
+<span class="nc" id="L209">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

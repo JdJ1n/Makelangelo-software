@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_Maze.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.maze</a> &gt; <span class="el_source">Generator_Maze.java</span></div><h1>Generator_Maze.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.maze;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.select.SelectRandomSeed;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Stack;
+
+public abstract class Generator_Maze extends TurtleGenerator {
+<span class="fc" id="L15">    protected final List&lt;MazeCell&gt; cells = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L16">    protected final List&lt;MazeWall&gt; walls = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L17">    private static int seed = 0;</span>
+<span class="fc" id="L18">    private static final Random random = new Random();</span>
+
+    public Generator_Maze() {
+<span class="fc" id="L21">        super();</span>
+<span class="fc" id="L22">        add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href='https://en.wikipedia.org/wiki/Maze_generation_algorithm'&gt;&quot; +</span>
+<span class="fc" id="L23">                Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;) + &quot;&lt;/a&gt;&quot;));</span>
+
+<span class="fc" id="L25">        SelectRandomSeed selectRandomSeed = new SelectRandomSeed(&quot;randomSeed&quot;, Translator.get(&quot;Generator.randomSeed&quot;), seed);</span>
+<span class="fc" id="L26">        add(selectRandomSeed);</span>
+<span class="fc" id="L27">        selectRandomSeed.addSelectListener((evt) -&gt; {</span>
+<span class="nc" id="L28">            seed = (int) evt.getNewValue();</span>
+<span class="nc" id="L29">            random.setSeed((long) evt.getNewValue());</span>
+<span class="nc" id="L30">            generate();</span>
+<span class="nc" id="L31">        });</span>
+<span class="fc" id="L32">    }</span>
+
+    /**
+     * build a list of walls in the maze, cells in the maze, and how they connect to each other.
+     */
+    @Override
+    public void generate() {
+<span class="nc" id="L39">        buildCells();</span>
+<span class="nc" id="L40">        buildWalls();</span>
+<span class="nc" id="L41">        buildMaze();</span>
+
+        // draw the maze
+<span class="nc" id="L44">        Turtle turtle = drawMaze();</span>
+
+<span class="nc" id="L46">        turtle.translate(myPaper.getCenterX(),myPaper.getCenterY());</span>
+
+<span class="nc" id="L48">        notifyListeners(turtle);</span>
+<span class="nc" id="L49">    }</span>
+
+    /**
+     * Build the list of rooms.
+     */
+    public abstract void buildCells();
+
+    /**
+     * Build the list of walls between rooms.
+     */
+    public abstract void buildWalls();
+
+    public abstract Turtle drawMaze();
+
+
+    /**
+     * Depth first search of the maze, removing walls as we go.
+     */
+    protected void buildMaze() {
+<span class="nc" id="L68">        int unvisitedCells = cells.size();</span>
+<span class="nc" id="L69">        Stack&lt;MazeCell&gt; stack = new Stack&lt;&gt;();</span>
+
+        // Make the initial cell the current cell and mark it as visited
+<span class="nc" id="L72">        int currentCell = (int)(random.nextDouble()*unvisitedCells);</span>
+<span class="nc" id="L73">        cells.get(currentCell).visited = true;</span>
+<span class="nc" id="L74">        stack.add(cells.get(currentCell));</span>
+<span class="nc" id="L75">        --unvisitedCells;</span>
+
+        // While there are unvisited cells
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        while (unvisitedCells &gt; 0) {</span>
+            // If the current cell has any neighbours which have not been visited
+            // Choose randomly one of the unvisited neighbours
+<span class="nc" id="L81">            int nextCell = chooseUnvisitedNeighbor(currentCell);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            if (nextCell != -1) {</span>
+                // Remove the wall between the current cell and the next cell
+<span class="nc" id="L84">                int wallIndex = findWallBetween(currentCell, nextCell);</span>
+<span class="nc" id="L85">                walls.get(wallIndex).removed = true;</span>
+                // Make the next cell into the current cell and mark it as visited
+<span class="nc" id="L87">                currentCell = nextCell;</span>
+
+<span class="nc" id="L89">                cells.get(currentCell).visited = true;</span>
+<span class="nc" id="L90">                stack.add(cells.get(currentCell));</span>
+<span class="nc" id="L91">                --unvisitedCells;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            } else if(!stack.isEmpty()) {</span>
+                // else if stack is not empty pop a cell from the stack
+<span class="nc" id="L94">                MazeCell c = stack.pop();</span>
+<span class="nc" id="L95">                currentCell = cells.indexOf(c);</span>
+            }
+<span class="nc" id="L97">        }</span>
+<span class="nc" id="L98">    }</span>
+
+    protected int chooseUnvisitedNeighbor(int currentCell) {
+<span class="nc" id="L101">        List&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L102">        MazeCell c = cells.get(currentCell);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        for(int i=0;i&lt;c.walls.size();++i) {</span>
+<span class="nc" id="L104">            MazeWall w = c.walls.get(i);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            if(w.removed) continue;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if(w.cellA==currentCell) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                if(cells.get(w.cellB).visited) continue;</span>
+<span class="nc" id="L108">                candidates.add(w.cellB);</span>
+            } else {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                if(cells.get(w.cellA).visited) continue;</span>
+<span class="nc" id="L111">                candidates.add(w.cellA);</span>
+            }
+        }
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        if(candidates.isEmpty())</span>
+<span class="nc" id="L116">            return -1;</span>
+
+        // choose a random candidate
+<span class="nc" id="L119">        int choice = (int) (random.nextDouble() * candidates.size());</span>
+<span class="nc" id="L120">        return candidates.get(choice);</span>
+    }
+
+    protected int findWallBetween(int currentCell, int nextCell) {
+<span class="nc" id="L124">        MazeCell c = cells.get(currentCell);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        for(MazeWall w : c.walls) {</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">            if(w.cellA==nextCell || w.cellB==nextCell) {</span>
+<span class="nc" id="L127">                return walls.indexOf(w);</span>
+            }
+<span class="nc" id="L129">        }</span>
+<span class="nc" id="L130">        return -1;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,347 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,TurtleToBufferedImage,122,35,16,0,26,6,10,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,PointOnPath,153,79,10,0,27,13,6,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,PrintTurtle,194,61,34,0,42,10,20,1,2,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,PathImageMask,351,99,24,0,57,16,16,1,4,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,AddTurtles,40,46,4,0,8,8,3,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,TurtleToRectangle,23,36,4,0,5,6,3,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,PatternOnPath,99,59,12,0,22,10,7,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,LoadTurtle,55,65,2,0,11,11,2,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,SaveTurtle,33,34,4,0,8,7,3,2,1,2
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,ColorTurtle,108,71,12,0,17,12,7,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,TransformTurtle,91,97,12,0,13,16,7,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes,TurtleDAO4JSON,0,21,0,0,0,7,0,3,0,3
+Makelangelo,com.marginallyclever.convenience,ButtonIcon,12,27,1,1,4,8,2,3,1,3
+Makelangelo,com.marginallyclever.convenience,LineSegment2D,50,47,0,0,3,12,3,3,3,3
+Makelangelo,com.marginallyclever.convenience,QuadGraph,341,0,40,0,71,0,28,0,8,0
+Makelangelo,com.marginallyclever.convenience,W3CColorNames,8,1510,0,4,2,155,2,4,2,2
+Makelangelo,com.marginallyclever.convenience,ResizableImagePanel.new MouseAdapter() {...},53,0,0,0,9,0,2,0,2,0
+Makelangelo,com.marginallyclever.convenience,ResizableImagePanel.new MouseAdapter() {...},12,0,0,0,3,0,2,0,2,0
+Makelangelo,com.marginallyclever.convenience,SoundSystem,48,0,2,0,20,0,8,0,7,0
+Makelangelo,com.marginallyclever.convenience,LineInterpolator,156,0,6,0,35,0,12,0,9,0
+Makelangelo,com.marginallyclever.convenience,Sequence2D,15,0,0,0,6,0,2,0,2,0
+Makelangelo,com.marginallyclever.convenience,CommandLineOptions,57,0,8,0,11,0,8,0,4,0
+Makelangelo,com.marginallyclever.convenience,LineInterpolatorSinCurve,117,0,0,0,22,0,7,0,7,0
+Makelangelo,com.marginallyclever.convenience,ResizableImagePanel,182,0,6,0,40,0,8,0,5,0
+Makelangelo,com.marginallyclever.convenience,Bezier,396,373,34,22,58,60,23,12,4,3
+Makelangelo,com.marginallyclever.convenience,ColorPalette,230,24,10,0,42,2,15,2,10,2
+Makelangelo,com.marginallyclever.convenience,FileAccess,80,142,12,10,20,30,10,11,3,7
+Makelangelo,com.marginallyclever.convenience,NameThatColor,1535,0,6,0,173,0,11,0,8,0
+Makelangelo,com.marginallyclever.convenience,NameThatColor.NamedColor,12,0,0,0,4,0,1,0,1,0
+Makelangelo,com.marginallyclever.convenience,ToggleButtonIcon,6,96,2,4,2,19,2,5,0,4
+Makelangelo,com.marginallyclever.convenience,ColorRGB,264,47,12,0,41,8,25,3,19,3
+Makelangelo,com.marginallyclever.convenience,Histogram,356,0,32,0,60,0,22,0,6,0
+Makelangelo,com.marginallyclever.convenience,Clipper2D,8,345,4,38,3,47,5,21,1,4
+Makelangelo,com.marginallyclever.convenience,LineCollection,55,272,11,19,12,60,10,14,0,9
+Makelangelo,com.marginallyclever.convenience,ColorHSB,42,168,5,7,7,21,10,10,5,9
+Makelangelo,com.marginallyclever.convenience,Point2D,75,63,2,2,16,16,7,8,6,7
+Makelangelo,com.marginallyclever.convenience,ToggleButtonIcon.Item,0,12,0,0,0,5,0,1,0,1
+Makelangelo,com.marginallyclever.convenience,ConvexHull,158,315,18,34,30,69,19,27,7,13
+Makelangelo,com.marginallyclever.communications,NetworkSession,64,0,2,0,18,0,9,0,8,0
+Makelangelo,com.marginallyclever.communications,Configuration,33,0,0,0,11,0,6,0,6,0
+Makelangelo,com.marginallyclever.communications,NetworkSessionEvent,0,10,0,0,0,4,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.maze,Generator_MazeHoneycomb,684,57,58,0,129,11,42,5,13,5
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.maze,Generator_MazeRectangle,361,53,24,0,68,10,19,5,7,5
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.maze,MazeCell,29,0,2,0,7,0,3,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.maze,Generator_MazeCircle,516,59,35,3,92,13,26,7,8,6
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.maze,Generator_Maze,236,44,24,0,51,11,17,2,5,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.maze,MazeWall,18,0,0,0,6,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.grid,Generator_GraphPaper,210,27,6,0,47,7,7,4,4,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.grid,Generator_GridHexagons,211,23,18,0,39,5,13,2,4,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.grid,Generator_GridFit,210,57,10,0,49,9,12,2,7,2
+Makelangelo,com.marginallyclever.makelangelo.firmwareuploader,AVRDudeDownloader,621,0,66,0,145,0,54,0,21,0
+Makelangelo,com.marginallyclever.makelangelo.firmwareuploader,FirmwareDownloader,235,0,18,0,66,0,18,0,9,0
+Makelangelo,com.marginallyclever.makelangelo.firmwareuploader,FirmwareUploader,297,0,12,0,66,0,20,0,14,0
+Makelangelo,com.marginallyclever.makelangelo.firmwareuploader,FirmwareUploaderPanel,400,0,12,0,98,0,15,0,9,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plotterrenderer,PlotterRendererFactory,17,77,0,0,5,12,3,3,3,3
+Makelangelo,com.marginallyclever.makelangelo.plotter.plotterrenderer,Makelangelo3,525,0,2,0,97,0,5,0,4,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plotterrenderer,Makelangelo5,1065,3,36,0,232,1,33,1,15,1
+Makelangelo,com.marginallyclever.makelangelo.plotter.plotterrenderer,MakelangeloCustom,710,3,20,0,128,1,16,1,6,1
+Makelangelo,com.marginallyclever.makelangelo.plotter.plotterrenderer,Cartesian,394,18,4,0,82,6,7,1,5,1
+Makelangelo,com.marginallyclever.makelangelo.plotter.plotterrenderer,Makelangelo3_3,289,3,2,0,56,1,4,1,3,1
+Makelangelo,com.marginallyclever.makelangelo.plotter.plotterrenderer,Polargraph,973,0,18,0,165,0,22,0,13,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plotterrenderer,Zarplotter,449,18,2,0,93,6,6,1,5,1
+Makelangelo,com.marginallyclever.makelangelo.plotter.plotterrenderer,Makelangelo5Huge,1065,3,36,0,232,1,33,1,15,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,SaveBitmap,4,157,3,11,0,36,3,9,0,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,SaveGCode,202,345,22,26,32,82,19,18,6,6
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadScratch3.Scratch3List,11,0,0,0,4,0,1,0,1,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,SaveSVG,0,171,2,10,0,47,2,9,0,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadScratch3.Scratch3Procedure,0,21,0,0,0,7,0,2,0,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,SaveDXF,0,306,0,7,0,86,0,8,0,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadGCode,233,283,36,36,43,70,27,20,2,7
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadScratch2.Scratch2List,11,0,0,0,4,0,1,0,1,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,TurtleFactory,305,0,24,0,30,0,19,0,7,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadScratch2.Scratch2Variable,10,0,0,0,4,0,1,0,1,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadSVG,425,1265,44,88,75,241,43,59,4,26
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadDXF,7,299,1,27,2,68,2,24,1,10
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadFilePanel,247,0,12,0,56,0,18,0,12,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadScratch3.Scratch3Variable,0,18,0,0,0,6,0,2,0,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,OpenFileChooser,206,0,8,0,45,0,11,0,7,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadScratch3,1141,1268,123,98,227,280,126,77,28,39
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadScratch2,1848,0,193,0,432,0,168,0,49,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.io,LoadScratch3.Scratch3Variables,0,28,0,2,0,5,0,2,0,1
+Makelangelo,com.marginallyclever.convenience.noise,PerlinNoise,284,1057,12,2,29,6,11,2,5,1
+Makelangelo,com.marginallyclever.convenience.noise,CellularNoise.Point,42,0,0,0,9,0,2,0,2,0
+Makelangelo,com.marginallyclever.convenience.noise,CellularNoise,446,0,50,0,53,0,34,0,9,0
+Makelangelo,com.marginallyclever.convenience.noise,SimplexNoise,3083,0,76,0,188,0,47,0,9,0
+Makelangelo,com.marginallyclever.convenience.noise,SimplexNoise.Grad,27,0,0,0,11,0,2,0,2,0
+Makelangelo,com.marginallyclever.convenience.noise,NoiseFactory,19,15,4,0,6,1,5,1,2,1
+Makelangelo,com.marginallyclever.communications.tcp,TCPConnection,218,0,24,0,61,0,20,0,8,0
+Makelangelo,com.marginallyclever.communications.tcp,TCPTransportLayer,40,0,0,0,13,0,4,0,4,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,TurtleGeneratorPanel,0,8,0,0,0,3,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Spirograph,228,116,8,0,58,24,18,8,14,8
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Polyeder.Model,0,3,0,0,0,1,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,TurtleGeneratorFactory.TurtleGeneratorNode,0,41,0,0,0,12,0,5,0,5
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_FlowField,498,227,28,0,105,49,34,3,20,3
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Package,308,75,0,0,62,15,9,5,9,5
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Border,84,6,0,0,18,2,1,2,1,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Text.Align,0,21,0,0,0,1,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Spiral,152,43,8,0,35,11,7,3,3,3
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Text.VAlign,0,21,0,0,0,2,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Polyeder.Transform,240,0,0,0,35,0,6,0,6,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Voronoi,210,66,14,0,48,15,15,4,8,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_FillPage,182,43,8,0,41,11,7,3,3,3
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Lissajous,120,109,2,0,35,20,11,7,10,7
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,TurtleGenerator,11,56,0,2,5,13,3,7,3,6
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,TurtleGeneratorFactory,3,274,0,0,1,5,1,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_TruchetTiles,29,279,3,13,7,51,7,11,4,6
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Text,1351,141,134,2,287,35,110,8,22,7
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator,Generator_Polyeder,347,3096,20,2,67,38,18,9,8,8
+Makelangelo,com.marginallyclever.makelangelo,RecentFiles,197,0,20,0,53,0,21,0,11,0
+Makelangelo,com.marginallyclever.makelangelo,MainFrame,148,0,6,0,31,0,8,0,5,0
+Makelangelo,com.marginallyclever.makelangelo,DialogBadFirmwareVersion,26,0,0,0,6,0,3,0,3,0
+Makelangelo,com.marginallyclever.makelangelo,TranslatorLanguage,32,205,8,12,15,56,7,17,1,13
+Makelangelo,com.marginallyclever.makelangelo,CollapsiblePanel,603,0,30,0,123,0,31,0,16,0
+Makelangelo,com.marginallyclever.makelangelo,DialogAbout,72,0,2,0,23,0,6,0,5,0
+Makelangelo,com.marginallyclever.makelangelo,MakelangeloDropTarget,88,0,10,0,26,0,8,0,3,0
+Makelangelo,com.marginallyclever.makelangelo,MakelangeloVersion,9,17,1,1,3,5,3,3,2,3
+Makelangelo,com.marginallyclever.makelangelo,MainMenu.new WindowAdapter() {...},18,0,0,0,4,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo,MainMenu.new WindowAdapter() {...},12,0,0,0,3,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo,MainMenu.new WindowAdapter() {...},21,0,0,0,5,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo,MainMenu.new WindowAdapter() {...},18,0,0,0,4,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo,MainMenu.new WindowAdapter() {...},21,0,0,0,4,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo,MainMenu,1788,0,26,0,346,0,75,0,62,0
+Makelangelo,com.marginallyclever.makelangelo,Makelangelo.new WindowAdapter() {...},33,0,0,0,6,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo,Makelangelo.new WindowAdapter() {...},14,0,0,0,4,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo,Makelangelo,933,0,50,0,247,0,61,0,36,0
+Makelangelo,com.marginallyclever.makelangelo,MainFrame.new ComponentAdapter() {...},14,0,0,0,5,0,3,0,3,0
+Makelangelo,com.marginallyclever.makelangelo,CollapsiblePanel.new MouseAdapter() {...},10,0,0,0,3,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo,CollapsiblePanel.new ComponentAdapter() {...},14,0,0,0,5,0,3,0,3,0
+Makelangelo,com.marginallyclever.makelangelo,MakeleangeloRangeSlider,158,0,0,0,36,0,8,0,8,0
+Makelangelo,com.marginallyclever.makelangelo,SaveDialog,97,0,10,0,20,0,11,0,6,0
+Makelangelo,com.marginallyclever.makelangelo,Translator,150,280,14,24,38,80,13,21,3,12
+Makelangelo,com.marginallyclever.makelangelo.select,SelectPassword.new DocumentListener() {...},24,0,0,0,9,0,5,0,5,0
+Makelangelo,com.marginallyclever.makelangelo.select,SelectDouble.new DocumentListener() {...},9,79,4,6,3,19,4,6,1,4
+Makelangelo,com.marginallyclever.makelangelo.select,SelectTextArea,27,73,0,0,9,16,6,3,6,3
+Makelangelo,com.marginallyclever.makelangelo.select,SelectInteger.1.new TimerTask() {...},0,23,0,0,0,3,0,2,0,2
+Makelangelo,com.marginallyclever.makelangelo.select,SelectTextField.new DocumentListener() {...},24,0,0,0,9,0,5,0,5,0
+Makelangelo,com.marginallyclever.makelangelo.select,SelectTextArea.new DocumentListener() {...},3,21,0,0,2,7,1,4,1,4
+Makelangelo,com.marginallyclever.makelangelo.select,SelectInteger,22,102,0,0,7,27,3,5,3,5
+Makelangelo,com.marginallyclever.makelangelo.select,SelectButton,41,67,6,4,9,18,8,7,4,6
+Makelangelo,com.marginallyclever.makelangelo.select,SelectEvent,9,12,0,0,3,5,3,1,3,1
+Makelangelo,com.marginallyclever.makelangelo.select,SelectDouble.1.new TimerTask() {...},0,23,0,0,0,3,0,2,0,2
+Makelangelo,com.marginallyclever.makelangelo.select,SelectTextField,75,0,0,0,20,0,7,0,7,0
+Makelangelo,com.marginallyclever.makelangelo.select,SelectColor,19,98,2,0,5,20,2,3,1,3
+Makelangelo,com.marginallyclever.makelangelo.select,SelectBoolean,0,69,0,2,0,16,0,5,0,4
+Makelangelo,com.marginallyclever.makelangelo.select,SelectFile.new ActionListener() {...},12,6,0,0,2,1,1,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.select,SelectFile.new DocumentListener() {...},3,21,0,0,2,7,1,4,1,4
+Makelangelo,com.marginallyclever.makelangelo.select,SelectSlider,1,98,1,1,0,25,1,4,0,4
+Makelangelo,com.marginallyclever.makelangelo.select,BackgroundPaintedButton,0,31,0,0,0,8,0,2,0,2
+Makelangelo,com.marginallyclever.makelangelo.select,SelectOneOfMany,15,96,0,0,6,24,3,8,3,8
+Makelangelo,com.marginallyclever.makelangelo.select,SelectPassword,82,0,0,0,21,0,7,0,7,0
+Makelangelo,com.marginallyclever.makelangelo.select,SelectToggleButton,80,0,10,0,19,0,13,0,8,0
+Makelangelo,com.marginallyclever.makelangelo.select,SelectDouble,39,84,2,0,11,21,7,4,6,4
+Makelangelo,com.marginallyclever.makelangelo.select,SelectPanel,0,41,0,0,0,8,0,2,0,2
+Makelangelo,com.marginallyclever.makelangelo.select,SelectSpinner,72,0,2,0,16,0,4,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.select,Select,6,53,0,2,2,10,1,4,1,3
+Makelangelo,com.marginallyclever.makelangelo.select,SelectInteger.new DocumentListener() {...},7,68,2,2,2,18,3,4,1,4
+Makelangelo,com.marginallyclever.makelangelo.select,SelectRandomSeed,31,119,0,0,10,29,5,3,5,3
+Makelangelo,com.marginallyclever.makelangelo.select,SelectRandomSeed.new ActionListener() {...},10,6,0,0,2,1,1,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.select,SelectRandomSeed.new DocumentListener() {...},69,6,4,0,19,1,6,1,4,1
+Makelangelo,com.marginallyclever.makelangelo.select,SelectRandomSeed.1.new TimerTask() {...},23,0,0,0,3,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.select,SelectReadOnlyText,77,46,14,0,21,14,9,3,2,3
+Makelangelo,com.marginallyclever.makelangelo.select,SelectFile,42,77,2,0,13,17,5,3,4,3
+Makelangelo,com.marginallyclever.convenience.helpers,DrawingHelper,231,0,4,0,52,0,9,0,7,0
+Makelangelo,com.marginallyclever.convenience.helpers,OSHelper,27,0,4,0,5,0,5,0,3,0
+Makelangelo,com.marginallyclever.convenience.helpers,OpenGLHelper,59,0,2,0,19,0,8,0,7,0
+Makelangelo,com.marginallyclever.convenience.helpers,StringHelper,3,104,0,4,1,15,1,7,1,5
+Makelangelo,com.marginallyclever.convenience.helpers,MathHelper,19,268,6,16,1,33,7,12,1,7
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,ConversationHistory,220,150,12,0,55,32,21,5,15,5
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,TextInterfaceToNetworkSession,183,42,23,0,51,11,27,2,15,2
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,ProgramPanel,160,0,4,0,44,0,11,0,9,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,MarlinPanelEvent,3,18,0,0,1,7,1,3,1,3
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,TextInterfaceToListeners,85,92,2,0,24,25,10,4,9,4
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,ChooseConnection,232,168,17,5,60,33,21,5,11,4
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,MarlinPlotterPanel,168,292,20,18,45,70,20,23,7,15
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,ProgramPanel.new ListCellRenderer() {...},32,0,2,0,6,0,3,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,CartesianButtons.new MouseAdapter() {...},66,0,6,0,14,0,6,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,CartesianButtons,764,0,56,0,148,0,55,0,27,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,TextInterfaceWithHistory,74,87,4,0,24,23,10,3,8,3
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,CartesianButtons.new MouseAdapter() {...},36,0,4,0,9,0,4,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,MarlinPanel,340,334,44,27,91,77,45,21,15,15
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,ActionCommandDialog,140,22,14,0,38,8,15,3,8,3
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,JogPanel,342,0,18,0,87,0,24,0,15,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,ConversationEvent,0,29,0,0,0,7,0,2,0,2
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,MarlinCommand,0,9,0,0,0,4,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,PlotterControls,732,0,53,0,186,0,59,0,30,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,ChooseConnection.ComboItem,16,0,0,0,5,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols,ConversationHistory.new ListCellRenderer() {...},4,45,3,3,1,10,3,2,0,2
+Makelangelo,com.marginallyclever.convenience.log,Log,77,0,0,0,17,0,6,0,6,0
+Makelangelo,com.marginallyclever.convenience.log,LogPanel,243,0,8,0,58,0,13,0,9,0
+Makelangelo,com.marginallyclever.convenience.log,RollOncePerSessionTriggeringPolicy,14,0,2,0,6,0,4,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,FlipTurtleAction,23,0,0,0,7,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,ReorderTurtleAction,149,428,32,52,35,106,21,29,2,6
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,CropTurtle,3,171,0,16,1,34,1,10,1,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,CenterTurtleToPaperAction,26,0,0,0,8,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,TranslateTurtlePanel,347,0,2,0,82,0,9,0,8,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,InfillTurtleAction,35,0,0,0,11,0,3,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,RemoveExtraColorChangesFromTurtle,71,0,8,0,16,0,7,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,InfillTurtle.ComparePointsByY,9,0,0,0,2,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,InfillTurtle.ComparePointsByX,9,0,0,0,2,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,InfillTurtle,495,0,26,0,78,0,25,0,12,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,SimplifyTurtleAction,21,98,1,5,7,25,2,6,1,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,ScaleTurtlePanel,670,0,24,0,144,0,26,0,14,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,RotateTurtlePanel,295,0,2,0,79,0,10,0,9,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.tools,ResizeTurtleToPaperAction,86,0,2,0,24,0,3,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.preview,Camera,173,0,4,0,38,0,16,0,14,0
+Makelangelo,com.marginallyclever.makelangelo.preview,PreviewPanel.new MouseAdapter() {...},82,0,8,0,14,0,6,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.preview,PreviewPanel.new MouseAdapter() {...},27,0,0,0,7,0,3,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.preview,PreviewPanel.new MouseAdapter() {...},88,0,2,0,22,0,4,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.preview,PreviewPanel,352,0,12,0,89,0,20,0,14,0
+Makelangelo,com.marginallyclever.communications.dummy,DummyTransportLayer.new NetworkSession() {...},22,0,0,0,9,0,6,0,6,0
+Makelangelo,com.marginallyclever.communications.dummy,DummyTransportLayer,15,0,0,0,4,0,4,0,4,0
+Makelangelo,com.marginallyclever.convenience.voronoi,VoronoiTesselator2,97,0,8,0,18,0,9,0,5,0
+Makelangelo,com.marginallyclever.convenience.voronoi,VoronoiCell,21,0,0,0,7,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols.communications,DummyUI,11,0,0,0,6,0,6,0,6,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols.communications,SerialUI,30,39,0,0,9,3,4,2,4,2
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottercontrols.communications,TCPUI,11,0,0,0,6,0,6,0,6,0
+Makelangelo,com.marginallyclever.makelangelo.makeart,TransformedImage,414,74,48,0,78,19,37,4,13,4
+Makelangelo,com.marginallyclever.makelangelo.makeart,LSystem,0,66,0,6,0,15,0,6,0,3
+Makelangelo,com.marginallyclever.makelangelo.makeart,TurtleModifierAction,58,9,2,0,13,3,7,1,6,1
+Makelangelo,com.marginallyclever.makelangelo.applicationsettings,SoundPreferences,124,0,0,0,22,0,7,0,7,0
+Makelangelo,com.marginallyclever.makelangelo.applicationsettings,GFXPreferences,199,0,4,0,44,0,14,0,12,0
+Makelangelo,com.marginallyclever.makelangelo.applicationsettings,LanguagePreferences,68,0,2,0,23,0,7,0,6,0
+Makelangelo,com.marginallyclever.makelangelo.applicationsettings,MetricsPreferences,56,0,2,0,17,0,6,0,5,0
+Makelangelo,com.marginallyclever.makelangelo.applicationsettings,ApplicationSettings,231,0,8,0,64,0,13,0,9,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterContrastAdjust,202,0,6,0,44,0,8,0,5,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterDifference,118,0,8,0,24,0,7,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,ImageFilter,130,3,0,0,25,1,9,1,9,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterLevels,348,0,28,0,69,0,24,0,9,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterDitherFloydSteinbergColor,399,0,24,0,51,0,19,0,7,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterInvert,20,73,0,4,4,16,1,4,1,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterExtendedDifferenceOfGaussians,193,0,8,0,37,0,8,0,4,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterThreshold,71,17,4,2,13,5,3,3,1,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterScale,97,0,4,0,17,0,4,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterCMYK,460,0,20,0,81,0,19,0,9,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterDitherFloydSteinberg,289,0,26,0,49,0,18,0,5,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterThresholdFancy,74,51,4,2,13,12,3,3,1,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterGaussianBlur,262,0,10,0,54,0,11,0,6,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterSubtract,119,0,8,0,23,0,7,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterDesaturate,140,0,6,0,26,0,8,0,5,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imagefilter,FilterJumpFlood,247,0,18,0,44,0,15,0,6,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.lineweight,LineWeightSegment,45,0,0,0,12,0,3,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.lineweight,LineWeight,26,0,2,0,7,0,3,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.lineweight,LineWeightByImageIntensity,1081,64,76,0,192,17,60,3,22,3
+Makelangelo,com.marginallyclever.makelangelo.plotter.marlinsimulation,MarlinSimulation,1633,0,161,0,309,0,105,0,23,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.marlinsimulation,MarlinSimulation.JerkType,27,0,0,0,5,0,1,0,1,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.marlinsimulation,MarlinSimulationBlock,133,0,2,0,35,0,4,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottersettings,PlotterSettingsManagerPanel,328,0,18,0,83,0,21,0,12,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottersettings,PlotterSettingsUserGcodePanel,121,0,0,0,26,0,3,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottersettings,PlotterSettingsPanel,981,0,16,0,151,0,26,0,18,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottersettings,PlotterSettings,90,881,7,5,18,142,10,22,6,20
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottersettings,PlotterSettingsManagerPanel.new AbstractAction() {...},16,0,0,0,3,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottersettings,PlotterSettingsManagerPanel.new AbstractAction() {...},16,0,0,0,3,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.plotter.plottersettings,PlotterSettingsManager,57,230,1,1,13,65,3,9,2,9
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Spiral,242,0,10,0,60,0,12,0,7,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_CMYK_Circles,448,0,10,0,87,0,16,0,11,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,ImageConverterIterative,101,0,8,0,29,0,13,0,9,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_SpiralPulse,426,0,26,0,98,0,26,0,13,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_CMYK_Spiral,346,0,12,0,75,0,14,0,8,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_FlowField.SampleAt,12,0,0,0,5,0,1,0,1,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Pulse,470,0,20,0,97,0,26,0,16,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_IntensityToHeight,406,0,14,0,87,0,21,0,14,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,ImageConverterPanel,15,0,0,0,5,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_TruchetFromImage,195,0,6,0,39,0,9,0,6,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Wander,577,0,42,0,123,0,35,0,14,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Boxxy,359,0,20,0,73,0,21,0,11,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Moire,569,0,44,0,129,0,35,0,13,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_PulseCMYK,508,0,20,0,106,0,27,0,17,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,SelectImageConverterPanel,643,0,32,0,164,0,44,0,28,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,ImageConverter,595,0,40,0,107,0,33,0,13,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_FlowField,1083,0,40,0,235,0,60,0,40,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Wander.Bucket,23,0,0,0,6,0,1,0,1,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_VoronoiStippling,445,0,24,0,89,0,28,0,16,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_VoronoiZigZag,682,0,68,0,151,0,53,0,19,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Sandy,494,0,27,0,121,0,26,0,11,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_RandomLines,191,0,6,0,49,0,11,0,8,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_CMYK_Crosshatch,252,0,4,0,49,0,10,0,8,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_QuadTreeInstant,460,0,18,0,76,0,25,0,16,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Multipass,294,0,12,0,63,0,16,0,10,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,ImageConverterThread,125,0,14,0,39,0,14,0,7,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Voronoi,725,0,40,0,164,0,44,0,24,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,ImageConverterFactory,136,0,2,0,4,0,3,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_Crosshatch,455,0,12,0,97,0,26,0,20,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_EdgeDetection,758,0,27,0,150,0,45,0,28,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.imageconverter,Converter_QuadTreeInstant.BoxCondition,19,0,0,0,6,0,1,0,1,0
+Makelangelo,com.marginallyclever.makelangelo.rangeslider,RangeSliderUI.ChangeHandler,22,0,4,0,5,0,4,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.rangeslider,RangeSlider,89,0,2,0,26,0,9,0,8,0
+Makelangelo,com.marginallyclever.makelangelo.rangeslider,RangeSliderUI,637,0,42,0,134,0,37,0,16,0
+Makelangelo,com.marginallyclever.makelangelo.rangeslider,RangeSliderUI.RangeTrackListener,588,0,46,0,118,0,32,0,7,0
+Makelangelo,com.marginallyclever.util,MarginallyCleverPreferencesFileFactory,104,0,12,0,30,0,17,0,11,0
+Makelangelo,com.marginallyclever.util,MarginallyCleverPreferences,456,0,36,0,130,0,36,0,18,0
+Makelangelo,com.marginallyclever.util,MarginallyCleverPreferencesHelper,160,0,22,0,44,0,17,0,6,0
+Makelangelo,com.marginallyclever.util,PreferencesHelper.MakelangeloPreferenceKey,0,70,0,0,0,13,0,3,0,3
+Makelangelo,com.marginallyclever.util,PropertiesFileHelper,18,69,4,6,5,19,5,5,1,4
+Makelangelo,com.marginallyclever.util,MarginallyCleverTranslationXmlFileHelper,373,0,40,0,106,0,41,0,21,0
+Makelangelo,com.marginallyclever.util,PreferencesHelper,282,99,19,1,74,22,19,4,9,4
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl,DonatelloRegistry,2,50,0,0,1,22,1,4,1,4
+Makelangelo,com.marginallyclever.makelangelo.turtle,MovementType,0,21,0,0,0,4,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.turtle,Turtle,322,1012,45,98,63,213,49,72,13,35
+Makelangelo,com.marginallyclever.makelangelo.turtle,TurtleMove,45,99,6,9,7,16,10,7,4,5
+Makelangelo,com.marginallyclever.makelangelo.turtle.turtlerenderer,TurtleRenderFactory,84,0,0,0,16,0,6,0,6,0
+Makelangelo,com.marginallyclever.makelangelo.turtle.turtlerenderer,MarlinSimulationVisualizer.ColorPoint,9,0,0,0,4,0,1,0,1,0
+Makelangelo,com.marginallyclever.makelangelo.turtle.turtlerenderer,DirectionLoopTurtleRenderer,183,0,6,0,47,0,14,0,11,0
+Makelangelo,com.marginallyclever.makelangelo.turtle.turtlerenderer,BarberPoleTurtleRenderer,146,0,4,0,38,0,13,0,11,0
+Makelangelo,com.marginallyclever.makelangelo.turtle.turtlerenderer,SeparateLoopTurtleRenderer,180,0,10,0,44,0,19,0,11,0
+Makelangelo,com.marginallyclever.makelangelo.turtle.turtlerenderer,MarlinSimulationVisualizer,674,0,29,0,128,0,34,0,18,0
+Makelangelo,com.marginallyclever.makelangelo.turtle.turtlerenderer,DefaultTurtleRenderer,176,0,8,0,47,0,14,0,10,0
+Makelangelo,com.marginallyclever.makelangelo.turtle.turtlerenderer,TurtleRenderFacade,261,0,32,0,72,0,31,0,14,0
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetOrthogonalH,0,9,0,0,0,3,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetOrthogonalV,0,9,0,0,0,3,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetDiagonalRising,0,9,0,0,0,3,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetCurvedCurtainR,0,9,0,0,0,3,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetCurvedCurtainL,0,9,0,0,0,3,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetOrthogonal,22,119,6,8,4,27,6,9,1,6
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetDiagonalFalling,0,9,0,0,0,3,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetTileFactory,9,97,1,8,2,10,2,9,1,2
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetCurved,42,410,10,14,7,69,8,15,1,8
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetCurvedFanR,0,9,0,0,0,3,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetDiagonal,22,158,6,8,4,32,6,9,1,6
+Makelangelo,com.marginallyclever.makelangelo.makeart.truchet,TruchetCurvedFanL,0,9,0,0,0,3,0,1,0,1
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal,Generator_GosperCurve,277,38,10,0,71,10,11,4,6,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal,Generator_LSystemTree,199,157,8,0,56,29,17,8,13,8
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal,Generator_HilbertCurve,194,41,6,0,44,9,8,4,5,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal,Generator_SierpinskiTriangle,163,38,8,0,37,8,8,4,4,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal,Generator_Dragon,112,44,8,0,25,9,7,4,3,4
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal,Generator_FibonacciSpiral,323,44,10,0,73,10,9,3,4,3
+Makelangelo,com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal,Generator_KochCurve,154,36,8,0,38,7,9,3,5,3
+Makelangelo,com.marginallyclever.makelangelo.paper,PaperSize,0,20,0,0,0,6,0,2,0,2
+Makelangelo,com.marginallyclever.makelangelo.paper,Paper,148,324,2,2,42,63,11,16,9,16
+Makelangelo,com.marginallyclever.makelangelo.paper,PaperSettingsPanel,126,709,12,18,30,92,15,16,6,10
+Makelangelo,com.marginallyclever.communications.serial,SerialTransportLayer,45,69,4,12,11,18,5,9,2,4
+Makelangelo,com.marginallyclever.communications.serial,SerialConnection,187,0,20,0,50,0,18,0,8,0
+Makelangelo,com.marginallyclever.makelangelo.plotter,RobotUID,101,0,10,0,29,0,9,0,4,0
+Makelangelo,com.marginallyclever.makelangelo.plotter,PiCaptureAction.new ActionListener() {...},17,0,0,0,4,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.plotter,PiCaptureAction.new ActionListener() {...},90,0,0,0,15,0,2,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.plotter,DragAndDrive.new MouseMotionListener() {...},16,0,0,0,5,0,3,0,3,0
+Makelangelo,com.marginallyclever.makelangelo.plotter,DragAndDrive.new MouseListener() {...},35,0,0,0,12,0,6,0,6,0
+Makelangelo,com.marginallyclever.makelangelo.plotter,PiCaptureAction,800,0,2,0,162,0,5,0,4,0
+Makelangelo,com.marginallyclever.makelangelo.plotter,DragAndDrive,252,0,6,0,49,0,5,0,2,0
+Makelangelo,com.marginallyclever.makelangelo.plotter,Plotter,222,80,9,3,51,20,19,9,13,8
+Makelangelo,com.marginallyclever.makelangelo.plotter,StartAtPanel,116,0,6,0,32,0,8,0,5,0
+Makelangelo,com.marginallyclever.makelangelo.plotter,PlotterEvent,8,12,0,0,3,5,1,1,1,1
+Makelangelo,com.marginallyclever.makelangelo.plotter,StatusBar,328,0,12,0,73,0,14,0,8,0
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes,Line,72,74,8,0,13,13,5,2,1,2
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes,Circle,76,35,4,0,15,7,3,2,1,2
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes,NGon,71,48,6,0,15,9,4,2,1,2
+Makelangelo,com.marginallyclever.makelangelo.donatelloimpl.nodes.shapes,Rectangle,76,48,4,0,16,9,3,2,1,2

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JogPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols</a> &gt; <span class="el_source">JogPanel.java</span></div><h1>JogPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols;
+
+import com.marginallyclever.convenience.ButtonIcon;
+import com.marginallyclever.convenience.CommandLineOptions;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.plotter.Plotter;
+import com.marginallyclever.makelangelo.plotter.PlotterEvent;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+
+/**
+ * {@link JogPanel} provides cartesian driving controls for a {@link Plotter}.
+ * It also includes buttons to engage/disengage the motors; find home; and raise/lower the pen.
+ * Cartesian driving is disabled until the &quot;find home&quot; action has completed.
+ *
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class JogPanel extends JPanel {
+<span class="nc" id="L26">	private static final Logger logger = LoggerFactory.getLogger(JogPanel.class);</span>
+
+	private final Plotter myPlotter;
+<span class="nc" id="L29">	private final CartesianButtons bCartesian = new CartesianButtons();</span>
+	private JButton toggleEngageMotor;
+	private JButton findHome;
+	private JButton penUp;
+	private JButton penDown;
+
+	public JogPanel(Plotter plotter) {
+<span class="nc" id="L36">		super();</span>
+<span class="nc" id="L37">		myPlotter=plotter;</span>
+		
+<span class="nc" id="L39">		this.setLayout(new BorderLayout());</span>
+<span class="nc" id="L40">		this.add(bCartesian,BorderLayout.CENTER);</span>
+<span class="nc" id="L41">		this.add(getToolBar(),BorderLayout.NORTH);</span>
+		
+<span class="nc" id="L43">		bCartesian.addActionListener((e)-&gt;{</span>
+<span class="nc" id="L44">	    	int id = e.getID();</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">	    	if(CartesianButtons.isCenterZone(id)) return;</span>
+<span class="nc" id="L46">	    	int q=CartesianButtons.getQuadrant(id);</span>
+<span class="nc" id="L47">	    	int z=CartesianButtons.getZone(id);</span>
+	    	int x,y;
+<span class="nc bnc" id="L49" title="All 2 branches missed.">	    	if((q%2)==1) {</span>
+<span class="nc" id="L50">	    		x=0;</span>
+<span class="nc" id="L51">	    		y=100;</span>
+	    	} else {
+<span class="nc" id="L53">	    		x=100;</span>
+<span class="nc" id="L54">	    		y=0;</span>
+	    	}
+<span class="nc bnc" id="L56" title="All 2 branches missed.">	    	if(q&gt;1) {</span>
+<span class="nc" id="L57">	    		x=-x;</span>
+<span class="nc" id="L58">	    		y=-y;</span>
+	    	}
+<span class="nc bnc" id="L60" title="All 2 branches missed.">	    	while(z--&gt;0) {</span>
+<span class="nc" id="L61">	    		x/=10;</span>
+<span class="nc" id="L62">	    		y/=10;</span>
+	    	}
+<span class="nc" id="L64">	    	logger.debug(&quot;Move {},{}&quot;, x, y);</span>
+<span class="nc" id="L65">	    	Point2D p = plotter.getPos();</span>
+<span class="nc" id="L66">	    	p.x+=x;</span>
+<span class="nc" id="L67">	    	p.y+=y;</span>
+<span class="nc" id="L68">	    	plotter.setPos(p.x,p.y);</span>
+<span class="nc" id="L69">	    });</span>
+
+<span class="nc" id="L71">		myPlotter.addPlotterEventListener((e)-&gt; {</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">			if(e.type == PlotterEvent.MOTORS_ENGAGED</span>
+			|| e.type == PlotterEvent.HOME_FOUND) {
+<span class="nc" id="L74">				updateButtonStatusWithPlotter();</span>
+			}
+<span class="nc" id="L76">		});</span>
+<span class="nc" id="L77">		updateButtonStatusWithPlotter();</span>
+<span class="nc" id="L78">		updateButtonsStatus(false);</span>
+<span class="nc" id="L79">	}</span>
+	
+	public void findHome() {
+<span class="nc" id="L82">		myPlotter.findHome();</span>
+<span class="nc" id="L83">		updateButtonStatusWithPlotter();</span>
+<span class="nc" id="L84">	}</span>
+
+	public void onNetworkConnect() {
+<span class="nc" id="L87">		updateButtonsStatus(true);</span>
+<span class="nc" id="L88">	}</span>
+
+	public void onNetworkDisconnect() {
+<span class="nc" id="L91">		updateButtonsStatus(false);</span>
+<span class="nc" id="L92">	}</span>
+	
+	private JToolBar getToolBar() {
+<span class="nc" id="L95">		JToolBar bar = new JToolBar();</span>
+<span class="nc" id="L96">		bar.setFloatable(false);</span>
+<span class="nc" id="L97">		findHome = new ButtonIcon(Translator.get(&quot;JogInterface.FindHome&quot;), &quot;/images/house.png&quot;);</span>
+<span class="nc" id="L98">		penUp = new ButtonIcon(Translator.get(&quot;JogInterface.PenUp&quot;), &quot;/images/arrow_up.png&quot;);</span>
+<span class="nc" id="L99">		penDown  = new ButtonIcon(Translator.get(&quot;JogInterface.PenDown&quot;), &quot;/images/arrow_down.png&quot;);</span>
+<span class="nc" id="L100">		toggleEngageMotor = new ButtonIcon(Translator.get(&quot;JogInterface.DisengageMotors&quot;), &quot;/images/lock_open.png&quot;);</span>
+
+<span class="nc" id="L102">		bar.add(findHome);</span>
+<span class="nc" id="L103">		bar.addSeparator();</span>
+<span class="nc" id="L104">		bar.add(penUp);</span>
+<span class="nc" id="L105">		bar.add(penDown);</span>
+<span class="nc" id="L106">		bar.addSeparator();</span>
+<span class="nc" id="L107">		bar.add(toggleEngageMotor);</span>
+
+<span class="nc" id="L109">		findHome.addActionListener(e -&gt; myPlotter.findHome());</span>
+<span class="nc" id="L110">		penUp.addActionListener(e-&gt; myPlotter.raisePen());</span>
+<span class="nc" id="L111">		penDown.addActionListener(e-&gt; myPlotter.lowerPen());</span>
+<span class="nc" id="L112">		toggleEngageMotor.addActionListener(this::onToggleEngageMotorAction);</span>
+		
+<span class="nc" id="L114">		return bar;</span>
+	}
+
+	private void onToggleEngageMotorAction(ActionEvent e) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (myPlotter.getMotorsEngaged()) {</span>
+<span class="nc" id="L119">			((ButtonIcon) e.getSource()).replaceIcon(&quot;/images/lock.png&quot;);</span>
+<span class="nc" id="L120">			myPlotter.setMotorsEngaged(false);</span>
+		} else {
+<span class="nc" id="L122">			((ButtonIcon) e.getSource()).replaceIcon(&quot;/images/lock_open.png&quot;);</span>
+<span class="nc" id="L123">			myPlotter.setMotorsEngaged(true);</span>
+		}
+<span class="nc" id="L125">	}</span>
+
+	private void updateButtonStatusWithPlotter() {
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		toggleEngageMotor.setText( myPlotter.getMotorsEngaged() ?</span>
+<span class="nc" id="L129">				Translator.get(&quot;JogInterface.DisengageMotors&quot;) :</span>
+<span class="nc" id="L130">				Translator.get(&quot;JogInterface.EngageMotors&quot;)</span>
+		);
+<span class="nc" id="L132">		boolean isHomed = myPlotter.getDidFindHome();</span>
+<span class="nc" id="L133">		bCartesian.setEnabled(isHomed);</span>
+<span class="nc" id="L134">	}</span>
+
+	private void updateButtonsStatus(boolean isConnected) {
+<span class="nc" id="L137">		findHome.setEnabled(isConnected);</span>
+<span class="nc" id="L138">		penUp.setEnabled(isConnected);</span>
+<span class="nc" id="L139">		penDown.setEnabled(isConnected);</span>
+<span class="nc" id="L140">		toggleEngageMotor.setEnabled(isConnected);</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if(!isConnected) bCartesian.setEnabled(false);</span>
+<span class="nc" id="L142">	}</span>
+
+	public static void main(String[] args) {
+<span class="nc" id="L145">		PreferencesHelper.start();</span>
+<span class="nc" id="L146">		CommandLineOptions.setFromMain(args);</span>
+<span class="nc" id="L147">		Translator.start();</span>
+		
+<span class="nc" id="L149">		JFrame frame = new JFrame(JogPanel.class.getSimpleName());</span>
+<span class="nc" id="L150">		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L151">		frame.add(new JogPanel(new Plotter()));</span>
+<span class="nc" id="L152">		frame.pack();</span>
+<span class="nc" id="L153">		frame.setVisible(true);</span>
+<span class="nc" id="L154">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

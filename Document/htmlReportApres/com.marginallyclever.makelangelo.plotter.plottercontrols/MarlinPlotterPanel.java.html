@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MarlinPlotterPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter.plottercontrols</a> &gt; <span class="el_source">MarlinPlotterPanel.java</span></div><h1>MarlinPlotterPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter.plottercontrols;
+
+import com.marginallyclever.communications.NetworkSessionEvent;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.convenience.W3CColorNames;
+import com.marginallyclever.convenience.helpers.StringHelper;
+import com.marginallyclever.makelangelo.plotter.Plotter;
+import com.marginallyclever.makelangelo.plotter.PlotterEvent;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+
+/**
+ * {@link MarlinPlotterPanel} is a {@link MarlinPanel} with extra
+ * instructions for interaction with a plotter robot.
+ * 
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class MarlinPlotterPanel extends MarlinPanel {
+<span class="fc" id="L23">	private static final Logger logger = LoggerFactory.getLogger(MarlinPlotterPanel.class);</span>
+
+	private static final String STR_FEEDRATE = &quot;echo:  M203&quot;;
+	private static final String STR_ACCELERATION = &quot;echo:  M201&quot;;
+	private static final String MOTOR_ENGAGE = &quot;M17&quot;;
+	private static final String MOTOR_DISENGAGE = &quot;M18&quot;;
+
+	// M665 Set delta/polargraph configuration.
+	private static final String M665 = &quot;M665&quot;;
+
+	private final Plotter myPlotter;
+
+	public MarlinPlotterPanel(Plotter plotter, ChooseConnection chooseConnection) {
+<span class="fc" id="L36">		super(chooseConnection);</span>
+
+<span class="fc" id="L38">		myPlotter = plotter;</span>
+
+<span class="fc" id="L40">		plotter.addPlotterEventListener(this::onPlotterEvent);</span>
+<span class="fc" id="L41">	}</span>
+
+	public void stopListeningToPlotter() {
+<span class="nc" id="L44">		myPlotter.removePlotterEventListener(this::onPlotterEvent);</span>
+<span class="nc" id="L45">	}</span>
+
+	private void onPlotterEvent(PlotterEvent e) {
+<span class="pc bpc" id="L48" title="5 of 6 branches missed.">		switch (e.type) {</span>
+			case PlotterEvent.HOME_FOUND -&gt;
+				// logger.debug(&quot;MarlinPlotterInterface heard plotter home.&quot;);
+<span class="nc" id="L51">					sendFindHome();</span>
+			case PlotterEvent.POSITION -&gt;
+				// logger.debug(&quot;MarlinPlotterInterface heard plotter move.&quot;);
+<span class="fc" id="L54">					sendGoto();</span>
+			case PlotterEvent.PEN_UPDOWN -&gt;
+				// logger.debug(&quot;MarlinPlotterInterface heard plotter up/down.&quot;);
+<span class="nc" id="L57">					sendPenUpDown();</span>
+			case PlotterEvent.MOTORS_ENGAGED -&gt;
+				// logger.debug(&quot;MarlinPlotterInterface heard plotter engage.&quot;);
+<span class="nc" id="L60">					sendEngage();</span>
+			case PlotterEvent.TOOL_CHANGE -&gt;
+				// logger.debug(&quot;MarlinPlotterInterface heard plotter tool change.&quot;);
+<span class="nc" id="L63">					sendToolChange((int) e.extra);</span>
+			default -&gt; {
+			}
+		}
+<span class="fc" id="L67">	}</span>
+
+	private void sendToolChange(int toolNumber) {
+<span class="nc" id="L70">		queueAndSendCommand(MarlinPlotterPanel.getPenUpString(myPlotter.getSettings()));</span>
+<span class="nc" id="L71">		queueAndSendCommand(getToolChangeString(toolNumber));</span>
+<span class="nc" id="L72">	}</span>
+
+	private void sendFindHome() {
+<span class="nc" id="L75">		queueAndSendCommand(getFindHomeString());</span>
+<span class="nc" id="L76">	}</span>
+
+	private void sendPenUpDown() {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		String str = myPlotter.getPenIsUp()</span>
+<span class="nc" id="L80">				? MarlinPlotterPanel.getPenUpString(myPlotter.getSettings())</span>
+<span class="nc" id="L81">				: MarlinPlotterPanel.getPenDownString(myPlotter.getSettings());</span>
+<span class="nc" id="L82">		queueAndSendCommand(str);</span>
+<span class="nc" id="L83">	}</span>
+
+	private void sendEngage() {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		queueAndSendCommand(myPlotter.getMotorsEngaged() ? MOTOR_ENGAGE : MOTOR_DISENGAGE);</span>
+<span class="nc" id="L87">	}</span>
+
+	private void sendGoto() {
+<span class="fc" id="L90">		Point2D p = myPlotter.getPos();</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">		String msg = myPlotter.getPenIsUp()</span>
+<span class="nc" id="L92">				? MarlinPlotterPanel.getTravelToString(myPlotter.getSettings(), p.x, p.y)</span>
+<span class="fc" id="L93">				: MarlinPlotterPanel.getDrawToString(myPlotter.getSettings(), p.x, p.y);</span>
+<span class="fc" id="L94">		queueAndSendCommand(msg);</span>
+<span class="fc" id="L95">	}</span>
+
+	/**
+	 * M665: Set POLARGRAPH plottersettings
+	 * Parameters:
+	 *   S[segments]  - Segments-per-second
+	 *   L[left]      - Work area minimum X
+	 *   R[right]     - Work area maximum X
+	 *   T[top]       - Work area maximum Y
+	 *   B[bottom]    - Work area minimum Y
+	 *   H[length]    - Maximum belt length
+	 */
+	private void sendSizeUpdate() {
+<span class="nc" id="L108">		var settings = myPlotter.getSettings();</span>
+<span class="nc" id="L109">		var top = settings.getDouble(PlotterSettings.LIMIT_TOP);</span>
+<span class="nc" id="L110">		var bottom = settings.getDouble(PlotterSettings.LIMIT_BOTTOM);</span>
+<span class="nc" id="L111">		var left = settings.getDouble(PlotterSettings.LIMIT_LEFT);</span>
+<span class="nc" id="L112">		var right = settings.getDouble(PlotterSettings.LIMIT_RIGHT);</span>
+<span class="nc" id="L113">		var width = right-left;</span>
+<span class="nc" id="L114">		var height = top-bottom;</span>
+<span class="nc" id="L115">		var maxLen = Math.sqrt(width*width + height*height);</span>
+
+<span class="nc" id="L117">		queueAndSendCommand(M665</span>
+<span class="nc" id="L118">				+&quot; T&quot;+StringHelper.formatDouble(top)</span>
+<span class="nc" id="L119">				+&quot; B&quot;+StringHelper.formatDouble(bottom)</span>
+<span class="nc" id="L120">				+&quot; L&quot;+StringHelper.formatDouble(left)</span>
+<span class="nc" id="L121">				+&quot; R&quot;+StringHelper.formatDouble(right)</span>
+<span class="nc" id="L122">				+&quot; S&quot;+ settings.getInteger(PlotterSettings.SEGMENTS_PER_SECOND)</span>
+<span class="nc" id="L123">				+&quot; H&quot;+StringHelper.formatDouble(maxLen));</span>
+<span class="nc" id="L124">	}</span>
+
+	/**
+	 * This does not fire on the Swing EVT thread.  Be careful!  Concurrency problems may happen.
+	 * @param evt the network session event
+	 */
+	@Override
+	protected void onDataReceived(NetworkSessionEvent evt) {
+<span class="nc" id="L132">		super.onDataReceived(evt);</span>
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if(evt.flag == NetworkSessionEvent.DATA_RECEIVED) {</span>
+<span class="nc" id="L135">			String message = ((String)evt.data).trim();</span>
+			//logger.debug(&quot;MarlinPlotterInterface received '&quot;+message.trim()+&quot;'.&quot;);
+<span class="nc bnc" id="L137" title="All 4 branches missed.">			if (message.startsWith(&quot;X:&quot;) &amp;&amp; message.contains(&quot;Count&quot;)) {</span>
+<span class="nc" id="L138">				onHearM114(message);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			} else if (message.startsWith(STR_FEEDRATE)) {</span>
+<span class="nc" id="L140">				onHearFeedrate(message);</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			} else if (message.startsWith(STR_ACCELERATION)) {</span>
+<span class="nc" id="L142">				onHearAcceleration(message);</span>
+			}
+		}
+<span class="nc" id="L145">	}</span>
+
+	// format is normally X:0.00 Y:270.00 Z:0.00 Count X:0 Y:0 Z:0 U:0 V:0 W:0
+	// trim everything after and including &quot;Count&quot;, then read the state data.
+	protected void onHearM114(String message) {
+		try {
+<span class="fc" id="L151">			String position = message.substring(0, message.indexOf(&quot;Count&quot;));</span>
+<span class="fc" id="L152">			String[] majorParts = position.split(&quot;\s&quot;);</span>
+<span class="fc" id="L153">			Point2D pos = myPlotter.getPos();</span>
+
+<span class="fc bfc" id="L155" title="All 2 branches covered.">			for (String s : majorParts) {</span>
+<span class="fc" id="L156">				String[] minorParts = s.split(&quot;:&quot;);</span>
+<span class="fc" id="L157">				double v = Double.parseDouble(minorParts[1].trim());</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">				if (minorParts[0].equalsIgnoreCase(&quot;X&quot;)) pos.x = v;</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">				if (minorParts[0].equalsIgnoreCase(&quot;Y&quot;)) pos.y = v;</span>
+			}
+
+<span class="fc" id="L162">			myPlotter.setPos(pos.x,pos.y);</span>
+<span class="fc" id="L163">		} catch (NumberFormatException e) {</span>
+<span class="fc" id="L164">			logger.warn(&quot;M114 problem, continuing anyway: {}&quot;, message);</span>
+<span class="fc" id="L165">		}</span>
+<span class="fc" id="L166">	}</span>
+
+	// format is &quot;echo: M201 X5400.00 Y5400.00 Z5400.00&quot;
+	// I only care about the x value when reading.
+	protected void onHearAcceleration(String message) {
+		try {
+<span class="fc" id="L172">			String position = message.substring(STR_ACCELERATION.length());</span>
+<span class="fc" id="L173">			String[] parts = position.split(&quot;\s&quot;);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">			if (parts.length != 4)</span>
+<span class="fc" id="L175">				throw new Exception(&quot;M201 format bad: &quot; + message);</span>
+<span class="fc" id="L176">			double v = Double.parseDouble(parts[1].substring(1));</span>
+<span class="fc" id="L177">			logger.debug(&quot;MarlinPlotterInterface found acceleration {}&quot;, v);</span>
+<span class="fc" id="L178">			myPlotter.getSettings().setDouble(PlotterSettings.MAX_ACCELERATION,v);</span>
+<span class="fc" id="L179">		} catch (Exception e) {</span>
+<span class="fc" id="L180">			logger.warn(&quot;M201 problem, continuing anyway: {}&quot;, message);</span>
+<span class="fc" id="L181">		}</span>
+<span class="fc" id="L182">	}</span>
+
+	// format is &quot;echo: M203 X5400.00 Y5400.00 Z5400.00&quot;
+	// I only care about the x value when reading.
+	protected void onHearFeedrate(String message) {
+		try {
+<span class="fc" id="L188">			String position = message.substring(STR_FEEDRATE.length());</span>
+<span class="fc" id="L189">			String[] parts = position.split(&quot;\s&quot;);</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">			if (parts.length != 4)</span>
+<span class="fc" id="L191">				throw new Exception(&quot;M203 format bad: &quot; + message);</span>
+<span class="fc" id="L192">			double v = Double.parseDouble(parts[1].substring(1));</span>
+<span class="fc" id="L193">			logger.debug(&quot;MarlinPlotterInterface found feedrate {}&quot;, v);</span>
+<span class="fc" id="L194">			myPlotter.getSettings().setDouble(PlotterSettings.FEED_RATE_DRAW,v);</span>
+<span class="fc" id="L195">		} catch (Exception e) {</span>
+<span class="fc" id="L196">			logger.warn(&quot;M203 problem, continuing anyway: {}&quot;, message);</span>
+<span class="fc" id="L197">		}</span>
+<span class="fc" id="L198">	}</span>
+
+	/**
+	 * &lt;a href=&quot;https://marlinfw.org/docs/gcode/G000-G001.html&quot;&gt;By convention, most G-code generators use G0 for non-extrusion movements&lt;/a&gt;
+	 * @param settings plotter settings
+	 * @param x destination point
+	 * @param y destination point
+	 * @return the formatted string
+	 */
+	public static String getTravelToString(PlotterSettings settings,double x, double y) {
+<span class="fc" id="L208">		return &quot;G0 &quot; + getPosition(x, y)</span>
+<span class="fc" id="L209">				+ &quot; F&quot; + settings.getDouble(PlotterSettings.FEED_RATE_TRAVEL);</span>
+	}
+
+	/**
+	 * &lt;a href=&quot;https://marlinfw.org/docs/gcode/G000-G001.html&quot;&gt;By convention, most G-code generators use G0 for non-extrusion movements&lt;/a&gt;
+	 * @param settings plotter settings
+	 * @param x destination point
+	 * @param y destination point
+	 * @return the formatted string
+	 */
+	public static String getDrawToString(PlotterSettings settings,double x, double y) {
+<span class="fc" id="L220">		return &quot;G1 &quot; + getPosition(x, y)</span>
+<span class="fc" id="L221">				+ &quot; F&quot; + settings.getDouble(PlotterSettings.FEED_RATE_DRAW);</span>
+	}
+
+	private static String getPosition(double x, double y) {
+<span class="fc" id="L225">		return &quot;X&quot; + StringHelper.formatDouble(x)</span>
+<span class="fc" id="L226">				+ &quot; Y&quot; + StringHelper.formatDouble(y);</span>
+	}
+
+	public static String getPenUpString(PlotterSettings settings) {
+<span class="fc bfc" id="L230" title="All 2 branches covered.">		if(settings.getInteger(PlotterSettings.Z_MOTOR_TYPE)== PlotterSettings.Z_MOTOR_TYPE_SERVO) {</span>
+<span class="fc" id="L231">			return &quot;M280 P0&quot;</span>
+<span class="fc" id="L232">					+ &quot; S&quot; + (int)settings.getDouble(PlotterSettings.PEN_ANGLE_UP)</span>
+<span class="fc" id="L233">					+ &quot; T&quot; + (int)settings.getDouble(PlotterSettings.PEN_ANGLE_UP_TIME);</span>
+		} else {
+<span class="fc" id="L235">			return &quot;G0 Z&quot; + (int)settings.getDouble(PlotterSettings.PEN_ANGLE_UP);</span>
+		}
+	}
+
+	public static String getPenDownString(PlotterSettings settings) {
+<span class="fc bfc" id="L240" title="All 2 branches covered.">		if(settings.getInteger(PlotterSettings.Z_MOTOR_TYPE)== PlotterSettings.Z_MOTOR_TYPE_SERVO) {</span>
+<span class="fc" id="L241">			return &quot;M280 P0&quot;</span>
+<span class="fc" id="L242">					+ &quot; S&quot; + (int)settings.getDouble(PlotterSettings.PEN_ANGLE_DOWN)</span>
+<span class="fc" id="L243">					+ &quot; T&quot; + (int)settings.getDouble(PlotterSettings.PEN_ANGLE_DOWN_TIME);</span>
+		} else {
+<span class="fc" id="L245">			return &quot;G1 Z&quot; + (int)settings.getDouble(PlotterSettings.PEN_ANGLE_DOWN);</span>
+		}
+	}
+
+	public static String getToolChangeString(int toolNumber) {
+<span class="fc" id="L250">		String colorName = getColorName(toolNumber &amp; 0xFFFFFF);</span>
+<span class="fc" id="L251">		return &quot;M0 Ready &quot; + colorName + &quot; and click&quot;;</span>
+	}
+
+	private static String getColorName(int toolNumber) {
+<span class="fc" id="L255">		String name = W3CColorNames.get(new Color(toolNumber));</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">		if(name==null) name = &quot;0x&quot; + StringHelper.paddedHex(toolNumber); // display unknown RGB value as hex</span>
+<span class="fc" id="L257">		return name;</span>
+	}
+
+	public static String getFindHomeString() {
+<span class="fc" id="L261">		return &quot;G28 X Y&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

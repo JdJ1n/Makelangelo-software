@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RobotUID.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter</a> &gt; <span class="el_source">RobotUID.java</span></div><h1>RobotUID.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter;
+
+import com.marginallyclever.convenience.CommandLineOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+
+/**
+ * Was used in Makelangelo-firmware to get the GUID from the arduino board.
+ * If the number was zero, it would request a new number from the Marginally Clever url.
+ * This way Marginally Clever could track how many new machines were being made over time.
+ * Kept for historical reasons.
+ * @author Dan Royer
+ */
+@Deprecated
+<span class="nc" id="L20">public class RobotUID {</span>
+
+<span class="nc" id="L22">	private static final Logger logger = LoggerFactory.getLogger(RobotUID.class);</span>
+
+	public static long findOrCreateUID(String line) {
+<span class="nc" id="L25">		long newUID = -1;</span>
+		
+		// try to get the UID in the line
+<span class="nc" id="L28">		String[] lines = line.split(&quot;\\r?\\n&quot;);</span>
+<span class="nc bnc" id="L29" title="All 2 branches missed.">		if (lines.length &gt; 0) {</span>
+			try {
+<span class="nc" id="L31">				newUID = Long.parseLong(lines[0]);</span>
+<span class="nc" id="L32">				logger.debug(&quot;UID found: {}&quot;, newUID);</span>
+<span class="nc" id="L33">			} catch (NumberFormatException e) {</span>
+<span class="nc" id="L34">				logger.error(&quot;UID parsing failed. line={}, error={}&quot;, lines[0], e.getMessage());</span>
+<span class="nc" id="L35">			}</span>
+		}
+
+		// new robots have UID&lt;=0
+<span class="nc bnc" id="L39" title="All 2 branches missed.">		if(newUID &lt;= 0) newUID = getNewRobotUID();</span>
+		
+<span class="nc" id="L41">		return newUID;</span>
+	}
+
+	// based on http://www.exampledepot.com/egs/java.net/Post.html
+	private static long getNewRobotUID() {
+<span class="nc" id="L46">		long newUID = 0;</span>
+
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		boolean pleaseGetAGUID = !CommandLineOptions.hasOption(&quot;-noguid&quot;);</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (!pleaseGetAGUID)</span>
+<span class="nc" id="L50">			return 0;</span>
+
+<span class="nc" id="L52">		logger.debug(&quot;obtaining UID from server.&quot;);</span>
+		try {
+			// Send request
+<span class="nc" id="L55">			URL url = new URL(&quot;https://www.marginallyclever.com/drawbot_getuid.php&quot;);</span>
+<span class="nc" id="L56">			URLConnection conn = url.openConnection();</span>
+			// get results
+<span class="nc" id="L58">			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));</span>
+<span class="nc" id="L59">			String line = rd.readLine();</span>
+<span class="nc" id="L60">			logger.debug(&quot;Server says: '{}'&quot;, line);</span>
+<span class="nc" id="L61">			newUID = Long.parseLong(line);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			if (newUID != 0) {</span>
+				//plottersettings.createNewUID(newUID);
+			}
+			
+<span class="nc" id="L66">		} catch (Exception e) {</span>
+<span class="nc" id="L67">			logger.error(&quot;Error from server&quot;, e);</span>
+<span class="nc" id="L68">			return 0;</span>
+<span class="nc" id="L69">		}</span>
+
+<span class="nc" id="L71">		return newUID;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

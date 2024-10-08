@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectTextArea.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.select</a> &gt; <span class="el_source">SelectTextArea.java</span></div><h1>SelectTextArea.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.select;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
+
+/**
+ * A text input dialog with some limited formatting options.
+ * @author Dan Royer
+ * @since 7.24.0
+ */
+public class SelectTextArea extends Select {
+	private final JTextArea field;
+
+	public SelectTextArea(String internalName,String labelKey,String defaultText) {
+<span class="fc" id="L17">		super(internalName);</span>
+		//this.setBorder(BorderFactory.createLineBorder(Color.RED));
+
+<span class="fc" id="L20">		JLabel label = new JLabel(labelKey, JLabel.LEADING);</span>
+
+<span class="fc" id="L22">		field = new JTextArea(defaultText,4,20);</span>
+<span class="fc" id="L23">		field.setLineWrap(true);</span>
+<span class="fc" id="L24">		field.setWrapStyleWord(true);</span>
+<span class="fc" id="L25">		field.setBorder(BorderFactory.createLoweredBevelBorder());</span>
+<span class="fc" id="L26">		field.setFont(UIManager.getFont(&quot;Label.font&quot;));</span>
+<span class="fc" id="L27">		field.getDocument().addDocumentListener(new DocumentListener() {</span>
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+<span class="fc" id="L30">				validate();</span>
+<span class="fc" id="L31">			}</span>
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+<span class="fc" id="L35">				validate();</span>
+<span class="fc" id="L36">			}</span>
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+<span class="nc" id="L40">				validate();</span>
+<span class="nc" id="L41">			}</span>
+			
+			void validate() {
+<span class="fc" id="L44">				fireSelectEvent(null,field.getText());</span>
+<span class="fc" id="L45">			}</span>
+		});
+
+<span class="fc" id="L48">		JScrollPane pane = new JScrollPane(field);</span>
+<span class="fc" id="L49">		pane.setPreferredSize(new Dimension(200, 150));</span>
+		
+<span class="fc" id="L51">		this.add(label,BorderLayout.PAGE_START);</span>
+<span class="fc" id="L52">		this.add(pane,BorderLayout.CENTER);</span>
+<span class="fc" id="L53">	}</span>
+
+	public String getText() {
+<span class="fc" id="L56">		return field.getText();</span>
+	}
+	
+	public void setText(String str) {
+<span class="fc" id="L60">		field.setText(str);</span>
+<span class="fc" id="L61">	}</span>
+
+	public void setLineWrap(boolean wrap) {
+<span class="nc" id="L64">		field.setLineWrap(wrap);</span>
+<span class="nc" id="L65">	}</span>
+
+	public boolean getLineWrap() {
+<span class="nc" id="L68">		return field.getLineWrap();</span>
+	}
+
+	public boolean isEditable() {
+<span class="nc" id="L72">		return field.isEditable();</span>
+	}
+
+	public void setEditable(boolean b) {
+<span class="nc" id="L76">		field.setEditable(b);</span>
+<span class="nc" id="L77">	}</span>
+
+	public boolean getDragEnabled() {
+<span class="nc" id="L80">		return field.getDragEnabled();</span>
+	}
+
+	public void setDragEnabled(boolean b) {
+<span class="nc" id="L84">		field.setDragEnabled(b);</span>
+<span class="nc" id="L85">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

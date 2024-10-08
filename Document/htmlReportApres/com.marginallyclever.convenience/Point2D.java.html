@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Point2D.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">Point2D.java</span></div><h1>Point2D.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+/**
+ * A 2D point class with some useful methods.
+ * @author Dan Royer
+ * @since 7.0.0
+ */
+public class Point2D {
+	public double x,y;
+	
+<span class="fc" id="L11">	public Point2D() {}</span>
+
+	public Point2D(Point2D b) {
+<span class="nc" id="L14">		this(b.x,b.y);</span>
+<span class="nc" id="L15">	}</span>
+
+<span class="fc" id="L17">	public Point2D(double x0,double y0) {</span>
+<span class="fc" id="L18">		x=x0;</span>
+<span class="fc" id="L19">		y=y0;</span>
+<span class="fc" id="L20">	}</span>
+	
+	public void set(double x0,double y0) {
+<span class="fc" id="L23">		x=x0;</span>
+<span class="fc" id="L24">		y=y0;</span>
+<span class="fc" id="L25">	}</span>
+
+	public void set(Point2D p) {
+<span class="fc" id="L28">		x=p.x;</span>
+<span class="fc" id="L29">		y=p.y;</span>
+<span class="fc" id="L30">	}</span>
+
+	public double lengthSquared() {
+<span class="nc" id="L33">		return x*x+y*y;</span>
+	}
+	
+	public double length() {
+<span class="nc" id="L37">		return Math.sqrt(lengthSquared());</span>
+	}
+	
+	public void scale(double scale) {
+<span class="nc" id="L41">		x*=scale;</span>
+<span class="nc" id="L42">		y*=scale;</span>
+<span class="nc" id="L43">	}</span>
+	
+	public double distanceSquared(Point2D p) {
+<span class="fc" id="L46">		double dx = x-p.x;</span>
+<span class="fc" id="L47">		double dy = y-p.y;</span>
+<span class="fc" id="L48">		return dx*dx + dy*dy;</span>
+	}
+
+	public double distance(Point2D p) {
+<span class="fc" id="L52">		return Math.sqrt(distanceSquared(p));</span>
+	}
+
+	public void normalize() {
+<span class="nc" id="L56">		double len = length();</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if(len!=0) {</span>
+<span class="nc" id="L58">			double ilen = 1.0/len;</span>
+<span class="nc" id="L59">			x*=ilen;</span>
+<span class="nc" id="L60">			y*=ilen;</span>
+		}
+<span class="nc" id="L62">	}</span>
+
+	public boolean equalsEpsilon(Point2D b, double epsilon) {
+<span class="fc bfc" id="L65" title="All 2 branches covered.">		return distance(b) &lt; epsilon;</span>
+	}
+
+	public void add(Point2D b){
+<span class="nc" id="L69">		x += b.x;</span>
+<span class="nc" id="L70">		y += b.y;</span>
+<span class="nc" id="L71">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

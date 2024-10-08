@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ColorRGB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">ColorRGB.java</span></div><h1>ColorRGB.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+
+import java.awt.Color;
+import java.util.Objects;
+
+
+/**
+ * RGB color class.  each component is 0...255
+ *
+ * @author Dan Royer
+ */
+@Deprecated
+public class ColorRGB {
+    public int red;
+    public int green;
+    public int blue;
+
+    public ColorRGB() {
+<span class="nc" id="L20">        this(0, 0, 0);</span>
+<span class="nc" id="L21">    }</span>
+
+    public ColorRGB(int red, int green, int blue) {
+<span class="nc" id="L24">        super();</span>
+<span class="nc" id="L25">        set(red, green, blue);</span>
+<span class="nc" id="L26">    }</span>
+
+    public ColorRGB(ColorRGB x) {
+<span class="nc" id="L29">        super();</span>
+<span class="nc" id="L30">        set(x);</span>
+<span class="nc" id="L31">    }</span>
+
+    public ColorRGB(int pixel) {
+<span class="fc" id="L34">        super();</span>
+<span class="fc" id="L35">        set(pixel);</span>
+<span class="fc" id="L36">    }</span>
+
+    public void set(int pixel) {
+<span class="fc" id="L39">        this.red   = (pixel &gt;&gt; 16) &amp; 0xff;</span>
+<span class="fc" id="L40">        this.green = (pixel &gt;&gt;  8) &amp; 0xff;</span>
+<span class="fc" id="L41">        this.blue  = (pixel      ) &amp; 0xff;</span>
+<span class="fc" id="L42">    }</span>
+
+<span class="nc" id="L44">    public ColorRGB(Color c) {</span>
+<span class="nc" id="L45">        red   = c.getRed();</span>
+<span class="nc" id="L46">        green = c.getGreen();</span>
+<span class="nc" id="L47">        blue  = c.getBlue();</span>
+<span class="nc" id="L48">    }</span>
+
+    public int toInt() {
+<span class="fc" id="L51">        return (0xff&lt;&lt;24) | ((red &amp; 0xff) &lt;&lt; 16) | ((green &amp; 0xff) &lt;&lt; 8) | (blue &amp; 0xff);</span>
+    }
+
+    public void set(ColorRGB x) {
+<span class="nc" id="L55">        this.red   = x.red;</span>
+<span class="nc" id="L56">        this.green = x.green;</span>
+<span class="nc" id="L57">        this.blue  = x.blue;</span>
+<span class="nc" id="L58">    }</span>
+
+    public void set(int red, int green, int blue) {
+<span class="nc" id="L61">        this.red   = red;</span>
+<span class="nc" id="L62">        this.green = green;</span>
+<span class="nc" id="L63">        this.blue  = blue;</span>
+<span class="nc" id="L64">    }</span>
+
+    public void set(ColorHSB hsb) {
+<span class="nc" id="L67">        set(Color.HSBtoRGB(hsb.hue, hsb.saturation, hsb.brightness));</span>
+<span class="nc" id="L68">    }</span>
+
+    public ColorRGB sub(ColorRGB x) {
+<span class="nc" id="L71">        return new ColorRGB(</span>
+                this.red - x.red,
+                this.green - x.green,
+                this.blue - x.blue);
+    }
+
+    public ColorRGB add(ColorRGB x) {
+<span class="nc" id="L78">        return new ColorRGB(</span>
+                this.red + x.red,
+                this.green + x.green,
+                this.blue + x.blue);
+    }
+
+    public ColorRGB mul(double f) {
+<span class="nc" id="L85">        return new ColorRGB(</span>
+                (int) (f * this.red),
+                (int) (f * this.green),
+                (int) (f * this.blue));
+    }
+
+    public float diffSquared(ColorRGB other) {
+<span class="nc" id="L92">        int r = other.red - this.red;</span>
+<span class="nc" id="L93">        int g = other.green - this.green;</span>
+<span class="nc" id="L94">        int b = other.blue - this.blue;</span>
+<span class="nc" id="L95">        return r * r + g * g + b * b;</span>
+    }
+
+    public float diff(ColorRGB other) {
+<span class="nc" id="L99">        return (float)Math.sqrt(diffSquared(other));</span>
+    }
+
+    public String toString() {
+<span class="nc" id="L103">        return &quot;(&quot; + red + &quot;,&quot; + green + &quot;,&quot; + blue + &quot;)&quot;;</span>
+    }
+
+    // https://www.codegrepper.com/code-examples/java/rgb+to+hex+java
+    public String toHexString() {
+<span class="nc" id="L108">        return String.format(&quot;#%02X%02X%02X&quot;, red, green, blue);</span>
+    }
+
+    public int getRed() {
+<span class="nc" id="L112">        return red;</span>
+    }
+
+    public int getGreen() {
+<span class="nc" id="L116">        return green;</span>
+    }
+
+    public int getBlue() {
+<span class="nc" id="L120">        return blue;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if (this == o) return true;</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="nc" id="L127">        ColorRGB colorRGB = (ColorRGB) o;</span>
+<span class="nc bnc" id="L128" title="All 6 branches missed.">        return red == colorRGB.red</span>
+                &amp;&amp; green == colorRGB.green
+                &amp;&amp; blue == colorRGB.blue;
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L135">        return Objects.hash(red, green, blue);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

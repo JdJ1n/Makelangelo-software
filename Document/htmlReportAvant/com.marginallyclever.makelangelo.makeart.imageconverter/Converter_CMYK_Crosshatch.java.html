@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_CMYK_Crosshatch.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_CMYK_Crosshatch.java</span></div><h1>Converter_CMYK_Crosshatch.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterCMYK;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+
+/**
+ * See also &lt;a href=&quot;http://the-print-guide.blogspot.ca/2009/05/halftone-screen-angles.html&quot;&gt;...&lt;/a&gt;
+ * @author Dan Royer
+ */
+public class Converter_CMYK_Crosshatch extends ImageConverter {
+<span class="nc" id="L21">	private static final Logger logger = LoggerFactory.getLogger(Converter_CMYK_Crosshatch.class);</span>
+<span class="nc" id="L22">	static protected int passes=1;// passes value have to be &gt;=1.</span>
+
+	public Converter_CMYK_Crosshatch() {
+<span class="nc" id="L25">		super();</span>
+
+<span class="nc" id="L27">		SelectSlider selectPasses = new SelectSlider(&quot;passes&quot;, Translator.get(&quot;Converter_CMYK_Crosshatch.Passes&quot;), 5, 1, getPasses());</span>
+<span class="nc" id="L28">		selectPasses.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L29">			setPasses((int)evt.getNewValue());</span>
+<span class="nc" id="L30">			fireRestart();</span>
+<span class="nc" id="L31">		});</span>
+<span class="nc" id="L32">		add(selectPasses);</span>
+
+<span class="nc" id="L34">		add(new SelectReadOnlyText(&quot;note&quot;,Translator.get(&quot;Converter_CMYK_Crosshatch.Note&quot;)));</span>
+<span class="nc" id="L35">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L39">		return Translator.get(&quot;Converter_CMYK_Crosshatch.Name&quot;);</span>
+	}
+
+	public int getPasses() {
+<span class="nc" id="L43">		return passes;</span>
+	}
+	
+	/**
+	 * @param value number of passes to make.  Must be &gt;=1.
+	 */
+	public void setPasses(int value) {
+<span class="nc" id="L50">		passes = Math.max(1, value);</span>
+<span class="nc" id="L51">	}</span>
+
+	/**
+	 * create horizontal lines across the image.  Raise and lower the pen to darken the appropriate areas
+	 */
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L58">		super.start(paper, image);</span>
+
+<span class="nc" id="L60">		FilterCMYK cmyk = new FilterCMYK(myImage);</span>
+<span class="nc" id="L61">		cmyk.filter();</span>
+		
+<span class="nc" id="L63">		turtle = new Turtle();</span>
+		// remove extra change color at the start of the turtle
+<span class="nc" id="L65">		turtle.history.clear();</span>
+		
+<span class="nc" id="L67">		logger.debug(&quot;Yellow...&quot;);		outputChannel(cmyk.getY(),0 , Color.YELLOW);</span>
+<span class="nc" id="L68">		logger.debug(&quot;Cyan...&quot;);		outputChannel(cmyk.getC(),15, Color.CYAN);</span>
+<span class="nc" id="L69">		logger.debug(&quot;Magenta...&quot;);		outputChannel(cmyk.getM(),75, Color.MAGENTA);</span>
+<span class="nc" id="L70">		logger.debug(&quot;Black...&quot;);		outputChannel(cmyk.getK(),45, Color.BLACK);</span>
+
+<span class="nc" id="L72">		fireConversionFinished();</span>
+<span class="nc" id="L73">	}</span>
+	
+	protected void outputChannel(TransformedImage img, float angle, Color newColor) {
+<span class="nc" id="L76">		double dx = Math.cos(Math.toRadians(angle));</span>
+<span class="nc" id="L77">		double dy = Math.sin(Math.toRadians(angle));</span>
+<span class="nc" id="L78">		double [] channelCutoff = {0,153,51,102,204};</span>
+		
+<span class="nc" id="L80">		turtle.setColor(newColor);</span>
+
+		// figure out how many lines we're going to have on this image.
+<span class="nc" id="L83">		double stepSize = passes;</span>
+
+		// from top to bottom of the margin area...
+<span class="nc" id="L86">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L87">		double height  = rect.getHeight();</span>
+<span class="nc" id="L88">		double width   = rect.getWidth();</span>
+<span class="nc" id="L89">		double maxLen  = Math.sqrt(width*width+height*height);</span>
+
+		double a;
+<span class="nc" id="L92">		int i=0;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		for(a = -maxLen;a&lt;maxLen;a+=stepSize) {</span>
+<span class="nc" id="L94">			double px = dx * a;</span>
+<span class="nc" id="L95">			double py = dy * a;</span>
+			// p0-p1 is at a right angle to dx/dy
+<span class="nc" id="L97">			double x0 = px - dy * maxLen;</span>
+<span class="nc" id="L98">			double y0 = py + dx * maxLen;</span>
+<span class="nc" id="L99">			double x1 = px + dy * maxLen;</span>
+<span class="nc" id="L100">			double y1 = py - dx * maxLen;</span>
+
+<span class="nc" id="L102">			double cutoff=channelCutoff[i%channelCutoff.length];</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if ((i % 2) == 0) {</span>
+<span class="nc" id="L104">				convertAlongLine(x0,y0,x1,y1,stepSize,cutoff,img);</span>
+			} else {
+<span class="nc" id="L106">				convertAlongLine(x1,y1,x0,y0,stepSize,cutoff,img);</span>
+			}
+<span class="nc" id="L108">			++i;</span>
+		}
+<span class="nc" id="L110">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

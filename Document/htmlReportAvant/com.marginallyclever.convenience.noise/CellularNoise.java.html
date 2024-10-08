@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CellularNoise.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience.noise</a> &gt; <span class="el_source">CellularNoise.java</span></div><h1>CellularNoise.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience.noise;
+
+import java.util.Random;
+
+/**
+ * This code is released into the public domain.
+ * It is a conversion of Matt Pharr's original C++ implementation.
+ * The licensing of the original code follows:
+ *
+ * &lt;pre&gt;wnoise.cpp
+ *
+ * Copyright (C) 1998, Matt Pharr &lt;mmp@graphics.stanford.edu&gt;
+ *
+ * This software is placed in the public domain and is provided as is
+ * without express or implied warranty.
+ *
+ * Basic implementation of Steve Worley's noise function; see proceedings
+ * of SIGGRAPH 96.&lt;/pre&gt;
+ */
+<span class="nc" id="L20">public class CellularNoise implements Noise {</span>
+    /**
+     * Represents a point in three dimensional space.
+     *
+     * @author saybur
+     *
+     */
+    private static final class Point {
+        private final double x;
+        private final double y;
+        private final double z;
+
+        /**
+         * Creates a point at location (x, y, z).
+         *
+         * @param x
+         *            the x coordinate of the point.
+         * @param y
+         *            the y coordinate of the point.
+         * @param z
+         *            the z coordinate of the point.
+         */
+        private Point(double x, double y, double z)
+<span class="nc" id="L43">        {</span>
+<span class="nc" id="L44">            this.x = x;</span>
+<span class="nc" id="L45">            this.y = y;</span>
+<span class="nc" id="L46">            this.z = z;</span>
+<span class="nc" id="L47">        }</span>
+
+        /**
+         * Provides a fast distance calculation between two points. This is done by
+         * not taking the square root of the result.
+         *
+         * @param other
+         *            the coordinate to calculate distance to.
+         * @return the distance between this point and the provided point.
+         */
+        public double distanceSquared(Point other)
+        {
+<span class="nc" id="L59">            double x2 = x - other.x;</span>
+<span class="nc" id="L60">            double y2 = y - other.y;</span>
+<span class="nc" id="L61">            double z2 = z - other.z;</span>
+<span class="nc" id="L62">            return x2 * x2 + y2 * y2 + z2 * z2;</span>
+        }
+    }
+
+    @Override
+    public double noise(double xin) {
+<span class="nc" id="L68">        return noise(xin,0,0);</span>
+    }
+
+    @Override
+    public double noise(double xin, double yin) {
+<span class="nc" id="L73">        return noise(xin,yin,0);</span>
+    }
+
+    private int floor(double n) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        return n &gt; 0 ? (int) n : (int) n - 1;</span>
+    }
+
+    private double frac(double n) {
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        return n &gt;= 0 ? n - (int) (n) : frac(-n);</span>
+    }
+
+    /**
+     * Checks all voxels near the origin for the closest point to the origin.
+     * The returned value will be the distance to the closest point.
+     */
+    private double minimumDistance(Random r, Point origin) {
+        // hack, but easier than handling points that are exactly at negative
+        // integer latice-points correctly.
+<span class="nc" id="L91">        Point p = new Point(origin.x + 1e-7, origin.y + 1e-7, origin.z + 1e-7);</span>
+        // get the coordinate that this point resides at
+<span class="nc" id="L93">        int x = floor(p.x);</span>
+<span class="nc" id="L94">        int y = floor(p.y);</span>
+<span class="nc" id="L95">        int z = floor(p.z);</span>
+        // create storage to track lowest values
+<span class="nc" id="L97">        double s = Double.MAX_VALUE;</span>
+        // first check voxel the point is in
+<span class="nc" id="L99">        s = processVoxel(r, p, s, x, y, z);</span>
+        // check each of the voxels that share a face with the
+        // point's voxel, if they're close enough to possibly
+        // make a difference
+        // squared distance to the voxel in the +x direction
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        double dpx2 = p.x &gt;= 0. ? square(1.0 - frac(p.x)) : square(frac(p.x));</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if(dpx2 &lt; s) {</span>
+<span class="nc" id="L106">            s = processVoxel(r, p, s, x + 1, y, z);</span>
+        }
+        // -x
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        double dnx2 = p.x &gt;= 0. ? square(frac(p.x)) : square(1. - frac(p.x));</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if(dnx2 &lt; s) {</span>
+<span class="nc" id="L111">            s = processVoxel(r, p, s, x - 1, y, z);</span>
+        }
+        // +y
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        double dpy2 = p.y &gt;= 0. ? square(1. - frac(p.y)) : square(frac(p.y));</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        if(dpy2 &lt; s) {</span>
+<span class="nc" id="L116">            s = processVoxel(r, p, s, x, y + 1, z);</span>
+        }
+        // -y
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        double dny2 = p.y &gt;= 0. ? square(frac(p.y)) : square(1. - frac(p.y));</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if(dny2 &lt; s) {</span>
+<span class="nc" id="L121">            s = processVoxel(r, p, s, x, y - 1, z);</span>
+        }
+        // +z
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        double dpz2 = p.z &gt;= 0. ? square(1. - frac(p.z)) : square(frac(p.z));</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if(dpz2 &lt; s) {</span>
+<span class="nc" id="L126">            s = processVoxel(r, p, s, x, y, z + 1);</span>
+        }
+        // -z
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        double dnz2 = p.z &gt;= 0. ? square(frac(p.z)) : square(1. - frac(p.z));</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if(dnz2 &lt; s) {</span>
+<span class="nc" id="L131">            s = processVoxel(r, p, s, x, y, z - 1);</span>
+        }
+        // finally check the remaining adjacent voxels
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        for(int i = -1; i &lt;= 1; ++i) {</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            for(int j = -1; j &lt;= 1; ++j) {</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                for(int k = -1; k &lt;= 1; ++k) {</span>
+                    // don't check the ones we already did above
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                    if(Math.abs(i) + Math.abs(j) + Math.abs(k) &lt;= 1) {</span>
+<span class="nc" id="L139">                        continue;</span>
+                    }
+                    // find squared distance to voxel
+<span class="nc" id="L142">                    double vd2 = 0;</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                    if(i &lt; 0)      vd2 += dnx2;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                    else if(i &gt; 0) vd2 += dpx2;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                    if(j &lt; 0)      vd2 += dny2;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                    else if(j &gt; 0) vd2 += dpy2;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">                    if(k &lt; 0)      vd2 += dnz2;</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">                    else if(k &gt; 0) vd2 += dpz2;</span>
+                    // and check it if it's close enough to matter
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                    if(vd2 &lt; s) {</span>
+<span class="nc" id="L151">                        s = processVoxel(r, p, s, x + i, y + j, z + k);</span>
+                    }
+                }
+            }
+        }
+        // provide minimum. be sure to square root it to get the
+        // true distance.
+<span class="nc" id="L158">        return Math.sqrt(s);</span>
+    }
+
+    /**
+     * Processes a voxel and calculates the distances of the points within
+     * against the provided point. It also tracks the progress of the lowest
+     * values yet discovered.
+     *
+     * @param r
+     *            the random number generator.
+     * @param p
+     *            the point that the locations within this voxel will be tested
+     *            against.
+     * @param s
+     *            the storage that tracks the lowest values currently
+     *            encountered.
+     * @param x
+     *            the x coordinate of the voxel.
+     * @param y
+     *            the y coordinate of the voxel.
+     * @param z
+     *            the z coordinate of the voxel.
+     * @return the closest distance of the points within the voxel to the
+     *         provided point.
+     */
+    private double processVoxel(Random r, Point p, double s, int x, int y, int z) {
+        // reset random number generator for the voxel
+<span class="nc" id="L185">        r.setSeed(x + y + z);</span>
+        // each voxel always has one point
+<span class="nc" id="L187">        Point created = new Point(</span>
+<span class="nc" id="L188">                x + r.nextDouble(),</span>
+<span class="nc" id="L189">                y + r.nextDouble(),</span>
+<span class="nc" id="L190">                z + r.nextDouble());</span>
+        // determine the distance between the generated point
+        // and the source point we're checking.
+<span class="nc" id="L193">        double distance = p.distanceSquared(created);</span>
+        // add distance if it is lowest
+<span class="nc" id="L195">        return Math.min(distance, s);</span>
+    }
+
+    private double square(double n) {
+<span class="nc" id="L199">        return n * n;</span>
+    }
+
+    /**
+     * Gets the noise value at the provided location.
+     *
+     * @param x
+     *            the x coordinate.
+     * @param y
+     *            the y coordinate.
+     * @param z
+     *            the z coordinate.
+     * @return the noise value at the coordinate.
+     */
+    public double noise(double x, double y, double z)
+    {
+<span class="nc" id="L215">        return minimumDistance(new Random(), new Point(x, y, z));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

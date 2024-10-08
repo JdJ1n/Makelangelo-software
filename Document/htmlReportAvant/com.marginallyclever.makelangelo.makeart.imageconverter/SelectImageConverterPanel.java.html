@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectImageConverterPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">SelectImageConverterPanel.java</span></div><h1>SelectImageConverterPanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.jogamp.opengl.GL2;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.imagefilter.FilterContrastAdjust;
+import com.marginallyclever.makelangelo.makeart.io.LoadFilePanel;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.preview.PreviewListener;
+import com.marginallyclever.makelangelo.rangeslider.RangeSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.util.PreferencesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.prefs.Preferences;
+
+/**
+ * This panel allows the user to select an image converter and set its parameters.
+ */
+public class SelectImageConverterPanel extends JPanel implements PreviewListener, ImageConverterListener {
+<span class="nc" id="L33">	private static final Logger logger = LoggerFactory.getLogger(SelectImageConverterPanel.class);</span>
+
+	/**
+	 * Set of image file extensions.
+	 */
+<span class="nc" id="L38">	public static final String [] IMAGE_FILE_EXTENSIONS = Arrays.stream(ImageIO.getReaderFileSuffixes()).sorted().toArray(String[]::new);</span>
+
+<span class="nc" id="L40">	@SuppressWarnings(&quot;deprecation&quot;)</span>
+	private final Preferences prefs = PreferencesHelper
+<span class="nc" id="L42">			.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.LEGACY_MAKELANGELO_ROOT);</span>
+	
+	private final Paper myPaper;
+	private final TransformedImage myImage;
+
+	private static JComboBox&lt;String&gt; styleNames;
+	private static JComboBox&lt;String&gt; fillNames;
+<span class="nc" id="L49">	private final JPanel cards = new JPanel(new CardLayout());</span>
+<span class="nc" id="L50">	private final RangeSlider rangeSlider = new RangeSlider();</span>
+<span class="nc" id="L51">	private static int rangeSliderMin = 0;</span>
+<span class="nc" id="L52">	private static int rangeSliderMax = 255;</span>
+
+	private ImageConverter myConverter;
+	
+	public SelectImageConverterPanel(Paper paper, TransformedImage image) {
+<span class="nc" id="L57">		super(new GridBagLayout());</span>
+<span class="nc" id="L58">		myPaper = paper;</span>
+<span class="nc" id="L59">		myImage = image;</span>
+
+<span class="nc" id="L61">		fillNames = getFillSelection();</span>
+<span class="nc" id="L62">		styleNames = getStyleSelection();</span>
+
+<span class="nc" id="L64">		Insets insetTop = new Insets(5, 0, 0, 0);</span>
+<span class="nc" id="L65">		Insets insetLeft = new Insets(0, 5, 0, 0);</span>
+
+<span class="nc" id="L67">		GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L68">		c.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L69">		c.weightx = 0;</span>
+<span class="nc" id="L70">		c.weighty = 0;</span>
+<span class="nc" id="L71">		c.gridwidth = 1;</span>
+
+<span class="nc" id="L73">		int y = 0;</span>
+
+<span class="nc" id="L75">		c.anchor = GridBagConstraints.WEST;</span>
+<span class="nc" id="L76">		c.gridx = 0;</span>
+<span class="nc" id="L77">		c.gridy = y;</span>
+<span class="nc" id="L78">		c.insets = insetTop;</span>
+<span class="nc" id="L79">		this.add(new JLabel(Translator.get(&quot;ConversionFill&quot;)), c);</span>
+<span class="nc" id="L80">		c.gridx = 1;</span>
+<span class="nc" id="L81">		c.insets = insetLeft;</span>
+<span class="nc" id="L82">		this.add(fillNames, c);</span>
+<span class="nc" id="L83">		y++;</span>
+
+<span class="nc" id="L85">		c.gridx = 0;</span>
+<span class="nc" id="L86">		c.gridy = y;</span>
+<span class="nc" id="L87">		c.insets = insetTop;</span>
+<span class="nc" id="L88">		this.add(new JLabel(Translator.get(&quot;ConversionStyle&quot;)), c);</span>
+<span class="nc" id="L89">		c.gridx = 1;</span>
+<span class="nc" id="L90">		c.insets = insetLeft;</span>
+<span class="nc" id="L91">		this.add(styleNames, c);</span>
+<span class="nc" id="L92">		y++;</span>
+
+<span class="nc" id="L94">		c.gridx = 0;</span>
+<span class="nc" id="L95">		c.gridy = y;</span>
+<span class="nc" id="L96">		c.insets = insetTop;</span>
+<span class="nc" id="L97">		this.add(new JLabel(Translator.get(&quot;SelectImageConverterPanel.Contrast&quot;)), c);</span>
+<span class="nc" id="L98">		c.gridx = 1;</span>
+<span class="nc" id="L99">		c.insets = insetLeft;</span>
+<span class="nc" id="L100">		this.add(rangeSlider, c);</span>
+<span class="nc" id="L101">		y++;</span>
+
+<span class="nc" id="L103">		rangeSlider.setMinimum(0);</span>
+<span class="nc" id="L104">		rangeSlider.setMaximum(255);</span>
+<span class="nc" id="L105">		rangeSlider.setUpperValue(rangeSliderMax);</span>
+<span class="nc" id="L106">		rangeSlider.setValue(rangeSliderMin);</span>
+<span class="nc" id="L107">		rangeSlider.addChangeListener(this::onSliderChanged);</span>
+
+<span class="nc" id="L109">		c.anchor = GridBagConstraints.NORTHWEST;</span>
+<span class="nc" id="L110">		c.fill = GridBagConstraints.BOTH;</span>
+<span class="nc" id="L111">		c.gridwidth = 2;</span>
+<span class="nc" id="L112">		c.gridx = 0;</span>
+<span class="nc" id="L113">		c.gridy = y;</span>
+<span class="nc" id="L114">		c.weightx=1;</span>
+<span class="nc" id="L115">		c.weighty=1;</span>
+<span class="nc" id="L116">		c.insets = insetTop;</span>
+<span class="nc" id="L117">		cards.setBorder(BorderFactory.createLoweredBevelBorder());</span>
+<span class="nc" id="L118">		this.add(cards, c);</span>
+<span class="nc" id="L119">	}</span>
+
+	private void onSliderChanged(ChangeEvent changeEvent) {
+<span class="nc" id="L122">		rangeSliderMin = rangeSlider.getValue();</span>
+<span class="nc" id="L123">		rangeSliderMax = rangeSlider.getUpperValue();</span>
+<span class="nc" id="L124">		restart();</span>
+<span class="nc" id="L125">	}</span>
+
+	/**
+	 * Start the image conversion process.
+	 */
+	public void run() {
+<span class="nc" id="L131">		showCard((String) styleNames.getSelectedItem());</span>
+<span class="nc" id="L132">		int first = styleNames.getSelectedIndex();</span>
+<span class="nc" id="L133">		changeConverter(ImageConverterFactory.getList()[first]);</span>
+<span class="nc" id="L134">	}</span>
+	
+	private JComboBox&lt;String&gt; getStyleSelection() {
+<span class="nc" id="L137">		ArrayList&lt;String&gt; imageConverterNames = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		for( ImageConverter i : ImageConverterFactory.getList() ) {</span>
+<span class="nc" id="L139">			imageConverterNames.add(i.getName());</span>
+<span class="nc" id="L140">			cards.add(new ImageConverterPanel(i), i.getName());</span>
+		}
+		
+<span class="nc" id="L143">		JComboBox&lt;String&gt; box = new JComboBox&lt;&gt;(imageConverterNames.toArray(new String[0]));</span>
+<span class="nc" id="L144">		box.setSelectedIndex(getPreferredDrawStyle());</span>
+<span class="nc" id="L145">		box.addItemListener(this::onConverterChanged);</span>
+
+<span class="nc" id="L147">		return box;</span>
+	}
+
+	private JComboBox&lt;String&gt; getFillSelection() {
+<span class="nc" id="L151">		String[] imageFillNames = {</span>
+<span class="nc" id="L152">				Translator.get(&quot;ConvertImagePaperFit&quot;),</span>
+<span class="nc" id="L153">				Translator.get(&quot;ConvertImagePaperFill&quot;),</span>
+		};
+<span class="nc" id="L155">		JComboBox&lt;String&gt; box = new JComboBox&lt;&gt;(imageFillNames);</span>
+
+<span class="nc" id="L157">		int p = getPreferredFillStyle();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if(p&gt;=box.getItemCount()) p=0;</span>
+<span class="nc" id="L159">		box.setSelectedIndex(p);</span>
+<span class="nc" id="L160">		box.addItemListener((e) -&gt;{</span>
+<span class="nc" id="L161">			setPreferredFillStyle(box.getSelectedIndex());</span>
+<span class="nc" id="L162">			restart();</span>
+<span class="nc" id="L163">		});</span>
+
+<span class="nc" id="L165">		return box;</span>
+	}
+
+	private void onConverterChanged(ItemEvent e) {
+<span class="nc" id="L169">		logger.debug(&quot;changing to {}&quot;, e.getItem());</span>
+
+<span class="nc" id="L171">		showCard((String)e.getItem());</span>
+
+<span class="nc bnc" id="L173" title="All 2 branches missed.">		int first = (styleNames!=null ? styleNames.getSelectedIndex() : 0);</span>
+<span class="nc" id="L174">		setPreferredDrawStyle(first);</span>
+<span class="nc" id="L175">		changeConverter(ImageConverterFactory.getList()[first]);</span>
+<span class="nc" id="L176">	}</span>
+
+	private void showCard(String cardName) {
+<span class="nc" id="L179">		CardLayout cl = (CardLayout)(cards.getLayout());</span>
+<span class="nc" id="L180">		cl.show(cards, cardName);</span>
+<span class="nc" id="L181">	}</span>
+
+	private void scaleImage(int mode) {
+<span class="nc" id="L184">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L185">		double width  = rect.getWidth();</span>
+<span class="nc" id="L186">		double height = rect.getHeight();</span>
+
+		boolean test;
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		if (mode == 0) {</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			test = width &lt; height;  // fit paper</span>
+		} else {
+<span class="nc bnc" id="L192" title="All 2 branches missed.">			test = width &gt; height;  // fill paper</span>
+		}
+
+		float f;
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		if( test ) {</span>
+<span class="nc" id="L197">			f = (float)( width / (double)myImage.getSourceImage().getWidth() );</span>
+		} else {
+<span class="nc" id="L199">			f = (float)( height / (double)myImage.getSourceImage().getHeight() );</span>
+		}
+<span class="nc" id="L201">		myImage.setScale(f,-f);</span>
+<span class="nc" id="L202">	}</span>
+
+	private void setPreferredDrawStyle(int style) {
+<span class="nc" id="L205">		prefs.putInt(&quot;Draw Style&quot;, style);</span>
+<span class="nc" id="L206">	}</span>
+	
+	private void setPreferredFillStyle(int style) {
+<span class="nc" id="L209">		prefs.putInt(&quot;Fill Style&quot;, style);</span>
+<span class="nc" id="L210">	}</span>
+
+	private int getPreferredDrawStyle() {
+<span class="nc" id="L213">		return prefs.getInt(&quot;Draw Style&quot;, 0);</span>
+	}
+
+	private int getPreferredFillStyle() {
+<span class="nc" id="L217">		return prefs.getInt(&quot;Fill Style&quot;, 0);</span>
+	}
+	
+	public static boolean isFilenameForAnImage(String filename) {
+<span class="nc" id="L221">		final String filenameExtension = filename.substring(filename.lastIndexOf('.') + 1);</span>
+<span class="nc" id="L222">		List&lt;String&gt; valid = Arrays.asList(IMAGE_FILE_EXTENSIONS);</span>
+<span class="nc" id="L223">		return valid.contains(filenameExtension.toLowerCase());</span>
+	}
+
+	private void stopConversion() {
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if(myConverter != null) {</span>
+<span class="nc" id="L228">			logger.debug(&quot;Stop conversion&quot;);</span>
+<span class="nc" id="L229">			myConverter.stop();</span>
+		}
+<span class="nc" id="L231">	}</span>
+	
+	private void startConversion() {
+<span class="nc bnc" id="L234" title="All 6 branches missed.">		if(myConverter==null || myImage==null || myPaper==null) return;</span>
+
+<span class="nc" id="L236">		logger.debug(&quot;starting {}&quot;, myConverter.getName());</span>
+
+<span class="nc" id="L238">		scaleImage(fillNames.getSelectedIndex());</span>
+<span class="nc" id="L239">		FilterContrastAdjust filter = new FilterContrastAdjust(myImage,rangeSliderMin, rangeSliderMax);</span>
+<span class="nc" id="L240">		TransformedImage result = filter.filter();</span>
+
+<span class="nc" id="L242">		myConverter.start(myPaper,result);</span>
+<span class="nc" id="L243">	}</span>
+	
+	private void changeConverter(ImageConverter converter) {
+<span class="nc" id="L246">		logger.debug(&quot;changeConverter() {}&quot;, converter.getName());</span>
+
+<span class="nc" id="L248">		stopConversion();</span>
+<span class="nc" id="L249">		eraseOldTurtle();</span>
+
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if(myConverter != null) myConverter.removeImageConverterListener(this);</span>
+<span class="nc" id="L252">		myConverter = converter;</span>
+<span class="nc" id="L253">		myConverter.addImageConverterListener(this);</span>
+
+<span class="nc" id="L255">		startConversion();</span>
+<span class="nc" id="L256">	}</span>
+
+	private void restart() {
+<span class="nc" id="L259">		logger.debug(&quot;restart()&quot;);</span>
+<span class="nc" id="L260">		stopConversion();</span>
+<span class="nc" id="L261">		eraseOldTurtle();</span>
+<span class="nc" id="L262">		startConversion();</span>
+<span class="nc" id="L263">	}</span>
+
+	private void eraseOldTurtle() {
+<span class="nc" id="L266">		onConvertFinished(new Turtle());</span>
+<span class="nc" id="L267">	}</span>
+
+	@Override
+	public void render(GL2 gl2) {
+<span class="nc bnc" id="L271" title="All 4 branches missed.">		if( myConverter != null &amp;&amp; myConverter instanceof PreviewListener ) {</span>
+<span class="nc" id="L272">			((PreviewListener)myConverter).render(gl2);</span>
+		}
+<span class="nc" id="L274">	}</span>
+
+	@Override
+	public void onRestart(ImageConverter converter) {
+<span class="nc" id="L278">		restart();</span>
+<span class="nc" id="L279">	}</span>
+
+	@Override
+	public void onConvertFinished(Turtle turtle) {
+<span class="nc" id="L283">		notifyListeners(new ActionEvent(turtle,0, LoadFilePanel.COMMAND_TURTLE));</span>
+<span class="nc" id="L284">	}</span>
+
+	public void loadingFinished() {
+<span class="nc" id="L287">		logger.debug(&quot;loadingFinished()&quot;);</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		if(myConverter != null) myConverter.stop();</span>
+<span class="nc" id="L289">	}</span>
+
+	// OBSERVER PATTERN
+
+<span class="nc" id="L293">	private final ArrayList&lt;ActionListener&gt; listeners = new ArrayList&lt;&gt;();</span>
+	public void addActionListener(ActionListener a) {
+<span class="nc" id="L295">		listeners.add(a);</span>
+<span class="nc" id="L296">	}</span>
+
+	@SuppressWarnings(&quot;unused&quot;)
+	public void removeActionListener(ActionListener a) {
+<span class="nc" id="L300">		listeners.remove(a);</span>
+<span class="nc" id="L301">	}</span>
+	
+	private void notifyListeners(ActionEvent e) {
+<span class="nc bnc" id="L304" title="All 2 branches missed.">		for( ActionListener a : listeners ) {</span>
+<span class="nc" id="L305">			a.actionPerformed(e);</span>
+<span class="nc" id="L306">		}</span>
+<span class="nc" id="L307">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

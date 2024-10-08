@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_Border.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator</a> &gt; <span class="el_source">Generator_Border.java</span></div><h1>Generator_Border.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.awt.geom.Rectangle2D;
+
+/**
+ * Draws a border around the paper.  Uses current paper myPaper.
+ * @author Dan Royer
+ *
+ */
+<span class="fc" id="L13">public class Generator_Border extends TurtleGenerator {</span>
+	
+	@Override
+	public String getName() {
+<span class="fc" id="L17">		return Translator.get(&quot;BorderName&quot;);</span>
+	}
+
+	@Override
+	public void generate() {
+<span class="nc" id="L22">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L23">		double yMin = rect.getMinY();</span>
+<span class="nc" id="L24">		double yMax = rect.getMaxY();</span>
+<span class="nc" id="L25">		double xMin = rect.getMinX();</span>
+<span class="nc" id="L26">		double xMax = rect.getMaxX();</span>
+<span class="nc" id="L27">		double cx = myPaper.getCenterX();</span>
+<span class="nc" id="L28">		double cy = myPaper.getCenterY();</span>
+
+<span class="nc" id="L30">		Turtle turtle = new Turtle();</span>
+<span class="nc" id="L31">		turtle.penUp();</span>
+<span class="nc" id="L32">		turtle.moveTo(cx+xMin,cy+yMax);</span>
+<span class="nc" id="L33">		turtle.penDown();</span>
+<span class="nc" id="L34">		turtle.moveTo(cx+xMin,cy+yMax);</span>
+<span class="nc" id="L35">		turtle.moveTo(cx+xMax,cy+yMax);</span>
+<span class="nc" id="L36">		turtle.moveTo(cx+xMax,cy+yMin);</span>
+<span class="nc" id="L37">		turtle.moveTo(cx+xMin,cy+yMin);</span>
+<span class="nc" id="L38">		turtle.moveTo(cx+xMin,cy+yMax);</span>
+		
+<span class="nc" id="L40">		notifyListeners(turtle);</span>
+<span class="nc" id="L41">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

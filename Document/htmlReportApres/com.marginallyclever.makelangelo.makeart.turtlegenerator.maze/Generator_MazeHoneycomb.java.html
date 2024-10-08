@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_MazeHoneycomb.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.maze</a> &gt; <span class="el_source">Generator_MazeHoneycomb.java</span></div><h1>Generator_MazeHoneycomb.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.maze;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.tools.ResizeTurtleToPaperAction;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import javax.vecmath.Vector2d;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Makes a &quot;well formed&quot; honeycomb maze.  This maze uses &quot;point top&quot; hexagons where odd-numbered rows are shifted to
+ * the right.  See also
+ * &lt;a href=&quot;https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_backtracker&quot;&gt;wikipedia&lt;/a&gt;,
+ * &lt;a href=&quot;https://www.redblobgames.com/grids/hexagons/&quot;&gt;redblobgames&lt;/a&gt;.
+ * @author Dan Royer
+ * @since 7.43.0
+ */
+public class Generator_MazeHoneycomb extends Generator_Maze {
+<span class="fc" id="L22">	private static int rows = 5, columns = 5;</span>
+
+	public Generator_MazeHoneycomb() {
+<span class="fc" id="L25">		super();</span>
+
+		SelectSlider field_rows;
+		SelectSlider field_columns;
+
+<span class="fc" id="L30">		add(field_rows = new SelectSlider(&quot;rows&quot;,Translator.get(&quot;Generator_MazeRectangle.rows&quot;),100,1,getRows()));</span>
+<span class="fc" id="L31">		field_rows.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L32">			setRows(field_rows.getValue());</span>
+<span class="nc" id="L33">			generate();</span>
+<span class="nc" id="L34">		});</span>
+<span class="fc" id="L35">		add(field_columns = new SelectSlider(&quot;columns&quot;,Translator.get(&quot;Generator_MazeRectangle.columns&quot;),100,1,getCols()));</span>
+<span class="fc" id="L36">		field_columns.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L37">			setCols(field_columns.getValue());</span>
+<span class="nc" id="L38">			generate();</span>
+<span class="nc" id="L39">		});</span>
+<span class="fc" id="L40">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="fc" id="L44">		return Translator.get(&quot;Generator_MazeHoneycomb.name&quot;);</span>
+	}
+
+	public int getRows() {
+<span class="fc" id="L48">		return rows;</span>
+	}
+	public void setRows(int arg0) {
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if(arg0&lt;1) arg0=1;</span>
+<span class="nc" id="L52">		rows=arg0;</span>
+<span class="nc" id="L53">	}</span>
+	public int getCols() {
+<span class="fc" id="L55">		return columns;</span>
+	}
+	public void setCols(int arg0) {
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if(arg0&lt;1) arg0=1;</span>
+<span class="nc" id="L59">		columns=arg0;</span>
+<span class="nc" id="L60">	}</span>
+
+	/**
+	 * build a list of walls in the maze, cells in the maze, and how they connect to each other.
+	 */
+	@Override
+	public void buildCells() {
+<span class="nc" id="L67">		cells.clear();</span>
+
+		int x, y;
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		for (y = 0; y &lt; rows; ++y) {</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			for (x = 0; x &lt; columns; ++x) {</span>
+<span class="nc" id="L72">				cells.add(new MazeCell(x,y));</span>
+			}
+		}
+<span class="nc" id="L75">	}</span>
+
+
+<span class="fc" id="L78">	private final int[] neighbors = new int[6];</span>
+	private int neighborCount;
+
+	@Override
+	public void buildWalls() {
+<span class="nc" id="L83">		walls.clear();</span>
+
+<span class="nc" id="L85">		List&lt;Long&gt; duplicates = new ArrayList&lt;&gt;();</span>
+
+		MazeWall w;
+<span class="nc" id="L88">		int x, y, currentCell=0;</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for (y = 0; y &lt; rows; ++y) {</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			boolean isOddRow = ((y%2)==1);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			for (x = 0; x &lt; columns; ++x) {</span>
+				// get the six possible neighbors of this cell - two above, two below, two to the side
+<span class="nc" id="L93">				neighborCount = 0;</span>
+				// above
+<span class="nc" id="L95">				maybeAdd(y - 1, x + 0);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				maybeAdd(y - 1, x + (isOddRow? 1:-1));</span>
+				// below
+<span class="nc" id="L98">				maybeAdd(y + 1, x + 0);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">				maybeAdd(y + 1, x + (isOddRow? 1:-1));</span>
+				// left and right
+<span class="nc" id="L101">				maybeAdd(y + 0, x - 1);</span>
+<span class="nc" id="L102">				maybeAdd(y + 0, x + 1);</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">				for (int i = 0; i &lt; neighborCount; ++i) {</span>
+					// vertical wall between horizontal cells
+					// do not add duplicates.
+<span class="nc" id="L107">					long a = currentCell;</span>
+<span class="nc" id="L108">					long b = neighbors[i];</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">					if(a&gt;b) {</span>
+<span class="nc" id="L110">						long tmp = a;</span>
+<span class="nc" id="L111">						a = b;</span>
+<span class="nc" id="L112">						b = tmp;</span>
+					}
+<span class="nc" id="L114">					long address = a&lt;&lt;16 | b;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">					if(duplicates.contains(address)) continue;</span>
+<span class="nc" id="L116">					duplicates.add(address);</span>
+
+<span class="nc" id="L118">					w = new MazeWall( currentCell, neighbors[i]);</span>
+<span class="nc" id="L119">					walls.add(w);</span>
+<span class="nc" id="L120">					cells.get(w.cellA).walls.add(w);</span>
+<span class="nc" id="L121">					cells.get(w.cellB).walls.add(w);</span>
+				}
+<span class="nc" id="L123">				currentCell++; // current cell</span>
+			}
+		}
+<span class="nc" id="L126">	}</span>
+
+	private void maybeAdd(int y, int x) {
+<span class="nc bnc" id="L129" title="All 4 branches missed.">		if(y&lt;0 || y&gt;=rows) return;</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">		if(x&lt;0 || x&gt;=columns) return;</span>
+<span class="nc" id="L131">		neighbors[neighborCount] = (y * columns) + x;</span>
+<span class="nc" id="L132">		neighborCount++;</span>
+<span class="nc" id="L133">	}</span>
+
+	@Override
+	public Turtle drawMaze() {
+<span class="nc" id="L137">		Turtle turtle = new Turtle();</span>
+
+<span class="nc" id="L139">		Rectangle2D.Double rect = myPaper.getMarginRectangle();</span>
+<span class="nc" id="L140">		double yMin = rect.getMinY();</span>
+<span class="nc" id="L141">		double yMax = rect.getMaxY();</span>
+<span class="nc" id="L142">		double xMin = rect.getMinX();</span>
+<span class="nc" id="L143">		double xMax = rect.getMaxX();</span>
+
+<span class="nc" id="L145">		double w = (xMax - xMin) / columns;</span>
+<span class="nc" id="L146">		double h = (yMax - yMin) / rows;</span>
+<span class="nc" id="L147">		double len = Math.min(w,h)/2.0;</span>
+		// In the point-top orientation, the horizontal distance between adjacent hexagon centers is
+<span class="nc" id="L149">		double horiz = Math.sqrt(3) * len;</span>
+		// The vertical distance is
+<span class="nc" id="L151">		double vert = 3.0/2.0 * len;</span>
+
+<span class="nc" id="L153">		drawInteriorWalls(turtle,len,horiz,vert);</span>
+<span class="nc" id="L154">		drawOutsideEdge(turtle,len,horiz,vert);</span>
+
+<span class="nc" id="L156">		ResizeTurtleToPaperAction act = new ResizeTurtleToPaperAction(myPaper,false,&quot;&quot;);</span>
+<span class="nc" id="L157">		turtle = act.run(turtle);</span>
+
+<span class="nc" id="L159">		return turtle;</span>
+	}
+
+	private void drawInteriorWalls(Turtle turtle, double len, double horiz, double vert) {
+		int i;
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		for (i = 0; i &lt; walls.size(); ++i) {</span>
+<span class="nc" id="L165">			MazeWall wall = walls.get(i);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (wall.removed) {</span>
+<span class="nc" id="L167">				continue;</span>
+			}
+
+<span class="nc" id="L170">			int a = wall.cellA;</span>
+<span class="nc" id="L171">			int b = wall.cellB;</span>
+
+<span class="nc" id="L173">			Vector2d aPos = getCellCenter(a,horiz,vert);</span>
+<span class="nc" id="L174">			Vector2d bPos = getCellCenter(b,horiz,vert);</span>
+			// get the midpoint
+<span class="nc" id="L176">			Vector2d mid = new Vector2d();</span>
+<span class="nc" id="L177">			mid.add(aPos,bPos);</span>
+<span class="nc" id="L178">			mid.scale(0.5);</span>
+			// get a vector a to b, then rotate it 90 degrees and make it sin(PI/12) long.
+<span class="nc" id="L180">			Vector2d n = new Vector2d();</span>
+<span class="nc" id="L181">			n.sub(aPos,bPos);</span>
+<span class="nc" id="L182">			double tmp = n.x;</span>
+<span class="nc" id="L183">			n.x = n.y;</span>
+<span class="nc" id="L184">			n.y = -tmp;</span>
+<span class="nc" id="L185">			n.normalize();</span>
+<span class="nc" id="L186">			n.scale(len/2.0);</span>
+
+<span class="nc" id="L188">			Vector2d start = new Vector2d(mid);</span>
+<span class="nc" id="L189">			start.sub(n);</span>
+
+<span class="nc" id="L191">			Vector2d end = new Vector2d(mid);</span>
+<span class="nc" id="L192">			end.add(n);</span>
+
+<span class="nc" id="L194">			turtle.jumpTo(start.x, start.y);</span>
+<span class="nc" id="L195">			turtle.moveTo(end.x, end.y);</span>
+		}
+<span class="nc" id="L197">	}</span>
+
+	private void drawOutsideEdge(Turtle turtle,double len, double horiz, double vert) {
+		// top edge
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		for(int x=0;x&lt;columns;++x) {</span>
+<span class="nc" id="L202">			Vector2d center = getCellCenter(cells.size()-1-x,horiz,vert);</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">			if(x&gt;0) drawEdge(turtle, center, len, 1);</span>
+<span class="nc" id="L204">			drawEdge(turtle,center,len,2);</span>
+		}
+
+		// bottom edge
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		for(int x=0;x&lt;columns;++x) {</span>
+<span class="nc" id="L209">			Vector2d center = getCellCenter(x,horiz,vert);</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			if(x&gt;0) drawEdge(turtle,center,len,4);</span>
+<span class="nc" id="L211">			drawEdge(turtle,center,len,5);</span>
+		}
+
+		// left edge
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		for(int y=0;y&lt;rows;++y) {</span>
+<span class="nc" id="L216">			Vector2d center = getCellCenter(y*columns,horiz,vert);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if((y%2)==0) {  // even row</span>
+<span class="nc" id="L218">				drawEdge(turtle,center,len,2);</span>
+<span class="nc" id="L219">				drawEdge(turtle,center,len,3);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">				if(y!=0) drawEdge(turtle,center,len,4);</span>
+			} else {
+<span class="nc" id="L222">				drawEdge(turtle,center,len,3);</span>
+			}
+		}
+
+		// right edge
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		for(int y=0;y&lt;rows;++y) {</span>
+<span class="nc" id="L228">			Vector2d center = getCellCenter((y+1)*columns-1,horiz,vert);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			if((y%2)==0) {  // even row</span>
+<span class="nc" id="L230">				drawEdge(turtle,center,len,0);</span>
+			} else {
+<span class="nc" id="L232">				drawEdge(turtle,center,len,0);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">				if(y!=rows-1) drawEdge(turtle,center,len,1);</span>
+<span class="nc" id="L234">				drawEdge(turtle,center,len,5);</span>
+			}
+		}
+<span class="nc" id="L237">	}</span>
+
+	/**
+	 * draw edges of a hexagon
+	 * @param turtle the drawing tool
+	 * @param center position of the center of the hexagon
+	 * @param len distance between center and corner
+	 * @param index counter-clockwise order, starting with vertical side on the right.
+	 */
+	private void drawEdge(Turtle turtle, Vector2d center, double len, int index) {
+<span class="nc" id="L247">		Vector2d c0 = getCorner(center,len,index);</span>
+<span class="nc" id="L248">		Vector2d c1 = getCorner(center,len,index+1);</span>
+<span class="nc" id="L249">		turtle.jumpTo(c0.x,c0.y);</span>
+<span class="nc" id="L250">		turtle.moveTo(c1.x,c1.y);</span>
+<span class="nc" id="L251">	}</span>
+
+	/**
+	 * get the position of a corner of a hexagon
+	 * @param center position of the center of the hexagon
+	 * @param len distance between center and corner
+	 * @param index counter-clockwise order, starting with the south-east corner.
+	 * @return position of the corner
+	 */
+	private Vector2d getCorner(Vector2d center,double len,int index) {
+<span class="nc" id="L261">		double angleRad = Math.toRadians(60.0*index-30.0);</span>
+<span class="nc" id="L262">		return new Vector2d(</span>
+<span class="nc" id="L263">				center.x + len * Math.cos(angleRad),</span>
+<span class="nc" id="L264">				center.y + len * Math.sin(angleRad));</span>
+	}
+
+
+	private Vector2d getCellCenter(int index,double horiz,double vert) {
+<span class="nc" id="L269">		MazeCell c = cells.get(index);</span>
+<span class="nc" id="L270">		Vector2d pos = new Vector2d(c.x*horiz, c.y*vert);</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		if((c.y%2)==1) {</span>
+			// shift this row over by half a cell
+<span class="nc" id="L273">			pos.x+=horiz/2;</span>
+		}
+<span class="nc" id="L275">		return pos;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

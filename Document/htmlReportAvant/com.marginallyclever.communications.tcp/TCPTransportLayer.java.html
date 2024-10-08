@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TCPTransportLayer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.communications.tcp</a> &gt; <span class="el_source">TCPTransportLayer.java</span></div><h1>TCPTransportLayer.java</h1><pre class="source lang-java linenums">package com.marginallyclever.communications.tcp;
+
+import com.marginallyclever.communications.Configuration;
+import com.marginallyclever.communications.NetworkSession;
+import com.marginallyclever.communications.TransportLayer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
+/**
+ * Lists available TCP connections and opens a connection of that type to a robot
+ *
+ * @author Dan
+ * @since v7.1.0.0
+ */
+public class TCPTransportLayer implements TransportLayer {
+<span class="nc" id="L18">	private static final Logger logger = LoggerFactory.getLogger(TCPTransportLayer.class);</span>
+
+<span class="nc" id="L20">	public TCPTransportLayer() {}</span>
+
+	/**
+	 * @return &lt;code&gt;serialConnection&lt;/code&gt; if connection successful.  &lt;code&gt;null&lt;/code&gt; on failure.
+	 */
+	public NetworkSession openConnection(Configuration configuration) {
+		/*
+		// check it
+		Log.message(&quot;Validating &quot;+connectionName);
+		InetAddressValidator validator = new InetAddressValidator();
+		if(!validator.isValid(connectionName)) {
+			Log.error(&quot;Not a valid IP Address.&quot;);
+			return null;
+		}
+		*/
+<span class="nc" id="L35">		logger.info(&quot;Connecting to {}&quot;, configuration.getConnectionName());</span>
+<span class="nc" id="L36">		TCPConnection connection = new TCPConnection();</span>
+
+		try {
+<span class="nc" id="L39">			connection.openConnection(configuration.getConnectionName());</span>
+<span class="nc" id="L40">			logger.info(&quot;Connect OK&quot;);</span>
+<span class="nc" id="L41">		} catch (Exception e) {</span>
+<span class="nc" id="L42">			logger.error(&quot;Connection FAILED to {}&quot;, connection, e);</span>
+<span class="nc" id="L43">			return null;</span>
+<span class="nc" id="L44">		}</span>
+
+<span class="nc" id="L46">		return connection;</span>
+	}
+
+	@Override
+	public List&lt;String&gt; listConnections() {
+<span class="nc" id="L51">		logger.debug(&quot;Listing available tcp connection&quot;);</span>
+<span class="nc" id="L52">		return List.of(&quot;192.168.1.183:9999&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

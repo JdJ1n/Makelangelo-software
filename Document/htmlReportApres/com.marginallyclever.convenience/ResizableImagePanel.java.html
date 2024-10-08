@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResizableImagePanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience</a> &gt; <span class="el_source">ResizableImagePanel.java</span></div><h1>ResizableImagePanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.security.InvalidParameterException;
+
+/**
+ * Displays an {@link BufferedImage} in a {@link JPanel} and allows the user to zoom and pan.
+ * @author Dan Royer
+ * @since 7.39.9
+ */
+public class ResizableImagePanel extends JPanel {
+    private final BufferedImage image;
+<span class="nc" id="L20">    private final Point imagePosition = new Point(0, 0);</span>
+<span class="nc" id="L21">    private double zoomFactor = 1.0;</span>
+    private Point lastDragPoint;
+
+<span class="nc" id="L24">    public ResizableImagePanel(BufferedImage image) {</span>
+<span class="nc" id="L25">        this.image = image;</span>
+
+        // Enable mouse wheel events for zooming
+<span class="nc" id="L28">        addMouseWheelListener(e -&gt; {</span>
+<span class="nc" id="L29">            int rotation = e.getWheelRotation();</span>
+<span class="nc" id="L30">            zoomFactor += rotation * 0.1; // Adjust the zoom speed here if needed</span>
+<span class="nc" id="L31">            zoomFactor = Math.max(0.1, zoomFactor); // Ensure zoomFactor doesn't go below 0.1</span>
+<span class="nc" id="L32">            repaint();</span>
+<span class="nc" id="L33">        });</span>
+
+        // Enable mouse events for dragging the image
+<span class="nc" id="L36">        addMouseListener(new MouseAdapter() {</span>
+            @Override
+            public void mousePressed(MouseEvent e) {
+<span class="nc" id="L39">                lastDragPoint = e.getPoint();</span>
+<span class="nc" id="L40">            }</span>
+        });
+
+<span class="nc" id="L43">        addMouseMotionListener(new MouseAdapter() {</span>
+            @Override
+            public void mouseDragged(MouseEvent e) {
+<span class="nc" id="L46">                int dx = e.getX() - lastDragPoint.x;</span>
+<span class="nc" id="L47">                int dy = e.getY() - lastDragPoint.y;</span>
+
+                // Adjust the translation based on the zoom factor
+<span class="nc" id="L50">                dx /= zoomFactor;</span>
+<span class="nc" id="L51">                dy /= zoomFactor;</span>
+
+                // Update the last drag point
+<span class="nc" id="L54">                lastDragPoint = e.getPoint();</span>
+
+                // Update the image position
+<span class="nc" id="L57">                imagePosition.translate(dx, dy);</span>
+
+<span class="nc" id="L59">                repaint();</span>
+<span class="nc" id="L60">            }</span>
+        });
+<span class="nc" id="L62">    }</span>
+
+    @Override
+    protected void paintComponent(Graphics g) {
+<span class="nc" id="L66">        super.paintComponent(g);</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (image != null) {</span>
+            // Calculate the aspect ratio of the image
+<span class="nc" id="L70">            double imageAspect = (double) image.getWidth() / image.getHeight();</span>
+
+            // Get the size of the panel
+<span class="nc" id="L73">            int panelWidth = getWidth();</span>
+<span class="nc" id="L74">            int panelHeight = getHeight();</span>
+
+            // Calculate the scaled dimensions based on the zoom factor
+<span class="nc" id="L77">            int drawWidth = (int) (panelWidth * zoomFactor);</span>
+<span class="nc" id="L78">            int drawHeight = (int) (panelHeight * zoomFactor);</span>
+
+            // Adjust the drawing size to maintain the aspect ratio
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (panelWidth &gt; panelHeight) {</span>
+<span class="nc" id="L82">                drawHeight = (int) (drawWidth / imageAspect);</span>
+            } else {
+<span class="nc" id="L84">                drawWidth = (int) (drawHeight * imageAspect);</span>
+            }
+
+            // Calculate the position to center the image
+<span class="nc" id="L88">            int x = (panelWidth - drawWidth) / 2;</span>
+<span class="nc" id="L89">            int y = (panelHeight - drawHeight) / 2;</span>
+
+            // Draw the scaled image on the panel
+<span class="nc" id="L92">            g.drawImage(image, x + imagePosition.x, y + imagePosition.y, drawWidth, drawHeight, this);</span>
+        }
+<span class="nc" id="L94">    }</span>
+
+    /**
+     * Displays an image in a resizable window.
+     *
+     * @param image The image to display.
+     * @param title The title of the window.
+     */
+    public static void showImage(BufferedImage image,String title) throws InvalidParameterException {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (image == null) throw new InvalidParameterException(&quot;image cannot be null.&quot;);</span>
+
+<span class="nc" id="L105">        JFrame frame = new JFrame(title);</span>
+<span class="nc" id="L106">        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L107">        frame.setSize(400, 500);</span>
+
+<span class="nc" id="L109">        ResizableImagePanel imagePanel = new ResizableImagePanel(image);</span>
+<span class="nc" id="L110">        frame.add(imagePanel);</span>
+
+<span class="nc" id="L112">        frame.setVisible(true);</span>
+<span class="nc" id="L113">        imagePanel.revalidate();</span>
+<span class="nc" id="L114">        imagePanel.repaint();</span>
+<span class="nc" id="L115">    }</span>
+
+    public static void main(String[] args) throws IOException {
+        // Replace &quot;path_to_your_image.png&quot; with the actual path to your image file
+<span class="nc" id="L119">        BufferedImage image = ImageIO.read(new File(&quot;src/test/resources/test.png&quot;));</span>
+<span class="nc" id="L120">        showImage(image,&quot;Resizable Image Panel&quot;);</span>
+<span class="nc" id="L121">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

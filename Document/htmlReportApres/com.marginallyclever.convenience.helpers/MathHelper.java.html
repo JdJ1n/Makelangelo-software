@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MathHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.convenience.helpers</a> &gt; <span class="el_source">MathHelper.java</span></div><h1>MathHelper.java</h1><pre class="source lang-java linenums">package com.marginallyclever.convenience.helpers;
+
+import javax.vecmath.Point2d;
+import javax.vecmath.Tuple2d;
+import javax.vecmath.Vector2d;
+import java.security.InvalidParameterException;
+
+<span class="nc" id="L8">public class MathHelper {</span>
+
+	/**
+	 * Round a float off to 3 decimal places.
+	 * @param v a value
+	 * @return Value rounded off to 3 decimal places
+	 */
+	public static double roundOff3(double v) {
+<span class="fc" id="L16">		double SCALE = 1000.0f;</span>
+		
+<span class="fc" id="L18">		return Math.round(v*SCALE)/SCALE;</span>
+	}
+
+	/**
+	 * @param dx x component
+	 * @param dy y component
+	 * @return Square of length of vector (dx,dy) 
+	 */
+	public static double lengthSquared(double dx,double dy) {
+<span class="fc" id="L27">		return dx*dx+dy*dy;</span>
+	}
+
+	/**
+	 * Returns true if c is on the line between a and b
+	 * @param a point
+	 * @param b	point
+	 * @param c	point	
+	 * @param epsilon acceptable error
+	 * @return true if c is on the line between a and b
+	 */
+	public static boolean between(Tuple2d a, Tuple2d b, Tuple2d c, double epsilon) {
+<span class="fc" id="L39">		Vector2d ba = new Vector2d(b.x - a.x, b.y - a.y);</span>
+<span class="fc" id="L40">		Vector2d ca = new Vector2d(c.x - a.x, c.y - a.y);</span>
+
+		// the cross product will tell us if C is on the infinite line A-B.
+<span class="fc" id="L43">		double crossproduct = ca.y * ba.x - ca.x * ba.y;</span>
+		// Check if cross product is outside acceptable range
+<span class="fc bfc" id="L45" title="All 2 branches covered.">		if (Math.abs(crossproduct) &gt; epsilon) {</span>
+<span class="fc" id="L46">			return false;</span>
+		}
+
+		// the dot product will tell us if C is between A and B.
+<span class="fc" id="L50">		double dotproduct = ca.x * ba.x + ca.y * ba.y;</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">		if (dotproduct &lt; 0) {</span>
+<span class="fc" id="L52">			return false;</span>
+		}
+		// Check squared length
+<span class="fc" id="L55">		double squaredlengthba = ba.x*ba.x + ba.y*ba.y;</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">		if (dotproduct &gt; squaredlengthba) {</span>
+<span class="fc" id="L57">			return false;</span>
+		}
+
+<span class="fc" id="L60">		return true;</span>
+	}
+
+	/**
+	 * Returns true if the two line segments match.
+	 * @param a0 point on segment a
+	 * @param a1 point on segment a
+	 * @param b0 point on segment b
+	 * @param b1 point on segment b
+	 * @param epsilon margin of error
+	 * @return true if (a0=b0 and a1=b1) or (a0=b1 and a1=b0).
+	 */
+	public static boolean equals(Tuple2d a0, Tuple2d a1, Tuple2d b0, Tuple2d b1, double epsilon) {
+<span class="fc" id="L73">		Vector2d c = new Vector2d(a0.x - b0.x, a0.y - b0.y);</span>
+<span class="fc" id="L74">		Vector2d d = new Vector2d(a1.x - b1.x, a1.y - b1.y);</span>
+<span class="pc bpc" id="L75" title="1 of 4 branches missed.">		if(Math.abs(c.x)&lt;epsilon &amp;&amp; Math.abs(d.y)&lt;epsilon) return true;</span>
+<span class="fc" id="L76">		c.set(a0.x - b1.x, a0.y - b1.y);</span>
+<span class="fc" id="L77">		d.set(a1.x - b0.x, a1.y - b0.y);</span>
+<span class="pc bpc" id="L78" title="2 of 4 branches missed.">		return (Math.abs(c.x)&lt;epsilon &amp;&amp; Math.abs(d.y)&lt;epsilon);</span>
+	}
+
+	/**
+	 * Linear interpolation between a and b.
+	 * @param t 0...1
+	 * @param a
+	 * @param b
+	 * @return a + t * (b - a)
+	 */
+	public static double lerp(double t, double a, double b) {
+<span class="fc" id="L89">		return a + t * (b - a);</span>
+	}
+
+	/**
+	 * Returns the point on the line segment between a and b at t.
+	 * @param a point
+	 * @param b point
+	 * @param t 0...1
+	 * @return a + t * (b - a)
+	 */
+	public static Point2d lerp(Tuple2d a, Tuple2d b,double t) {
+<span class="fc" id="L100">		Point2d ba = new Point2d(b.x - a.x, b.y - a.y);</span>
+<span class="fc" id="L101">		ba.scale(t);</span>
+<span class="fc" id="L102">		ba.add(a);</span>
+<span class="fc" id="L103">		return ba;</span>
+	}
+
+	/**
+	 * Calculates an intersection of two circles.  Assume the first circle is at the origin and the second is
+	 * moved along the positive x axis.
+	 * @param r1 radius of circle 0
+	 * @param r2 radius of circle 1
+	 * @param d distance between the two circles
+	 * @return one of the two points where the circles intersect.
+	 * @throws InvalidParameterException if r0, r1, or d are negative.
+	 * @throws IllegalArgumentException if the circles do not intersect.
+	 */
+	public static Vector2d intersectionOfCircles(double r1,double r2,double d) {
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">		if(r1&lt;0) throw new InvalidParameterException(&quot;r1 must be &gt;= 0&quot;);</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">		if(r2&lt;0) throw new InvalidParameterException(&quot;r2 must be &gt;= 0&quot;);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">		if(d&lt;0) throw new InvalidParameterException(&quot;d must be &gt;= 0&quot;);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">		if(r1+r2&lt;d) throw new IllegalArgumentException(&quot;circles do not intersect&quot;);</span>
+
+<span class="fc" id="L122">		double x = (r1*r1 - r2*r2 + d*d) / (2.0*d);</span>
+<span class="fc" id="L123">		double y = Math.sqrt(r1*r1 - x*x);</span>
+<span class="fc" id="L124">		return new Vector2d(x,y);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

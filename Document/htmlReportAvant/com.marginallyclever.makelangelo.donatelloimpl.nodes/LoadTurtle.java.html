@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoadTurtle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.donatelloimpl.nodes</a> &gt; <span class="el_source">LoadTurtle.java</span></div><h1>LoadTurtle.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.donatelloimpl.nodes;
+
+import com.marginallyclever.makelangelo.makeart.io.TurtleFactory;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.nodegraphcore.DockReceiving;
+import com.marginallyclever.nodegraphcore.DockShipping;
+import com.marginallyclever.nodegraphcore.Node;
+import com.marginallyclever.nodegraphcore.Packet;
+
+import java.awt.geom.Rectangle2D;
+
+public class LoadTurtle extends Node {
+<span class="fc" id="L13">    private final DockReceiving&lt;String&gt; filename = new DockReceiving&lt;&gt;(&quot;filename&quot;,String.class,null);</span>
+<span class="fc" id="L14">    private final DockShipping&lt;Turtle&gt; contents = new DockShipping&lt;&gt;(&quot;contents&quot;, Turtle.class, new Turtle());</span>
+<span class="fc" id="L15">    private final DockShipping&lt;Number&gt; w = new DockShipping&lt;&gt;(&quot;width&quot;, Number.class, 0);</span>
+<span class="fc" id="L16">    private final DockShipping&lt;Number&gt; h = new DockShipping&lt;&gt;(&quot;height&quot;, Number.class, 0);</span>
+<span class="fc" id="L17">    private final DockShipping&lt;Number&gt; length = new DockShipping&lt;&gt;(&quot;length&quot;, Number.class, 0);</span>
+
+
+    public LoadTurtle() {
+<span class="fc" id="L21">        super(&quot;LoadTurtle&quot;);</span>
+<span class="fc" id="L22">        addVariable(filename);</span>
+<span class="fc" id="L23">        addVariable(contents);</span>
+<span class="fc" id="L24">        addVariable(w);</span>
+<span class="fc" id="L25">        addVariable(h);</span>
+<span class="fc" id="L26">    }</span>
+
+    @Override
+    public void update() {
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if(filename.hasPacketWaiting()) filename.receive();</span>
+
+        try {
+<span class="nc" id="L33">            Turtle t = TurtleFactory.load(filename.getValue());</span>
+<span class="nc" id="L34">            contents.send(new Packet&lt;&gt;(t));</span>
+<span class="nc" id="L35">            Rectangle2D r = t.getBounds();</span>
+<span class="nc" id="L36">            w.send(new Packet&lt;&gt;(r.getWidth()));</span>
+<span class="nc" id="L37">            h.send(new Packet&lt;&gt;(r.getHeight()));</span>
+<span class="nc" id="L38">            length.send(new Packet&lt;&gt;(t.getDrawDistance()));</span>
+<span class="nc" id="L39">        } catch (Exception e) {</span>
+<span class="nc" id="L40">            e.printStackTrace();</span>
+<span class="nc" id="L41">        }</span>
+<span class="nc" id="L42">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

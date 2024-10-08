@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScaleTurtlePanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.tools</a> &gt; <span class="el_source">ScaleTurtlePanel.java</span></div><h1>ScaleTurtlePanel.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.tools;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+import com.marginallyclever.util.PreferencesHelper;
+import org.apache.batik.ext.swing.GridBagConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.geom.Rectangle2D;
+
+public class ScaleTurtlePanel extends JPanel {
+<span class="nc" id="L18">	private static final Logger logger = LoggerFactory.getLogger(ScaleTurtlePanel.class);</span>
+	
+<span class="nc" id="L20">	private final String [] unitTypes = new String[]{&quot;mm&quot;,&quot;%&quot;};</span>
+	private final Turtle turtleToChange;
+	private final Turtle turtleOriginal;
+	private final JSpinner width;
+	private final JSpinner height;
+<span class="nc" id="L25">	private final JComboBox&lt;String&gt; units = new JComboBox&lt;String&gt;(unitTypes); </span>
+<span class="nc" id="L26">	private final JCheckBox lockRatio = new JCheckBox(&quot;🔒&quot;);</span>
+	private final Rectangle2D.Double myOriginalBounds;
+
+<span class="nc" id="L29">	private double ratioAtTimeOfLock=1;</span>
+<span class="nc" id="L30">	private boolean ignoreChange=false;</span>
+	
+	public ScaleTurtlePanel(Turtle t) {
+<span class="nc" id="L33">		super();</span>
+<span class="nc" id="L34">		turtleToChange = t;</span>
+<span class="nc" id="L35">		turtleOriginal = new Turtle(t);  // make a deep copy of the original.  Doubles memory usage!</span>
+
+<span class="nc" id="L37">		myOriginalBounds = turtleToChange.getBounds();</span>
+<span class="nc" id="L38">		width = new JSpinner(new SpinnerNumberModel(myOriginalBounds.width,null,null,1));</span>
+<span class="nc" id="L39">		height = new JSpinner(new SpinnerNumberModel(myOriginalBounds.height,null,null,1));</span>
+		
+<span class="nc" id="L41">		setLayout(new GridBagLayout());</span>
+<span class="nc" id="L42">		GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L43">		c.insets=new Insets(10,10,3,10);</span>
+
+<span class="nc" id="L45">		c.gridx=0;</span>
+<span class="nc" id="L46">		c.gridy=0;</span>
+<span class="nc" id="L47">		c.weightx=1;</span>
+<span class="nc" id="L48">		c.anchor=GridBagConstants.NORTHWEST;</span>
+<span class="nc" id="L49">		add(new JLabel(Translator.get(&quot;Width&quot;)),c);</span>
+		
+<span class="nc" id="L51">		c.gridx=0;</span>
+<span class="nc" id="L52">		c.gridy=1;</span>
+<span class="nc" id="L53">		c.anchor=GridBagConstants.NORTHWEST;</span>
+<span class="nc" id="L54">		add(new JLabel(Translator.get(&quot;Height&quot;)),c);</span>
+		
+<span class="nc" id="L56">		c.gridx=1;</span>
+<span class="nc" id="L57">		c.gridy=0;</span>
+<span class="nc" id="L58">		c.anchor=GridBagConstants.NORTHWEST;</span>
+<span class="nc" id="L59">		c.fill=GridBagConstants.HORIZONTAL;</span>
+<span class="nc" id="L60">		add(width,c);</span>
+
+<span class="nc" id="L62">		c.gridx=1;</span>
+<span class="nc" id="L63">		c.gridy=1;</span>
+<span class="nc" id="L64">		c.anchor=GridBagConstants.NORTHWEST;</span>
+<span class="nc" id="L65">		c.fill=GridBagConstants.HORIZONTAL;</span>
+<span class="nc" id="L66">		add(height,c);</span>
+		
+<span class="nc" id="L68">		c.gridx=2;</span>
+<span class="nc" id="L69">		c.gridy=0;</span>
+<span class="nc" id="L70">		c.gridheight=2;</span>
+<span class="nc" id="L71">		c.anchor=GridBagConstants.CENTER;</span>
+<span class="nc" id="L72">		add(lockRatio,c);</span>
+		
+<span class="nc" id="L74">		c.gridx=3;</span>
+<span class="nc" id="L75">		c.gridy=0;</span>
+<span class="nc" id="L76">		c.gridheight=2;</span>
+<span class="nc" id="L77">		c.anchor=GridBagConstants.CENTER;</span>
+<span class="nc" id="L78">		add(units,c);</span>
+		
+<span class="nc" id="L80">		width.addChangeListener(this::onWidthChange);</span>
+<span class="nc" id="L81">		height.addChangeListener(this::onHeightChange);</span>
+<span class="nc" id="L82">		units.addActionListener(this::onUnitChange);</span>
+<span class="nc" id="L83">		lockRatio.addActionListener(e -&gt; onLockChange());</span>
+<span class="nc" id="L84">		lockRatio.setSelected(true);</span>
+<span class="nc" id="L85">		onLockChange();</span>
+
+<span class="nc" id="L87">		updateMinimumWidth(width);</span>
+<span class="nc" id="L88">		updateMinimumWidth(height);</span>
+<span class="nc" id="L89">	}</span>
+	
+	private void updateMinimumWidth(JSpinner spinner) {
+<span class="nc" id="L92">		JComponent field = spinner.getEditor();</span>
+<span class="nc" id="L93">	    Dimension prefSize = field.getPreferredSize();</span>
+<span class="nc" id="L94">	    prefSize = new Dimension(80, prefSize.height);</span>
+<span class="nc" id="L95">	    field.setPreferredSize(prefSize);</span>
+<span class="nc" id="L96">	}</span>
+
+	private void onWidthChange(ChangeEvent e) {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if(lockRatio.isSelected()) {</span>
+<span class="nc" id="L100">			double w1 = (Double)width.getValue();</span>
+<span class="nc" id="L101">			height.setValue(w1 / ratioAtTimeOfLock);</span>
+		}
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if(!ignoreChange) scaleNow();</span>
+<span class="nc" id="L104">	}</span>
+
+	private void onHeightChange(ChangeEvent e) {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if(lockRatio.isSelected()) {</span>
+<span class="nc" id="L108">			double h1 = (Double)height.getValue();</span>
+<span class="nc" id="L109">			width.setValue(h1 * ratioAtTimeOfLock);</span>
+		}
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if(!ignoreChange) scaleNow();</span>
+<span class="nc" id="L112">	}</span>
+	
+	private void scaleNow() {
+<span class="nc" id="L115">		double ow = myOriginalBounds.getWidth();</span>
+<span class="nc" id="L116">		double oh = myOriginalBounds.getHeight();</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		ow = (ow == 0) ? 1 : ow;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		oh = (oh == 0) ? 1 : oh;</span>
+		
+<span class="nc" id="L120">		double w1 = (Double)width.getValue();</span>
+<span class="nc" id="L121">		double h1 = (Double)height.getValue();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if(units.getSelectedIndex()==0) {</span>
+			// mm
+<span class="nc" id="L124">			w1 /= ow;</span>
+<span class="nc" id="L125">			h1 /= oh;			</span>
+		} else {
+			// %
+<span class="nc" id="L128">			w1*=0.01;</span>
+<span class="nc" id="L129">			h1*=0.01;</span>
+		}
+
+<span class="nc" id="L132">		logger.debug(&quot;scale {}x{} -&gt; {}x{} units={}&quot;, ow, oh, w1, h1, units.getSelectedIndex());</span>
+<span class="nc" id="L133">		revertOriginalTurtle();</span>
+<span class="nc" id="L134">		turtleToChange.scale(w1, h1);</span>
+<span class="nc" id="L135">	}</span>
+
+	private void revertOriginalTurtle() {
+		// reset original turtle to original scale.
+<span class="nc" id="L139">		turtleToChange.history.clear();</span>
+		// deep copy
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		for(TurtleMove m : turtleOriginal.history) {</span>
+<span class="nc" id="L142">			turtleToChange.history.add(new TurtleMove(m));</span>
+<span class="nc" id="L143">		}</span>
+<span class="nc" id="L144">	}</span>
+	
+	private void onUnitChange(ActionEvent e) {
+<span class="nc" id="L147">		double ow = myOriginalBounds.getWidth();</span>
+<span class="nc" id="L148">		double oh = myOriginalBounds.getHeight();</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		ow = (ow == 0) ? 1 : ow;</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		oh = (oh == 0) ? 1 : oh;</span>
+
+<span class="nc" id="L152">		double w1 = (Double)width.getValue();</span>
+<span class="nc" id="L153">		double h1 = (Double)height.getValue();</span>
+
+<span class="nc" id="L155">		ignoreChange=true;</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if(units.getSelectedIndex()==0) {</span>
+			// switching to mm
+<span class="nc" id="L158">			width.setValue(w1*0.01 * ow);</span>
+<span class="nc" id="L159">			height.setValue(h1*0.01 * oh);</span>
+		} else {
+			// switching to %
+<span class="nc" id="L162">			width.setValue(100.0*w1 / ow);</span>
+<span class="nc" id="L163">			height.setValue(100.0*h1 / oh);</span>
+		}
+<span class="nc" id="L165">		ignoreChange=false;</span>
+<span class="nc" id="L166">	}</span>
+
+	private void onLockChange() {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if(lockRatio.isSelected()) {</span>
+<span class="nc" id="L170">			ratioAtTimeOfLock = (Double)width.getValue() / (Double)height.getValue();</span>
+		}
+<span class="nc" id="L172">	}</span>
+
+	public static void runAsDialog(Window parent,Turtle t) {
+<span class="nc" id="L175">		ScaleTurtlePanel panel = new ScaleTurtlePanel(t);</span>
+
+<span class="nc" id="L177">		JDialog dialog = new JDialog(parent,Translator.get(&quot;Scale&quot;));</span>
+
+<span class="nc" id="L179">		JButton okButton = new JButton(Translator.get(&quot;OK&quot;));</span>
+<span class="nc" id="L180">		JButton cancelButton = new JButton(Translator.get(&quot;Cancel&quot;));</span>
+
+<span class="nc" id="L182">		JPanel outerPanel = new JPanel(new GridBagLayout());</span>
+<span class="nc" id="L183">		GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L184">		c.gridx=0;</span>
+<span class="nc" id="L185">		c.gridy=0;</span>
+<span class="nc" id="L186">		c.gridwidth=3;</span>
+<span class="nc" id="L187">		c.anchor=GridBagConstraints.NORTHWEST;</span>
+<span class="nc" id="L188">		c.fill=GridBagConstraints.BOTH;</span>
+<span class="nc" id="L189">		outerPanel.add(panel,c);</span>
+
+<span class="nc" id="L191">		c.gridx=1;</span>
+<span class="nc" id="L192">		c.gridy=1;</span>
+<span class="nc" id="L193">		c.gridwidth=1;</span>
+<span class="nc" id="L194">		c.weightx=1;</span>
+<span class="nc" id="L195">		outerPanel.add(okButton,c);</span>
+<span class="nc" id="L196">		c.gridx=2;</span>
+<span class="nc" id="L197">		c.gridwidth=1;</span>
+<span class="nc" id="L198">		c.weightx=1;</span>
+<span class="nc" id="L199">		outerPanel.add(cancelButton,c);</span>
+		
+<span class="nc" id="L201">		okButton.addActionListener((e)-&gt; dialog.dispose());</span>
+<span class="nc" id="L202">		cancelButton.addActionListener((e)-&gt; {</span>
+<span class="nc" id="L203">			panel.revertOriginalTurtle();</span>
+<span class="nc" id="L204">			dialog.dispose();</span>
+<span class="nc" id="L205">		});</span>
+		
+<span class="nc" id="L207">		dialog.add(outerPanel);</span>
+<span class="nc" id="L208">		dialog.pack();</span>
+<span class="nc" id="L209">		dialog.setLocationRelativeTo(parent);</span>
+<span class="nc" id="L210">		dialog.setVisible(true);</span>
+<span class="nc" id="L211">	}</span>
+	
+	// TEST
+	
+	public static void main(String[] args) {
+<span class="nc" id="L216">		PreferencesHelper.start();</span>
+<span class="nc" id="L217">		Translator.start();</span>
+
+<span class="nc" id="L219">		JFrame frame = new JFrame(ScaleTurtlePanel.class.getSimpleName());</span>
+<span class="nc" id="L220">		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L221">		frame.pack();</span>
+<span class="nc" id="L222">		frame.setLocationRelativeTo(null);</span>
+<span class="nc" id="L223">		runAsDialog(frame,new Turtle());</span>
+<span class="nc" id="L224">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

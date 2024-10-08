@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoadDXF.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.io</a> &gt; <span class="el_source">LoadDXF.java</span></div><h1>LoadDXF.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.io;
+
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.kabeja.dxf.*;
+import org.kabeja.dxf.helpers.DXFSplineConverter;
+import org.kabeja.dxf.helpers.Point;
+import org.kabeja.parser.DXFParser;
+import org.kabeja.parser.Parser;
+import org.kabeja.parser.ParserBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * @author Dan Royer
+ *
+ */
+<span class="fc" id="L23">public class LoadDXF implements TurtleLoader {</span>
+<span class="fc" id="L24">	private static final Logger logger = LoggerFactory.getLogger(LoadDXF.class);</span>
+	public static final double EPSILON = 0.01;
+<span class="fc" id="L26">	private static final FileNameExtensionFilter filter = new FileNameExtensionFilter(&quot;DXF R12&quot;, &quot;dxf&quot;);</span>
+<span class="fc" id="L27">	private final Parser parser = ParserBuilder.createDefaultParser();</span>
+	private double previousX,previousY;
+	private Turtle myTurtle;
+	
+	
+	@Override
+	public FileNameExtensionFilter getFileNameFilter() {
+<span class="nc" id="L34">		return filter;</span>
+	}
+
+	@Override
+	public boolean canLoad(String filename) {
+<span class="fc" id="L39">		String ext = filename.substring(filename.lastIndexOf('.'));</span>
+<span class="fc" id="L40">		return (ext.equalsIgnoreCase(&quot;.dxf&quot;));</span>
+	}
+
+	@Override
+	public Turtle load(InputStream in) throws Exception {
+<span class="fc bfc" id="L45" title="All 2 branches covered.">		if (in == null) {</span>
+<span class="fc" id="L46">			throw new NullPointerException(&quot;Input stream is null&quot;);</span>
+		}
+
+<span class="fc" id="L49">		logger.debug(&quot;Loading...&quot;);</span>
+
+		// Read in the DXF file
+<span class="fc" id="L52">		parser.parse(in, DXFParser.DEFAULT_ENCODING);</span>
+		
+<span class="fc" id="L54">		DXFDocument doc = parser.getDocument();</span>
+
+<span class="fc" id="L56">		myTurtle = new Turtle();</span>
+		
+		// convert each entity
+<span class="fc" id="L59">		Iterator&lt;?&gt; layerItr = doc.getDXFLayerIterator();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">		while (layerItr.hasNext()) {</span>
+<span class="fc" id="L61">			DXFLayer layer = (DXFLayer)layerItr.next();</span>
+<span class="fc" id="L62">			int color = layer.getColor();</span>
+<span class="fc" id="L63">			logger.debug(&quot;Found layer {} (color index={})&quot;, layer.getName(), color);</span>
+			
+			// Some DXF layers are empty.  Only write the tool change command if there's something on this layer.
+<span class="fc" id="L66">			Iterator&lt;?&gt; entityTypeItr = layer.getDXFEntityTypeIterator();</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">			if(entityTypeItr.hasNext()) {</span>
+				// ignore the color index, DXF is dumb.
+<span class="fc" id="L69">				myTurtle.setColor(Color.BLACK);</span>
+
+<span class="fc" id="L71">				parseLayer(layer);</span>
+			}
+<span class="fc" id="L73">		}</span>
+
+<span class="fc" id="L75">		return myTurtle;</span>
+	}
+
+	private void parseLayer(DXFLayer layer) {
+<span class="fc" id="L79">		logger.debug(&quot;Sorting layer &quot;+layer.getName()+&quot; into buckets...&quot;);</span>
+
+<span class="fc" id="L81">		Iterator&lt;?&gt; entityTypeIter = layer.getDXFEntityTypeIterator();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">		while (entityTypeIter.hasNext()) {</span>
+<span class="fc" id="L83">			String entityType = (String) entityTypeIter.next();</span>
+<span class="fc" id="L84">			List&lt;?&gt; entityList = layer.getDXFEntities(entityType);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">			for (Object o : entityList) {</span>
+<span class="fc" id="L86">				DXFEntity e = (DXFEntity) o;</span>
+
+<span class="pc bpc" id="L88" title="1 of 4 branches missed.">				switch(e.getType()) {</span>
+<span class="fc" id="L89">					case DXFConstants.ENTITY_TYPE_LINE -&gt; parseDXFLine((DXFLine)e);</span>
+<span class="fc" id="L90">					case DXFConstants.ENTITY_TYPE_SPLINE -&gt; parseDXFPolyline(DXFSplineConverter.toDXFPolyline((DXFSpline)e));</span>
+					case DXFConstants.ENTITY_TYPE_POLYLINE,
+<span class="fc" id="L92">							DXFConstants.ENTITY_TYPE_LWPOLYLINE -&gt; parseDXFPolyline((DXFPolyline)e);</span>
+<span class="nc" id="L93">					default -&gt; logger.error(&quot;Unknown DXF type {}&quot;, e.getType());</span>
+				}
+<span class="fc" id="L95">			}</span>
+<span class="fc" id="L96">		}</span>
+<span class="fc" id="L97">	}</span>
+	
+	private void parseDXFLine(DXFLine entity) {
+<span class="fc" id="L100">		Point start = entity.getStartPoint();</span>
+<span class="fc" id="L101">		double x = start.getX();</span>
+<span class="fc" id="L102">		double y = start.getY();</span>
+<span class="fc bfc" id="L103" title="All 4 branches covered.">		if(Math.abs(x-previousX)&gt;EPSILON || Math.abs(y-previousY)&gt;EPSILON) {</span>
+<span class="fc" id="L104">			myTurtle.jumpTo(TX(x), TY(y));</span>
+		}
+
+<span class="fc" id="L107">		Point end = entity.getEndPoint();</span>
+<span class="fc" id="L108">		double x2 = end.getX();</span>
+<span class="fc" id="L109">		double y2 = end.getY();</span>
+<span class="fc" id="L110">		myTurtle.moveTo(TX(x2),TY(y2));</span>
+<span class="fc" id="L111">		previousX = x2;</span>
+<span class="fc" id="L112">		previousY = y2;</span>
+<span class="fc" id="L113">	}</span>
+
+	private void parseDXFPolyline(DXFPolyline entity) {
+<span class="fc" id="L116">		boolean first = true;</span>
+<span class="fc" id="L117">		int c = entity.getVertexCount();</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">		int count = c + (entity.isClosed()?1:0);</span>
+		DXFVertex v;
+		double x,y;
+<span class="fc bfc" id="L121" title="All 2 branches covered.">		for (int j = 0; j &lt; count; ++j) {</span>
+<span class="fc" id="L122">			v = entity.getVertex(j % c);</span>
+<span class="fc" id="L123">			x = v.getX();</span>
+<span class="fc" id="L124">			y = v.getY();</span>
+<span class="fc" id="L125">			drawPolylinePoint(x,y,first);</span>
+<span class="fc" id="L126">			first = false;</span>
+		}
+<span class="fc" id="L128">	}</span>
+
+	private void drawPolylinePoint(double x, double y, boolean first) {
+<span class="fc bfc" id="L131" title="All 2 branches covered.">		if (first) {</span>
+<span class="fc bfc" id="L132" title="All 4 branches covered.">			if(Math.abs(x-previousX)&gt;EPSILON || Math.abs(y-previousY)&gt;EPSILON) {</span>
+<span class="fc" id="L133">				myTurtle.jumpTo(TX(x),TY(y));</span>
+			}
+		} else {
+<span class="fc" id="L136">			myTurtle.moveTo(TX(x),TY(y));</span>
+		}
+<span class="fc" id="L138">		previousX = x;</span>
+<span class="fc" id="L139">		previousY = y;</span>
+<span class="fc" id="L140">	}</span>
+
+	private double TX(double x) {
+<span class="fc" id="L143">		return x;</span>
+	}
+
+	private double TY(double y) {
+<span class="fc" id="L147">		return y;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

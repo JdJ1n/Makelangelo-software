@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectRandomSeed.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.select</a> &gt; <span class="el_source">SelectRandomSeed.java</span></div><h1>SelectRandomSeed.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.select;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.DefaultFormatterFactory;
+import javax.swing.text.NumberFormatter;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.NumberFormat;
+import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
+
+
+/**
+ * A JFormattedTextField that sets itself up to format integers.  Also includes a &quot;random&quot; button.
+ * @author Dan Royer
+ * @since 7.50.5
+ */
+public class SelectRandomSeed extends Select {
+	private JFormattedTextField field;
+	private int value;
+<span class="pc" id="L25">	private Timer timer=null;</span>
+
+	public SelectRandomSeed(String internalName, String labelKey, Locale locale, int defaultValue) {
+<span class="fc" id="L28">		super(internalName);</span>
+
+<span class="fc" id="L30">		value = defaultValue;</span>
+
+<span class="fc" id="L32">		JLabel label = new JLabel(labelKey, JLabel.LEADING);</span>
+
+<span class="fc" id="L34">		field = new JFormattedTextField();</span>
+<span class="fc" id="L35">		createAndAttachFormatter(locale);</span>
+<span class="fc" id="L36">		Dimension d = field.getPreferredSize();</span>
+<span class="fc" id="L37">		d.width = 100;</span>
+<span class="fc" id="L38">		field.setPreferredSize(d);</span>
+<span class="fc" id="L39">		field.setMinimumSize(d);</span>
+<span class="fc" id="L40">		field.setValue(defaultValue);</span>
+<span class="fc" id="L41">		field.setHorizontalAlignment(JTextField.RIGHT);</span>
+<span class="fc" id="L42">		field.getDocument().addDocumentListener(new DocumentListener() {</span>
+			@Override
+			public void changedUpdate(DocumentEvent arg0) {
+<span class="nc" id="L45">				validate();</span>
+<span class="nc" id="L46">			}</span>
+
+			@Override
+			public void insertUpdate(DocumentEvent arg0) {
+<span class="nc" id="L50">				validate();</span>
+<span class="nc" id="L51">			}</span>
+
+			@Override
+			public void removeUpdate(DocumentEvent arg0) {
+<span class="nc" id="L55">				validate();</span>
+<span class="nc" id="L56">			}</span>
+
+			public void validate() {
+				try {
+<span class="nc" id="L60">					int newNumber = Integer.parseInt(field.getText());</span>
+<span class="nc" id="L61">					field.setForeground(UIManager.getColor(&quot;Textfield.foreground&quot;));</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">					if(value != newNumber) {</span>
+<span class="nc" id="L63">						int oldValue = value;</span>
+<span class="nc" id="L64">						value = newNumber;</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">						if(timer!=null) timer.cancel();</span>
+<span class="nc" id="L67">						timer = new Timer(&quot;Delayed response&quot;);</span>
+<span class="nc" id="L68">						timer.schedule(new TimerTask() {</span>
+							public void run() {
+<span class="nc" id="L70">								fireSelectEvent(oldValue,newNumber);</span>
+<span class="nc" id="L71">							}</span>
+						}, 100L); // brief delay in case someone is typing fast
+					}
+<span class="nc" id="L74">				} catch(NumberFormatException e1) {</span>
+<span class="nc" id="L75">					field.setForeground(Color.RED);</span>
+<span class="nc" id="L76">					return;</span>
+<span class="nc" id="L77">				}</span>
+<span class="nc" id="L78">			}</span>
+		});
+
+<span class="fc" id="L81">		JButton chooseButton = new JButton(&quot;↻&quot;);</span>
+<span class="fc" id="L82">		chooseButton.addActionListener(new ActionListener() {</span>
+			@Override
+			public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L85">				field.setText(Integer.toString((int)(Math.random()*Integer.MAX_VALUE)));</span>
+<span class="nc" id="L86">			}</span>
+		});
+
+
+<span class="fc" id="L90">		JPanel panel2 = new JPanel(new BorderLayout());</span>
+<span class="fc" id="L91">		panel2.add(field,BorderLayout.LINE_END);</span>
+
+<span class="fc" id="L93">		this.add(label,BorderLayout.LINE_START);</span>
+<span class="fc" id="L94">		this.add(panel2,BorderLayout.CENTER);</span>
+<span class="fc" id="L95">		this.add(chooseButton,BorderLayout.LINE_END);</span>
+<span class="fc" id="L96">	}</span>
+
+	public SelectRandomSeed(String internalName, String labelKey, Locale locale) {
+<span class="nc" id="L99">		this(internalName,labelKey,locale,0);</span>
+<span class="nc" id="L100">	}</span>
+
+	public SelectRandomSeed(String internalName, String labelKey, int defaultValue) {
+<span class="fc" id="L103">		this(internalName,labelKey,Locale.getDefault(),defaultValue);</span>
+<span class="fc" id="L104">	}</span>
+
+	public SelectRandomSeed(String internalName) {
+<span class="nc" id="L107">		super(internalName);</span>
+<span class="nc" id="L108">		createAndAttachFormatter(Locale.getDefault());</span>
+<span class="nc" id="L109">	}</span>
+	
+	protected void createAndAttachFormatter(Locale locale) {
+<span class="fc" id="L112">		NumberFormat nFloat = NumberFormat.getIntegerInstance(locale);</span>
+<span class="fc" id="L113">		nFloat.setGroupingUsed(false);</span>
+		
+<span class="fc" id="L115">		NumberFormatter nff = new NumberFormatter(nFloat);</span>
+<span class="fc" id="L116">		DefaultFormatterFactory factory = new DefaultFormatterFactory(nff);</span>
+<span class="fc" id="L117">		field.setFormatterFactory(factory);</span>
+<span class="fc" id="L118">	}</span>
+	
+	public void setReadOnly() {
+<span class="nc" id="L121">		field.setEditable(false);</span>
+<span class="nc" id="L122">	}</span>
+	
+	/**
+	 * @return last valid integer typed into field.
+	 */
+	public int getValue() {
+<span class="nc" id="L128">		return value;</span>
+	}
+	
+	public void setValue(int arg0) {
+<span class="nc" id="L132">		field.setText(Integer.toString(arg0));</span>
+<span class="nc" id="L133">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

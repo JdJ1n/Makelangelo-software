@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoadSVG.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.io</a> &gt; <span class="el_source">LoadSVG.java</span></div><h1>LoadSVG.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.io;
+
+import com.marginallyclever.convenience.Bezier;
+import com.marginallyclever.convenience.Point2D;
+import com.marginallyclever.convenience.W3CColorNames;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import org.apache.batik.anim.dom.*;
+import org.apache.batik.bridge.*;
+import org.apache.batik.dom.svg.SVGItem;
+import org.apache.batik.util.XMLResourceDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.svg.*;
+
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Vector3d;
+import java.awt.*;
+import java.io.InputStream;
+import java.util.List;
+
+/**
+ * @author Dan Royer
+ * See &lt;a href=&quot;https://www.w3.org/TR/SVG/paths.html&quot;&gt;w3&lt;/a&gt;
+ */
+public class LoadSVG implements TurtleLoader {
+<span class="fc" id="L31">	private static final Logger logger = LoggerFactory.getLogger(LoadSVG.class);</span>
+
+	private static final String LABEL_STROKE=&quot;stroke:&quot;;
+
+<span class="fc" id="L35">	private static final FileNameExtensionFilter filter = new FileNameExtensionFilter(&quot;Scaleable Vector Graphics 1.1&quot;, &quot;svg&quot;);</span>
+	private Turtle myTurtle;
+
+	private boolean isNewPath;  // for cubic paths
+<span class="fc" id="L39">	private final Vector3d pathFirstPoint = new Vector3d();</span>
+<span class="fc" id="L40">	private final Vector3d pathPoint = new Vector3d();</span>
+<span class="fc" id="L41">	private final Color paperColor = new Color(255,255,255);</span>
+<span class="fc" id="L42">	private final SAXSVGDocumentFactory factory = new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());</span>
+
+	public LoadSVG() {
+<span class="fc" id="L45">		super();</span>
+<span class="fc" id="L46">	}</span>
+
+	@Override
+	public FileNameExtensionFilter getFileNameFilter() {
+<span class="nc" id="L50">		return filter;</span>
+	}
+
+	@Override
+	public boolean canLoad(String filename) {
+<span class="fc" id="L55">		String ext = filename.substring(filename.lastIndexOf('.'));</span>
+<span class="fc" id="L56">		return ext.equalsIgnoreCase(&quot;.svg&quot;);</span>
+	}
+
+	@Override
+	public Turtle load(InputStream in) throws Exception {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">		if (in == null) {</span>
+<span class="fc" id="L62">			throw new NullPointerException(&quot;Input stream is null&quot;);</span>
+		}
+
+<span class="fc" id="L65">		logger.debug(&quot;Loading...&quot;);</span>
+
+<span class="fc" id="L67">		Document document = newDocumentFromInputStream(in);</span>
+<span class="fc" id="L68">		initSVGDOM(document);</span>
+
+<span class="fc" id="L70">		myTurtle = new Turtle();</span>
+<span class="fc" id="L71">		myTurtle.setColor(Color.BLACK);  // initial pen color</span>
+<span class="fc" id="L72">		parseAll(document);</span>
+
+		// plotter coordinates are inverted in Y so flip the image.
+<span class="fc" id="L75">		myTurtle.scale(1, -1);</span>
+
+<span class="fc" id="L77">		Turtle t2 = new Turtle();</span>
+<span class="fc" id="L78">		t2.history.clear();</span>
+
+		// remove tool changes for zero-length moves.
+<span class="fc" id="L81">		List&lt;Turtle&gt; list = myTurtle.splitByToolChange();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">		for(Turtle t : list) {</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">			if(t.getDrawDistance()&gt;0)</span>
+<span class="fc" id="L84">				t2.add(t);</span>
+<span class="fc" id="L85">		}</span>
+<span class="fc" id="L86">		return t2;</span>
+	}
+
+	private void parseAll(Document document) throws Exception {
+<span class="fc" id="L90">		SVGOMSVGElement documentElement = (SVGOMSVGElement)document.getDocumentElement();</span>
+<span class="fc" id="L91">		processElement(documentElement);</span>
+<span class="fc" id="L92">	}</span>
+
+	/**
+	 * Process the given element and all its children.
+	 * @param element the source of the elements
+	 * @throws Exception if the child elements have a problem.
+	 */
+	private void processElement(Element element) throws Exception {
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">		if(setStrokeToElementColorBecomesNone(element)) return;</span>
+
+		// Check if the element is a &quot;g&quot; element and process it
+<span class="pc bpc" id="L103" title="2 of 9 branches missed.">		switch(element.getTagName()) {</span>
+<span class="fc" id="L104">			case &quot;path&quot; -&gt; parsePathElement(element);</span>
+<span class="nc" id="L105">			case &quot;polyline&quot; -&gt; parsePolylineElement(element);</span>
+<span class="nc" id="L106">			case &quot;polygon&quot; -&gt; parsePolylineElement(element);</span>
+<span class="fc" id="L107">			case &quot;line&quot; -&gt; parseLineElement(element);</span>
+<span class="fc" id="L108">			case &quot;rect&quot; -&gt; parseRectElement(element);</span>
+<span class="fc" id="L109">			case &quot;circle&quot; -&gt; parseCircleElement(element);</span>
+<span class="fc" id="L110">			case &quot;ellipse&quot; -&gt; parseEllipseElement(element);</span>
+<span class="fc" id="L111">			case &quot;g&quot; -&gt; parseGroupElement(element);</span>
+<span class="fc" id="L112">			default -&gt; logger.debug(&quot;Unknown element {}&quot;, element.getTagName());</span>
+		}
+
+		// Recursively process all child elements
+<span class="fc" id="L116">		NodeList childNodes = element.getChildNodes();</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">		for (int i = 0; i &lt; childNodes.getLength(); i++) {</span>
+<span class="fc" id="L118">			Node child = childNodes.item(i);</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">			if (child.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L120">				processElement((Element) child);</span>
+			}
+		}
+<span class="fc" id="L123">	}</span>
+
+	/**
+	 * Parse through all the SVG group elements and raster them to gcode.
+	 * @param element the source of the elements
+	 * @throws Exception if the child elements have a problem.
+	 */
+	private void parseGroupElement(Element element) throws Exception {
+		// do nothing, the children will be processed by processElement().
+<span class="fc" id="L132">	}</span>
+
+	/**
+	 * Parse through all the SVG polyline elements and raster them to gcode.
+	 * @param pathNodes the source of the elements
+	 */
+	private void parsePolylineElement(Element pathNodes) {
+<span class="nc" id="L139">		SVGPointShapeElement element = (SVGPointShapeElement)pathNodes;</span>
+
+<span class="nc" id="L141">		Matrix3d m = getMatrixFromElement(element);</span>
+
+<span class="nc" id="L143">		SVGPointList pointList = element.getAnimatedPoints();</span>
+<span class="nc" id="L144">		int numPoints = pointList.getNumberOfItems();</span>
+		//logger.debug(&quot;New Node has &quot;+pathObjects+&quot; elements.&quot;);
+
+<span class="nc" id="L147">		SVGPoint item = pointList.getItem(0);</span>
+<span class="nc" id="L148">		Vector3d v2 = transform(item.getX(),item.getY(),m);</span>
+<span class="nc" id="L149">		myTurtle.jumpTo(v2.x,v2.y);</span>
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		for( int i=1; i&lt;numPoints; ++i ) {</span>
+<span class="nc" id="L152">			item = pointList.getItem(i);</span>
+<span class="nc" id="L153">			v2 = transform(item.getX(),item.getY(),m);</span>
+<span class="nc" id="L154">			myTurtle.moveTo(v2.x,v2.y);</span>
+		}
+<span class="nc" id="L156">	}</span>
+
+	/**
+	 * Read and apply the element stroke color.
+	 * @param element source of the stroke color.
+	 * @return true if the stroke color is 'none' or white (assumed to be the paper color)
+	 */
+	private boolean setStrokeToElementColorBecomesNone(Element element) {
+<span class="fc" id="L164">		Color color = getStroke(element);</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">		if(color==null) return false;  // none</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">		if(color.getAlpha()==0) return false;  // transparent</span>
+		//if(color.equals(paperColor)) return true;
+
+<span class="fc bfc" id="L169" title="All 2 branches covered.">		if(!color.equals(myTurtle.getColor())) {</span>
+<span class="fc" id="L170">			logger.debug(&quot;Setting stroke color to {}&quot;,color);</span>
+<span class="fc" id="L171">			myTurtle.setColor(color);</span>
+		}
+<span class="fc" id="L173">		return false;</span>
+	}
+
+	private void parseLineElement(Element element) {
+		Vector3d v2;
+<span class="fc" id="L178">		Matrix3d m = getMatrixFromElement(element);</span>
+
+<span class="fc" id="L180">		double x1=0,y1=0;</span>
+<span class="fc" id="L181">		double x2=0,y2=0;</span>
+
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;x1&quot;)) x1 = Double.parseDouble(element.getAttribute(&quot;x1&quot;));</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;y1&quot;)) y1 = Double.parseDouble(element.getAttribute(&quot;y1&quot;));</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;x2&quot;)) x2 = Double.parseDouble(element.getAttribute(&quot;x2&quot;));</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;y2&quot;)) y2 = Double.parseDouble(element.getAttribute(&quot;y2&quot;));</span>
+<span class="fc" id="L187">		v2 = transform(x1,y1,m);</span>
+<span class="fc" id="L188">		myTurtle.jumpTo(v2.x,v2.y);</span>
+<span class="fc" id="L189">		v2 = transform(x2,y2,m);</span>
+<span class="fc" id="L190">		myTurtle.moveTo(v2.x,v2.y);</span>
+<span class="fc" id="L191">	}</span>
+
+	private Color getStroke(Element element) {
+<span class="fc" id="L194">		Color strokeColor = null;</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">		while (element != null) {</span>
+<span class="fc" id="L196">			strokeColor = extractStrokeColor(element);</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">			if (strokeColor != null) {</span>
+<span class="fc" id="L198">				break;</span>
+			}
+<span class="fc" id="L200">			Node parentNode = element.getParentNode();</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">			if (parentNode instanceof Element) {</span>
+<span class="fc" id="L202">				element = (Element) parentNode;</span>
+			} else {
+<span class="fc" id="L204">				element = null;</span>
+			}
+<span class="fc" id="L206">		}</span>
+<span class="fc" id="L207">		return strokeColor;</span>
+	}
+
+	private Color extractStrokeColor(Element element) {
+<span class="fc" id="L211">		Color c=null;</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">		if(element.hasAttribute(&quot;style&quot;)) {</span>
+<span class="fc" id="L213">			String style = element.getAttribute(&quot;style&quot;).toLowerCase().replace(&quot;\\s+&quot;,&quot;&quot;);</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">			if(!style.contains(LABEL_STROKE)) {</span>
+				// default SVG stroke is &quot;none&quot;, which isn't even transparent - it's nothing!
+			} else {
+<span class="fc" id="L217">				int k = style.indexOf(LABEL_STROKE);</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">				if(k&gt;=0) {</span>
+<span class="fc" id="L219">					String strokeStyleName = style.substring(k + LABEL_STROKE.length());</span>
+					// chop off the rest of the style string
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">					if(strokeStyleName.contains(&quot;;&quot;)) {</span>
+<span class="fc" id="L222">						strokeStyleName = strokeStyleName.substring(0, strokeStyleName.indexOf(&quot;;&quot;)).trim();</span>
+					}
+					// extract the color
+<span class="fc" id="L225">					c = stringToColor(strokeStyleName);</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">					if (c != null) {</span>
+<span class="fc" id="L227">						final String STROKE_OPACITY = &quot;stroke-opacity:&quot;;</span>
+<span class="fc" id="L228">						k = style.indexOf(STROKE_OPACITY);</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">						if (k &gt;= 0) {</span>
+<span class="fc" id="L230">							style = style.substring(k+STROKE_OPACITY.length());</span>
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">							if(style.contains(&quot;;&quot;)) {</span>
+<span class="nc" id="L232">								style = style.substring(0, style.indexOf(&quot;;&quot;)).trim();</span>
+							}
+<span class="fc" id="L234">							c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (Double.parseDouble(style) * 255.0));</span>
+						}
+					}
+				}
+			}
+		}
+<span class="fc bfc" id="L240" title="All 2 branches covered.">		if(c==null) {</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">			if (element.hasAttribute(&quot;stroke&quot;)) {</span>
+<span class="fc" id="L242">				String strokeStyleName = element.getAttribute(&quot;stroke&quot;).toLowerCase().replace(&quot;\\s+&quot;, &quot;&quot;);</span>
+<span class="fc" id="L243">				c = stringToColor(strokeStyleName);</span>
+			}
+		}
+<span class="fc bfc" id="L246" title="All 2 branches covered.">		if(c!=null) {</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">			if (element.hasAttribute(&quot;stroke-opacity&quot;)) {</span>
+<span class="nc" id="L248">				c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (Double.parseDouble(element.getAttribute(&quot;stroke-opacity&quot;)) * 255.0));</span>
+			}
+		}
+<span class="fc" id="L251">		return c;</span>
+	}
+
+	private Color stringToColor(String strokeName) {
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">		if(strokeName.startsWith(&quot;#&quot;)) {</span>
+<span class="fc" id="L256">			strokeName = strokeName.substring(1);</span>
+<span class="pc bpc" id="L257" title="1 of 2 branches missed.">			if(strokeName.length()==1) {</span>
+<span class="nc" id="L258">				int r = Integer.parseInt(strokeName.substring(0,1),16);</span>
+<span class="nc" id="L259">				return new Color(r,r,r);</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">			} else if(strokeName.length()==2) {</span>
+<span class="nc" id="L261">				int r = Integer.parseInt(strokeName.substring(0,2),16);</span>
+<span class="nc" id="L262">				return new Color(r,r,r);</span>
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">			} else if(strokeName.length()==3) {</span>
+<span class="nc" id="L264">				int r = Integer.parseInt(strokeName.substring(0,1),16);</span>
+<span class="nc" id="L265">				int g = Integer.parseInt(strokeName.substring(1,2),16);</span>
+<span class="nc" id="L266">				int b = Integer.parseInt(strokeName.substring(2,3),16);</span>
+<span class="nc" id="L267">				return new Color(r,g,b);</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">			} else if(strokeName.length()==6) {</span>
+<span class="fc" id="L269">				int r = Integer.parseInt(strokeName.substring(0,2),16);</span>
+<span class="fc" id="L270">				int g = Integer.parseInt(strokeName.substring(2,4),16);</span>
+<span class="fc" id="L271">				int b = Integer.parseInt(strokeName.substring(4,6),16);</span>
+<span class="fc" id="L272">				return new Color(r,g,b);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			} else if(strokeName.length()==8) {</span>
+<span class="nc" id="L274">				int r = Integer.parseInt(strokeName.substring(0,2),16);</span>
+<span class="nc" id="L275">				int g = Integer.parseInt(strokeName.substring(2,4),16);</span>
+<span class="nc" id="L276">				int b = Integer.parseInt(strokeName.substring(4,6),16);</span>
+<span class="nc" id="L277">				int a = Integer.parseInt(strokeName.substring(6,8),16);</span>
+<span class="nc" id="L278">				return new Color(r,g,b,a);</span>
+			}
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		} else if(strokeName.startsWith(&quot;rgb(&quot;)) {</span>
+			// isolate the portion between the ()
+<span class="nc" id="L282">			strokeName = strokeName.substring(4,strokeName.length()-1);</span>
+<span class="nc" id="L283">			strokeName = strokeName.substring(0,strokeName.indexOf(&quot;)&quot;));</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">			if(strokeName.contains(&quot;%&quot;)) {</span>
+				// convert from percent to 0-255
+<span class="nc" id="L286">				strokeName = strokeName.replace(&quot;%&quot;,&quot;&quot;);</span>
+<span class="nc" id="L287">				String [] parts = strokeName.split(&quot;,&quot;);</span>
+<span class="nc" id="L288">				int r = (int)(Integer.parseInt(parts[0])*255.0/100.0);</span>
+<span class="nc" id="L289">				int g = (int)(Integer.parseInt(parts[1])*255.0/100.0);</span>
+<span class="nc" id="L290">				int b = (int)(Integer.parseInt(parts[2])*255.0/100.0);</span>
+<span class="nc" id="L291">				return new Color(r,g,b);</span>
+			} else {
+				// already in 0-255
+<span class="nc" id="L294">				String [] parts = strokeName.split(&quot;,&quot;);</span>
+<span class="nc" id="L295">				int r = Integer.parseInt(parts[0]);</span>
+<span class="nc" id="L296">				int g = Integer.parseInt(parts[1]);</span>
+<span class="nc" id="L297">				int b = Integer.parseInt(parts[2]);</span>
+<span class="nc" id="L298">				return new Color(r,g,b);</span>
+			}
+		} else {
+<span class="nc" id="L301">			return W3CColorNames.get(strokeName);</span>
+		}
+<span class="nc" id="L303">		return null;</span>
+	}
+
+ 	/**
+	 * Draw rectangles that may have rounded corners.
+	 * given corners
+	 * &lt;pre&gt;
+	 *    x0 x1 x2 x3
+	 * y0    a  b
+	 * y1 c        d
+	 * y2 e        f
+	 * y3    g  h
+	 * &lt;/pre&gt;
+	 * draw a-b-d-f-h-g-e-c-a.
+	 * See &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect&quot;&gt;mozilla&lt;/a&gt;
+	 * @param element the source of the elements
+	 */
+	private void parseRectElement(Element element) {
+<span class="fc" id="L321">		Matrix3d m = getMatrixFromElement(element);</span>
+
+<span class="fc" id="L323">		double x=0,y=0;</span>
+<span class="fc" id="L324">		double rx=0,ry=0;</span>
+
+<span class="fc bfc" id="L326" title="All 2 branches covered.">		if(element.hasAttribute(&quot;x&quot;)) x = Double.parseDouble(element.getAttribute(&quot;x&quot;));</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">		if(element.hasAttribute(&quot;y&quot;)) y = Double.parseDouble(element.getAttribute(&quot;y&quot;));</span>
+<span class="fc bfc" id="L328" title="All 2 branches covered.">		if(element.hasAttribute(&quot;rx&quot;)) {</span>
+<span class="fc" id="L329">			rx = Double.parseDouble(element.getAttribute(&quot;rx&quot;));</span>
+<span class="pc bpc" id="L330" title="1 of 2 branches missed.">			if(element.hasAttribute(&quot;ry&quot;)) {</span>
+<span class="nc" id="L331">				ry = Double.parseDouble(element.getAttribute(&quot;ry&quot;));</span>
+			} else {
+				// ry defaults to rx if specified
+<span class="fc" id="L334">				ry = rx;</span>
+			}
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">		} else if(element.hasAttribute(&quot;ry&quot;)) {</span>
+			// rx defaults to ry if specified
+<span class="nc" id="L338">			rx = ry = Double.parseDouble(element.getAttribute(&quot;ry&quot;));</span>
+		}
+<span class="fc" id="L340">		double w = Double.parseDouble(element.getAttribute(&quot;width&quot;));</span>
+<span class="fc" id="L341">		double h = Double.parseDouble(element.getAttribute(&quot;height&quot;));</span>
+
+		//double x0=x;
+<span class="fc" id="L344">		double x1=x+rx;</span>
+<span class="fc" id="L345">		double x2=x+w-rx;</span>
+		//double x3=x+w;
+<span class="fc" id="L347">		double y0=y;</span>
+<span class="fc" id="L348">		double y1=y+ry;</span>
+<span class="fc" id="L349">		double y2=y+h-ry;</span>
+		//double y3=y+h;
+
+<span class="fc" id="L352">		Vector3d v2 = transform(x1,y0,m);</span>
+<span class="fc" id="L353">		myTurtle.jumpTo(v2.x,v2.y);</span>
+<span class="fc" id="L354">		arcTurtle(myTurtle, x2,y1, rx,ry, Math.PI * -0.5,Math.PI *  0.0,m);</span>
+<span class="fc" id="L355">		arcTurtle(myTurtle, x2,y2, rx,ry, Math.PI *  0.0,Math.PI *  0.5,m);</span>
+<span class="fc" id="L356">		arcTurtle(myTurtle, x1,y2, rx,ry, Math.PI * -1.5,Math.PI * -1.0,m);</span>
+<span class="fc" id="L357">		arcTurtle(myTurtle, x1,y1, rx,ry, Math.PI * -1.0,Math.PI * -0.5,m);</span>
+<span class="fc" id="L358">	}</span>
+
+	/**
+	 * @param turtle the drawing tool
+	 * @param cx center position
+	 * @param cy center position
+	 * @param rx radius on X
+	 * @param ry radius on Y
+	 * @param p0 radian start angle.
+	 * @param p1 radian end angle.
+	 */
+	private void arcTurtle(Turtle turtle,double cx,double cy,double rx,double ry,double p0,double p1,Matrix3d m) {
+		Vector3d v2;
+<span class="fc" id="L371">		double steps=1;</span>
+<span class="pc bpc" id="L372" title="1 of 4 branches missed.">		if(rx&gt;0 &amp;&amp; ry&gt;0) {</span>
+<span class="fc" id="L373">			double r = Math.max(rx, ry);</span>
+<span class="fc" id="L374">			double circ = Math.PI*r*2.0;  // radius to circumference</span>
+<span class="fc" id="L375">			steps = Math.ceil(circ/4.0);  // 1/4 circumference</span>
+<span class="fc" id="L376">			steps = Math.max(steps,1);</span>
+		}
+<span class="fc" id="L378">		steps = steps/4;</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">		for(double p = 0;p&lt;=steps;++p) {</span>
+<span class="fc" id="L380">			double pFraction = ((p1-p0)*(p/steps) + p0);</span>
+<span class="fc" id="L381">			double c = Math.cos(pFraction) * rx;</span>
+<span class="fc" id="L382">			double s = Math.sin(pFraction) * ry;</span>
+<span class="fc" id="L383">			v2 = transform(cx+c,cy+s,m);</span>
+<span class="fc" id="L384">			turtle.moveTo(v2.x,v2.y);</span>
+		}
+<span class="fc" id="L386">	}</span>
+
+	private void parseCircleElement(Element element) {
+		Vector3d v2;
+
+<span class="fc" id="L391">		Matrix3d m = getMatrixFromElement(element);</span>
+
+<span class="fc" id="L393">		double cx=0,cy=0,r=0;</span>
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;cx&quot;)) cx = Double.parseDouble(element.getAttribute(&quot;cx&quot;));</span>
+<span class="pc bpc" id="L395" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;cy&quot;)) cy = Double.parseDouble(element.getAttribute(&quot;cy&quot;));</span>
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;r&quot; )) r  = Double.parseDouble(element.getAttribute(&quot;r&quot;));</span>
+<span class="fc" id="L397">		v2 = transform(cx+r,cy,m);</span>
+<span class="fc" id="L398">		myTurtle.jumpTo(v2.x,v2.y);</span>
+
+<span class="fc" id="L400">		double circ = Math.PI * 2.0 * r;</span>
+<span class="fc" id="L401">		circ = Math.ceil(Math.min(Math.max(3,circ),360));</span>
+
+		//logger.debug(&quot;circ={}&quot;, circ);
+<span class="fc" id="L404">		printEllipse(m, cx, cy, r, r, circ);</span>
+<span class="fc" id="L405">	}</span>
+
+	private void parseEllipseElement(Element element) {
+		Vector3d v2;
+<span class="fc" id="L409">		Matrix3d m = getMatrixFromElement(element);</span>
+
+<span class="fc" id="L411">		double cx=0,cy=0,rx=0,ry=0;</span>
+<span class="pc bpc" id="L412" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;cx&quot;)) cx = Double.parseDouble(element.getAttribute(&quot;cx&quot;));</span>
+<span class="pc bpc" id="L413" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;cy&quot;)) cy = Double.parseDouble(element.getAttribute(&quot;cy&quot;));</span>
+<span class="pc bpc" id="L414" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;rx&quot;)) rx = Double.parseDouble(element.getAttribute(&quot;rx&quot;));</span>
+<span class="pc bpc" id="L415" title="1 of 2 branches missed.">		if(element.hasAttribute(&quot;ry&quot;)) ry = Double.parseDouble(element.getAttribute(&quot;ry&quot;));</span>
+<span class="fc" id="L416">		v2 = transform(cx+rx,cy,m);</span>
+<span class="fc" id="L417">		myTurtle.jumpTo(v2.x,v2.y);</span>
+
+<span class="fc" id="L419">		double perimeterOfAnEllipseApprox = Math.PI * 2.0 * Math.sqrt((ry*ry + rx*rx)/2.0);</span>
+<span class="fc" id="L420">		double steps = Math.max(3,perimeterOfAnEllipseApprox);</span>
+<span class="fc" id="L421">		steps = Math.min(60,steps);</span>
+<span class="fc" id="L422">		printEllipse(m, cx, cy, rx, ry, steps);</span>
+<span class="fc" id="L423">	}</span>
+
+	private void printEllipse(Matrix3d m, double cx, double cy, double rx, double ry, double steps) {
+		Vector3d v2;
+<span class="fc bfc" id="L427" title="All 2 branches covered.">		for(double i = 1; i&lt;steps; ++i) {</span>
+<span class="fc" id="L428">			double v = (Math.PI*2.0) * (i/steps);</span>
+<span class="fc" id="L429">			double s=ry*Math.sin(v);</span>
+<span class="fc" id="L430">			double c=rx*Math.cos(v);</span>
+<span class="fc" id="L431">			v2 = transform(cx+c,cy+s,m);</span>
+<span class="fc" id="L432">			myTurtle.moveTo(v2.x,v2.y);</span>
+		}
+<span class="fc" id="L434">		v2 = transform(cx+rx,cy,m);</span>
+<span class="fc" id="L435">		myTurtle.moveTo(v2.x,v2.y);</span>
+<span class="fc" id="L436">	}</span>
+
+	/**
+	 * Parse through all the SVG path elements and raster them to {@link Turtle}.
+	 * @param paths the source of the elements
+	 */
+	private void parsePathElement(Element paths) throws Exception {
+<span class="pc bpc" id="L443" title="1 of 2 branches missed.">		if(paths instanceof SVGOMPolylineElement) {</span>
+<span class="nc" id="L444">			logger.debug(&quot;Node is a polyline.&quot;);</span>
+<span class="nc" id="L445">			parsePolylineElement(paths);</span>
+<span class="nc" id="L446">			return;</span>
+		}
+<span class="fc" id="L448">		SVGOMPathElement element = (SVGOMPathElement)paths;</span>
+<span class="fc" id="L449">		Matrix3d m = getMatrixFromElement(element);</span>
+
+<span class="fc" id="L451">		isNewPath=true;</span>
+<span class="fc" id="L452">		SVGPathSegList pathList = element.getNormalizedPathSegList();</span>
+<span class="fc bfc" id="L453" title="All 2 branches covered.">		for(int i=0; i&lt;pathList.getNumberOfItems(); i++) {</span>
+<span class="fc" id="L454">			SVGPathSeg item = pathList.getItem(i);</span>
+<span class="pc bpc" id="L455" title="3 of 7 branches missed.">			switch( item.getPathSegType() ) {</span>
+<span class="fc" id="L456">				case SVGPathSeg.PATHSEG_MOVETO_ABS 			-&gt; doMoveToAbs(item,m);  	// M</span>
+<span class="nc" id="L457">				case SVGPathSeg.PATHSEG_MOVETO_REL 			-&gt; doMoveRel(item,m);  		// m</span>
+<span class="fc" id="L458">				case SVGPathSeg.PATHSEG_LINETO_ABS 			-&gt; doLineToAbs(item,m);  	// L H V</span>
+<span class="nc" id="L459">				case SVGPathSeg.PATHSEG_LINETO_REL 			-&gt; doLineToRel(item,m);  	// l h v</span>
+<span class="fc" id="L460">				case SVGPathSeg.PATHSEG_CURVETO_CUBIC_ABS 	-&gt; doCubicCurveAbs(item,m);	// C c</span>
+<span class="fc" id="L461">				case SVGPathSeg.PATHSEG_CLOSEPATH 			-&gt; doClosePath(); 			// Z z</span>
+<span class="nc" id="L462">				default -&gt; throw new Exception(&quot;Found unknown SVGPathSeg type &quot;+((SVGItem)item).getValueAsString());</span>
+			}
+		}
+<span class="fc" id="L465">	}</span>
+
+	private void doCubicCurveAbs(SVGPathSeg item, Matrix3d m) {
+<span class="fc" id="L468">		SVGPathSegCurvetoCubicAbs path = (SVGPathSegCurvetoCubicAbs)item;</span>
+
+		// x0,y0 is the first point
+<span class="fc" id="L471">		Vector3d p0 = pathPoint;</span>
+		// x1,y1 is the first control point
+<span class="fc" id="L473">		Vector3d p1 = transform(path.getX1(),path.getY1(),m);</span>
+		// x2,y2 is the second control point
+<span class="fc" id="L475">		Vector3d p2 = transform(path.getX2(),path.getY2(),m);</span>
+		// x3,y3 is the end point
+<span class="fc" id="L477">		Vector3d p3 = transform(path.getX(),path.getY(),m);</span>
+
+<span class="fc" id="L479">		logger.debug(&quot;Cubic curve {} {} {} {}&quot;, p0,p1,p2,p3);</span>
+
+<span class="fc" id="L481">		Bezier b = new Bezier(</span>
+				p0.x,p0.y,
+				p1.x,p1.y,
+				p2.x,p2.y,
+				p3.x,p3.y);
+<span class="fc" id="L486">		List&lt;Point2D&gt; points = b.generateCurvePoints(0.1);</span>
+<span class="fc bfc" id="L487" title="All 2 branches covered.">		for(Point2D p : points) myTurtle.moveTo(p.x,p.y);</span>
+<span class="fc" id="L488">		pathPoint.set(p3);</span>
+<span class="fc" id="L489">		isNewPath=true;</span>
+<span class="fc" id="L490">	}</span>
+
+	private void doLineToRel(SVGPathSeg item, Matrix3d m) {
+<span class="nc" id="L493">		SVGPathSegLinetoRel path = (SVGPathSegLinetoRel)item;</span>
+<span class="nc" id="L494">		Vector3d p = transform(path.getX(),path.getY(),m);</span>
+<span class="nc" id="L495">		logger.debug(&quot;Line Rel {}&quot;, p);</span>
+<span class="nc" id="L496">		pathPoint.set(myTurtle.getX(),myTurtle.getY(),0);</span>
+<span class="nc" id="L497">		pathPoint.add(p);</span>
+<span class="nc" id="L498">		myTurtle.moveTo(pathPoint.x,pathPoint.y);</span>
+<span class="nc" id="L499">		isNewPath=false;</span>
+<span class="nc" id="L500">	}</span>
+
+	private void doLineToAbs(SVGPathSeg item, Matrix3d m) {
+<span class="fc" id="L503">		SVGPathSegLinetoAbs path = (SVGPathSegLinetoAbs)item;</span>
+<span class="fc" id="L504">		Vector3d p = transform(path.getX(),path.getY(),m);</span>
+		//logger.debug(&quot;Line Abs {}&quot;, p);
+<span class="fc" id="L506">		pathPoint.set(p);</span>
+<span class="fc" id="L507">		myTurtle.moveTo(pathPoint.x,pathPoint.y);</span>
+<span class="fc" id="L508">		isNewPath=false;</span>
+<span class="fc" id="L509">	}</span>
+
+	private void doMoveRel(SVGPathSeg item, Matrix3d m) {
+<span class="nc" id="L512">		SVGPathSegMovetoRel path = (SVGPathSegMovetoRel)item;</span>
+<span class="nc" id="L513">		Vector3d p = transform(path.getX(),path.getY(),m);</span>
+		//logger.debug(&quot;Move Rel {}&quot;, p);
+<span class="nc" id="L515">		pathPoint.add(p);</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">		if(isNewPath) pathFirstPoint.set(pathPoint);</span>
+<span class="nc" id="L517">		myTurtle.jumpTo(p.x,p.y);</span>
+<span class="nc" id="L518">		isNewPath=false;</span>
+<span class="nc" id="L519">	}</span>
+
+	private void doMoveToAbs(SVGPathSeg item, Matrix3d m) {
+<span class="fc" id="L522">		SVGPathSegMovetoAbs path = (SVGPathSegMovetoAbs)item;</span>
+<span class="fc" id="L523">		Vector3d p = transform(path.getX(),path.getY(),m);</span>
+		//logger.debug(&quot;Move Abs {}&quot;, p);
+<span class="fc" id="L525">		pathPoint.set(p);</span>
+<span class="fc bfc" id="L526" title="All 2 branches covered.">		if(isNewPath) pathFirstPoint.set(pathPoint);</span>
+<span class="fc" id="L527">		myTurtle.jumpTo(p.x,p.y);</span>
+<span class="fc" id="L528">		isNewPath=false;</span>
+<span class="fc" id="L529">	}</span>
+
+	private void doClosePath() {
+		//logger.debug(&quot;Close path&quot;);
+<span class="fc" id="L533">		myTurtle.moveTo(pathFirstPoint.x,pathFirstPoint.y);</span>
+<span class="fc" id="L534">		isNewPath=true;</span>
+<span class="fc" id="L535">	}</span>
+
+	private Vector3d transform(double x, double y, Matrix3d m) {
+<span class="fc" id="L538">		Vector3d p = new Vector3d(x,y,1);</span>
+<span class="fc" id="L539">		m.transform(p);</span>
+<span class="fc" id="L540">		return p;</span>
+	}
+
+	/**
+	 * Get the transformation matrix from the given element.  The {@link SVGGraphicsElement} matrix is
+	 * &lt;pre&gt;
+	 * [ a c e ]
+	 * [ b d f ]
+	 * [ 0 0 1 ]&lt;/pre&gt;
+	 * @param element the source of the matrix
+	 * @return the matrix
+	 */
+	private Matrix3d getMatrixFromElement(Element element) {
+<span class="fc" id="L553">		Matrix3d m = new Matrix3d();</span>
+
+<span class="pc bpc" id="L555" title="1 of 2 branches missed.">		if(!(element instanceof SVGGraphicsElement)) {</span>
+<span class="nc" id="L556">			m.setIdentity();</span>
+<span class="nc" id="L557">			return m;</span>
+		}
+
+		try {
+<span class="fc" id="L561">			SVGGraphicsElement svgge = (SVGGraphicsElement)element;</span>
+<span class="fc" id="L562">			SVGMatrix svgMatrix = svgge.getCTM();</span>
+<span class="fc" id="L563">			m.m00 = svgMatrix.getA();	m.m01 = svgMatrix.getC();	m.m02 = svgMatrix.getE();</span>
+<span class="fc" id="L564">			m.m10 = svgMatrix.getB();	m.m11 = svgMatrix.getD();	m.m12 = svgMatrix.getF();</span>
+<span class="fc" id="L565">			m.m20 = 0;					m.m21 = 0;					m.m22 = 1;</span>
+		}
+<span class="nc" id="L567">		catch(Exception e) {</span>
+<span class="nc" id="L568">			m.setIdentity();</span>
+<span class="fc" id="L569">		}</span>
+<span class="fc" id="L570">		return m;</span>
+	}
+
+	/**
+	 * Enhance the SVG DOM for the given document to provide CSS- and
+	 * SVG-specific DOM interfaces.
+	 * See &lt;a href=&quot;https://cwiki.apache.org/confluence/display/XMLGRAPHICSBATIK/BootSvgAndCssDom&quot;&gt;apache&lt;/a&gt;
+	 * @param document The document to enhance.
+	 */
+	private void initSVGDOM(Document document) {
+<span class="fc" id="L580">		UserAgent userAgent = new UserAgentAdapter();</span>
+<span class="fc" id="L581">		DocumentLoader loader = new DocumentLoader(userAgent);</span>
+<span class="fc" id="L582">		BridgeContext bridgeContext = new BridgeContext(userAgent, loader);</span>
+<span class="fc" id="L583">		bridgeContext.setDynamicState(BridgeContext.STATIC);</span>
+
+		// Enable CSS- and SVG-specific enhancements.
+<span class="fc" id="L586">		(new GVTBuilder()).build(bridgeContext, document);</span>
+<span class="fc" id="L587">	}</span>
+
+	private SVGDocument newDocumentFromInputStream(InputStream in) throws Exception {
+<span class="fc" id="L590">		return (SVGDocument) factory.createDocument(&quot;&quot;,in);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

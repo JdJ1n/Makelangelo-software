@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter_VoronoiStippling.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imageconverter</a> &gt; <span class="el_source">Converter_VoronoiStippling.java</span></div><h1>Converter_VoronoiStippling.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imageconverter;
+
+import com.jogamp.opengl.GL2;
+import com.marginallyclever.convenience.voronoi.VoronoiCell;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+import com.marginallyclever.makelangelo.makeart.tools.InfillTurtle;
+import com.marginallyclever.makelangelo.paper.Paper;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+/**
+ * Voronoi graph based stippling.
+ * See &lt;a href=&quot;http://en.wikipedia.org/wiki/Fortune%27s_algorithm&quot;&gt;...&lt;/a&gt;
+ * See &lt;a href=&quot;http://skynet.ie/~sos/mapviewer/voronoi.php&quot;&gt;...&lt;/a&gt;
+ * @author Dan
+ * @since 7.0.0?
+ */
+public class Converter_VoronoiStippling extends Converter_Voronoi {
+<span class="nc" id="L20">	private static double maxDotSize = 3.5;</span>
+<span class="nc" id="L21">	private static double minDotSize = 0.5;</span>
+
+<span class="nc" id="L23">	private final int TABLE_SIZE=10;</span>
+<span class="nc" id="L24">	private final double [] cosTable = new double[TABLE_SIZE+1];</span>
+<span class="nc" id="L25">	private final double [] sinTable = new double[TABLE_SIZE+1];</span>
+
+	public Converter_VoronoiStippling() {
+<span class="nc" id="L28">		super();</span>
+
+<span class="nc bnc" id="L30" title="All 2 branches missed.">		for(int i=0;i&lt;=TABLE_SIZE;++i) {</span>
+<span class="nc" id="L31">			cosTable[i] = Math.cos(i*2.0*Math.PI/TABLE_SIZE);</span>
+<span class="nc" id="L32">			sinTable[i] = Math.sin(i*2.0*Math.PI/TABLE_SIZE);</span>
+		}
+
+<span class="nc" id="L35">		SelectSlider selectMax = new SelectSlider(&quot;max&quot;, Translator.get(&quot;Converter_VoronoiStippling.DotMax&quot;), 50,1, (int)(getMaxDotSize()*10));</span>
+<span class="nc" id="L36">		add(selectMax);</span>
+<span class="nc" id="L37">		selectMax.addSelectListener(evt -&gt; setMaxDotSize((int)evt.getNewValue()*0.1));</span>
+
+<span class="nc" id="L39">		SelectSlider selectMin = new SelectSlider(&quot;min&quot;, Translator.get(&quot;Converter_VoronoiStippling.DotMin&quot;), 50,1, (int)(getMinDotSize()*10));</span>
+<span class="nc" id="L40">		add(selectMin);</span>
+<span class="nc" id="L41">		selectMin.addSelectListener(evt -&gt; setMinDotSize((int)evt.getNewValue()*0.1));</span>
+<span class="nc" id="L42">	}</span>
+	
+	@Override
+	public String getName() {
+<span class="nc" id="L46">		return Translator.get(&quot;Converter_VoronoiStippling.Name&quot;);</span>
+	}
+
+	@Override
+	public void resume() {
+<span class="nc" id="L51">		turtle = new Turtle();</span>
+<span class="nc" id="L52">		fireConversionFinished();</span>
+<span class="nc" id="L53">	}</span>
+
+	@Override
+	public void start(Paper paper, TransformedImage image) {
+<span class="nc" id="L57">		turtle = new Turtle();</span>
+<span class="nc" id="L58">		super.start(paper, image);</span>
+<span class="nc" id="L59">	}</span>
+
+	@Override
+	public void render(GL2 gl2) {
+<span class="nc" id="L63">		super.render(gl2);</span>
+
+<span class="nc" id="L65">		ImageConverterThread thread = getThread();</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">		if(thread==null || thread.getPaused()) return;</span>
+
+<span class="nc" id="L68">		double cx = myPaper.getCenterX();</span>
+<span class="nc" id="L69">		double cy = myPaper.getCenterY();</span>
+<span class="nc" id="L70">		gl2.glPushMatrix();</span>
+<span class="nc" id="L71">		gl2.glTranslated(cx,cy,0);</span>
+
+<span class="nc" id="L73">		lock.lock();</span>
+		try {
+<span class="nc" id="L75">			renderDots(gl2);</span>
+		}
+		finally {
+<span class="nc" id="L78">			lock.unlock();</span>
+		}
+
+<span class="nc" id="L81">		gl2.glPopMatrix();</span>
+<span class="nc" id="L82">	}</span>
+
+	private void drawCircle(GL2 gl2,double x, double y, double r) {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if(r&lt;=minDotSize) return;</span>
+
+<span class="nc" id="L87">		gl2.glBegin(GL2.GL_TRIANGLE_FAN);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		for (int j = 0; j &lt;= TABLE_SIZE; ++j) {</span>
+<span class="nc" id="L89">			gl2.glVertex2d(</span>
+					x + r * cosTable[j],
+					y + r * sinTable[j] );
+		}
+<span class="nc" id="L93">		gl2.glEnd();</span>
+<span class="nc" id="L94">	}</span>
+
+	private void renderDots(GL2 gl2) {
+<span class="nc" id="L97">		int lpc = getLowpassCutoff();</span>
+<span class="nc" id="L98">		double scale = (maxDotSize-minDotSize)/255.0;</span>
+<span class="nc" id="L99">		double cx = myPaper.getCenterX();</span>
+<span class="nc" id="L100">		double cy = myPaper.getCenterY();</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		for( VoronoiCell c : cells ) {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if(c.weight&lt;lpc) continue;</span>
+<span class="nc" id="L104">			double r = (c.weight-lpc) * scale;</span>
+<span class="nc" id="L105">			double x = c.center.x;</span>
+<span class="nc" id="L106">			double y = c.center.y;</span>
+<span class="nc" id="L107">			gl2.glColor3f((float)c.change, 0, 0);</span>
+<span class="nc" id="L108">			drawCircle(gl2,x,y,r);</span>
+<span class="nc" id="L109">		}</span>
+<span class="nc" id="L110">	}</span>
+
+	/**
+	 * write cell centers to gcode.
+	 */
+	@Override
+	public void writeOutCells() {
+<span class="nc" id="L117">		int lpc = getLowpassCutoff();</span>
+<span class="nc" id="L118">		double scale = (maxDotSize-minDotSize)/255.0;</span>
+<span class="nc" id="L119">		double cx = myPaper.getCenterX();</span>
+<span class="nc" id="L120">		double cy = myPaper.getCenterY();</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		for( VoronoiCell c : cells ) {</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			if(c.weight&lt;lpc) continue;</span>
+<span class="nc" id="L124">			double r = (c.weight-lpc) * scale;</span>
+<span class="nc" id="L125">			double x = cx + c.center.x;</span>
+<span class="nc" id="L126">			double y = cy + c.center.y;</span>
+<span class="nc" id="L127">			turtleCircle(x, y, r);</span>
+<span class="nc" id="L128">		}</span>
+<span class="nc" id="L129">	}</span>
+
+	// filled circles
+	private void turtleCircle(double x, double y, double r) {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if(r&lt;=minDotSize) return;</span>
+
+<span class="nc" id="L135">		int detail = (int)Math.max(4, Math.min(20,Math.ceil((r) * Math.PI * 2.0)));</span>
+
+<span class="nc" id="L137">		double r2 = r-0.5;</span>
+
+<span class="nc" id="L139">		Turtle circle = new Turtle();</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		for(int j = 0; j &lt;= detail; ++j) {</span>
+<span class="nc" id="L141">			double v = (double)j * 2.0 * Math.PI / (double)detail;</span>
+<span class="nc" id="L142">			double newX = x + r2 * Math.cos(v);</span>
+<span class="nc" id="L143">			double newY = y + r2 * Math.sin(v);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if(j==0) circle.jumpTo(newX,newY);</span>
+<span class="nc" id="L145">			else circle.moveTo(newX,newY);</span>
+		}
+
+<span class="nc" id="L148">		InfillTurtle filler = new InfillTurtle();</span>
+<span class="nc" id="L149">		filler.setPenDiameter(turtle.getDiameter());</span>
+		try {
+<span class="nc" id="L151">			turtle.add(circle);</span>
+<span class="nc" id="L152">			turtle.add(filler.run(circle));</span>
+<span class="nc" id="L153">		} catch(Exception ignored) {}</span>
+<span class="nc" id="L154">	}</span>
+
+	public void setMinDotSize(double value) {
+<span class="nc" id="L157">		minDotSize = Math.max(0.001,value);</span>
+<span class="nc" id="L158">	}</span>
+	public double getMinDotSize() {
+<span class="nc" id="L160">		return minDotSize;</span>
+	}
+
+	public double getMaxDotSize() {
+<span class="nc" id="L164">		return maxDotSize;</span>
+	}
+	public void setMaxDotSize(double value) {
+<span class="nc" id="L167">		value = Math.max(value,minDotSize+1);</span>
+<span class="nc" id="L168">		maxDotSize = value;</span>
+<span class="nc" id="L169">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

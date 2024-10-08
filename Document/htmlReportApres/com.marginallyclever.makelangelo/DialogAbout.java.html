@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DialogAbout.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo</a> &gt; <span class="el_source">DialogAbout.java</span></div><h1>DialogAbout.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo;
+
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.util.PreferencesHelper;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.text.JTextComponent;
+import java.awt.*;
+import java.io.IOException;
+
+<span class="nc" id="L14">public class DialogAbout {</span>
+<span class="nc" id="L15">	private static final Logger logger = LoggerFactory.getLogger(DialogAbout.class);</span>
+	/**
+	 * @return byte array containing data for image icon.
+	 */
+	private ImageIcon getImageIcon(String iconResourceName) {
+<span class="nc" id="L20">		ImageIcon icon = null;</span>
+		try {
+<span class="nc" id="L22">			final byte[] imageData = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream(iconResourceName));</span>
+<span class="nc" id="L23">			icon = new ImageIcon(imageData);</span>
+<span class="nc" id="L24">		} catch (NullPointerException | IOException e) {</span>
+<span class="nc" id="L25">			logger.warn(&quot;Error getting image icon {}&quot;, iconResourceName, e);</span>
+<span class="nc" id="L26">		}</span>
+<span class="nc" id="L27">		return icon;</span>
+	}
+
+	/**
+	 * Display the about dialog.
+	 */
+	public void display(Component parent, String versionString, String detailedVersion) {
+<span class="nc" id="L34">		String aboutHtml = Translator.get(&quot;DialogAbout.AboutHTML&quot;)</span>
+<span class="nc" id="L35">				.replace(&quot;%VERSION%&quot;, versionString)</span>
+<span class="nc" id="L36">				.replace(&quot;%DETAILED_VERSION%&quot;, detailedVersion);</span>
+		
+<span class="nc" id="L38">		final JTextComponent bottomText = SelectReadOnlyText.createJEditorPaneWithHyperlinkListenerAndToolTipsForDesktopBrowse(aboutHtml);</span>
+<span class="nc" id="L39">		ImageIcon icon = getImageIcon(&quot;logo.png&quot;);</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		if (icon == null) {</span>
+<span class="nc" id="L41">			icon = getImageIcon(&quot;resources/logo.png&quot;);</span>
+		}
+<span class="nc" id="L43">		JOptionPane.showMessageDialog(parent, bottomText, Translator.get(&quot;MenuAbout&quot;), JOptionPane.INFORMATION_MESSAGE, icon);</span>
+<span class="nc" id="L44">	}</span>
+
+	// TEST
+
+	public static void main(String[] args) {
+<span class="nc" id="L49">		PreferencesHelper.start();</span>
+<span class="nc" id="L50">		Translator.start();</span>
+<span class="nc" id="L51">		DialogAbout a = new DialogAbout();</span>
+<span class="nc" id="L52">		a.display(null, &quot;7.31.0&quot;, &quot;hash-ee8c91a-dirty&quot;);</span>
+<span class="nc" id="L53">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

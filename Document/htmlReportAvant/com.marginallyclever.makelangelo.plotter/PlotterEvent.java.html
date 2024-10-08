@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlotterEvent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.plotter</a> &gt; <span class="el_source">PlotterEvent.java</span></div><h1>PlotterEvent.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.plotter;
+
+public class PlotterEvent {
+	// robot has disconnected
+	public static final int DISCONNECT = 0;
+	// robot is connected and identity confirmed.
+	public static final int CONNECTION_READY = 1;
+	// bad firmware detected. extra is a String with the version found.
+	public static final int BAD_FIRMWARE = 2;
+	// bad hardware detected. extra is a String with the version found.
+	public static final int BAD_HARDWARE = 3;
+	// starting to send gcode to robot
+	public static final int START = 4;
+	// stopping
+	public static final int STOP = 5;
+	// extra is the line number last sent to the robot.
+	public static final int PROGRESS_SOFAR = 6;
+	// requests tool change. extra is a 24 bit RGB value.
+	public static final int TOOL_CHANGE = 7;
+	// new GCode commands have been given to the robot.
+	public static final int NEW_GCODE = 8;
+	// motor engaged status has changed.  extra is a boolean with the new state.
+	public static final int MOTORS_ENGAGED = 9;
+	// robot has homed and is safe to drive.
+	public static final int HOME_FOUND = 10;
+	// robot has moved.
+	public static final int POSITION = 11;
+	// robot has raised or lowered pen.  extra is true if pen is up, false if pen is down.
+	public static final int PEN_UPDOWN = 12;
+	
+	public Plotter subject;
+	public int type;
+	public Object extra;
+
+	public PlotterEvent(int eventType, Plotter robot) {
+<span class="fc" id="L36">		super();</span>
+<span class="fc" id="L37">		type = eventType;</span>
+<span class="fc" id="L38">		subject = robot;</span>
+<span class="fc" id="L39">		extra = null;</span>
+<span class="fc" id="L40">	}</span>
+
+	public PlotterEvent(int eventType, Plotter robot, Object extraData) {
+<span class="nc" id="L43">		this(eventType, robot);</span>
+<span class="nc" id="L44">		extra = extraData;</span>
+<span class="nc" id="L45">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

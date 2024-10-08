@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterInvert.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.imagefilter</a> &gt; <span class="el_source">FilterInvert.java</span></div><h1>FilterInvert.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.imagefilter;
+
+import com.marginallyclever.convenience.ColorRGB;
+import com.marginallyclever.convenience.ResizableImagePanel;
+import com.marginallyclever.makelangelo.makeart.TransformedImage;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+
+/**
+ * Inverts the colors in an image.
+ *
+ * @author Dan
+ */
+public class FilterInvert extends ImageFilter {
+    private final TransformedImage img;
+
+    public FilterInvert(TransformedImage img) {
+<span class="fc" id="L22">        super();</span>
+<span class="fc" id="L23">        this.img = img;</span>
+<span class="fc" id="L24">    }</span>
+
+    public TransformedImage filter() {
+<span class="fc" id="L27">        BufferedImage src = img.getSourceImage();</span>
+<span class="fc" id="L28">        int h = src.getHeight();</span>
+<span class="fc" id="L29">        int w = src.getWidth();</span>
+        int x, y;
+
+<span class="fc" id="L32">        TransformedImage after = new TransformedImage(img);</span>
+<span class="fc" id="L33">        BufferedImage afterBI = after.getSourceImage();</span>
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        for (y = 0; y &lt; h; ++y) {</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            for (x = 0; x &lt; w; ++x) {</span>
+<span class="fc" id="L37">                ColorRGB color = new ColorRGB(src.getRGB(x, y));</span>
+<span class="fc" id="L38">                color.red = 255 - color.red;</span>
+<span class="fc" id="L39">                color.green = 255 - color.green;</span>
+<span class="fc" id="L40">                color.blue = 255 - color.blue;</span>
+<span class="fc" id="L41">                afterBI.setRGB(x, y, color.toInt());</span>
+            }
+        }
+
+<span class="fc" id="L45">        return after;</span>
+    }
+
+    public static void main(String[] args) throws IOException {
+<span class="nc" id="L49">        TransformedImage src = new TransformedImage( ImageIO.read(new FileInputStream(&quot;src/test/resources/mandrill.png&quot;)) );</span>
+<span class="nc" id="L50">        FilterInvert f = new FilterInvert(src);</span>
+<span class="nc" id="L51">        ResizableImagePanel.showImage(f.filter().getSourceImage(), &quot;Filter_Invert&quot; );</span>
+<span class="nc" id="L52">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

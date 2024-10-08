@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SaveGCode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.io</a> &gt; <span class="el_source">SaveGCode.java</span></div><h1>SaveGCode.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.io;
+
+import com.marginallyclever.convenience.helpers.StringHelper;
+import com.marginallyclever.makelangelo.MakelangeloVersion;
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.plotter.Plotter;
+import com.marginallyclever.makelangelo.plotter.plottercontrols.MarlinPlotterPanel;
+import com.marginallyclever.makelangelo.plotter.plottercontrols.ProgramPanel;
+import com.marginallyclever.makelangelo.plotter.plottersettings.PlotterSettings;
+import com.marginallyclever.makelangelo.turtle.MovementType;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.geom.Rectangle2D;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * Save the {@link ProgramPanel} instruction buffer to a gcode file of the user's choosing.
+ * Relies on {@link MarlinPlotterPanel} to translate the instructions into gcode.
+ * @author Dan Royer
+ * @since 7.28.0
+ */
+public class SaveGCode implements TurtleSaver {
+<span class="fc" id="L33">	private static final Logger logger = LoggerFactory.getLogger(SaveGCode.class);</span>
+
+<span class="pc" id="L35">	private final JFileChooser fc = new JFileChooser();</span>
+
+<span class="fc" id="L37">	public SaveGCode() {</span>
+<span class="fc" id="L38">		FileNameExtensionFilter filter = new FileNameExtensionFilter(&quot;GCode&quot;, &quot;gcode&quot;);</span>
+<span class="fc" id="L39">		fc.addChoosableFileFilter(filter);</span>
+		// do not allow wild card (*.*) file extensions
+<span class="fc" id="L41">		fc.setAcceptAllFileFilterUsed(false);</span>
+<span class="fc" id="L42">	}</span>
+
+<span class="nc" id="L44">	public SaveGCode(String lastDir) {</span>
+		// remember the last path used, if any
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		fc.setCurrentDirectory((lastDir==null?null : new File(lastDir)));</span>
+<span class="nc" id="L47">	}</span>
+
+	public void run(Turtle turtle, Plotter plotter, JFrame parent, int trimHead, int trimTail) throws Exception {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		if (fc.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {</span>
+<span class="nc" id="L51">			String selectedFile = fc.getSelectedFile().getAbsolutePath();</span>
+<span class="nc" id="L52">			String fileWithExtension = addExtension(selectedFile,((FileNameExtensionFilter)fc.getFileFilter()).getExtensions());</span>
+<span class="nc" id="L53">			logger.debug(&quot;File selected by user: {}&quot;, fileWithExtension);</span>
+
+<span class="nc" id="L55">			logger.debug(&quot;turtle.history.size={} trimHead={} trimTail={}&quot;, turtle.history.size(), trimHead, trimTail);			</span>
+<span class="nc" id="L56">			Turtle skinnyTurtle = trimTurtle(turtle, trimHead, trimTail);</span>
+<span class="nc" id="L57">			logger.debug(&quot;skinnyTurtle.history.size={} ?=(trimTail-trimHead)={}&quot;, skinnyTurtle.history.size(),trimTail-trimHead);</span>
+
+<span class="nc" id="L59">			int count = countTurtleToolChanges(skinnyTurtle);</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">			if(count&gt;1) {</span>
+<span class="nc" id="L61">				maybeSaveSeparateFiles(count,fileWithExtension, skinnyTurtle, plotter,parent);</span>
+			} else {
+<span class="nc" id="L63">				saveOneFile(fileWithExtension, skinnyTurtle, plotter);</span>
+			}
+		}
+<span class="nc" id="L66">	}</span>
+
+	/**
+	 * remove trimHead commands from the start of the turtle history.
+	 * remove trimTail commands from the end of the turtle history.
+	 * Returns the {@link Turtle} with the trimmed history.
+	 * @param turtle the source turtle.
+	 * @return the {@link Turtle} with the trimmed history.
+	 */
+	protected Turtle trimTurtle(Turtle turtle, int trimHead, int trimTail) {
+<span class="fc" id="L76">		Turtle skinny = new Turtle();</span>
+<span class="fc" id="L77">		skinny.history.clear();</span>
+
+<span class="fc" id="L79">		TurtleMove lastTC = null;</span>
+
+<span class="fc" id="L81">		int i=0;</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">		for( TurtleMove m : turtle.history ) {</span>
+<span class="fc bfc" id="L83" title="All 4 branches covered.">			if(i&lt;trimHead &amp;&amp; m.type == MovementType.TOOL_CHANGE) {</span>
+				// watch for the last tool change
+<span class="fc" id="L85">				lastTC = m;</span>
+			}
+<span class="pc bpc" id="L87" title="1 of 4 branches missed.">			if(i==trimHead &amp;&amp; m.type != MovementType.TOOL_CHANGE) {</span>
+				// we've reached the trimHead point, so start adding commands, starting with the last tool change.
+<span class="fc" id="L89">				skinny.history.add(lastTC);</span>
+			}
+<span class="pc bpc" id="L91" title="1 of 4 branches missed.">			if(i&gt;=trimHead &amp;&amp; i&lt;trimTail) {</span>
+				// between trimHead and trimTail, add all commands.
+<span class="fc" id="L93">				skinny.history.add(m);</span>
+			}
+<span class="fc" id="L95">			++i;</span>
+<span class="fc" id="L96">		}</span>
+		// insurance?
+<span class="fc" id="L98">		skinny.penUp();</span>
+
+<span class="fc" id="L100">		return skinny;</span>
+	}
+
+
+	/**
+	 * Offer to split the gcode file into one file per tool change, which is probably one per color.
+	 * @param count number of tool changes detected
+	 * @param fileWithExtension the user's desired filename.
+	 * @param turtle the source turtle containing many tool changes.
+	 * @param plotter the plotter that will translate the turtle to gcode.
+	 * @param parent the parent frame for the confirmation dialog.
+	 * @throws Exception if saving the file fails.
+	 */
+	private void maybeSaveSeparateFiles(int count,String fileWithExtension, Turtle turtle, Plotter plotter, JFrame parent) throws Exception {
+<span class="nc" id="L114">		String title = Translator.get(&quot;SaveGCode.splitGCodeTitle&quot;);</span>
+<span class="nc" id="L115">		String query = Translator.get(&quot;SaveGCode.splitGCodeQuestion&quot;,new String[]{Integer.toString(count)});</span>
+<span class="nc" id="L116">		int n = JOptionPane.showConfirmDialog(parent, query, title, JOptionPane.YES_NO_OPTION);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if(n==JOptionPane.NO_OPTION) {</span>
+<span class="nc" id="L118">			saveOneFile(fileWithExtension, turtle, plotter);</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		} else if(n==JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L120">			saveSeparateFiles(fileWithExtension, turtle, plotter);</span>
+		}
+<span class="nc" id="L122">	}</span>
+
+	/**
+	 * Splits a {@link Turtle} by tool changes and saves to one file per change.  Given a FILE.EXT it will generate
+	 * FILE-1.EXT, FILE-2.EXT, ..., FILE-N.EXT as required.
+	 * @param fileWithExtension the absolute path of the file to save
+	 * @param turtle the turtle to split and save
+	 * @param plotter the plotter reference for generating the gcode.
+	 * @return a list of the names of each file created.
+	 * @throws Exception
+	 */
+	protected List&lt;String&gt; saveSeparateFiles(String fileWithExtension, Turtle turtle, Plotter plotter) throws Exception {
+		// split filename.ext.  New format will be filename-n.ext
+<span class="fc" id="L135">		int last = fileWithExtension.lastIndexOf(&quot;.&quot;);</span>
+<span class="fc" id="L136">		String ext = fileWithExtension.substring(last);</span>
+<span class="fc" id="L137">		String fileWithoutExtension = fileWithExtension.substring(0,last);</span>
+		// now save each file
+<span class="fc" id="L139">		List&lt;Turtle&gt; list = turtle.splitByToolChange();</span>
+<span class="fc" id="L140">		List&lt;String&gt; filesCreated = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L141">		int i=0;</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">		for( Turtle split : list ) {</span>
+<span class="fc" id="L143">			++i;</span>
+<span class="fc" id="L144">			String newFileName = fileWithoutExtension+&quot;-&quot;+Integer.toString(i)+ext;</span>
+<span class="fc" id="L145">			saveOneFile(newFileName,split,plotter);</span>
+<span class="fc" id="L146">			filesCreated.add(newFileName);</span>
+<span class="fc" id="L147">		}</span>
+<span class="fc" id="L148">		return filesCreated;</span>
+	}
+
+	private int countTurtleToolChanges(Turtle turtle) {
+<span class="nc" id="L152">		int i=0;</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		for( TurtleMove m : turtle.history ) {</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			if(m.type == MovementType.TOOL_CHANGE) ++i;</span>
+<span class="nc" id="L155">		}</span>
+<span class="nc" id="L156">		return i;</span>
+	}
+
+	private String addExtension(String name, String [] extensions) {
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		for( String e : extensions ) {</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if(FilenameUtils.getExtension(name).equalsIgnoreCase(e)) return name;</span>
+		}
+		
+<span class="nc" id="L164">		return name + &quot;.&quot; + extensions[0];</span>
+	}
+		
+	protected void saveOneFile(String filename, Turtle turtle, Plotter robot) throws Exception {
+<span class="fc" id="L168">		logger.debug(&quot;saving...&quot;);</span>
+<span class="fc" id="L169">		try (FileOutputStream stream = new FileOutputStream(filename)) {</span>
+<span class="fc" id="L170">			save(stream, turtle, robot.getSettings());</span>
+		}
+<span class="fc" id="L172">		logger.debug(&quot;done.&quot;);</span>
+<span class="fc" id="L173">	}</span>
+
+	@Override
+	public FileNameExtensionFilter getFileNameFilter() {
+<span class="nc" id="L177">		return new FileNameExtensionFilter(&quot;GCode&quot;, &quot;gcode&quot;);</span>
+	}
+
+	/**
+	 * Save a turtle to a stream
+	 * @param outputStream destination of path
+	 * @param turtle source of path
+	 * @param settings plotter settings
+	 * @return true if save successful.
+	 * @throws Exception if save failed.
+	 */
+	@Override
+	public boolean save(OutputStream outputStream, Turtle turtle, PlotterSettings settings) throws Exception {
+<span class="fc" id="L190">		try (Writer out = new OutputStreamWriter(outputStream)) {</span>
+<span class="fc" id="L191">			out.write(&quot;;Generated with &quot; + MakelangeloVersion.getFullOrLiteVersionStringRelativeToSysEnvDevValue() + &quot;\n&quot;);</span>
+<span class="fc" id="L192">			out.write(&quot;;FLAVOR:Marlin-polargraph\n&quot;);</span>
+<span class="fc" id="L193">			Rectangle2D.Double bounds = turtle.getBounds();</span>
+<span class="fc" id="L194">			out.write(&quot;;MINX:&quot; + StringHelper.formatDouble(bounds.x) + &quot;\n&quot;);</span>
+<span class="fc" id="L195">			out.write(&quot;;MINY:&quot; + StringHelper.formatDouble(bounds.y) + &quot;\n&quot;);</span>
+			//out.write(&quot;;MINZ:0.000\n&quot;);
+<span class="fc" id="L197">			out.write(&quot;;MAXX:&quot; + StringHelper.formatDouble(bounds.width + bounds.x) + &quot;\n&quot;);</span>
+<span class="fc" id="L198">			out.write(&quot;;MAXY:&quot; + StringHelper.formatDouble(bounds.height + bounds.y) + &quot;\n&quot;);</span>
+			//out.write(&quot;;MAXZ:0.000\n&quot;);
+<span class="fc" id="L200">			SimpleDateFormat formatter = new SimpleDateFormat(&quot;yyyy-MM-dd 'at' HH:mm:ss z&quot;);</span>
+<span class="fc" id="L201">			Date date = new Date(System.currentTimeMillis());</span>
+<span class="fc" id="L202">			out.write(&quot;; &quot; + formatter.format(date) + &quot;\n&quot;);</span>
+<span class="fc" id="L203">			out.write(&quot;;Start of user gcode\n&quot;);</span>
+<span class="fc" id="L204">			out.write(settings.getString(PlotterSettings.USER_GENERAL_START_GCODE));</span>
+<span class="fc" id="L205">			out.write(&quot;\n;End of user gcode\n&quot;);</span>
+<span class="fc" id="L206">			out.write(MarlinPlotterPanel.getFindHomeString() + &quot;\n&quot;);  // go home</span>
+
+<span class="fc" id="L208">			boolean isUp = true;</span>
+
+<span class="fc" id="L210">			TurtleMove previousMovement = null;</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">			for (int i = 0; i &lt; turtle.history.size(); ++i) {</span>
+<span class="fc" id="L212">				TurtleMove m = turtle.history.get(i);</span>
+
+<span class="pc bpc" id="L214" title="1 of 4 branches missed.">				switch (m.type) {</span>
+					case TRAVEL -&gt; {
+<span class="fc bfc" id="L216" title="All 2 branches covered.">						if (!isUp) {</span>
+							// lift pen up
+<span class="fc" id="L218">							out.write(MarlinPlotterPanel.getPenUpString(settings) + &quot;\n&quot;);</span>
+<span class="fc" id="L219">							isUp = true;</span>
+						}
+<span class="fc" id="L221">						previousMovement = m;</span>
+<span class="fc" id="L222">					}</span>
+					case DRAW_LINE -&gt; {
+<span class="fc bfc" id="L224" title="All 2 branches covered.">						if (isUp) {</span>
+							// go to m and put pen down
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">							if (previousMovement == null) previousMovement = m;</span>
+<span class="fc" id="L227">							out.write(MarlinPlotterPanel.getTravelToString(settings, previousMovement.x, previousMovement.y) + &quot;\n&quot;);</span>
+<span class="fc" id="L228">							out.write(MarlinPlotterPanel.getPenDownString(settings) + &quot;\n&quot;);</span>
+<span class="fc" id="L229">							isUp = false;</span>
+						}
+<span class="fc" id="L231">						out.write(MarlinPlotterPanel.getDrawToString(settings, m.x, m.y) + &quot;\n&quot;);</span>
+<span class="fc" id="L232">						previousMovement = m;</span>
+<span class="fc" id="L233">					}</span>
+					case TOOL_CHANGE -&gt; {
+<span class="fc" id="L235">						out.write(MarlinPlotterPanel.getPenUpString(settings) + &quot;\n&quot;);</span>
+<span class="fc" id="L236">						out.write(MarlinPlotterPanel.getToolChangeString(m.getColor().hashCode()) + &quot;\n&quot;);</span>
+					}
+				}
+			}
+<span class="fc bfc" id="L240" title="All 2 branches covered.">			if (!isUp) out.write(MarlinPlotterPanel.getPenUpString(settings) + &quot;\n&quot;);</span>
+<span class="fc" id="L241">			out.write(&quot;;Start of user gcode\n&quot;);</span>
+<span class="fc" id="L242">			out.write(settings.getString(PlotterSettings.USER_GENERAL_END_GCODE));</span>
+<span class="fc" id="L243">			out.write(&quot;\n;End of user gcode\n&quot;);</span>
+<span class="fc" id="L244">			out.write(&quot;;End of Gcode\n&quot;);</span>
+<span class="fc" id="L245">			out.flush();</span>
+<span class="fc" id="L246">			return true;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

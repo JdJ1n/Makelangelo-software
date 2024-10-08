@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectDouble.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.select</a> &gt; <span class="el_source">SelectDouble.java</span></div><h1>SelectDouble.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.select;
+
+import com.marginallyclever.convenience.helpers.StringHelper;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
+import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
+
+
+/**
+ * A JFormattedTextField that sets itself up to format floating point numbers.
+ * @author Dan Royer
+ * @since 7.24.0
+ */
+public class SelectDouble extends Select {
+<span class="fc" id="L20">	private final JTextField field = new JTextField();</span>
+	private double value;
+	private Timer timer;
+
+	public SelectDouble(String internalName,String labelKey, Locale locale, double defaultValue) {
+<span class="fc" id="L25">		super(internalName);</span>
+
+<span class="fc" id="L27">		value = defaultValue;</span>
+
+<span class="fc" id="L29">		JLabel label = new JLabel(labelKey, JLabel.LEADING);</span>
+<span class="fc" id="L30">		label.setName(internalName+&quot;.label&quot;);</span>
+
+<span class="fc" id="L32">		field.setName(internalName+&quot;.field&quot;);</span>
+<span class="fc" id="L33">		Dimension d = field.getPreferredSize();</span>
+<span class="fc" id="L34">		d.width = 100;</span>
+<span class="fc" id="L35">		field.setPreferredSize(d);</span>
+<span class="fc" id="L36">		field.setMinimumSize(d);</span>
+<span class="fc" id="L37">		field.setText(StringHelper.formatDouble(defaultValue));</span>
+<span class="fc" id="L38">		field.setHorizontalAlignment(JTextField.RIGHT);</span>
+
+<span class="fc" id="L40">		field.getDocument().addDocumentListener(new DocumentListener() {</span>
+        	@Override
+			public void changedUpdate(DocumentEvent arg0) {
+<span class="nc bnc" id="L43" title="All 2 branches missed.">				if(arg0.getLength()==0) return;</span>
+<span class="nc" id="L44">				validate();</span>
+<span class="nc" id="L45">			}</span>
+
+        	@Override
+			public void insertUpdate(DocumentEvent arg0) {
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">				if(arg0.getLength()==0) return;</span>
+<span class="fc" id="L50">				validate();</span>
+<span class="fc" id="L51">			}</span>
+
+        	@Override
+			public void removeUpdate(DocumentEvent arg0) {
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">				if(arg0.getLength()==0) return;</span>
+<span class="fc" id="L56">				validate();</span>
+<span class="fc" id="L57">			}</span>
+
+			public void validate() {
+				try {
+<span class="fc" id="L61">					double newValue = Float.parseFloat(field.getText());</span>
+<span class="fc" id="L62">					field.setForeground(UIManager.getColor(&quot;Textfield.foreground&quot;));</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">					if(value != newValue) {</span>
+<span class="fc" id="L64">						double oldValue = value; </span>
+<span class="fc" id="L65">						value = newValue;</span>
+						
+<span class="fc bfc" id="L67" title="All 2 branches covered.">						if(timer!=null) timer.cancel();</span>
+<span class="fc" id="L68">						timer = new Timer(&quot;Delayed response&quot;);</span>
+<span class="fc" id="L69">						timer.schedule(new TimerTask() { </span>
+							public void run() {
+<span class="fc" id="L71">								fireSelectEvent(oldValue,newValue);</span>
+<span class="fc" id="L72">							}</span>
+						}, 100L); // brief delay in case someone is typing fast
+					}
+<span class="fc" id="L75">				} catch (NumberFormatException e) {</span>
+<span class="fc" id="L76">					field.setForeground(Color.RED);</span>
+<span class="fc" id="L77">				}</span>
+<span class="fc" id="L78">			}</span>
+		});
+
+<span class="fc" id="L81">		this.add(label, BorderLayout.LINE_START);</span>
+<span class="fc" id="L82">		this.add(field, BorderLayout.LINE_END);</span>
+<span class="fc" id="L83">	}</span>
+
+	public SelectDouble(String internalName,String labelKey, Locale locale) {
+<span class="nc" id="L86">		this(internalName,labelKey, locale, 0);</span>
+<span class="nc" id="L87">	}</span>
+
+	public SelectDouble(String internalName,String labelKey, double defaultValue) {
+<span class="fc" id="L90">		this(internalName,labelKey, Locale.getDefault(), defaultValue);</span>
+<span class="fc" id="L91">	}</span>
+
+	public SelectDouble(String internalName,String labelKey) {
+<span class="nc" id="L94">		this(internalName,labelKey, Locale.getDefault(), 0);</span>
+<span class="nc" id="L95">	}</span>
+
+	protected SelectDouble(String internalName) {
+<span class="nc" id="L98">		this(internalName,&quot;&quot;, Locale.getDefault(), 0);</span>
+<span class="nc" id="L99">	}</span>
+
+	public void setReadOnly() {
+<span class="nc" id="L102">		field.setEditable(false);</span>
+<span class="nc" id="L103">	}</span>
+
+	public void setReadOnly(boolean state) {
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		field.setEditable(!state);</span>
+<span class="nc" id="L107">	}</span>
+
+	// @return last valid value typed into field
+	public double getValue() {
+<span class="fc" id="L111">		return value;</span>
+	}
+
+	/**
+	 * Set the value visible in the field.  Do not fire a property change event.
+	 * @param newValue the new value to display
+     */
+	public void setValue(double newValue) {
+<span class="fc" id="L119">		field.setText(StringHelper.formatDouble(newValue));</span>
+<span class="fc" id="L120">	}</span>
+	
+	public String getText() {
+<span class="nc" id="L123">		return field.getText();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

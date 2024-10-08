@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrintTurtle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.donatelloimpl.nodes</a> &gt; <span class="el_source">PrintTurtle.java</span></div><h1>PrintTurtle.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.donatelloimpl.nodes;
+
+import com.marginallyclever.makelangelo.turtle.Turtle;
+import com.marginallyclever.makelangelo.turtle.TurtleMove;
+import com.marginallyclever.nodegraphcore.DockReceiving;
+import com.marginallyclever.nodegraphcore.DockShipping;
+import com.marginallyclever.nodegraphcore.Node;
+import com.marginallyclever.nodegraphcore.PrintWithGraphics;
+
+import java.awt.*;
+
+public class PrintTurtle extends Node implements PrintWithGraphics {
+<span class="fc" id="L13">    private final DockReceiving&lt;Turtle&gt; turtle = new DockReceiving&lt;&gt;(&quot;turtle&quot;, Turtle.class,new Turtle());</span>
+<span class="fc" id="L14">    private final DockReceiving&lt;Number&gt; px = new DockReceiving&lt;&gt;(&quot;X&quot;,Number.class,0);</span>
+<span class="fc" id="L15">    private final DockReceiving&lt;Number&gt; py = new DockReceiving&lt;&gt;(&quot;Y&quot;,Number.class,0);</span>
+<span class="fc" id="L16">    private final DockReceiving&lt;Color&gt; travelColor = new DockReceiving&lt;&gt;(&quot;travel color&quot;,Color.class,Color.GREEN);</span>
+<span class="fc" id="L17">    private final DockShipping&lt;Boolean&gt; showTravel = new DockShipping&lt;&gt;(&quot;show travel&quot;,Boolean.class,false);</span>
+
+    public PrintTurtle() {
+<span class="fc" id="L20">        super(&quot;PrintTurtle&quot;);</span>
+<span class="fc" id="L21">        addVariable(turtle);</span>
+<span class="fc" id="L22">        addVariable(px);</span>
+<span class="fc" id="L23">        addVariable(py);</span>
+<span class="fc" id="L24">    }</span>
+
+    @Override
+<span class="nc" id="L27">    public void update() {}</span>
+
+    @Override
+    public void print(Graphics g) {
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        if(turtle.hasPacketWaiting()) turtle.receive();</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        if(px.hasPacketWaiting()) px.receive();</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        if(py.hasPacketWaiting()) py.receive();</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if(travelColor.hasPacketWaiting()) travelColor.receive();</span>
+
+<span class="nc" id="L36">        Turtle myTurtle = turtle.getValue();</span>
+<span class="nc bnc" id="L37" title="All 4 branches missed.">        if(myTurtle==null || myTurtle.history.isEmpty()) return;</span>
+
+<span class="nc" id="L39">        int dx=px.getValue().intValue();</span>
+<span class="nc" id="L40">        int dy=py.getValue().intValue();</span>
+<span class="nc" id="L41">        g.translate(dx,dy);</span>
+
+        // where we're at in the drawing (to check if we're between first &amp; last)
+<span class="nc" id="L44">        boolean showPenUp = showTravel.getValue();</span>
+<span class="nc" id="L45">        int count = 0;</span>
+<span class="nc" id="L46">        int first=0;</span>
+<span class="nc" id="L47">        int last=myTurtle.history.size();</span>
+<span class="nc" id="L48">        TurtleMove previousMove = null;</span>
+
+<span class="nc" id="L50">        Color upColor = travelColor.getValue();</span>
+<span class="nc" id="L51">        Color downColor = new Color(0,0,0);</span>
+
+        try {
+<span class="nc" id="L54">            count++;</span>
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            for (TurtleMove m : myTurtle.history) {</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                if(m==null) throw new NullPointerException();</span>
+
+<span class="nc bnc" id="L59" title="All 4 branches missed.">                boolean inShow = (count &gt;= first &amp;&amp; count &lt; last);</span>
+<span class="nc bnc" id="L60" title="All 4 branches missed.">                switch (m.type) {</span>
+                    case TRAVEL -&gt; {
+<span class="nc bnc" id="L62" title="All 4 branches missed.">                        if (inShow &amp;&amp; previousMove != null) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">                            if (showPenUp) {</span>
+<span class="nc" id="L64">                                g.setColor(upColor);</span>
+<span class="nc" id="L65">                                g.drawLine((int) previousMove.x, (int)previousMove.y, (int) m.x, (int) m.y);</span>
+                            }
+                        }
+<span class="nc" id="L68">                        count++;</span>
+<span class="nc" id="L69">                        previousMove = m;</span>
+<span class="nc" id="L70">                    }</span>
+                    case DRAW_LINE -&gt; {
+<span class="nc bnc" id="L72" title="All 4 branches missed.">                        if (inShow &amp;&amp; previousMove != null) {</span>
+<span class="nc" id="L73">                            g.setColor(downColor);</span>
+<span class="nc" id="L74">                            g.drawLine((int) previousMove.x, (int)previousMove.y, (int) m.x, (int) m.y);</span>
+                        }
+<span class="nc" id="L76">                        count++;</span>
+<span class="nc" id="L77">                        previousMove = m;</span>
+<span class="nc" id="L78">                    }</span>
+                    case TOOL_CHANGE -&gt; {
+<span class="nc" id="L80">                        downColor = m.getColor();</span>
+<span class="nc" id="L81">                        ((Graphics2D) g).setStroke(new BasicStroke((int) m.getDiameter()));</span>
+                    }
+                }
+<span class="nc" id="L84">            }</span>
+        }
+<span class="nc" id="L86">        catch(Exception e) {</span>
+            //Log.error(e.getMessage());
+<span class="nc" id="L88">        }</span>
+
+<span class="nc" id="L90">        g.translate(-dx,-dy);</span>
+<span class="nc" id="L91">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

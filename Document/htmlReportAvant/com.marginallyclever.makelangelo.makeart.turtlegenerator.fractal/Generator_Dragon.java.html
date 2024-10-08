@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator_Dragon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Makelangelo</a> &gt; <a href="index.source.html" class="el_package">com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal</a> &gt; <span class="el_source">Generator_Dragon.java</span></div><h1>Generator_Dragon.java</h1><pre class="source lang-java linenums">package com.marginallyclever.makelangelo.makeart.turtlegenerator.fractal;
+
+import com.marginallyclever.makelangelo.Translator;
+import com.marginallyclever.makelangelo.makeart.tools.ResizeTurtleToPaperAction;
+import com.marginallyclever.makelangelo.makeart.turtlegenerator.TurtleGenerator;
+import com.marginallyclever.makelangelo.select.SelectReadOnlyText;
+import com.marginallyclever.makelangelo.select.SelectSlider;
+import com.marginallyclever.makelangelo.turtle.Turtle;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Dragon fractal
+ * @author Dan Royer
+ */
+public class Generator_Dragon extends TurtleGenerator {
+<span class="fc" id="L19">	private static int order = 12; // controls complexity of curve</span>
+	private final SelectSlider fieldOrder;
+
+<span class="fc" id="L22">	private final List&lt;Integer&gt; sequence = new ArrayList&lt;&gt;();</span>
+
+	public Generator_Dragon() {
+<span class="fc" id="L25">		super();</span>
+
+<span class="fc" id="L27">		add(fieldOrder = new SelectSlider(&quot;order&quot;,Translator.get(&quot;HilbertCurveOrder&quot;),16,0,Generator_Dragon.getOrder()));</span>
+<span class="fc" id="L28">		fieldOrder.addSelectListener(evt-&gt;{</span>
+<span class="nc" id="L29">			order = Math.max(1,fieldOrder.getValue());</span>
+<span class="nc" id="L30">			generate();</span>
+<span class="nc" id="L31">		});</span>
+<span class="fc" id="L32">		add(new SelectReadOnlyText(&quot;url&quot;,&quot;&lt;a href='https://en.wikipedia.org/wiki/Dragon_curve'&gt;&quot;+Translator.get(&quot;TurtleGenerators.LearnMore.Link.Text&quot;)+&quot;&lt;/a&gt;&quot;));</span>
+<span class="fc" id="L33">	}</span>
+
+	@Override
+	public String getName() {
+<span class="fc" id="L37">		return Translator.get(&quot;DragonName&quot;);</span>
+	}
+
+	static public int getOrder() {
+<span class="fc" id="L41">		return order;</span>
+	}
+	static public void setOrder(int value) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if(value&lt;1) value=1;</span>
+<span class="nc" id="L45">		order = value;</span>
+<span class="nc" id="L46">	}</span>
+
+	@Override
+	public void generate() {
+<span class="nc" id="L50">		Turtle turtle = new Turtle();</span>
+
+		// create the sequence of moves
+<span class="nc" id="L53">        sequence.clear();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        for (int i = 0; i &lt; order; i++) {</span>
+<span class="nc" id="L55">            List&lt;Integer&gt; copy = new ArrayList&lt;&gt;(sequence);</span>
+<span class="nc" id="L56">            Collections.reverse(copy);</span>
+<span class="nc" id="L57">            sequence.add(1);</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            for (Integer turn : copy) {</span>
+<span class="nc" id="L59">                sequence.add(-turn);</span>
+<span class="nc" id="L60">            }</span>
+        }
+        
+		// move to starting position
+<span class="nc" id="L64">		turtle.jumpTo(myPaper.getCenterX(),myPaper.getCenterY());</span>
+
+<span class="nc" id="L66">        turtle.penDown();</span>
+		// draw the fractal
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        for (Integer turn : sequence) {</span>
+<span class="nc" id="L69">            turtle.turn(turn * 90);</span>
+<span class="nc" id="L70">            turtle.forward(1);</span>
+<span class="nc" id="L71">        }</span>
+
+		// scale turtle to fit paper
+<span class="nc" id="L74">		ResizeTurtleToPaperAction action = new ResizeTurtleToPaperAction(myPaper,false,null);</span>
+<span class="nc" id="L75">		turtle = action.run(turtle);</span>
+
+<span class="nc" id="L77">        notifyListeners(turtle);</span>
+<span class="nc" id="L78">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
