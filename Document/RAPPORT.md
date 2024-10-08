@@ -18,11 +18,11 @@ Après les tests effectués avec config/coverage.py, la couverture totale est pa
 Voici deux captures d’écran montrant l’évolution de la couverture totale générée par Jacoco.
 
 ##### Avant
-[Lien vers le rapport Jacoco.](htmlReportAvant/index.html)
+[Lien vers le rapport Jacoco.](https://html-preview.github.io/?url=htmlReportAvant/index.html)
 ![Avant](Screenshots/all_before.png)
 
 ##### Après
-[Lien vers le rapport Jacoco.](htmlReportApres/index.html)
+[Lien vers le rapport Jacoco.](https://html-preview.github.io/?url=htmlReportApres/index.html)
 ![Après](Screenshots/all_after.png)
 
 ## Test 1-3
