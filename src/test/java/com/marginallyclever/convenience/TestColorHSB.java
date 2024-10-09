@@ -4,12 +4,33 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
 public class TestColorHSB {
+
+    private static final float delta = 1e-6f; // Allowable margin of error
+    private ColorHSB color1;
+    private ColorHSB color2;
+
+    // Méthode source pour les tests paramétrés
+    private static Stream<Arguments> provideColorHSBValues() {
+        return Stream.of(Arguments.of(0.2f, 0.3f, 0.4f, 0.1f, 0.2f, 0.3f), Arguments.of(0.5f, 0.6f, 0.7f, 0.2f, 0.3f, 0.4f), Arguments.of(0.8f, 0.9f, 1.0f, 0.3f, 0.4f, 0.5f));
+    }
+
+    private static Stream<Arguments> provideColorHSBValuesForMul() {
+        return Stream.of(Arguments.of(0.2f, 0.3f, 0.4f, 2.0), Arguments.of(0.5f, 0.6f, 0.7f, 1.5), Arguments.of(0.8f, 0.9f, 1.0f, 0.5));
+    }
+
+    private static Stream<Arguments> provideColorHSBValuesForSet() {
+        return Stream.of(Arguments.of(0.2f, 0.3f, 0.4f), Arguments.of(0.5f, 0.6f, 0.7f), Arguments.of(0.8f, 0.9f, 1.0f));
+    }
+
+    private static Stream<Arguments> provideColorHSBValuesForEquals() {
+        return Stream.of(Arguments.of(0.2f, 0.3f, 0.4f, 0.2f, 0.3f, 0.4f, true), Arguments.of(0.5f, 0.6f, 0.7f, 0.5f, 0.6f, 0.7f, true), Arguments.of(0.8f, 0.9f, 1.0f, 0.3f, 0.4f, 0.5f, false));
+    }
 
     private void assertColorsEqual(ColorHSB c, float hue, float saturation, float brightness) {
         Assertions.assertEquals(hue, c.hue);
@@ -31,16 +52,13 @@ public class TestColorHSB {
         assertColorsEqual(new ColorHSB(0, 0, 2), 0, 0, 1);
     }
 
-    private static final float delta = 1e-6f; // Allowable margin of error
-    private ColorHSB color1;
-    private ColorHSB color2;
-
     @BeforeEach
     public void setUp() {
         color1 = new ColorHSB();
         color2 = new ColorHSB();
     }
 
+    // Test paramétré pour la méthode set(...)
     @ParameterizedTest
     @MethodSource("provideColorHSBValuesForSet")
     public void testSet(float hue, float saturation, float brightness) {
@@ -51,6 +69,7 @@ public class TestColorHSB {
         assertColorsEqual(color1, clamp(hue), clamp(saturation), clamp(brightness));
     }
 
+    // Test paramétré pour la méthode sub(...)
     @ParameterizedTest
     @MethodSource("provideColorHSBValues")
     public void testSub(float hue1, float saturation1, float brightness1, float hue2, float saturation2, float brightness2) {
@@ -65,6 +84,7 @@ public class TestColorHSB {
         assertColorsEqual(result, clamp(hue1 - hue2), clamp(saturation1 - saturation2), clamp(brightness1 - brightness2));
     }
 
+    // Test paramétré pour la méthode add(...)
     @ParameterizedTest
     @MethodSource("provideColorHSBValues")
     public void testAdd(float hue1, float saturation1, float brightness1, float hue2, float saturation2, float brightness2) {
@@ -79,6 +99,7 @@ public class TestColorHSB {
         assertColorsEqual(result, clamp(hue1 + hue2), clamp(saturation1 + saturation2), clamp(brightness1 + brightness2));
     }
 
+    // Test paramétré pour la méthode mul(...)
     @ParameterizedTest
     @MethodSource("provideColorHSBValuesForMul")
     public void testMul(float hue, float saturation, float brightness, double factor) {
@@ -92,6 +113,7 @@ public class TestColorHSB {
         assertColorsEqual(result, clamp((float) (hue * factor)), clamp((float) (saturation * factor)), clamp((float) (brightness * factor)));
     }
 
+    // Test paramétré pour la méthode diffSquared(...)
     @ParameterizedTest
     @MethodSource("provideColorHSBValues")
     public void testDiffSquared(float hue1, float saturation1, float brightness1, float hue2, float saturation2, float brightness2) {
@@ -107,6 +129,7 @@ public class TestColorHSB {
         Assertions.assertEquals(expected, result, delta);
     }
 
+    // Test paramétré pour la méthode diff(...)
     @ParameterizedTest
     @MethodSource("provideColorHSBValues")
     public void testDiff(float hue1, float saturation1, float brightness1, float hue2, float saturation2, float brightness2) {
@@ -122,6 +145,7 @@ public class TestColorHSB {
         Assertions.assertEquals(expected, result, delta);
     }
 
+    // Test paramétré pour la méthode equals(...)
     @ParameterizedTest
     @MethodSource("provideColorHSBValuesForEquals")
     public void testEquals(float hue1, float saturation1, float brightness1, float hue2, float saturation2, float brightness2, boolean expected) {
@@ -133,43 +157,9 @@ public class TestColorHSB {
         Assertions.assertEquals(expected, color1.equals(color2));
     }
 
-    // Method source for parameterized tests
-    private static Stream<Arguments> provideColorHSBValues() {
-        return Stream.of(
-                Arguments.of(0.2f, 0.3f, 0.4f, 0.1f, 0.2f, 0.3f),
-                Arguments.of(0.5f, 0.6f, 0.7f, 0.2f, 0.3f, 0.4f),
-                Arguments.of(0.8f, 0.9f, 1.0f, 0.3f, 0.4f, 0.5f)
-        );
-    }
-
-    private static Stream<Arguments> provideColorHSBValuesForMul() {
-        return Stream.of(
-                Arguments.of(0.2f, 0.3f, 0.4f, 2.0),
-                Arguments.of(0.5f, 0.6f, 0.7f, 1.5),
-                Arguments.of(0.8f, 0.9f, 1.0f, 0.5)
-        );
-    }
-
-    private static Stream<Arguments> provideColorHSBValuesForSet() {
-        return Stream.of(
-                Arguments.of(0.2f, 0.3f, 0.4f),
-                Arguments.of(0.5f, 0.6f, 0.7f),
-                Arguments.of(0.8f, 0.9f, 1.0f)
-        );
-    }
-
-    private static Stream<Arguments> provideColorHSBValuesForEquals() {
-        return Stream.of(
-                Arguments.of(0.2f, 0.3f, 0.4f, 0.2f, 0.3f, 0.4f, true),
-                Arguments.of(0.5f, 0.6f, 0.7f, 0.5f, 0.6f, 0.7f, true),
-                Arguments.of(0.8f, 0.9f, 1.0f, 0.3f, 0.4f, 0.5f, false)
-        );
-    }
-
-    // Helper method to clamp values between 0.0 and 1.0
+    // Méthode pour clamp value entre 0.0 et 1.0
     private float clamp(float value) {
         return Math.max(0.0f, Math.min(1.0f, value));
     }
-
 
 }

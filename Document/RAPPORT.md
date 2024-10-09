@@ -45,7 +45,7 @@ trois tests, la couverture de cette classe a considérablement augmenté.
 
 1. Test 1
 
-   Destination : `public void testLengthSquared(double dx, double dy, double expected)`
+   Destination : `public static double lengthSquared(double dx,double dy)`
    #### Emplacements
    Source : `MathHelper.java` ligne 26  
    Test : `MathHelperTest.java` ligne 96
@@ -130,37 +130,46 @@ de cette classe a considérablement augmenté.
 
 ![Après](Screenshots/After-ColorHSB.png)
 
-1. Test 1
+1. Test 7
+   Destination : `public void set(float hue, float saturation, float brightness)`
    #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
+   Source : `ColorHSB.java` ligne 25  
+   Test : `TestColorHSB.java` ligne 46
 
-2. Test 2
+2. Test 8
+   Destination : `public ColorHSB sub(ColorHSB x)`
    #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
+   Source : `ColorHSB.java` ligne 36
+   Test : `TestColorHSB.java` ligne 56
 
-3. Test 3
+3. Test 9
+   Destination : `public ColorHSB add(ColorHSB x)`
    #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
+   Source : `ColorHSB.java` ligne 43  
+   Test : `TestColorHSB.java` ligne 70
 
-4. Test 3
+4. Test 10
+   Destination : `public ColorHSB mul(double f)`
    #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
+   Source : `ColorHSB.java` ligne 50  
+   Test : `TestColorHSB.java` ligne 84
 
-5. Test 3
+5. Test 11
+   Destination : `public float diffSquared(ColorHSB other)`
    #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
+   Source : `ColorHSB.java` ligne 57  
+   Test : `TestColorHSB.java` ligne 97
 
-6. Test 3
+6. Test 12
+   Destination : `public float diff(ColorHSB other)`
    #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
+   Source : `ColorHSB.java` ligne 64  
+   Test : `TestColorHSB.java` ligne 112
 
-7. Test 3
+7. Test 13
+   Destination : `public boolean equals(Object o)`
    #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
+   Source : `ColorHSB.java` ligne 85  
+   Test : `TestColorHSB.java` ligne 127
+
+#### Intention
