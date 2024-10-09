@@ -6,13 +6,9 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 public class StringHelperTest {
 
-    // Parameterized test for formatFloat method
+    // Test paramétré pour le format de Float
     @ParameterizedTest
-    @CsvSource({
-            "1.23456, 1.235",
-            "0.12345, 0.123",
-            "-1.23456, -1.235"
-    }) // Arrange
+    @CsvSource({"1.23456, 1.235", "0.12345, 0.123", "-1.23456, -1.235"}) // Arrange
     public void testFormatFloat(float input, String expected) {
         // Act
         String result = StringHelper.formatFloat(input);
@@ -21,13 +17,9 @@ public class StringHelperTest {
         Assertions.assertEquals(expected, result);
     }
 
-    // Parameterized test for padRight method
+    // Test paramétré pour le format de droite
     @ParameterizedTest
-    @CsvSource({
-            "'hello', 10, 'hello     '",
-            "'world', 8, 'world   '",
-            "'java', 6, 'java  '"
-    }) // Arrange
+    @CsvSource({"'hello', 10, 'hello     '", "'world', 8, 'world   '", "'java', 6, 'java  '"}) // Arrange
     public void testPadRight(String input, int length, String expected) {
         // Act
         String result = StringHelper.padRight(input, length);
@@ -36,14 +28,9 @@ public class StringHelperTest {
         Assertions.assertEquals(expected, result);
     }
 
-    // Parameterized test for getElapsedTime method
+    // Test paramétré pour la transition de temp
     @ParameterizedTest
-    @CsvSource({
-            "3661, '01:01:01'",
-            "7322, '02:02:02'",
-            "86400, '00:00:24'",
-            "86424, '00:00:24'"
-    }) // Arrange
+    @CsvSource({"3661, '01:01:01'", "7322, '02:02:02'", "86400, '00:00:24'", "86424, '00:00:24'"}) // Arrange
     public void testGetElapsedTime(int seconds, String expected) {
         // Act
         String result = StringHelper.getElapsedTime(seconds);

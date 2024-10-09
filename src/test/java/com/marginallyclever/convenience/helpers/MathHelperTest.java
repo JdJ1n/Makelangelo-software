@@ -106,14 +106,15 @@ public class MathHelperTest {
     // Fuzz test pour vérifier la fiabilité de cette méthode en utilisant java-faker
     @Test
     public void testEquals() {
-        for (int i = 0; i < 1000; i++) {//fuzz test
+        for (int i = 0; i < 1000; i++) { // fuzz test
             // Arrange
-            Tuple2d a0 = generateRandomPoint();// utilise java-faker dans cette méthode.
+            Tuple2d a0 = generateRandomPoint(); // utilise java-faker dans cette méthode.
             Tuple2d a1 = generateRandomPoint();
+            double delta = -epsilon + (2 * epsilon) * faker.random().nextDouble(); // Créer une valeur de déviation dont la valeur absolue est inférieure à epsilon
 
             // Act
-            Tuple2d b0 = new Point2d(a0.x, a0.y);
-            Tuple2d b1 = new Point2d(a1.x, a1.y);
+            Tuple2d b0 = new Point2d(a0.x + delta, a0.y + delta);
+            Tuple2d b1 = new Point2d(a1.x + delta, a1.y + delta);
 
             // Assert
             Assertions.assertTrue(MathHelper.equals(a0, a1, b0, b1, epsilon), "The segments should be equal");
@@ -126,7 +127,7 @@ public class MathHelperTest {
         return new Point2d(faker.number().randomDouble(2, -100, 100), faker.number().randomDouble(2, -100, 100));
     }
 
-    // Parameterized test for lerp method
+    // Test paramétré pour lerp
     @ParameterizedTest
     @CsvSource({"0.5, 1.0, 3.0, 2.0", "0.25, 2.0, 6.0, 3.0", "0.75, 0.0, 4.0, 3.0"}) // Arrange
     public void testLerp(double t, double a, double b, double expected) {
