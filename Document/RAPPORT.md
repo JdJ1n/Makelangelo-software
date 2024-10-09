@@ -134,42 +134,48 @@ de cette classe a considérablement augmenté.
    Destination : `public void set(float hue, float saturation, float brightness)`
    #### Emplacements
    Source : `ColorHSB.java` ligne 25  
-   Test : `TestColorHSB.java` ligne 46
+   Test : `TestColorHSB.java` ligne 62
 
 2. Test 8
    Destination : `public ColorHSB sub(ColorHSB x)`
    #### Emplacements
    Source : `ColorHSB.java` ligne 36
-   Test : `TestColorHSB.java` ligne 56
+   Test : `TestColorHSB.java` ligne 73
 
 3. Test 9
    Destination : `public ColorHSB add(ColorHSB x)`
    #### Emplacements
    Source : `ColorHSB.java` ligne 43  
-   Test : `TestColorHSB.java` ligne 70
+   Test : `TestColorHSB.java` ligne 88
 
 4. Test 10
    Destination : `public ColorHSB mul(double f)`
    #### Emplacements
    Source : `ColorHSB.java` ligne 50  
-   Test : `TestColorHSB.java` ligne 84
+   Test : `TestColorHSB.java` ligne 103
 
 5. Test 11
    Destination : `public float diffSquared(ColorHSB other)`
    #### Emplacements
    Source : `ColorHSB.java` ligne 57  
-   Test : `TestColorHSB.java` ligne 97
+   Test : `TestColorHSB.java` ligne 117
 
 6. Test 12
    Destination : `public float diff(ColorHSB other)`
    #### Emplacements
    Source : `ColorHSB.java` ligne 64  
-   Test : `TestColorHSB.java` ligne 112
+   Test : `TestColorHSB.java` ligne 133
 
 7. Test 13
    Destination : `public boolean equals(Object o)`
    #### Emplacements
    Source : `ColorHSB.java` ligne 85  
-   Test : `TestColorHSB.java` ligne 127
+   Test : `TestColorHSB.java` ligne 149
 
 #### Intention
+
+Dans cette classe, nous avons effectué 4 tests supplémentaires, portant notre total de tests à 13. Étant donné que les 7
+tests dans cette classe ont une structure similaire, nous utilisons des tests paramétrés avec plusieurs ensembles de
+données pour vérifier ces méthodes et nous assurer qu'elles sont efficacement testées. Nous avons utilisé 4 méthodes
+semblables, mais pas identiques (comme provideColorHSBValues(), etc.), un paramètre de tolérance delta = 1e-6f, une
+méthode setUp et une méthode clamp pour uniformiser et simplifier ces 7 tests.
