@@ -10,6 +10,8 @@ Répertoire : [Lien](https://github.com/JdJ1n/Makelangelo-software) vers le rép
 
 Documentation : Suivante.
 
+Bonus : Le test 2 utilise la bibliothèque [java-faker](https://github.com/DiUS/java-faker).
+
 ******
 
 ## Augmentation de la couverture de code total
@@ -36,19 +38,30 @@ Ces trois tests sont destinés à `com.marginallyclever.convenience.helpers.Math
 !MathHelperAprès
 
 1. Test 1
-   #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
 
-2. Test 2
+   Destination : `lengthSquared(double dx,double dy)`
    #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
+   Source : `MathHelper.java` ligne 26  
+   Test : `MathHelperTest.java` ligne 96
+   #### Intention
+   Utiliser un test paramétré pour vérifier si les résultats calculés par cette méthode correspondent aux attentes, en utilisant plusieurs ensembles de données.
+
+2. Test 2 * (On utilise java-faker ici.)
+
+   Destination : `lengthSquared(double dx,double dy)`
+   #### Emplacements
+   Source : `MathHelper.java` ligne 72  
+   Test : `MathHelperTest.java` ligne 107
+   #### Intention
+   Utiliser la bibliothèque java-faker pour générer des nombres aléatoires conformes aux exigences, puis utiliser un fuzz test pour vérifier la fiabilité de cette méthode.
 
 3. Test 3
+   Destination : `lengthSquared(double dx,double dy)`
    #### Emplacements
-   Méthode testée : `UTF8JsonGenerator.java` ligne 149  
-   Test : `UTF8GeneratorTest.java` ligne 58
+   Source : `MathHelper.java` ligne 72  
+   Test : `MathHelperTest.java` ligne 107
+   #### Intention
+   Utiliser la bibliothèque java-faker pour générer des nombres aléatoires conformes aux exigences, puis utiliser un fuzz test pour vérifier la fiabilité de cette méthode.
 
 
 ## Test 4-6

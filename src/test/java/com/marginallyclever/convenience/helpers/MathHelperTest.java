@@ -92,7 +92,7 @@ public class MathHelperTest {
         }
     }
 
-    // Parameterized test for lengthSquared method
+    // Test paramétré pour vérifier si les résultats calculés par cette méthode correspondent aux attentes
     @ParameterizedTest
     @CsvSource({"3.0, 4.0, 25.0", "5.0, 12.0, 169.0", "8.0, 15.0, 289.0"}) // Arrange
     public void testLengthSquared(double dx, double dy, double expected) {
@@ -103,12 +103,12 @@ public class MathHelperTest {
         Assertions.assertEquals(expected, result, epsilon, "The length squared should be " + expected);
     }
 
-    // Test for equals method using javafaker
+    // Fuzz test pour vérifier la fiabilité de cette méthode en utilisant java-faker
     @Test
     public void testEquals() {
         for (int i = 0; i < 1000; i++) {//fuzz test
             // Arrange
-            Tuple2d a0 = generateRandomPoint();
+            Tuple2d a0 = generateRandomPoint();// utilise java-faker dans cette méthode.
             Tuple2d a1 = generateRandomPoint();
 
             // Act
@@ -121,6 +121,7 @@ public class MathHelperTest {
         }
     }
 
+    // Méthode en utilisant java-faker
     private Point2d generateRandomPoint() {
         return new Point2d(faker.number().randomDouble(2, -100, 100), faker.number().randomDouble(2, -100, 100));
     }
