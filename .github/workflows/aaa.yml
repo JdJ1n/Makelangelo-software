@@ -31,11 +31,19 @@ jobs:
         timeout-minutes: 15
         run: ./mvnw -B verify -DargLine="${{ matrix.jvm_flag }}"
 
+      - name: Set multiline environment variable
+        run: |
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          cat release_notes.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        shell: bash
+
       - name: Get JaCoCo Coverage
         id: coverage
         run: |
-          coverage=$(python3 config/coverage.py target/site/jacoco/jacoco.csv) 
+          coverage=$(python3 config/coverage.py target/site/jacoco/jacoco.csv)
           echo "COVERAGE=$coverage" >> $GITHUB_ENV
+        shell: bash
 
       - name: Fail if coverage has not improved.
         run: |
