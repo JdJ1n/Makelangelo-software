@@ -11,7 +11,8 @@ jobs:
     strategy:
       matrix:
         jvm_flag: [
-          "-Xms512m -Xmx1024m"
+          "-Xms512m -Xmx1024m",
+          "-XX:+UseG1GC"
         ]
 
     steps:
