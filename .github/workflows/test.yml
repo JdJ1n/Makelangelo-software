@@ -12,7 +12,10 @@ jobs:
       matrix:
         jvm_flag: [
           "-Xms512m -Xmx1024m",
-          "-XX:+UseG1GC"
+          "-XX:+UseG1GC",
+          "-XX:+UnlockExperimentalVMOptions",
+          "-XX:+UseZGC",
+          "-XX:+UseStringDeduplication"
         ]
 
     steps:
