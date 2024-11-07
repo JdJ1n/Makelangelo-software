@@ -42,6 +42,7 @@ jobs:
           } >> $GITHUB_ENV
         shell: bash
 
+
       - name: Fail if coverage has not improved.
         run: |
           coverage=$COVERAGE
