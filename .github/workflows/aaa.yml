@@ -34,14 +34,12 @@ jobs:
       - name: Get JaCoCo Coverage
         id: coverage
         run: |
-          coverage=$(python3 config/coverage.py target/site/jacoco/jacoco.csv)
-          echo "Coverage output: $coverage"
-          echo "COVERAGE=$coverage" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Check COVERAGE value
-        run: | 
-          echo "COVERAGE is set to: $COVERAGE"
+          {
+            echo 'COVERAGE<<EOF'
+            coverage=$(python3 config/coverage.py target/site/jacoco/jacoco.csv)
+            echo "$coverage"
+            echo 'EOF'
+          } >> $GITHUB_ENV
         shell: bash
 
       - name: Fail if coverage has not improved.
