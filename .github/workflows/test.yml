@@ -7,6 +7,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        jvm_flag: [
+          "-Xms512m -Xmx1024m"
+        ]
+
     steps:
     - uses: actions/checkout@v4
 
