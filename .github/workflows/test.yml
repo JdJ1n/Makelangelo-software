@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        jvm_flag: [
+        jvm_flags: [
           "-Xms512m -Xmx1024m",
           "-XX:+UseG1GC",
           "-XX:+UnlockExperimentalVMOptions",
@@ -27,14 +27,18 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Build and Test with Maven
-        timeout-minutes: 15
-        run: ./mvnw -B verify
-
       - name: Log current JVM flag
         run: |
+          echo "MAVEN_OPTS=${{ matrix.jvm_opts }}" >> $GITHUB_ENV
           echo "Running tests with JVM flag: ${{ matrix.jvm_flag }}"
         shell: bash
+
+      - name: Build and Test with Maven
+        timeout-minutes: 15
+        env:
+          MAVEN_OPTS: ${{ matrix.jvm_flags }}
+        run: |
+          xvfb-run mvn -B verify -Djavafx.platform=linux jacoco:report -Pcoverage
 
       - name: Get JaCoCo Coverage
         id: coverage
