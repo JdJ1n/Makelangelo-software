@@ -29,8 +29,8 @@ jobs:
 
       - name: Log current JVM flag
         run: |
-          echo "MAVEN_OPTS=${{ matrix.jvm_opts }}" >> $GITHUB_ENV
-          echo "Running tests with JVM flag: ${{ matrix.jvm_flag }}"
+          echo "MAVEN_OPTS=${{ matrix.jvm_flags }}" >> $GITHUB_ENV
+          echo "Running tests with JVM flag: ${{ matrix.jvm_flags }}"
         shell: bash
 
       - name: Build and Test with Maven
@@ -43,8 +43,9 @@ jobs:
       - name: Get JaCoCo Coverage
         id: coverage
         run: |
-          coverage=$(python3 config/coverage.py target/site/jacoco/jacoco.csv) 
+          coverage=$(python3 config/coverage.py target/site/jacoco/jacoco.csv)
           echo "COVERAGE=$coverage" >> $GITHUB_ENV
+        shell: bash
 
       - name: Fail if coverage has not improved.
         run: |
@@ -56,3 +57,4 @@ jobs:
           else
             echo "New coverage: $coverage%. Coverage is improved!"
           fi
+        shell: bash
