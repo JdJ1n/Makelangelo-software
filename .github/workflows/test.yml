@@ -12,7 +12,7 @@ jobs:
       matrix:
         jvm_flags: [
           "-XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+PrintFlagsFinal",
-          "-Xms512m -Xmx1024m -XX:+PrintGCDetails -XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime -XX:+LogVMOutput -XX:LogFile=/path/to/jvm1.log",
+          "-Xms512m -Xmx1024m -XX:+PrintGCDetails -XX:+PrintFlagsFinal -XX:+LogVMOutput -XX:LogFile=/path/to/jvm1.log",
           "-XX:+UseG1GC -XX:+PrintGCDetails",
           "-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/path/to/heapdump",
           "-XX:+UseZGC",
