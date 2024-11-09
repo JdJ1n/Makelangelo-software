@@ -30,8 +30,8 @@ jobs:
 
       - name: Log current JVM flag
         run: |
-          echo "Running tests with JVM flag: ${{ matrix.jvm_flags }}"
           echo "MAVEN_OPTS=${{ matrix.jvm_flags }}" >> $GITHUB_ENV
+          echo "Running tests with JVM flag: ${{ matrix.jvm_flags }}"
         shell: bash
 
       - name: Build and Test with Maven
