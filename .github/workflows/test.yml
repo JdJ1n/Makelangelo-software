@@ -10,11 +10,11 @@ jobs:
 
     strategy:
       matrix:
+        common_jvm_flags: ["-XX:+UnlockDiagnosticVMOptions -XX:+PrintGCDetails -XX:+PrintFlagsFinal -XX:+LogVMOutput -XX:LogFile=/path/to/jvm1.log"]
         jvm_flags: [
-          "-XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+PrintFlagsFinal",
-          "-Xms512m -Xmx1024m -XX:+UnlockDiagnosticVMOptions -XX:+PrintGCDetails -XX:+PrintFlagsFinal -XX:+LogVMOutput -XX:LogFile=/path/to/jvm1.log",
-          "-XX:+UseG1GC -XX:+PrintGCDetails",
-          "-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/path/to/heapdump",
+          "-Xms512m -Xmx1024m",
+          "-XX:+UseG1GC",
+          "-XX:+UnlockExperimentalVMOptions",
           "-XX:+UseZGC",
           "-XX:+UseStringDeduplication"
         ]
@@ -28,16 +28,15 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Log current JVM flag
+      - name: Set MAVEN_OPTS environment variable
         run: |
-          echo "MAVEN_OPTS=${{ matrix.jvm_flags }}" >> $GITHUB_ENV
-          echo "Running tests with JVM flag: ${{ matrix.jvm_flags }}"
+          echo "MAVEN_OPTS=${{ matrix.common_jvm_flags }} ${{ matrix.jvm_flags }}" >> $GITHUB_ENV
         shell: bash
 
       - name: Build and Test with Maven
         timeout-minutes: 15
         env:
-          MAVEN_OPTS: ${{ matrix.jvm_flags }}
+          MAVEN_OPTS: "${{ matrix.common_jvm_flags }} ${{ matrix.jvm_flags }}"
         run: |
           xvfb-run mvn -B verify -Djavafx.platform=linux jacoco:report -Pcoverage
 
@@ -58,4 +57,9 @@ jobs:
           else
             echo "New coverage: $coverage%. Coverage is improved!"
           fi
+        shell: bash
+
+      - name: Display JVM Log
+        if: always()  # Ensure this step runs regardless of previous step outcome
+        run: cat /path/to/jvm1.log
         shell: bash
