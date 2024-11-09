@@ -68,13 +68,3 @@ jobs:
         if: always()
         run: cat jvm.log
         shell: bash
-
-      - name: Archive Build Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: |
-            target/*.jar
-            target/surefire-reports/*.txt
-            jvm.log
