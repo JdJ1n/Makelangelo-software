@@ -10,7 +10,6 @@ jobs:
 
     strategy:
       matrix:
-        common_jvm_flags: ["-XX:+UnlockDiagnosticVMOptions -XX:+PrintGCDetails -XX:+PrintFlagsFinal -XX:+LogVMOutput -XX:LogFile=jvm.log"]
         jvm_flags: [
           "-Xms512m -Xmx1024m",
           "-XX:+UseG1GC",
@@ -18,6 +17,7 @@ jobs:
           "-XX:+UseZGC",
           "-XX:+UseStringDeduplication"
         ]
+        common_jvm_flags_logs: ["-XX:+UnlockDiagnosticVMOptions -XX:+PrintGCDetails -XX:+PrintFlagsFinal -XX:+LogVMOutput -XX:LogFile=jvm.log"]
 
     steps:
       - uses: actions/checkout@v4
@@ -30,13 +30,13 @@ jobs:
 
       - name: Set MAVEN_OPTS environment variable
         run: |
-          echo "MAVEN_OPTS=${{ matrix.jvm_flags }} ${{ matrix.common_jvm_flags }}" >> $GITHUB_ENV
+          echo "MAVEN_OPTS=${{ matrix.jvm_flags }} ${{ matrix.common_jvm_flags_logs }}" >> $GITHUB_ENV
         shell: bash
 
       - name: Build and Test with Maven
         timeout-minutes: 15
         env:
-          MAVEN_OPTS: "${{ matrix.jvm_flags }} ${{ matrix.common_jvm_flags }}"
+          MAVEN_OPTS: "${{ matrix.jvm_flags }} ${{ matrix.common_jvm_flags_logs }}"
         run: |
           xvfb-run mvn -B verify -Djavafx.platform=linux jacoco:report -Pcoverage
 
@@ -60,6 +60,6 @@ jobs:
         shell: bash
 
       - name: Display JVM Log
-        if: always()  # Ensure this step runs regardless of previous step outcome
+        if: always()
         run: cat jvm.log
         shell: bash
