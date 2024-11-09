@@ -10,14 +10,14 @@ jobs:
 
     strategy:
       matrix:
-        jvm_flags: [
-          "-Xms512m -Xmx1024m",
-          "-XX:+UseZGC",
-          "-Xmx256m -XX:+HeapDumpOnOutOfMemoryError",
-          "-XX:MaxMetaspaceSize=128m -XX:MaxNewSize=256m -XX:SurvivorRatio=128 -XX:MaxTenuringThreshold=0",
-          "-XX:+UseCompressedOops"
+        jvm_flags: [ # Tester avec une variété de flags JVM.
+          "-Xms512m -Xmx1024m",  # Commencer avec une taille de tas modérée.
+          "-XX:+UseZGC",  # Essayons le Z Garbage Collector. Z comme Zéro latence !
+          "-Xmx256m -XX:+HeapDumpOnOutOfMemoryError",  # Délibérément serré sur la mémoire. Qu'est-ce qui pourrait mal tourner ?
+          "-XX:MaxMetaspaceSize=128m -XX:MaxNewSize=256m -XX:SurvivorRatio=128 -XX:MaxTenuringThreshold=0",  # Ajustez les paramètres de mémoire comme un pro.
+          "-XX:+UseCompressedOops"  # OOPs compressés, parce que qui n'aime pas économiser de la mémoire ?
         ]
-        common_jvm_flags_logs: ["-XX:+UnlockDiagnosticVMOptions -Xlog:gc*:file=jvm.log:time,level,tags -XX:+PrintFlagsFinal"]
+        common_jvm_flags_logs: [ "-XX:+UnlockDiagnosticVMOptions -Xlog:gc*:file=jvm.log:time,level,tags -XX:+PrintFlagsFinal" ] # Montrez toujours les logs JVM. Parce que les logs, c'est la vie !
 
     steps:
       - uses: actions/checkout@v4
@@ -51,7 +51,7 @@ jobs:
         run: |
           coverage=$COVERAGE
           threshold=24.46
-          if (( $(echo "$coverage - $threshold <= 0.1" | bc -l) )); then
+          if (( $(echo "$coverage - $threshold <= 0.1" | bc -l) )); then 
             echo "Coverage is not improved."
             exit 1
           else
@@ -66,5 +66,5 @@ jobs:
 
       - name: Display JVM Log
         if: always()
-        run: cat jvm.log
+        run: cat jvm.log  # Montrez toujours les logs JVM. Parce que les logs, c'est la vie ! (Attendez, j'ai déjà dit ça)
         shell: bash
