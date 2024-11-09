@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         jvm_flags: [
-          "-XX:+UnlockDiagnosticVMOptions -XX:+PrintFlagsFinal",
+          "-XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+PrintFlagsFinal",
           "-Xms512m -Xmx1024m -XX:+PrintFlagsFinal",
           "-XX:+UseG1GC -XX:+PrintGCDetails",
           "-XX:+UnlockExperimentalVMOptions",
