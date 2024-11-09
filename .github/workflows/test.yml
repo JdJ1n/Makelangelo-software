@@ -14,7 +14,7 @@ jobs:
           "-Xms512m -Xmx1024m",
           "-XX:+UseG1GC",
           "-XX:+HeapDumpOnOutOfMemoryError",
-          "-XX:MaxPermSize=128m -XX:MaxNewSize=256m -XX:SurvivorRatio=128 -XX:MaxTenuringThreshold=0",
+          "-XX:MaxMetaspaceSize=128m -XX:MaxNewSize=256m -XX:SurvivorRatio=128 -XX:MaxTenuringThreshold=0",
           "-XX:+UseCompressedOops"
         ]
         common_jvm_flags_logs: ["-XX:+UnlockDiagnosticVMOptions -XX:+PrintGCDetails -XX:+PrintFlagsFinal -XX:+LogVMOutput -XX:LogFile=jvm.log"]
