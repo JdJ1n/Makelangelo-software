@@ -30,13 +30,13 @@ jobs:
 
       - name: Set MAVEN_OPTS environment variable
         run: |
-          echo "MAVEN_OPTS=${{ matrix.common_jvm_flags }} ${{ matrix.jvm_flags }}" >> $GITHUB_ENV
+          echo "MAVEN_OPTS=${{ matrix.jvm_flags }} ${{ matrix.common_jvm_flags }}" >> $GITHUB_ENV
         shell: bash
 
       - name: Build and Test with Maven
         timeout-minutes: 15
         env:
-          MAVEN_OPTS: "${{ matrix.common_jvm_flags }} ${{ matrix.jvm_flags }}"
+          MAVEN_OPTS: "${{ matrix.jvm_flags }} ${{ matrix.common_jvm_flags }}"
         run: |
           xvfb-run mvn -B verify -Djavafx.platform=linux jacoco:report -Pcoverage
 
