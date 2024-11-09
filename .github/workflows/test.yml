@@ -12,12 +12,12 @@ jobs:
       matrix:
         jvm_flags: [
           "-Xms512m -Xmx1024m",
-          "-XX:+UseG1GC",
-          "-XX:+HeapDumpOnOutOfMemoryError",
+          "-XX:+UseZGC",
+          "-Xmx128m -XX:+HeapDumpOnOutOfMemoryError",
           "-XX:MaxMetaspaceSize=128m -XX:MaxNewSize=256m -XX:SurvivorRatio=128 -XX:MaxTenuringThreshold=0",
           "-XX:+UseCompressedOops"
         ]
-        common_jvm_flags_logs: ["-XX:+UnlockDiagnosticVMOptions -Xlog:gc -XX:+PrintFlagsFinal -XX:+LogVMOutput -XX:LogFile=jvm.log"]
+        common_jvm_flags_logs: ["-XX:+UnlockDiagnosticVMOptions -Xlog:gc*:file=jvm.log:time,level,tags -XX:+PrintFlagsFinal"]
 
     steps:
       - uses: actions/checkout@v4
