@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         jvm_flags: [
+          "-XX:+UnlockDiagnosticVMOptions -XX:+PrintFlagsFinal -version",
           "-Xms512m -Xmx1024m",
           "-XX:+UseG1GC",
           "-XX:+UnlockExperimentalVMOptions",
@@ -29,8 +30,8 @@ jobs:
 
       - name: Log current JVM flag
         run: |
-          echo "MAVEN_OPTS=${{ matrix.jvm_flags }}" >> $GITHUB_ENV
           echo "Running tests with JVM flag: ${{ matrix.jvm_flags }}"
+          echo "MAVEN_OPTS=${{ matrix.jvm_flags }}" >> $GITHUB_ENV
         shell: bash
 
       - name: Build and Test with Maven
