@@ -13,9 +13,9 @@ jobs:
         jvm_flags: [
           "-Xms512m -Xmx1024m",
           "-XX:+UseG1GC",
-          "-XX:+UnlockExperimentalVMOptions",
-          "-XX:+UseZGC",
-          "-XX:+UseStringDeduplication"
+          "-XX:+HeapDumpOnOutOfMemoryError",
+          "-XX:MaxPermSize=128m -XX:MaxNewSize=256m -XX:SurvivorRatio=128 -XX:MaxTenuringThreshold=0",
+          "-XX:+UseCompressedOops"
         ]
         common_jvm_flags_logs: ["-XX:+UnlockDiagnosticVMOptions -XX:+PrintGCDetails -XX:+PrintFlagsFinal -XX:+LogVMOutput -XX:LogFile=jvm.log"]
 
@@ -28,7 +28,7 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Set MAVEN_OPTS environment variable
+      - name: Set environment variables
         run: |
           echo "MAVEN_OPTS=${{ matrix.jvm_flags }} ${{ matrix.common_jvm_flags_logs }}" >> $GITHUB_ENV
         shell: bash
