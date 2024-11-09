@@ -13,7 +13,7 @@ jobs:
         jvm_flags: [
           "-Xms512m -Xmx1024m",
           "-XX:+UseZGC",
-          "-Xmx128m -XX:+HeapDumpOnOutOfMemoryError",
+          "-Xmx256m -XX:+HeapDumpOnOutOfMemoryError",
           "-XX:MaxMetaspaceSize=128m -XX:MaxNewSize=256m -XX:SurvivorRatio=128 -XX:MaxTenuringThreshold=0",
           "-XX:+UseCompressedOops"
         ]
