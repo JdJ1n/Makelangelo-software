@@ -66,5 +66,5 @@ jobs:
 
       - name: Display JVM Log
         if: always()
-        run: cat jvm.log  # Montrez toujours les logs JVM. Parce que les logs, c'est la vie ! (Attendez, j'ai déjà dit ça)
+        run: cat jvm.log  # Montrez toujours les logs JVM. Parce que les logs, c'est la vie !! (Attendez, j'ai déjà dit ça)
         shell: bash
