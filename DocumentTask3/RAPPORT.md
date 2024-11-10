@@ -10,26 +10,43 @@ Répertoire : [Lien](https://github.com/JdJ1n/Makelangelo-software) vers le rép
 
 Documentation : Suivante.
 
-Bonus : Le test 2 utilise la bibliothèque [java-faker](https://github.com/DiUS/java-faker).
+Bonus : Le répertoire utilise le projet [lolcommits](https://github.com/lolcommits/lolcommits).
 
 ******
 
-## Augmentation de la couverture de code total
+## Les changements apportés à la Github action
 
-Après les tests effectués avec config/coverage.py, la couverture totale est passée de 24,46% à 24,76%.
-Voici deux captures d’écran montrant l’évolution de la couverture totale générée par Jacoco.
+Nous avons modifié le fichier `test.yml` en nous référant aux exemples que vous avez présentés en classe (le fichier [test.yml](https://github.com/umontreal-diro/cryptomator/blob/develop/.github/workflows/test.yml) dans le repo cryptomator) et en combinant nos connaissances sur l'utilisation des matrices. 
+Nous avons défini et utilisé cinq flags JVM différents dans le workflow GitHub Actions pour effectuer les tâches de compilation et de test.
+Nous avons utilisé `-XX:+PrintFlagsFinal` pour afficher tous les paramètres dans l'étape `Build and Test with Maven` et `-Xlog:gc` pour générer des journaux clairs, qui sont entièrement affichés dans l'étape `Display JVM Log`.
 
 ##### Avant
 
-[Lien vers le rapport Jacoco.](https://html-preview.github.io/?url=https://github.com/JdJ1n/Makelangelo-software/blob/master/Document/htmlReportAvant/index.html)
-![Avant](Screenshots/all_before.png)
+[Lien vers le fichier test.yml avant.](https://github.com/umontreal-diro/Makelangelo-software/blob/master/.github/workflows/test.yml)
 
 ##### Après
 
-[Lien vers le rapport Jacoco.](https://html-preview.github.io/?url=https://github.com/JdJ1n/Makelangelo-software/blob/master/Document/htmlReportApres/index.html)
-![Après](Screenshots/all_after.png)
+[Lien vers le fichier test.yml après.](https://github.com/JdJ1n/Makelangelo-software/blob/master/.github/workflows/test.yml)
 
-## Test 1-3
+### Common Flag
+
+Source : `test.yml` ligne 20
+
+#### JVM options : `-XX:+UnlockDiagnosticVMOptions -Xlog:gc*:file=jvm.log:time,level,tags -XX:+PrintFlagsFinal`
+
+##### -Xlog:gc*:file=jvm.log:time,level,tags
+- **Fonction**: Active la journalisation pour la collecte des déchets (Garbage Collection) et enregistre les journaux dans un fichier. 
+  - `gc*` : Inclut toutes les journalisations liées à la collecte des déchets. 
+  - `file=jvm.log` : Enregistre les journaux dans le fichier `jvm.log`. 
+  - `time` : Ajoute des horodatages aux entrées du journal. 
+  - `level` : Indique le niveau de chaque entrée du journal. 
+  - `tags` : Ajoute des étiquettes pour faciliter le filtrage et l'analyse. 
+- **Raison**: Fournit des informations détaillées et horodatées sur la collecte des déchets, ce qui est essentiel pour diagnostiquer les problèmes de performances et optimiser le comportement de la mémoire.
+##### -XX:+PrintFlagsFinal
+- **Fonction**: Affiche toutes les options et configurations finales de la JVM lors du démarrage. 
+- **Raison**: Utile pour vérifier quelles options JVM sont effectivement appliquées et leurs valeurs finales, ce qui aide à valider la configuration et à résoudre les problèmes de configuration.
+
+### Flag 1
 
 Ces trois tests sont destinés à `com.marginallyclever.convenience.helpers.MathHelper`. Nous avons directement ajouté ces
 trois tests dans le fichier existant `com.marginallyclever.convenience.helpers.MathHelperTest`. Après l’ajout de ces
