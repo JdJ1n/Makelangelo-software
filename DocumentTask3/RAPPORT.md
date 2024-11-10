@@ -48,148 +48,21 @@ Source : `test.yml` ligne 20
 
 ### Flag 1
 
-Ces trois tests sont destinés à `com.marginallyclever.convenience.helpers.MathHelper`. Nous avons directement ajouté ces
-trois tests dans le fichier existant `com.marginallyclever.convenience.helpers.MathHelperTest`. Après l’ajout de ces
-trois tests, la couverture de cette classe a considérablement augmenté.
-
-##### Avant
-
-![Avant](Screenshots/Before-MathHelp.png)
-
-##### Après
-
-![Après](Screenshots/After-MathHelper.png)
-
-1. Test 1
-
-   Destination : `public static double lengthSquared(double dx,double dy)`
-   #### Emplacements
-   Source : `MathHelper.java` ligne 26  
-   Test : `MathHelperTest.java` ligne 96
-   #### Intention
-   Utiliser un test paramétré pour vérifier si les résultats calculés par cette méthode correspondent aux attentes, en
-   utilisant plusieurs ensembles de données.
-
-2. Test 2 * (On utilise java-faker ici.)
-
-   Destination : `public static boolean equals(Tuple2d a0, Tuple2d a1, Tuple2d b0, Tuple2d b1, double epsilon)`
-   #### Emplacements
-   Source : `MathHelper.java` ligne 72  
-   Test : `MathHelperTest.java` ligne 107
-   #### Intention
-   Utiliser la bibliothèque java-faker pour générer des nombres aléatoires conformes aux exigences, puis utiliser un
-   fuzz test pour vérifier la fiabilité de cette méthode.
-
-3. Test 3
-
-   Destination : `public static Point2d lerp(Tuple2d a, Tuple2d b,double t)`
-   #### Emplacements
-   Source : `MathHelper.java` ligne 99  
-   Test : `MathHelperTest.java` ligne 131
-   #### Intention
-   Utilisez un test paramétré pour vérifier si les résultats calculés par lerp correspondent aux attentes, en utilisant
-   plusieurs ensembles de données.
-
-## Test 4-6
-
-Ces trois tests sont destinés à `com.marginallyclever.convenience.helpers.StringHelper`. Nous avons créé une nouvelle
-classe `com.marginallyclever.convenience.helpers.StringHelperTest` pour ajouter ces trois tests.
-
-##### Avant
-
-![Avant](Screenshots/Before-StringHelper.png)
-
-##### Après
-
-![Après](Screenshots/After-StringHelper.png)
-
-1. Test 4
-
-   Destination : `public static String formatFloat(float arg0)`
-   #### Emplacements
-   Source : `StringHelper.java` ligne 17  
-   Test : `StringHelperTest.java` ligne 10
-   #### Intention
-   Utiliser un test paramétré avec plusieurs ensembles de données pour vérifier si les résultats par cette méthode
-   correspondent aux attentes.
-
-2. Test 5
-
-   Destination : `public static String padRight(String s, int n)`
-   #### Emplacements
-   Source : `StringHelperHelper.java` ligne 37  
-   Test : `StringHelperTest.java` ligne 21
-   #### Intention
-   Utiliser un test paramétré avec plusieurs ensembles de données pour vérifier si les résultats par cette méthode
-   correspondent aux attentes.
-
-3. Test 6
-
-   Destination : `public static String getElapsedTime(int seconds)`
-   #### Emplacements
-   Source : `StringHelperHelper.java` ligne 41  
-   Test : `StringHelperHelperTest.java` ligne 32
-   #### Intention
-   Utiliser un test paramétré avec plusieurs ensembles de données pour vérifier si les résultats par cette méthode
-   correspondent aux attentes.
-
-## Test 7-13
-
-Ces sept tests sont destinés à `com.marginallyclever.convenience.ColorHSB`. Nous avons directement ajouté ces sept tests
-dans le fichier existant `com.marginallyclever.convenience.TestColorHSB`. Après l’ajout de ces sept tests, la couverture
-de cette classe a considérablement augmenté.
-
-##### Avant
-
-![Avant](Screenshots/Before-ColorHSB.png)
-
-##### Après
-
-![Après](Screenshots/After-ColorHSB.png)
-
-1. Test 7
-   Destination : `public void set(float hue, float saturation, float brightness)`
-   #### Emplacements
-   Source : `ColorHSB.java` ligne 25  
-   Test : `TestColorHSB.java` ligne 62
-
-2. Test 8
-   Destination : `public ColorHSB sub(ColorHSB x)`
-   #### Emplacements
-   Source : `ColorHSB.java` ligne 36
-   Test : `TestColorHSB.java` ligne 73
-
-3. Test 9
-   Destination : `public ColorHSB add(ColorHSB x)`
-   #### Emplacements
-   Source : `ColorHSB.java` ligne 43  
-   Test : `TestColorHSB.java` ligne 88
-
-4. Test 10
-   Destination : `public ColorHSB mul(double f)`
-   #### Emplacements
-   Source : `ColorHSB.java` ligne 50  
-   Test : `TestColorHSB.java` ligne 103
-
-5. Test 11
-   Destination : `public float diffSquared(ColorHSB other)`
-   #### Emplacements
-   Source : `ColorHSB.java` ligne 57  
-   Test : `TestColorHSB.java` ligne 117
-
-6. Test 12
-   Destination : `public float diff(ColorHSB other)`
-   #### Emplacements
-   Source : `ColorHSB.java` ligne 64  
-   Test : `TestColorHSB.java` ligne 133
-
-7. Test 13
-   Destination : `public boolean equals(Object o)`
-   #### Emplacements
-   Source : `ColorHSB.java` ligne 85  
-   Test : `TestColorHSB.java` ligne 149
-
-#### Intention
+### 1. -Xms512m -Xmx1024m 
+- **Fonction**: Définit la taille initiale du tas et la taille maximale du tas. 
+- **Raison**: Assure que l'application dispose de suffisamment de mémoire au démarrage et limite l'utilisation maximale de la mémoire. 
+### 2. -XX:+UseZGC 
+- **Fonction**: Active le ramasse-miettes ZGC (Z Garbage Collector). 
+- **Raison**: Conçu pour les applications nécessitant une faible latence et des performances élevées, ZGC est idéal pour minimiser les pauses de collecte des déchets.
+### 3. -Xmx256m -XX:+HeapDumpOnOutOfMemoryError
+- **Fonction**: Définit une petite taille maximale de tas et génère un vidage du tas en cas d'erreur OutOfMemoryError.
+- **Raison**: Utilisé pour tester le comportement de l'application lorsque la mémoire est insuffisante, en fournissant des données de vidage pour l'analyse.
+### 4. -XX:MaxMetaspaceSize=128m -XX:MaxNewSize=256m -XX:SurvivorRatio=128 -XX:MaxTenuringThreshold=0
+- **Fonction**: Ajuste la taille de l'espace metaspace, la taille maximale de la nouvelle génération, le ratio des espaces Survivor et le seuil de vieillissement maximal.
+- **Raison**: Optimise la gestion de la mémoire en configurant finement les différentes zones de la mémoire.
+### 5. -XX:+UseCompressedOops
+- **Fonction**: Active la compression des pointeurs d'objets.
+- **Raison**: Réduit la consommation de mémoire et améliore l'efficacité, particulièrement bénéfique pour les systèmes 64 bits.
 
 Dans cette classe, nous avons effectué 4 tests supplémentaires, portant notre total de tests à 13. Étant donné que les 7
 tests dans cette classe ont une structure similaire, nous utilisons des tests paramétrés avec plusieurs ensembles de
