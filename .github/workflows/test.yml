@@ -12,7 +12,7 @@ jobs:
       matrix:
         jvm_flags: [ # Tester avec une variété de flags JVM.
           "-Xms512m -Xmx1024m",  # Commencer avec une taille de tas modérée.
-          "-XX:+UseZGC",  # Essayons le Z Garbage Collector. Z comme Zéro latence !
+          "-XX:+UseZGC",  # Essayons le Z Garbage Collector. Z comme Zéro
           "-Xmx256m -XX:+HeapDumpOnOutOfMemoryError",  # Délibérément serré sur la mémoire. Qu'est-ce qui pourrait mal tourner ?
           "-XX:MaxMetaspaceSize=128m -XX:MaxNewSize=256m -XX:SurvivorRatio=128 -XX:MaxTenuringThreshold=0",  # Ajustez les paramètres de mémoire comme un pro.
           "-XX:+UseCompressedOops"  # OOPs compressés, parce que qui n'aime pas économiser de la mémoire ?
